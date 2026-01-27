@@ -106,10 +106,6 @@
     --mostrar en el el layout algun indicador si hay una persona asignada en la estacion, si falto, si hay un punto de cabio o una asistencia, puede ser con algun color en la estacion
 */  
 
-
-//Remover trabajador 
-
-//Editar informacion de la linea
 //Registro de punto de cambio 
 
 //Registro de asistencia
@@ -118,15 +114,15 @@
 
 //Reflejar cambios y registros incertados en el layout
 
-
-
 //Generar mostrar el contenido dinamico de los formularios
 //Hacer restricciones y validaciones correspondientes
 
-//Registrar y Retirar certificacion 
-//Valoidar capacitaciones
 //Generar permisos de usuarios
 //Generar usuarios
+
+//Registrar y Retirar certificacion 
+//Validar capacitaciones
+
 
 
 //Pruebas

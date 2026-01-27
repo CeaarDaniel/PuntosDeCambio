@@ -13,9 +13,9 @@ $opcion = $_POST['opcion'];
 //REGISTRO DE UNA NUEVA LINEA
 if($opcion=='1') {
     $codigoLinea = $_POST['codigoLinea'] ?? null;
-    $encargado = $_POST['encargado'] ?? null;
-    $nombreLinea = $_POST['nombreLinea'] ?? null;
-    $descripcion = $_POST['descripcion'] ?? null;
+    $encargado = !empty($_POST['encargado']) ? $_POST['encargado'] : NULL;
+    $nombreLinea = !empty($_POST['nombreLinea']) ? $_POST['nombreLinea'] : null;
+    $descripcion = !empty($_POST['descripcion']) ? $_POST['descripcion'] : null;
 
     // Validar que se recibieron todos los datos
     if (!$codigoLinea || !$encargado) {
@@ -411,7 +411,6 @@ else
         }
     }
 
-
 //Registrar personal sin asignar a una estacion
 else 
     if($opcion =='8'){
@@ -515,56 +514,139 @@ else
         echo json_encode($response);
     }
 
-    //Remover trabajador de una estacion
-    else 
-        if($opcion=='10'){
-            $idEstacion = $_POST['idEstacion'] ?? null;
-            $nomina = $_POST['nomina'] ?? null;
+//Remover trabajador de una estacion
+else 
+    if($opcion=='10'){
+        $idEstacion = $_POST['idEstacion'] ?? null;
+        $nomina = $_POST['nomina'] ?? null;
 
-            // Validar que se recibieron todos los datos
-            if (!$idEstacion || !$nomina) {
-                echo json_encode([
-                    'estatus' => 'error',
-                    'mensaje' => 'Faltan datos obligatorios.'
-                ]);
-                exit; 
-            }
-
-            try { // Iniciar transacción
-                $conn->beginTransaction();
-
-                // Preparar la sentencia con parámetros
-                $sql = "UPDATE SPC_PERSONAL_ESTACION 
-                            SET fecha_fin = GETDATE() 
-                        WHERE id_estacion = :id_estacion 
-                            AND nomina = :nomina
-                            AND fecha_fin IS NULL";
-
-                $stmt = $conn->prepare($sql);
-
-                // Ejecutar con los parámetros
-                $stmt->execute([
-                    ':id_estacion' => $idEstacion,
-                    ':nomina' => $nomina
-                ]);
-
-                // Confirmar la transacción
-                $conn->commit();
-                echo json_encode([
-                    'estatus' => 'ok',
-                    'mensaje' => 'Trabajador removido correctamente.',
-                ]);
-            } catch (PDOException $e) {
-                // Si ocurre algún error, revertir la transacción
-                if ($conn->inTransaction()) {
-                    $conn->rollBack();
-                }   
-                // Respuesta JSON con el error
-                echo json_encode([
-                    'estatus' => 'error',
-                    'mensaje' => 'Error al remover el trabajador.',
-                    'detalle' => $e->getMessage()
-                ]);
-            }
+        // Validar que se recibieron todos los datos
+        if (!$idEstacion || !$nomina) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Faltan datos obligatorios.'
+            ]);
+            exit; 
         }
+
+        try { // Iniciar transacción
+            $conn->beginTransaction();
+
+            // Preparar la sentencia con parámetros
+            $sql = "UPDATE SPC_PERSONAL_ESTACION 
+                        SET fecha_fin = GETDATE() 
+                    WHERE id_estacion = :id_estacion 
+                        AND nomina = :nomina
+                        AND fecha_fin IS NULL";
+
+            $stmt = $conn->prepare($sql);
+
+            // Ejecutar con los parámetros
+            $stmt->execute([
+                ':id_estacion' => $idEstacion,
+                ':nomina' => $nomina
+            ]);
+
+            // Confirmar la transacción
+            $conn->commit();
+            echo json_encode([
+                'estatus' => 'ok',
+                'mensaje' => 'Trabajador removido correctamente.',
+            ]);
+        } catch (PDOException $e) {
+            // Si ocurre algún error, revertir la transacción
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }   
+            // Respuesta JSON con el error
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Error al remover el trabajador.',
+                'detalle' => $e->getMessage()
+            ]);
+        }
+    }
+
+//Editar informacion de la linea
+else 
+    if($opcion=='11'){
+        $codigoLinea = $_POST['codigoLinea'] ?? null;
+        $encargado = !empty($_POST['encargado']) ? $_POST['encargado'] :  null;
+        $nombreLinea = $_POST['nombreLinea'] ?? null;
+        $descripcion = $_POST['descripcion'] ?? null;
+
+        // Validar que se recibieron todos los datos
+        if (!$codigoLinea) {
+            echo json_encode([
+                'status' => 'error',
+                'mensaje' => 'Faltan datos obligatorios.'
+            ]);
+            exit; 
+        }
+
+        try { // Iniciar transacción
+            $conn->beginTransaction();
+
+            // Preparar la sentencia con parámetros
+            $sql = "UPDATE SPC_LINEAS 
+                        SET nombre_linea = :nombre_linea, 
+                            descripcion = :descripcion, 
+                            encargado_supervisor = :encargado_supervisor
+                    WHERE codigo_linea = :codigo_linea";
+            $stmt = $conn->prepare($sql);
+
+            // Ejecutar con los parámetros
+            $stmt->execute([
+                ':codigo_linea' => $codigoLinea,
+                ':nombre_linea' => $nombreLinea,
+                ':descripcion' => $descripcion,
+                ':encargado_supervisor' => $encargado
+            ]);
+
+            // Confirmar la transacción
+            $conn->commit();
+
+            echo json_encode([
+                'estatus' => 'ok',
+                'mensaje' => 'Registro actualizado correctamente.',
+            ]);
+
+        } catch (PDOException $e) {
+            // Si ocurre algún error, revertir la transacción
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+
+            // Respuesta JSON con el error
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Error al actualizar el registro.',
+                'detalle' => $e->getMessage()
+            ]);
+        }
+    }
+
+//Generar No. Control de cambio
+else 
+    if($opcion == '12'){
+        $sql = "SELECT FORMAT(GETDATE(), 'yyyy/MM') + '/' + RIGHT(CAST((SELECT COUNT(*) + 1 
+                        FROM SPC_PUNTOS_CAMBIO 
+                    WHERE FORMAT(fechaHora_inicio, 'yyyy/MM')  = 
+                                            FORMAT(GETDATE(), 'yyyy/MM')) AS VARCHAR), 3) as no_control;";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();   
+
+        if($resultado = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            echo json_encode([
+                'estatus' => 'ok',
+                'noControl' => $resultado['no_control']
+            ]);
+        } else {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'No se pudo generar el No. de Control.'
+            ]);
+        }
+    }
 ?>

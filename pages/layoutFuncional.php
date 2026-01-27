@@ -1,7 +1,18 @@
 <?php 
   $codigo = !empty($_GET['codigo']) ? urldecode($_GET['codigo']) : '';
   $nombre = !empty($_GET['nombre']) ? urldecode($_GET['nombre']) : '';
-   date_default_timezone_set('Etc/GMT+6');
+  date_default_timezone_set('Etc/GMT+6');
+
+  $sql= "SELECT descripcion, encargado_supervisor from SPC_LINEAS WHERE CODIGO_LINEA = :codigo_linea";
+
+  require_once('../api/conexion.php');
+  $stmt = $conn->prepare($sql);
+  $stmt->bindParam(':codigo_linea', $codigo);
+  $stmt->execute();
+  $linea = $stmt->fetch(PDO::FETCH_ASSOC);
+  $descripcion = !empty($linea['descripcion']) ? $linea['descripcion'] : '';
+  $encargado_supervisor = !empty($linea['encargado_supervisor']) ? $linea['encargado_supervisor'] : '';
+
 ?>
 
 <!DOCTYPE html>
@@ -1081,7 +1092,7 @@
                               </label>
                               <div class="input-group-custom">
                                 <input type="text" class="form-control form-control-custom" 
-                                      id="no_controlCambio" placeholder="Ej: CAM-001" maxlength="50" required>
+                                      id="no_controlCambio" placeholder="Ej: CAM-001" maxlength="50" readonly>
                                 <button type="button" class="input-icon"><i class="bi bi-search"></i></button>
                               </div>
                             </div>
@@ -1090,7 +1101,11 @@
                               <label for="tipo_cambio" class="form-label required-field">
                                 <i class="bi bi-shuffle"></i> Tipo de Cambio
                               </label>
-                              <input type="text" class="form-control form-control-custom" id="tipo_cambio" maxlength="20" required>
+
+                              <select type="text" class="form-select" id="tipo_cambio" required>
+                                <option value="1">Inesperado</option>
+                                <option value="2">Programado</option>
+                              </select>
                             </div>
                           </div>
 
@@ -1105,29 +1120,23 @@
 
                           <div class="mb-3">
                             <label for="motivo" class="form-label required-field">
-                              <i class="bi bi-chat-left-text"></i> Motivo
+                              <i class="bi bi-chat-left-text"></i> Descripcion
                             </label>
-                            <textarea class="form-control form-control-custom" id="motivo" rows="3" required></textarea>
+                            <textarea class="form-control form-control-custom" id="motivo" rows="3" placeholder="Descripcion del punto de cambio" required></textarea>
                           </div>
 
                           <div class="row">
                             <div class="col-md-6 mb-3">
                               <label for="codigolineaPC" class="form-label">
-                                <i class="bi bi-diagram-3"></i> Código de Línea
+                                <i class="bi bi-diagram-3"></i> Línea
                               </label>
                               <input type="text" class="form-control form-control-custom" id="codigolineaPC" value= <?php echo $nombre?>  readonly>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                              <label for="id_estacion" class="form-label">
-                                <i class="bi bi-geo-alt"></i> Estación
-                              </label>
-                              <select class="form-control form-control-custom" id="id_estacion">
-                                <option value="">Selecciona una estación...</option>
-                                <option value="1">Estación 1</option>
-                                <option value="2">Estación 2</option>
-                                <option value="3">Estación 3</option>
-                              </select>
+                              <label for="nombre_estacion" class="form-label"><i class="bi bi-geo-alt"></i> Estación</label>
+                              <input type="text" class="form-control form-control-custom" id="nombre_estacion">
+                              <input type="hidden" id="id_estacion">
                             </div>
                           </div>
                         </div>
@@ -1187,7 +1196,6 @@
                                   </span>
                               </div>
                           </div>
-                          
                       
                           <div class="col-md-12">
                               <!-- Nivel ILU -->
@@ -1689,17 +1697,16 @@
                   <div class="col-md-6 mb-2">
                     <label for="lineCode" class="form-label required-field">Código de Línea</label>
                     <div class="input-group-custom">
-                      <input type="text" class="form-control form-control-custom" id="lineCode" placeholder="Ej: LN-001" readonly style="background-color:snow;">
+                      <input type="text" class="form-control form-control-custom" id="lineCode" placeholder="Ej: LN-001" readonly style="background-color:snow;" value="<?php echo $codigo?>">
                       <button type="button" class="input-icon" data-bs-toggle="tooltip" title="Código único para identificar la línea">
                         <i class="bi bi-question-circle"></i>
                       </button>
                     </div>
-                    <div class="form-help">Usa un código único para identificar esta línea</div>
                   </div>
 
                   <div class="col-md-6 mb-2">
                     <label for="lineName" class="form-label required-field">Nombre de la Línea</label>
-                    <input type="text" class="form-control form-control-custom" id="lineName" placeholder="Ej: Línea de CRV" required>
+                    <input type="text" class="form-control form-control-custom" id="lineName" placeholder="Ej: Línea de CRV" value="<?php echo $nombre?>" required>
                   </div>
                 </div>
               </div>
@@ -1715,7 +1722,7 @@
                   <label for="supervisorSearch" class="form-label required-field">Encargado/Supervisor</label>
                   <div class="input-group-custom">
                     <input type="text" class="form-control form-control-custom" id="supervisorSearch"
-                      placeholder="Buscar empleado..." readonly>
+                      placeholder="Buscar empleado..." value="<?php echo $encargado_supervisor?>">
                     <button type="button" class="input-icon">
                       <i class="bi bi-search"></i>
                     </button>
@@ -1734,7 +1741,7 @@
                   <label for="lineDescription" class="form-label">Descripción de la Línea</label>
                   <textarea class="form-control form-control-custom form-textarea" id="lineDescription"
                     placeholder="Describe el propósito, procesos principales y características de esta línea de producción..."
-                    rows="4"></textarea>
+                    rows="4"><?php echo $descripcion?></textarea>
                   <div class="form-help">Opcional: Proporciona detalles sobre esta línea</div>
                 </div>
               </div>
@@ -1748,7 +1755,7 @@
             <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
               <i class="bi bi-x-circle"></i> Cancelar
             </button>
-            <button type="button" class="btn btn-primary-custom ms-1">
+            <button type="button" class="btn btn-primary-custom ms-1" id="btnGuardarEdicionLinea" style="color:white"  >
               <i class="bi bi-check-circle"></i> Guardar
             </button>
           </div>

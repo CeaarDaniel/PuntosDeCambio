@@ -1,6 +1,7 @@
   let btnGuardarEstacion = document.getElementById('btnGuardarEstacion');
   let btnAsignarOperador = document.getElementById('btnAsignarOperador');
   let btnGuardarDisponible = document.getElementById('btnGuardarDisponible');
+  let btnGuardarEdicionLinea = document.getElementById('btnGuardarEdicionLinea');
 
 
  
@@ -388,13 +389,22 @@
         element.style.top = `${top}px`;
       }
       
+      //Actualizar y mostrar el modal de la estacion
       showStationModal(stationData) {
-        // Actualizar contenido del modal
        
         document.getElementById('imgInfochangeControlModal').src=  (stationData.nomina) ? `../img/personal/${stationData.nomina}.jpg` : `../img/personal/na.jpg`;
         document.getElementById('nombreEstacionModalPC').textContent = (stationData.name).toUpperCase();
         document.getElementById('idEstacionModalPC').value = stationData.id;
         document.getElementById('idTrabajadorAsignado').value = stationData.nomina || '';
+
+
+        //Setear valores del formulario de registro de PC
+
+          getNoControl().then(resultado => { document.getElementById('no_controlCambio').value = resultado;});
+          document.getElementById('fechaHora_inicio').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
+          document.getElementById('id_estacion').value = stationData.id;
+          document.getElementById('nombre_estacion').value = stationData.name;
+
   
         //Modal creado registro de punto de cambio
             const stationModal = new bootstrap.Modal(document.getElementById('changeControlModal'));
@@ -883,7 +893,6 @@
                     let body = document.getElementById('tablaBodyPersonalNoAsignado');
 
                     let filasHTML = '';
-
                       data.forEach(emp => {
                         filasHTML += `
                           <tr>
@@ -956,8 +965,7 @@
                 
                     data = JSON.parse(data)
                       if(data.estatus=='ok'){
-
-                        console.log(data);
+                        
                           alert(data.mensaje);  
                           /* actualizarEstacion(estacionId, 
                                             { 'nomina': null, 
@@ -975,4 +983,67 @@
                   console.log(error);
             });
     })
-    
+
+    //Actualizar informacion de la linea
+    btnGuardarEdicionLinea.addEventListener('click', function(){
+      let formDataActualizarLinea = new FormData; 
+
+      let lineForm = document.getElementById('lineForm');
+
+      let descripcionLinea = document.getElementById('lineDescription').value;
+      let encargadoLinea = document.getElementById('supervisorSearch').value; 
+      let lineName = document.getElementById('lineName').value;
+
+
+
+      if (lineForm.reportValidity()){
+        formDataActualizarLinea.append('opcion', 11);
+        formDataActualizarLinea.append('codigoLinea', codigoLinea.value);
+        formDataActualizarLinea.append('descripcion', descripcionLinea);
+        formDataActualizarLinea.append('encargado', encargadoLinea);
+        formDataActualizarLinea.append('nombreLinea', lineName);
+
+
+        fetch("../api/operacionesLinea.php", {
+                    method: "POST",
+                    body: formDataActualizarLinea,
+                })
+                .then((response) => response.text())
+                .then((data) => { 
+        
+                    data= JSON.parse(data)
+                    if(data.estatus=='ok'){ 
+                        alert(data.mensaje);
+                        location.reload();
+                    }
+                    else  alert(data.mensaje);
+                })
+                .catch((error) => {
+                  console.log(error);
+            });
+      }
+    })
+
+
+
+    //Funcion para obtener el numero de control del ultimo registro del punto de cambio
+function getNoControl() {
+  const formDataNoControles = new FormData();
+  formDataNoControles.append('opcion', 12);
+
+  return fetch("../api/operacionesLinea.php", {
+    method: "POST",
+    body: formDataNoControles,
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.estatus === 'ok') {
+        return data.noControl;
+      }
+      return '';
+    })
+    .catch(error => {
+      console.error(error);
+      return '';
+    });
+}
