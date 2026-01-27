@@ -1,0 +1,22 @@
+api/conexion.php
+api/conexionEmpleado.php
+
+# Variables de entorno
+.env
+.env.*
+
+# Builds
+dist/
+build/
+out/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
+
+# Coverage / tests
+coverage/

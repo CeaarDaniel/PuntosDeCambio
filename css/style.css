@@ -1,0 +1,623 @@
+/*Estilos puntos de cambio*/
+    :root {
+          --primary-color: #2c3e50;
+          --secondary-color: #3498db;
+          --accent-color: #e74c3c;
+          --light-bg: #f8f9fa;
+          --card-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
+      margin: 0;
+      padding: 0;
+    }
+
+    /*Estilos de boton flotante*/
+    .btn-float {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background-color: var(--accent-color);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      z-index: 1000;
+      font-size: 1.8rem;
+      transition: all 0.3s;
+    }
+    
+    .btn-float:hover {
+      transform: scale(1.1);
+      background-color: #c0392b;
+      color: white;
+    }
+
+
+    /*Estilos de tablas */
+      .table-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+      }
+      
+      .table-header {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .table-title {
+        margin: 0;
+        font-size: 1.2rem;
+      }
+  /*Fin estilos de tablas*/
+
+/*Estilos para la transicion de ventanas*/
+    .animacion {
+        transition: transform 0.4s ease-in-out;
+    }
+
+    /*Transicion al cambiar de pagina con ajax*/
+    .ocultar-mostrar {
+        transform: scale(0);
+        transition: transform 0.4s ease-in-out;
+}
+/* Fin estilos para la transicion de ventanas*/
+
+
+
+    /*ESTILO DE LA BARRA DE NAVEGACION/SIDEBAR */
+      .sidebar {
+        width: 250px;
+        background-color: var(--primary-color);
+        color: white;
+        transition: all 0.3s;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+      }
+      
+      .sidebar-header {
+        padding: 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+      }
+      
+      .sidebar-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      
+      .sidebar-menu li {
+        margin: 0;
+      }
+      
+      .sidebar-menu a {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+        transition: all 0.3s;
+        border-left: 3px solid transparent;
+      }
+
+      a{
+        text-decoration: none;
+      }
+      
+      .sidebar-menu a:hover, .sidebar-menu a.active {
+        background-color : rgba(132, 132, 132, 0.61);
+        color: white;
+        border-left-color: var(--secondary-color);
+        font-weight: bold;
+      }
+      
+      .sidebar-menu i {
+        margin-right: 10px;
+        font-size: 1.2rem;
+        width: 20px;
+        text-align: center;
+      }
+    /*FIN ESTILO DE LA BARRA DE NAVEGACION/SIDEBAR */
+
+
+  /*Barra pricnipal de titulo*/    
+    .top-bar {
+      background-color: white;
+      padding: 15px 25px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .page-title{
+      font-size: clamp(1.3rem, 3vw, 4rem); 
+      transition: transform 0.4s ease-in-out;
+    }
+
+    /*Estilos del contenedor principal*/
+        .app-container {
+          display: flex;
+          min-height: 100vh;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+
+        /*Estilo del contenedor donde se renderiza el contenio dinamico de la pagina */
+        .content-area {
+          flex: 1;
+          padding: 25px;
+          overflow-y: auto;
+        }
+    /*Fin contenedor principal*/
+
+    /*Estilos de formulario*/
+        .form-container {
+          max-width: 800px;
+          margin: 0 auto;
+          background: white;
+          border-radius: 12px;
+          box-shadow: var(--card-shadow);
+          overflow: hidden;
+        }
+        
+        .form-header {
+          background: linear-gradient(135deg, var(--primary-color), #1a2530);
+          color: white;
+          padding: 20px 25px;
+        }
+        
+        .form-title {
+          margin: 0;
+          font-size: 1.5rem;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        
+        .form-body {
+          padding: 25px;
+        }
+        
+        .form-section {
+          margin-bottom: 25px;
+          padding-bottom: 20px;
+          border-bottom: 1px solid #eaeaea;
+        }
+        
+        .form-section:last-of-type {
+          border-bottom: none;
+          margin-bottom: 0;
+        }
+        
+        .form-label {
+          font-weight: 600;
+          color: var(--primary-color);
+          margin-bottom: 8px;
+        }
+        
+        .form-control-custom {
+          border: 2px solid #e9ecef;
+          border-radius: 8px;
+          padding: 10px 15px;
+          transition: all 0.3s;
+          font-size: 0.95rem;
+        }
+        
+        .form-control-custom:focus {
+          border-color: var(--secondary-color);
+          box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .input-group-custom {
+          position: relative;
+        }
+        
+        .input-group-custom .form-control-custom {
+          padding-right: 50px;
+        }
+        
+        .input-icon {
+          position: absolute;
+          right: 15px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #6c757d;
+          background: none;
+          border: none;
+          z-index: 5;
+        }
+        
+        .input-icon:hover {
+          color: var(--secondary-color);
+        }
+        
+        .form-textarea {
+          min-height: 120px;
+          resize: vertical;
+        }
+
+        .form-actions {
+          display: flex;
+          gap: 10px;
+          justify-content: flex-end;
+          margin-top: 25px;
+          padding-top: 20px;
+          border-top: 1px solid #eaeaea;
+        }
+          
+        .form-help {
+          font-size: 0.8rem;
+          color: #6c757d;
+          margin-top: 5px;
+        }
+
+        .required-field::after {
+          content: " *";
+          color: var(--accent-color);
+        }
+    /*Fin estilos de formulario*/
+
+    /*Estilo modal*/
+        .modal-header{
+          background: linear-gradient(135deg, var(--primary-color), #1a2530); 
+          color: white;
+        }
+    /*Fin estilo modal*/
+
+
+    /*Estilos de botones*/  
+        .btn-primary-custom {
+          background-color: var(--secondary-color);
+          border-color: var(--secondary-color);
+          color: white;
+        }
+        
+        .btn-primary-custom:hover {
+          background-color: #2980b9;
+          border-color: #2980b9;
+        }
+        
+        .btn-float {
+          position: fixed;
+          bottom: 30px;
+          right: 30px;
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          background-color: var(--accent-color);
+          color: white;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+          z-index: 1000;
+          font-size: 1.8rem;
+          transition: all 0.3s;
+        }
+        
+        .btn-float:hover {
+          transform: scale(1.1);
+          background-color: #c0392b;
+          color: white;
+        }
+
+        .btn-custom {
+          padding: 10px 20px;
+          border-radius: 8px;
+          font-weight: 600;
+          transition: all 0.3s;
+        }
+        
+        .btn-primary-custom {
+          background-color: var(--secondary-color);
+          border-color: var(--secondary-color);
+        }
+        
+        .btn-primary-custom:hover {
+          background-color: #2980b9;
+          border-color: #2980b9;
+          transform: translateY(-2px);
+        }
+        
+        .btn-outline-custom {
+          border: 2px solid #6c757d;
+          color: #6c757d;
+        }
+        
+        .btn-outline-custom:hover {
+          background-color: #6c757d;
+          border-color: #6c757d;
+          color: white;
+        }
+    /*Fin estilos de botones*/
+
+
+
+    /*Dashboard*/
+        .section-title {
+          color: var(--primary-color);
+          margin-bottom: 20px;
+          padding-bottom: 10px;
+          border-bottom: 2px solid var(--light-bg);
+          font-size: clamp(1rem, 3vw, 3rem);
+        }
+
+    /* Card Styles */
+        .card-option {
+          background: white;
+          border-radius: 10px;
+          padding: 25px 20px;
+          text-align: center;
+          box-shadow: var(--card-shadow);
+          transition: all 0.3s;
+          cursor: pointer;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          border: 1px solid #eaeaea;
+        }
+        
+        .card-option:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+          border-color: var(--secondary-color);
+        }
+
+        .card-icon {
+          font-size: 2.5rem;
+          color: var(--secondary-color);
+          margin-bottom: 15px;
+        }
+
+        .card-label {
+          font-weight: 600;
+          color: var(--primary-color);
+          font-size: 1.1rem;
+        }
+    /*Fin dashboard*/
+  
+  
+
+
+     /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      .app-container {
+        flex-direction: column;
+      }
+      
+      .sidebar {
+        width: 100%;
+        height: auto;
+      }
+      
+      .sidebar-menu {
+        display: flex;
+        overflow-x: auto;
+      }
+      
+      .sidebar-menu li {
+        flex: 1;
+        min-width: 120px;
+      }
+      
+      .sidebar-menu a {
+        padding: 15px 10px;
+        flex-direction: column;
+        text-align: center;
+        font-size: 0.85rem;
+      }
+      
+      .sidebar-menu i {
+        margin-right: 0;
+        margin-bottom: 5px;
+      }
+    }
+
+
+
+  /* Badge Styles Indicadores De Estatus */
+    .badge-custom {
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+    }
+    
+    .status-active {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    .status-pending {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+    
+    .status-expired {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+/*Fin estilos puntos de cambio*/
+
+
+
+
+/*
+:root {
+      --color-morado: #8760fa;
+      --color-azul: #66a0fe;
+      --color-naranja: #ffd6a5;
+      --color-bg: #f9f9fb;
+      --color-text: #333;
+      --color-card-bg: #fff;
+      --color-card-shadow: rgba(0, 0, 0, 0.05);
+    }
+
+    body {
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+     header {
+      background-color: var(--color-morado);
+      color: white;
+      padding: 1rem 2rem;
+      font-weight: 600;
+      font-size: 1.5rem;
+      text-align: center;
+      box-shadow: 0 2px 5px var(--color-card-shadow);
+    }
+*/
+     /*Boton flotante*
+        .btnfloat{
+          position: fixed;
+          bottom: 40px;
+          right: 40px;
+          transition: all 0.2s ease;
+        }
+
+        .btnfloat:hover{
+            transform: translateY(-7px);
+        }
+    /*Fin del boton flotante
+
+   /*Estilo de los contendores
+        .card-option {
+          background-color: var(--color-card-bg);
+          border-radius: 12px;
+          padding: 1.5rem 1rem;
+          box-shadow: 0 4px 8px var(--color-card-shadow);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          user-select: none;
+        }
+
+        .card-option:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 8px 16px var(--color-card-shadow);
+        }
+
+        .card-icon {
+          font-size: 3rem;
+          margin-bottom: 0.75rem;
+          color: var(--color-morado);
+          transition: all 0.2s ease;
+        }
+  /*Fin de los estilos de contenedor*/
+
+  /*Estilos layout
+        .body-drag {
+          margin: 0px;
+          padding: 0px;
+          height: 90vh;
+          width: 100%;
+          background: #f0f0f0;
+          user-select: none;
+          display: flex;
+        }
+
+        /* Contenedor padre con scroll 
+        .scroll-container {
+          width: 100%;
+          height: 100%;
+          position: relative; /* Muy importante para que los hijos absolute se posicionen respecto a este 
+          overflow-x: auto;
+          overflow-y: auto;
+          background: white;
+          border: 1px solid #ccc;
+          box-shadow: 0 0 10px rgba(0,0,0,0.1);
+          margin: 0px;
+          padding: 0px;
+        }
+
+        .container {
+          width: 150px;
+          height: 150px;
+          background-color: #4CAF50;
+          color: white;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          position: absolute;
+          font-size : 1rem;
+          border-radius: 20px;
+          cursor: grab;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+          transition: box-shadow 0.2s ease;
+          user-select: none;
+          overflow-y: auto;
+        }
+        
+        .container:active {
+          cursor: grabbing;
+          box-shadow: 0 8px 12px rgba(0,0,0,0.2);
+        }
+
+        .icon-btn {
+          background-color: var(--color-btn-bg);
+          border: none;
+          border-radius: 10px;
+          width: 48px;
+          height: 48px;
+          margin: 0.25rem 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 6px var(--color-btn-shadow);
+          transition: box-shadow 0.3s ease, transform 0.2s ease;
+          cursor: pointer;
+          color: var(--color-morado);
+          font-size: 1.5rem;
+          user-select: none;
+        }
+
+        .icon-btn:hover, .icon-btn:focus {
+          box-shadow: 0 6px 12px var(--color-btn-hover-shadow);
+          transform: translateY(-3px);
+          color: var(--color-azul);
+          outline: none;
+        }
+  /*Fin estilo layout
+
+
+
+
+
+  
+
+
+/*Este esilo no se usa pero puede servir para textos reponsivos
+   .card-label {
+      font-weight: 600;
+      font-size: 1.1rem;
+      text-align: center;
+      color: var(--color-text);
+    }
+*/
