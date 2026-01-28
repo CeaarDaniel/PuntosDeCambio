@@ -2,17 +2,17 @@
   let btnAsignarOperador = document.getElementById('btnAsignarOperador');
   let btnGuardarDisponible = document.getElementById('btnGuardarDisponible');
   let btnGuardarEdicionLinea = document.getElementById('btnGuardarEdicionLinea');
+  let confirmChange = document.getElementById('confirmChange');
 
 
- 
   let tablaPersonalNoAsignado = document.getElementById('tablaPersonalNoAsignado');
 
   //Inputs del modal asignar operador
   let nominaModalAsignar = document.getElementById('nominaModalAsignar')
+  let nominaPC = document.getElementById('nominaPC');
 
   document.getElementById('turnoasignar').value = $('#turnoLayout option:selected').text();
   document.getElementById('turnoAsignarPersonalDisponible').value =  $('#turnoLayout').val();
-
 
   // var turnoLinea = $('#turnoasignar').val()
   //$("#miSelect").val(turnoLinea);
@@ -399,12 +399,11 @@
 
 
         //Setear valores del formulario de registro de PC
-
           getNoControl().then(resultado => { document.getElementById('no_controlCambio').value = resultado;});
           document.getElementById('fechaHora_inicio').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
           document.getElementById('id_estacion').value = stationData.id;
           document.getElementById('nombre_estacion').value = stationData.name;
-
+          document.getElementById('turnoPuntoCambio').value =  $('#turnoLayout').val();
   
         //Modal creado registro de punto de cambio
             const stationModal = new bootstrap.Modal(document.getElementById('changeControlModal'));
@@ -718,23 +717,35 @@
         if (station) {
               // Contenido
               //station.querySelector('.station-header').textContent = 'Estación en uso';
-              station.querySelector('.station-name').textContent = newData.operator;
+
+              (newData.operator && newData.operator!= null && newData.operator !== '') 
+                      ? station.querySelector('.station-name').textContent = newData.operator : '';
 
               // Clases
-              station.classList.remove('station-color-7');
-              station.classList.add(newData.colorClass);
+              if(newData.colorClass && newData.colorClass!= null && newData.colorClass !== ''){
+                  station.classList.remove('station-color-7');
+                  station.classList.add(newData.colorClass);
+              }            
 
-              // Estado
-              const status = station.querySelector('.station-status');
-              status.classList.remove('status-pending');
-              status.classList.add(newData.status);
+              // Revisar esta
+              if(newData.status && newData.status!= null && newData.status !== ''){
+                    const status = station.querySelector('.station-status');
 
-              const operator = station.querySelector('.station-operator');
-              operator.innerHTML=`<img src="../img/personal/${newData.nomina}.jpg" alt="Foto del operador" 
-                                        style="width: 70px; height: 70px; border-radius: 10px; 
-                                              object-fit: cover; border: 3px solid #e9ecef; 
-                                              margin-bottom: 10px;">`;
+                    // Buscar todas las clases que comiencen con "status-"
+                    const clasesParaEliminar = Array.from(status.classList).filter(clase => clase.startsWith('status-'));
 
+                    // Eliminarlas
+                    clasesParaEliminar.forEach(clase => status.classList.remove(clase));
+                    status.classList.add(`status-${newData.status}`);
+              }
+
+              if(newData.nomina && newData.nomina!= null && newData.nomina !== '') {
+                    const operator = station.querySelector('.station-operator');
+                    operator.innerHTML=`<img src="../img/personal/${newData.nomina}.jpg" alt="Foto del operador" 
+                                              style="width: 70px; height: 70px; border-radius: 10px; 
+                                                    object-fit: cover; border: 3px solid #e9ecef; 
+                                                    margin-bottom: 10px;">`; 
+                }
               // Estilos (opcional)
               //station.style.border = '2px solid #4CAF50';
         } 
@@ -749,13 +760,14 @@
         let estation = stationsData.find(obj => obj.id === stationId);
 
         if (estation) {
-          estation.operator = newData.nombre;
-          //estation.name = 'Estación en uso';
-          estation.colorClass = newData.colorClass;
-          estation.nomina = newData.nomina;
-          estation.status = newData.status;
-        
+           (newData.operator) ? estation.operator = newData.operator : '';
+              //estation.name = 'Estación en uso';
+           (newData.colorClass) ? estation.colorClass = newData.colorClass : '';
+           (newData.status) ? estation.status = newData.status : '';
+           (newData.nomina) ? estation.nomina = newData.nomina : '';
         }
+
+        console.log(stationsData);  
     } 
 
     //Mostrar listado de estaciones
@@ -818,7 +830,7 @@
                     })
                     .then((response) => response.text())
                     .then((data) => {
-                          console.log(data);
+                  
                           data= JSON.parse(data)
                     
                         if(data.estatus=='ok')
@@ -826,6 +838,36 @@
                       
                       else{
                         nombreNoAsignado.value= ''; 
+                        console.log(data); 
+                      }
+                    })
+                    .catch((error) => {
+                      console.log(error);
+                });
+          }
+    })
+
+    nominaPC.addEventListener('change', function(){
+      let nombrePC = document.getElementById('nombrePC');
+
+        if(nominaPC && nominaPC !='') {
+            let formDataConsultarNombre = new FormData;
+            formDataConsultarNombre.append('nomina',nominaPC.value)
+            formDataConsultarNombre.append('opcion', 7)
+
+                fetch("../api/operacionesLinea.php", {
+                        method: "POST",
+                        body: formDataConsultarNombre,
+                    })
+                    .then((response) => response.text())
+                    .then((data) => {
+                          data= JSON.parse(data)
+                    
+                        if(data.estatus=='ok')
+                            nombrePC.value= data.nombre;
+                      
+                      else{
+                        nombrePC.value= ''; 
                         console.log(data); 
                       }
                     })
@@ -938,7 +980,7 @@
 
       newModal = new bootstrap.Modal(modalAsignarOperador);
       newModal.show();   
-}
+    }
 
     //Remover trabajador de la estacion
     btnRemoverTrabajadorPC.addEventListener('click', function(){
@@ -1024,26 +1066,74 @@
       }
     })
 
+    confirmChange.addEventListener('click', function(){
+      let registroCambioForm = document.getElementById('registroCambioForm');
+      let formDataPuntoCambio = new FormData;
+      let  idEstacion = document.getElementById('id_estacion').value;
 
+      if(!registroCambioForm.reportValidity()) return;
+
+      if(document.getElementById('nombrePC').value == '' || document.getElementById('nombrePC').value == null){
+            alert('No se encontro registro del empleado ingresado') 
+            return;
+      }
+
+      formDataPuntoCambio.append('nominaPC', document.getElementById('nominaPC').value);
+      formDataPuntoCambio.append('nombrePC', document.getElementById('nombrePC').value);
+      formDataPuntoCambio.append('tipoCambio', document.getElementById('tipo_cambio').value);
+      formDataPuntoCambio.append('fechaInicio', document.getElementById('fechaHora_inicio').value);
+      formDataPuntoCambio.append('turno', document.getElementById('turnoPuntoCambio').value);
+      formDataPuntoCambio.append('motivo', document.getElementById('motivo').value);
+      formDataPuntoCambio.append('idEstacion', idEstacion);
+      formDataPuntoCambio.append('codigoLinea', codigoLinea.value);
+      formDataPuntoCambio.append('opcion', 13);
+
+      fetch("../api/operacionesLinea.php", {
+                method: "POST",
+                body: formDataPuntoCambio,  
+            })
+            .then((response) => response.text())
+            .then((data) => { 
+                console.log(data);
+                data= JSON.parse(data)  
+                if(data.estatus=='ok'){ 
+                    alert(data.mensaje);
+                    actualizarEstacion(idEstacion, 
+                                        { 'nomina': document.getElementById('nominaPC').value, 
+                                          'operator': document.getElementById('nombrePC').value,
+                                          'colorClass': 'station-color-2',
+                                          'status' : 'occupied'
+                                        }
+                                      )
+                } 
+                else  alert(data.mensaje);
+            })
+            .catch((error) => {
+              console.log(error);
+        }); 
+    });
 
     //Funcion para obtener el numero de control del ultimo registro del punto de cambio
-function getNoControl() {
-  const formDataNoControles = new FormData();
-  formDataNoControles.append('opcion', 12);
+    function getNoControl() {
+      const formDataNoControles = new FormData();
+      formDataNoControles.append('opcion', 12);
 
-  return fetch("../api/operacionesLinea.php", {
-    method: "POST",
-    body: formDataNoControles,
-  })
-    .then(response => response.json())
-    .then(data => {
-      if (data.estatus === 'ok') {
-        return data.noControl;
-      }
-      return '';
-    })
-    .catch(error => {
-      console.error(error);
-      return '';
-    });
-}
+      return fetch("../api/operacionesLinea.php", {
+        method: "POST",
+        body: formDataNoControles,
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.estatus === 'ok') {
+            return data.noControl;
+          }
+          return '';
+        })
+        .catch(error => {
+          console.error(error);
+          return '';
+        });
+    }
+
+
+  

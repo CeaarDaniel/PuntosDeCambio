@@ -203,9 +203,7 @@ else
 
                 include('./conexionEmpleado.php');
 
-                        //Guardar la imagen del operador
-        
-                        // --- Obtener la foto del empleado ---
+                        //Guardar la imagen del trabajador
                         $sqlCheck = "SELECT No_Nomina as nomina, nombre, foto FROM empleado_mst WHERE No_Nomina = :nomina";
                         $stmtCheck = $connE->prepare($sqlCheck);
                         $stmtCheck->execute([':nomina' => $nomina]);
@@ -287,17 +285,34 @@ else
       $codigoLinea = $_POST['codigoLinea'];
 
         // Preparar la sentencia con parámetros
-        $sql= "SELECT E.id_estacion, E.nombre_estacion, EP.nomina, EP.nombre, E.codigo_linea, E.codigo_certificacion, E.posicion_x, E.posicion_y 
-                        FROM SPC_ESTACIONES E 
-                    LEFT JOIN (SELECT* from SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL) AS EP ON E.id_estacion = EP.id_estacion
-                WHERE codigo_linea= :codigoLinea ";
+        $sql= "SELECT E.id_estacion, E.nombre_estacion,
+                        CASE WHEN PC.nomina IS NULL THEN EP.nomina
+                            ELSE PC.nomina
+                        END AS nomina, 
+                        CASE  WHEN PC.nombre IS NULL THEN EP.nombre
+                            ELSE PC.nombre 
+                        END AS nombre, E.codigo_linea, E.codigo_certificacion, E.posicion_x, E.posicion_y, PC.estatusPC
+                                            FROM SPC_ESTACIONES E 
+                    LEFT JOIN (SELECT id_estacion, nomina, nombre from SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL) AS EP ON E.id_estacion = EP.id_estacion
+                    LEFT JOIN (select id_estacion, nomina, nombre, estatusPC from SPC_PUNTOS_CAMBIO where fechaHora_fin IS NULL) AS PC on E.id_estacion = PC.id_estacion
+                WHERE E.codigo_linea= :codigoLinea ";
 
         $stmt = $conn->prepare($sql);
         $response= array();
 
         // Ejecutar con los parámetros
         if($stmt->execute([':codigoLinea' => $codigoLinea])){
-            while($estacion= $stmt->fetch(PDO::FETCH_ASSOC))
+            while($estacion= $stmt->fetch(PDO::FETCH_ASSOC)){
+
+            if($estacion['estatusPC'] == '1') 
+                 $coloClass = 'station-color-2'; 
+
+            else  
+                if(!empty($estacion['nomina'])) $coloClass = 'station-color-1';
+            
+            else $coloClass = 'station-color-7';  
+            
+
                 $response[] = array( 'id' => $estacion['id_estacion'],
                                      'nomina' => $estacion['nomina'],
                                      'name' => $estacion['nombre_estacion'], 
@@ -306,8 +321,9 @@ else
                                      'certification' => $estacion['codigo_certificacion'], 
                                      'x' => $estacion['posicion_x'],
                                      'y' => $estacion['posicion_y'] ,
-                                     'colorClass' => !empty($estacion['nomina']) ? 'station-color-1' : 'station-color-7'   //1 asistencia, 3 falta, 2 o 6 punto de cambio
+                                     'colorClass' => $coloClass  //1 asistencia, 3 falta, 2 o 6 punto de cambio
                                    );
+            }
         }
 
         else 
@@ -646,6 +662,170 @@ else
             echo json_encode([
                 'estatus' => 'error',
                 'mensaje' => 'No se pudo generar el No. de Control.'
+            ]);
+        }
+    }
+
+//Registrar punto de cambio
+else 
+    if($opcion == '13'){
+        $idEstacion = !empty($_POST['idEstacion']) ? $_POST['idEstacion'] : null;
+        $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
+        $tipoCambio = !empty($_POST['tipoCambio']) ? $_POST['tipoCambio'] : null;
+        $nominaPC = !empty ($_POST['nominaPC']) ? $_POST['nominaPC'] : null;
+        $nombrePC = $_POST['nombrePC'] ?? null;
+        $fechaInicio = !empty($_POST['fechaInicio']) ? $_POST['fechaInicio'] :  null;
+        $turno = !empty($_POST['turno']) ? $_POST['turno'] : null;
+        $motivo = !empty($_POST['motivo']) ? $_POST['motivo'] : null;
+
+        $fechaHoraInicio = str_replace('T', ' ', $fechaInicio) . ':00';
+
+
+        // Validar que se recibieron todos los datos
+        if (!$codigoLinea || !$idEstacion || !$fechaInicio || !$turno || !$nominaPC || !$tipoCambio) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Faltan datos obligatorios.'
+            ]);
+            exit; 
+        }   
+
+        //Validar la existencia de un punto de cambio 
+            $sqlCheckPC = 'SELECT no_controlCambio from SPC_PUNTOS_CAMBIO WHERE id_estacion = :id_estacion and fechaHora_fin IS NULL';
+            $stmtCheckPC = $conn->prepare($sqlCheckPC);
+            $stmtCheckPC->execute([':id_estacion' => $idEstacion]);
+            $registroPC = $stmtCheckPC->fetch(PDO::FETCH_ASSOC);
+
+                if ($registroPC) {
+                    echo json_encode([
+                        'estatus' => 'error', 
+                        'mensaje' => 'Esta estacion cuenta con un punto de cambio abierto. Favor de cerrarlo antes de registrar uno nuevo.'
+                    ]);
+                    exit;
+                }
+
+        try { 
+            // Iniciar transacción
+            $conn->beginTransaction();
+
+            // Generar No. de Control
+            /* $sqlNoControl = "SELECT FORMAT(GETDATE(), 'yyyy/MM') + '/' + RIGHT(CAST((SELECT COUNT(*) + 1 FROM SPC_PUNTOS_CAMBIO WHERE FORMAT(fechaHora_inicio, 'yyyy/MM')  =  FORMAT(GETDATE(), 'yyyy/MM')) AS VARCHAR), 3) as no_control;"; */
+
+            $sqlNoControl = "SELECT FORMAT(GETDATE(), 'yyyy/MM') + '/' +
+                                    RIGHT(CAST( ISNULL( MAX( CAST( SUBSTRING(
+                                                            no_controlCambio,
+                                                            LEN(no_controlCambio) - CHARINDEX('/', REVERSE(no_controlCambio)) + 2,
+                                                            LEN(no_controlCambio)
+                                                        ) AS INT ) ), 0 ) + 1 AS VARCHAR), 3 ) AS no_control
+                                        FROM SPC_PUNTOS_CAMBIO WITH (UPDLOCK, HOLDLOCK)
+                                 WHERE fechaHora_inicio >= DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1)
+                                    AND fechaHora_inicio <  DATEADD(MONTH, 1,
+                                         DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1));";
+
+            $stmtNoControl = $conn->prepare($sqlNoControl);
+            $stmtNoControl->execute();
+            $noControlResult = $stmtNoControl->fetch(PDO::FETCH_ASSOC);
+
+            if($noControlResult === false) {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'No se pudo generar el No. de Control'
+                ]);
+                exit;
+            } 
+
+            else 
+                $noControl = $noControlResult['no_control'];
+            
+
+            // Preparar la sentencia con parámetros
+              $sql = "INSERT INTO SPC_PUNTOS_CAMBIO(no_controlCambio,
+                                                    fechaHora_inicio,
+                                                    motivo,
+                                                    tipo_cambio,
+                                                    codigo_linea,
+                                                    id_estacion,
+                                                    estatusPC,
+                                                    turno,
+                                                    nomina,
+                                                    nombre) 
+                                values ( :no_control, 
+                                         :fechaHora_inicio, 
+                                         :motivo, 
+                                         :tipoCambio, 
+                                         :codigo_linea, 
+                                         :id_estacion, 
+                                         '1', 
+                                         :turno, 
+                                         :nomina_operador,
+                                         :nombre)";
+
+            $stmt = $conn->prepare($sql);
+
+            // Ejecutar con los parámetros
+            $stmt->execute([
+                ':no_control' => $noControl,
+                ':fechaHora_inicio' => $fechaHoraInicio,
+                ':motivo' => $motivo,
+                ':tipoCambio' => $tipoCambio,
+                ':codigo_linea' => $codigoLinea,
+                ':id_estacion' => $idEstacion,
+                ':turno' => $turno,
+                ':nomina_operador' => $nominaPC, 
+                ':nombre' => $nombrePC
+            ]);
+
+            // Confirmar la transacción
+            $conn->commit();
+                    include('./conexionEmpleado.php');
+
+                        //Guardar la imagen del trabajador
+                        $sqlCheck = "SELECT No_Nomina as nomina, nombre, foto FROM empleado_mst WHERE No_Nomina = :nomina";
+                        $stmtCheck = $connE->prepare($sqlCheck);
+                        $stmtCheck->execute([':nomina' => $nominaPC]);
+                        $empleado = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+                        $nombre_archivo = ""; // Valor por defecto
+
+                        if ($empleado && !empty($empleado['foto'])) {
+                            // Detectar tipo de imagen
+                            $finfo = new finfo(FILEINFO_MIME_TYPE);
+                            $tipo_mime = $finfo->buffer($empleado['foto']);
+
+                            // Mapear extensión según MIME type
+                            $extensiones = [
+                                'image/jpeg' => 'jpg',
+                                'image/jpg' => 'jpg',
+                                'image/png' => 'png',
+                                'image/gif' => 'gif',
+                                'image/bmp' => 'bmp'
+                            ];
+
+                            $extension = $extensiones[$tipo_mime] ?? 'bin';
+                            $nombre_archivo = $nominaPC . "." . $extension;
+                              $ruta = "../img/personal/" . $nombre_archivo;
+
+                            // Guardar la imagen en el directorio
+                            file_put_contents($ruta, $empleado['foto']);
+                        }
+
+
+            echo json_encode([
+                'estatus' => 'ok',
+                'mensaje' => 'Punto de cambio registrado correctamente.',
+            ]);
+
+        } catch (PDOException $e) {
+            // Si ocurre algún error, revertir la transacción
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+
+            // Respuesta JSON con el error
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Error al registrar el punto de cambio.',
+                'detalle' => $e->getMessage()
             ]);
         }
     }

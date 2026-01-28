@@ -137,3 +137,5 @@
 
 //Dar opcion de registrar a un operador sin punto de cambio o no si no existe la ultima fecha de operacion en la linea
 //esto para al inicio cunado se empieza a registrar a todo el personaol 
+//Aggregar id a la tabla de SPC_PUNTO_CAMBIO
+//No limpiar todos los campos de los formularios solo los que son ingresados por el usuario

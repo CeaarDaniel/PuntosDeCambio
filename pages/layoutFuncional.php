@@ -1081,9 +1081,32 @@
 
                         <!-- Información del Cambio -->
                         <div class="form-section">
-                          <h4 class="section-subtitle">
-                            <i class="bi bi-gear"></i>Detalles del Cambio
-                          </h4>
+                          <div class="row">
+                              <div class="col-md-6 mb-3">
+                                <label for="nominaPC" class="form-label required-field">
+                                  <i class="bi bi-clock"></i>No. Reloj / ID Empleado
+                                </label>
+                                <div class="input-group-custom">
+                                  <input type="number" min="0" step="1" class="form-control form-control-custom" id="nominaPC" placeholder="Ej: 256" required>
+                                  <button type="button" class="input-icon" id="searchEmployee">
+                                    <i class="bi bi-search"></i>
+                                  </button>
+                                </div>
+                                <div class="form-help">Ingresa el número de reloj o ID único del empleado</div>
+                              </div>
+                              
+                              <div class="col-md-6 mb-3">
+                                <label for="nombrePC" class="form-label">
+                                  <i class="bi bi-person"></i> Nombre del trabajador
+                                </label>
+                                <div class="input-group-custom">
+                                  <input type="text" class="form-control form-control-custom" id="nombrePC" placeholder="Selecciona o busca un operador" readonly>
+                                  <button type="button" class="input-icon">
+                                    <i class="bi bi-people"></i>
+                                  </button>
+                                </div>
+                              </div>
+                          </div>
 
                           <div class="row">
                             <div class="col-md-6 mb-3">
@@ -1116,13 +1139,24 @@
                               </label>
                               <input type="datetime-local" class="form-control form-control-custom" id="fechaHora_inicio" required>
                             </div>
+
+                            <!--TURNO PUNTO DE CAMBIO -->
+                            <div class="col-md-6 mb-3">
+                                <label for="turnoPuntoCambio" class="form-label required-field">
+                                    <i class="bi bi-clock-history"></i>Turno</label>
+                                    <select id="turnoPuntoCambio" class="form-select" required>
+                                      <option value="" selected>--- Selecciona un turno ---</option>
+                                      <option value="1">Turno 1</option>
+                                      <option value="2">Turno 2</option>
+                                    </select>
+                            </div>
                           </div>
 
                           <div class="mb-3">
-                            <label for="motivo" class="form-label required-field">
+                            <label for="motivo" class="form-label">
                               <i class="bi bi-chat-left-text"></i> Descripcion
                             </label>
-                            <textarea class="form-control form-control-custom" id="motivo" rows="3" placeholder="Descripcion del punto de cambio" required></textarea>
+                            <textarea class="form-control form-control-custom" id="motivo" rows="3" placeholder="Descripcion del punto de cambio" ></textarea>
                           </div>
 
                           <div class="row">
@@ -1145,7 +1179,7 @@
                       <!-- Footer del Modal con Navegación -->
                       <div class="modal-footer">
                         <button type="button" class="btn btn-success" id="confirmChange">
-                          <i class="bi bi-check-lg"></i> Confirmar Cambio
+                          <i class="bi bi-check-lg"></i> Confirmar Registro
                         </button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                       </div>
