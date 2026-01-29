@@ -139,3 +139,8 @@
 //esto para al inicio cunado se empieza a registrar a todo el personaol 
 //Aggregar id a la tabla de SPC_PUNTO_CAMBIO
 //No limpiar todos los campos de los formularios solo los que son ingresados por el usuario
+
+//revisar la atomicidad el no control generado para el punto de cambio
+
+
+//Tal vez a futuro seria buen o agregar una opcion que diga mover operaedor de estacion

@@ -3,6 +3,7 @@
   let btnGuardarDisponible = document.getElementById('btnGuardarDisponible');
   let btnGuardarEdicionLinea = document.getElementById('btnGuardarEdicionLinea');
   let confirmChange = document.getElementById('confirmChange');
+  let btnConfirmClose = document.getElementById('btnConfirmClose');
 
 
   let tablaPersonalNoAsignado = document.getElementById('tablaPersonalNoAsignado');
@@ -404,6 +405,9 @@
           document.getElementById('id_estacion').value = stationData.id;
           document.getElementById('nombre_estacion').value = stationData.name;
           document.getElementById('turnoPuntoCambio').value =  $('#turnoLayout').val();
+
+        //Setear input de id del punto de cambio en el formulario de cierre de PC
+          document.getElementById('idPC').value = stationData.idPC || '';
   
         //Modal creado registro de punto de cambio
             const stationModal = new bootstrap.Modal(document.getElementById('changeControlModal'));
@@ -594,41 +598,37 @@
       formDataEstacion.append("x", 0);
       formDataEstacion.append("y", 0);
 
-
           //console.log(certrificacionF);
-      if (letstationForm.reportValidity()) {
-          fetch("../api/operacionesLinea.php", {
-                  method: "POST",
-                  body: formDataEstacion,
-              })
-              .then((response) => response.text())
-              .then((data) => {
-              
-                  console.log(data);
-                  data= JSON.parse(data)
-              
-                  if(data.status=='ok'){
-                      alert(data.mensaje);
-                      console.log(data);
-                      
-                      document.getElementById('stationForm').reset();
+        if (letstationForm.reportValidity()) {
+            fetch("../api/operacionesLinea.php", {
+                    method: "POST",
+                    body: formDataEstacion,
+                })
+                .then((response) => response.text())
+                .then((data) => {
+                    console.log(data);
+                    data= JSON.parse(data)
+                
+                    if(data.status=='ok'){
+                        alert(data.mensaje);
+                        console.log(data);
+                        document.getElementById('stationForm').reset();
 
-                      //Ocurtar modal
-                      let modalAgregarEstacion = bootstrap.Modal.getInstance(document.getElementById('modalAgregarEstacion'));
-                      modalAgregarEstacion.hide();
+                        //Ocurtar modal
+                        let modalAgregarEstacion = bootstrap.Modal.getInstance(document.getElementById('modalAgregarEstacion'));
+                        modalAgregarEstacion.hide();
 
-                      stationsData.push(data.dataEstacion);
-                      createStation(data.dataEstacion,workspaceGrid)
-                      listarEstaciones();
-                  }
+                        stationsData.push(data.dataEstacion);
+                        createStation(data.dataEstacion,workspaceGrid)
+                        listarEstaciones();
+                    }
 
-                  else alert(data.mensaje)
-              })
-              .catch((error) => {
-                console.log(error);
-          });
-      }
-
+                    else alert(data.mensaje)
+                })
+                .catch((error) => {
+                  console.log(error);
+            });
+        }
     }
 
     //Asignar un operador a una linea
@@ -1133,6 +1133,61 @@
           console.error(error);
           return '';
         });
+    }
+
+    //funcion para cerrar el punto de cambio
+    btnConfirmClose.addEventListener('click', function(){
+        let formDataCerrarPC = new FormData;
+        let idPC = document.getElementById('idPC');
+        let idEstacion = document.getElementById('idEstacionModalPC').value;
+        let cierreControlCambioForm = document.getElementById('cierreControlCambioForm')
+
+        if(idPC.value == '' || idPC.value == null){
+            alert('No hay un punto de cambio activo en esta estación');
+            return;
+        }
+
+        if(!cierreControlCambioForm.reportValidity()) return;
+
+        formDataCerrarPC.append('opcion', 14);
+        formDataCerrarPC.append('idEstacion', idEstacion);
+        formDataCerrarPC.append('idPC', idPC.value);
+        formDataCerrarPC.append('notasAdicionales', document.getElementById('notasAdicionales').value);
+        formDataCerrarPC.append('fechaCierre', document.getElementById('fechaCierre').value); 
+
+          fetch("../api/operacionesLinea.php", {
+                  method: "POST",
+                  body: formDataCerrarPC,
+              })
+              .then((response) => response.text())
+              .then((data) => {
+
+                console.log(data);
+                  data= JSON.parse(data)
+                  if(data.estatus=='ok'){ 
+                      alert(data.mensaje);
+                      //Actualizar informacion de la estacion
+                       getEstacion(idEstacion);
+                  }
+
+                    else  alert(data.mensaje);
+
+                    }).catch((error) => {
+                      console.log(error);
+            });
+      })
+
+    //Funcion para obtener datos de una estacion en especifico. 
+    function getEstacion(id){
+        //Esta funcion sirve para obtener los datos de una estaciones desde el servidor 
+        // despues de haber modificado sus valores en la base de datos
+        //Por ejemplo, si se finaliza el puto de cambio hay que cambiar el usuario del PC al usuario que esta
+        //asignado en la estacion, pero esta informaion no esta en el data del listado de las estaciones, por 
+        //ya que este valor se sobreescribe si hay un punto de cambio activo y muestra la inforacion de el usuario
+        //registrado en el pc, por lo que al finalizar el punto del cambio no se hace algun registro de un nuevo usuari
+        //con el que se pueda sustituir la informacion de la estacion, por lo que es necesario hacer una consulta a la BD
+        //para traer la informacion de especifica de esa estacion 
+
     }
 
 

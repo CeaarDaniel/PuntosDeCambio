@@ -60,7 +60,6 @@
           <!-- IDENTIFICADOR DE LA LINEA PARA EXTRAER LOS DATOS VISIBLES -->
             <input type="hidden" id="codigoLinea" value="<?php echo $codigo?>">
             <input type="hidden" id="nombreLinea" value="<?php echo $nombre?>">
-
         </div>
        
         <div class="layout-controls">
@@ -1275,157 +1274,208 @@
                   </div>
                 <!--Fin  Informacion del personal asignado-->
 
-                <!-- Formulario de liberacion de punto de cambio -->
+                <!-- Contenedor de liberacion de punto de cambio -->
                   <div id="contLiberarPC" class="fade-page d-none" style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border-left: 4px solid #000000; margin-bottom: 30px;">
-                         <!-- Información del Cambio -->
-                          <div class="info-card">
-                            <h6 class="info-title">
-                              <i class="bi bi-info-circle"></i>
-                              Información del Control de Cambio
-                            </h6>
+
+                      <div class="form-section">
+                        <h4 class="section-title justify-content-center">
+                            <i class="bi bi-unlock"></i>  CIERRE DEL PUNTO DE CAMBIO
+                        </h4>
+                      </div>
+
+                      <!-- Información del Cambio -->
+                      <div class="info-card">
+                        <h6 class="info-title">
+                          <i class="bi bi-info-circle"></i>
+                          Información del Control de Cambio
+                        </h6>
+                        <div class="row">
+                          <div class="col-md-6">
+                            <div class="info-item">
+                              <span class="info-label">Control No:</span>
+                              <span class="info-value">CC-2025-001</span>
+                            </div>
+                            <div class="info-item">
+                              <span class="info-label">Operador:</span>
+                              <span class="info-value">Juan Pérez</span>
+                            </div>
+                            <div class="info-item">
+                              <span class="info-label">Estación:</span>
+                              <span class="info-value">Estación 02</span>
+                            </div>
+                          </div>
+                          <div class="col-md-6">
+                            <div class="info-item">
+                              <span class="info-label">Inicio:</span>
+                              <span class="info-value">15/11/2025 08:30</span>
+                            </div>
+                            <div class="info-item">
+                              <span class="info-label">Duración:</span>
+                              <span class="info-value">3 días</span>
+                            </div>
+                            <div class="info-item">
+                              <span class="info-label">Estado:</span>
+                              <span class="info-value"><span class="badge bg-warning">En Proceso</span></span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Formulario de cierre de punto de cambio-->
+                      <div class= "decision-option option-close">
+                        <form class="form" id="cierreControlCambioForm">
+
+                            <!--ID del punto de cambio-->
+                            <input type="hidden" name="idPC" id="idPC">
+
+                            <!--Fecha de cierre del punto de cambio-->
                             <div class="row">
                               <div class="col-md-6">
-                                <div class="info-item">
-                                  <span class="info-label">Control No:</span>
-                                  <span class="info-value">CC-2025-001</span>
-                                </div>
-                                <div class="info-item">
-                                  <span class="info-label">Operador:</span>
-                                  <span class="info-value">Juan Pérez</span>
-                                </div>
-                                <div class="info-item">
-                                  <span class="info-label">Estación:</span>
-                                  <span class="info-value">Estación 02</span>
-                                </div>
-                              </div>
-                              <div class="col-md-6">
-                                <div class="info-item">
-                                  <span class="info-label">Inicio:</span>
-                                  <span class="info-value">15/11/2025 08:30</span>
-                                </div>
-                                <div class="info-item">
-                                  <span class="info-label">Duración:</span>
-                                  <span class="info-value">3 días</span>
-                                </div>
-                                <div class="info-item">
-                                  <span class="info-label">Estado:</span>
-                                  <span class="info-value"><span class="badge bg-warning">En Proceso</span></span>
-                                </div>
+                                <label for="fechaCierre" class="form-label fw-bold">Fecha de Cierre</label>
+                                <input type="datetime-local" class="form-control form-control-custom" id="fechaCierre" required>
                               </div>
                             </div>
-                          </div>
 
-                          <!-- Sección de Decisión -->
-                          <div class="decision-section">
-                            <h4 class="decision-title">
-                              <i class="bi bi-clipboard-check me-2"></i>
-                              Juicio para Cerrar el Control de Cambio
-                            </h4>
+                            <!-- Notas Adicionales -->
+                            <div class="mt-4">
+                              <label for="notasAdicionales" class="form-label fw-bold">
+                                <i class="bi bi-chat-text me-2"></i>Notas Adicionales
+                              </label>
+                              <textarea class="form-control form-control-custom" id="notasAdicionales" rows="3" placeholder="Agregue cualquier observación o comentario adicional sobre el cierre del control de cambio..."></textarea>
+                            </div>
+
+                            <!--FIRMAS PARA EL CIERRE DEL PC -->
+                              <div class="row mt-4">
+                                <div class="col-md-6 mb-3">
+                                  <div class="signature-box">
+                                    <div class="signature-label">Firma de Utility/Líder</div>
+                                    <div class="signature-hint">Haga clic para firmar</div>
+                                    <i class="bi bi-pen text-muted mt-2"></i>
+                                  </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                  <div class="signature-box">
+                                    <div class="signature-label">Firma de Supervisor</div>
+                                    <div class="signature-hint">Haga clic para firmar</div>
+                                    <i class="bi bi-pen text-muted mt-2"></i>
+                                  </div>
+                                </div>
+                              </div>
+                        </form>
+                      </div>
+
+                      <!-- Sección de Decisión 
+                        <div class="decision-section">
+                          <h4 class="decision-title">
+                            <i class="bi bi-clipboard-check me-2"></i>
+                            Juicio para Cerrar el Control de Cambio
+                          </h4>
+                          
+                          <Opción Cerrar
+                          <div class="decision-option option-close" id="optionClose">
+                            <div class="option-header">
+                              <div class="option-icon">
+                                <i class="bi bi-check-circle-fill"></i>
+                              </div>
+                              <div>
+                                <h5 class="option-title">Cerrar Control de Cambio</h5>
+                                <p class="option-description">El operador ha completado satisfactoriamente el período de prueba y está listo para operar de forma independiente.</p>
+                              </div>
+                            </div>
                             
-                            <!-- Opción Cerrar -->
-                            <div class="decision-option option-close" id="optionClose">
-                              <div class="option-header">
-                                <div class="option-icon">
-                                  <i class="bi bi-check-circle-fill"></i>
-                                </div>
-                                <div>
-                                  <h5 class="option-title">Cerrar Control de Cambio</h5>
-                                  <p class="option-description">El operador ha completado satisfactoriamente el período de prueba y está listo para operar de forma independiente.</p>
-                                </div>
+                            <div class="option-content">
+                              <div class="mb-3">
+                                <label for="contramedidasCerrar" class="form-label fw-bold">Contramedidas Aplicadas</label>
+                                <textarea class="form-control form-control-custom" id="contramedidasCerrar" rows="3" placeholder="Describa las contramedidas implementadas durante el período de prueba..."></textarea>
                               </div>
                               
-                              <div class="option-content">
-                                <div class="mb-3">
-                                  <label for="contramedidasCerrar" class="form-label fw-bold">Contramedidas Aplicadas</label>
-                                  <textarea class="form-control form-control-custom" id="contramedidasCerrar" rows="3" placeholder="Describa las contramedidas implementadas durante el período de prueba..."></textarea>
-                                </div>
-                                
-                                <div class="row">
-                                  <div class="col-md-6">
-                                    <label for="fechaCierre" class="form-label fw-bold">Fecha de Cierre</label>
-                                    <input type="date" class="form-control form-control-custom" id="fechaCierre">
-                                  </div>
+                              <div class="row">
+                                <div class="col-md-6">
+                                  <label for="fechaCierre" class="form-label fw-bold">Fecha de Cierre</label>
+                                  <input type="date" class="form-control form-control-custom" id="fechaCierre">
                                 </div>
                               </div>
                             </div>
+                          </div>
+                          
+                          Opción Continuar 
+                          <div class="decision-option option-continue" id="optionContinue">
+                            <div class="option-header">
+                              <div class="option-icon">
+                                <i class="bi bi-arrow-clockwise"></i>
+                              </div>
+                              <div>
+                                <h5 class="option-title">Continuar Control de Cambio</h5>
+                                <p class="option-description">Se requiere más tiempo de supervisión antes de que el operador pueda trabajar de forma independiente.</p>
+                              </div>
+                            </div>
                             
-                            <!-- Opción Continuar -->
-                            <div class="decision-option option-continue" id="optionContinue">
-                              <div class="option-header">
-                                <div class="option-icon">
-                                  <i class="bi bi-arrow-clockwise"></i>
-                                </div>
-                                <div>
-                                  <h5 class="option-title">Continuar Control de Cambio</h5>
-                                  <p class="option-description">Se requiere más tiempo de supervisión antes de que el operador pueda trabajar de forma independiente.</p>
-                                </div>
+                            <div class="option-content">
+                              <div class="mb-3">
+                                <label for="contramedidasContinuar" class="form-label fw-bold">Contramedidas Adicionales</label>
+                                <textarea class="form-control form-control-custom" id="contramedidasContinuar" rows="3" placeholder="Describa las contramedidas adicionales que se implementarán..."></textarea>
                               </div>
                               
-                              <div class="option-content">
-                                <div class="mb-3">
-                                  <label for="contramedidasContinuar" class="form-label fw-bold">Contramedidas Adicionales</label>
-                                  <textarea class="form-control form-control-custom" id="contramedidasContinuar" rows="3" placeholder="Describa las contramedidas adicionales que se implementarán..."></textarea>
+                              <div class="row">
+                                <div class="col-md-6">
+                                  <label for="fechaContinuar" class="form-label fw-bold">Fecha de Revisión</label>
+                                  <input type="date" class="form-control form-control-custom" id="fechaContinuar">
                                 </div>
-                                
-                                <div class="row">
-                                  <div class="col-md-6">
-                                    <label for="fechaContinuar" class="form-label fw-bold">Fecha de Revisión</label>
-                                    <input type="date" class="form-control form-control-custom" id="fechaContinuar">
-                                  </div>
-                                  <div class="col-md-6">
-                                    <label for="diasContinuar" class="form-label fw-bold">Días Adicionales</label>
-                                    <input type="number" class="form-control form-control-custom" id="diasContinuar" min="1" max="30" placeholder="Número de días">
-                                  </div>
+                                <div class="col-md-6">
+                                  <label for="diasContinuar" class="form-label fw-bold">Días Adicionales</label>
+                                  <input type="number" class="form-control form-control-custom" id="diasContinuar" min="1" max="30" placeholder="Número de días">
                                 </div>
                               </div>
                             </div>
                           </div>
+                        </div>
 
-                          <!-- Sección de Firmas -->
-                          <div class="signature-section">
-                            <h5 class="signature-title">
-                              <i class="bi bi-pen-fill me-2"></i>
-                              Autorizaciones Requeridas
-                            </h5>
-                            
-                            <div class="row">
-                              <div class="col-md-6 mb-3">
-                                <div class="signature-box">
-                                  <div class="signature-label">Firma de Utility/Líder</div>
-                                  <div class="signature-hint">Haga clic para firmar</div>
-                                  <i class="bi bi-pen text-muted mt-2"></i>
-                                </div>
+                        Sección de Firmas 
+                        <div class="signature-section">
+                          <h5 class="signature-title">
+                            <i class="bi bi-pen-fill me-2"></i>
+                            Autorizaciones Requeridas
+                          </h5>
+                          
+                          <div class="row">
+                            <div class="col-md-6 mb-3">
+                              <div class="signature-box">
+                                <div class="signature-label">Firma de Utility/Líder</div>
+                                <div class="signature-hint">Haga clic para firmar</div>
+                                <i class="bi bi-pen text-muted mt-2"></i>
                               </div>
-                              <div class="col-md-6 mb-3">
-                                <div class="signature-box">
-                                  <div class="signature-label">Firma de Supervisor</div>
-                                  <div class="signature-hint">Haga clic para firmar</div>
-                                  <i class="bi bi-pen text-muted mt-2"></i>
-                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                              <div class="signature-box">
+                                <div class="signature-label">Firma de Supervisor</div>
+                                <div class="signature-hint">Haga clic para firmar</div>
+                                <i class="bi bi-pen text-muted mt-2"></i>
                               </div>
                             </div>
                           </div>
+                        </div>
 
-                          <!-- Notas Adicionales -->
-                          <div class="mt-4">
-                            <label for="notasAdicionales" class="form-label fw-bold">
-                              <i class="bi bi-chat-text me-2"></i>Notas Adicionales
-                            </label>
-                            <textarea class="form-control form-control-custom" id="notasAdicionales" rows="3" placeholder="Agregue cualquier observación o comentario adicional sobre el cierre del control de cambio..."></textarea>
-                          </div>
+                        Notas Adicionales
+                        <div class="mt-4">
+                          <label for="notasAdicionales" class="form-label fw-bold">
+                            <i class="bi bi-chat-text me-2"></i>Notas Adicionales
+                          </label>
+                          <textarea class="form-control form-control-custom" id="notasAdicionales" rows="3" placeholder="Agregue cualquier observación o comentario adicional sobre el cierre del control de cambio..."></textarea>
+                        </div>
+                      -->
 
-                          <!-- Footer del Modal -->
-                          <div class="modal-footer">
-                            <button type="button" class="btn btn-close-custom" data-bs-dismiss="modal">
-                              <i class="bi bi-x-circle me-2"></i>Cancelar
-                            </button>
-                            <button type="button" class="btn btn-confirm-custom d-none" id="btnConfirmClose">
-                              <i class="bi bi-check-lg me-2"></i>Confirmar Cierre
-                            </button>
-                            <button type="button" class="btn btn-continue-custom d-none" id="btnConfirmContinue">
-                              <i class="bi bi-arrow-clockwise me-2"></i>Continuar Control
-                            </button>
-                          </div>
+                      <!-- Footer del Modal -->
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-close-custom" data-bs-dismiss="modal">
+                          <i class="bi bi-x-circle me-2"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-confirm-custom" id="btnConfirmClose">
+                          <i class="bi bi-check-lg me-2"></i>Cerrar punto de cambio
+                        </button>
+                        <button type="button" class="btn btn-continue-custom d-none" id="btnConfirmContinue">
+                          <i class="bi bi-arrow-clockwise me-2"></i>Continuar Control
+                        </button>
+                      </div>
                   </div>
                 <!-- Fin Formulario de liberacion -->
             </div>

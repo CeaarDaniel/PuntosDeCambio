@@ -66,7 +66,6 @@ if($opcion=='1') {
     }
 }
 
-
 //REGISTRO DE UNA NUEVA ESTACION
 else 
     if($opcion=='2'){
@@ -119,12 +118,12 @@ else
                 'mensaje' => 'Registro insertado correctamente.',
                 'dataEstacion' => [ 'id' => $idInsertado, 
                                      'name'=> $nombreEstacion, 
-                                     'operator' => 'Juan Pérez', 
-                                     'status' => 'occupied', 
+                                     'operator' => 'No asignado', 
+                                     'status' => 'pending', 
                                      'certification'=> $certificacion, 
                                      'x' => $x, 
                                      'y'=> $y, 
-                                     'colorClass'=> 'station-color-1' ]
+                                     'colorClass'=> 'station-color-7' ]
             ]);
 
         } catch (PDOException $e) {
@@ -291,10 +290,10 @@ else
                         END AS nomina, 
                         CASE  WHEN PC.nombre IS NULL THEN EP.nombre
                             ELSE PC.nombre 
-                        END AS nombre, E.codigo_linea, E.codigo_certificacion, E.posicion_x, E.posicion_y, PC.estatusPC
+                        END AS nombre, E.codigo_linea, E.codigo_certificacion, E.posicion_x, E.posicion_y, PC.estatusPC, PC.idPC
                                             FROM SPC_ESTACIONES E 
                     LEFT JOIN (SELECT id_estacion, nomina, nombre from SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL) AS EP ON E.id_estacion = EP.id_estacion
-                    LEFT JOIN (select id_estacion, nomina, nombre, estatusPC from SPC_PUNTOS_CAMBIO where fechaHora_fin IS NULL) AS PC on E.id_estacion = PC.id_estacion
+                    LEFT JOIN (select idPC, id_estacion, nomina, nombre, estatusPC from SPC_PUNTOS_CAMBIO where fechaHora_fin IS NULL) AS PC on E.id_estacion = PC.id_estacion
                 WHERE E.codigo_linea= :codigoLinea ";
 
         $stmt = $conn->prepare($sql);
@@ -321,7 +320,9 @@ else
                                      'certification' => $estacion['codigo_certificacion'], 
                                      'x' => $estacion['posicion_x'],
                                      'y' => $estacion['posicion_y'] ,
-                                     'colorClass' => $coloClass  //1 asistencia, 3 falta, 2 o 6 punto de cambio
+                                     'colorClass' => $coloClass,  //1 asistencia, 3 falta, 2 o 6 punto de cambio
+                                     'idPC' => $estacion['idPC']
+                                     //'estatusPC' => $estacion['estatusPC']
                                    );
             }
         }
@@ -825,6 +826,82 @@ else
             echo json_encode([
                 'estatus' => 'error',
                 'mensaje' => 'Error al registrar el punto de cambio.',
+                'detalle' => $e->getMessage()
+            ]);
+        }
+    }
+
+//Cerrar el punto de cambio
+else 
+    if($opcion=='14'){
+        $idEstacion = !empty($_POST['idEstacion']) ? $_POST['idEstacion'] : null;
+        $fechaFin = !empty($_POST['fechaCierre']) ? $_POST['fechaCierre'] : null;
+        $comentarios = $_POST['notasAdicionales'] ?? null;
+        $idPC = $_POST['idPC'] ?? null;
+
+        $fechaCierre = str_replace('T', ' ', $fechaFin) . ':00';
+
+        // Validar que se recibieron todos los datos
+        if (!$idEstacion || !$fechaFin || !$idPC) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Faltan datos obligatorios.'
+            ]);
+            exit; 
+        }   
+
+        try { 
+            // Iniciar transacción
+            $conn->beginTransaction();
+
+            // Preparar la sentencia con parámetros
+              $sql = "UPDATE SPC_PUNTOS_CAMBIO 
+                        SET fechaHora_fin = :fechaHora_fin,
+                            estatusPC = '3'
+                    WHERE idPC = :idPC 
+                        AND fechaHora_fin IS NULL";
+
+            $stmt = $conn->prepare($sql);
+
+            // Ejecutar con los parámetros
+            $stmt->execute([
+                ':fechaHora_fin' => $fechaCierre,
+                ':idPC' => $idPC
+            ]);
+
+
+            //Insertar datos del cierre en la tabla de PC_CIERRE
+            $sqlCierre = "INSERT INTO SPC_CIERRE_PC (idPC, fechaCierre, comentarios) 
+                            VALUES (:idPC, :fechaCierre, :comentarios)";
+
+            $stmtCierre = $conn->prepare($sqlCierre);
+
+
+            // Ejecutar con los parámetros
+            $stmtCierre->execute([
+                ':idPC' => $idPC,
+                ':fechaCierre' => $fechaCierre,
+                ':comentarios' => $comentarios
+            ]);
+
+            // Confirmar la transacción
+            $conn->commit();
+
+            echo json_encode([
+                'estatus' => 'ok',
+                'mensaje' => 'Punto de cambio cerrado correctamente.',
+            ]);
+
+        } catch (PDOException $e) {
+            // Si ocurre algún error, revertir la transacción
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+
+            // Respuesta JSON con el error
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Error al cerrar el punto de cambio.',
                 'detalle' => $e->getMessage()
             ]);
         }
