@@ -906,4 +906,40 @@ else
             ]);
         }
     }
+
+//Consulta para obtener los datos de una sola estacion
+
+else 
+    if($opcion=='15'){
+        $idEstacion = $_POST['idEstacion'] ?? null;
+
+        // Validar que se recibieron todos los datos
+        if (!$idEstacion) {
+            echo json_encode([
+                'status' => 'error',
+                'mensaje' => 'Faltan datos obligatorios.'
+            ]);
+            exit; 
+        }
+
+        // Preparar la sentencia con parámetros
+        $sql= "SELECT id_estacion, nombre_estacion, descripcion, requiere_certificacion, codigo_certificacion, posicion_x, posicion_y, codigo_linea 
+                FROM SPC_ESTACIONES 
+                WHERE id_estacion= :idEstacion ";
+
+        $stmt = $conn->prepare($sql);
+        $response= array();
+
+        // Ejecutar con los parámetros
+        if($stmt->execute([':idEstacion' => $idEstacion])){
+            if($estacion= $stmt->fetch(PDO::FETCH_ASSOC)){
+
+                $response = $estacion;
+            }
+        }
+
+        else 
+            $response = $stmt->errorInfo()[2];
+
+    }
 ?>
