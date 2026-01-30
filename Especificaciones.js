@@ -106,8 +106,6 @@
     --mostrar en el el layout algun indicador si hay una persona asignada en la estacion, si falto, si hay un punto de cabio o una asistencia, puede ser con algun color en la estacion
 */  
 
-//Registro de punto de cambio 
-
 //Registro de asistencia
 //Cambio de turno
 
@@ -144,3 +142,15 @@
 
 
 //Tal vez a futuro seria buen o agregar una opcion que diga mover operaedor de estacion
+//Modifcar el codigo para generar el consecutivo de PC para que sea por linea y no uno general
+//Modificar la estructura de la tabla para cambiar la clave primaria y agregar un id en vez del consecutivo como clave
+//Agregar opcion para consultar el acomodo del layout guardado por dia o fecha
+
+
+//El codigo remueve al trabajador que aparece en la estacion aunque no haya alguina operador asignado pero 
+// si esta registrado el punto de camvio, hay que corregir para manejar mejor la logica de esto cuando no haya operador asignado pero este un punto de cambio
+//gestionar quien queda en la estacion y si se muestra o no la inforacion de la persona
+
+//Tal vez validar al momento de remover al empleado si este es un punto de cambio que se finalice el punto de cambio
+//Y dejar otra opcion para que se puede finalizar y/o asignar al operador como titular de la estacion
+//Falta agregar el filtro de turno a las consultas

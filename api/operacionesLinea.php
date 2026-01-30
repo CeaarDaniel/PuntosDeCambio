@@ -294,7 +294,7 @@ else
                                             FROM SPC_ESTACIONES E 
                     LEFT JOIN (SELECT id_estacion, nomina, nombre from SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL) AS EP ON E.id_estacion = EP.id_estacion
                     LEFT JOIN (select idPC, id_estacion, nomina, nombre, estatusPC from SPC_PUNTOS_CAMBIO where fechaHora_fin IS NULL) AS PC on E.id_estacion = PC.id_estacion
-                WHERE E.codigo_linea= :codigoLinea ";
+                WHERE E.codigo_linea= :codigoLinea";
 
         $stmt = $conn->prepare($sql);
         $response= array();
@@ -432,6 +432,7 @@ else
 else 
     if($opcion =='8'){
         $nomina = $_POST['nomina'] ?? null;
+        $nombre = $_POST['nombre'] ?? null;
         $turno = $_POST['turno'] ?? null;
         $fechaR = $_POST['fechaR'] ?? null;
         $comentarios = $_POST['comentarios'] ?? null;
@@ -473,14 +474,15 @@ else
             $conn->beginTransaction();
 
             // Preparar la sentencia con parámetros
-            $sql = "INSERT INTO SPC_PERSONAL_NAD (nomina, codigo_linea, turno, comentarios, fechaR, eliminado) 
-                            VALUES (:nomina, :codigo_linea, :turno, :comentarios, :fechaR, :eliminado)";
+            $sql = "INSERT INTO SPC_PERSONAL_NAD (nomina, nombre, codigo_linea, turno, comentarios, fechaR, eliminado) 
+                            VALUES (:nomina, :nombre, :codigo_linea, :turno, :comentarios, :fechaR, :eliminado)";
 
             $stmt = $conn->prepare($sql);
 
             // Ejecutar con los parámetros
             $stmt->execute([
                 ':nomina' => $nomina, 
+                ':nombre' => $nombre,
                 ':codigo_linea' => $codigoLinea, 
                 ':turno' => $turno, 
                 ':comentarios' => $comentarios, 
@@ -515,7 +517,7 @@ else
 //Listar personal no asignado
 else 
      if($opcion== '9'){
-            $sql= "SELECT id_registro, nomina, turno from SPC_PERSONAL_NAD where eliminado = 0";
+            $sql= "SELECT id_registro, nomina, nombre, turno from SPC_PERSONAL_NAD where eliminado = 0";
 
             $registro = $conn->prepare($sql);
             $response= array();
@@ -740,7 +742,7 @@ else
             
 
             // Preparar la sentencia con parámetros
-              $sql = "INSERT INTO SPC_PUNTOS_CAMBIO(no_controlCambio,
+            $sql = "INSERT INTO SPC_PUNTOS_CAMBIO(no_controlCambio,
                                                     fechaHora_inicio,
                                                     motivo,
                                                     tipo_cambio,
@@ -775,6 +777,9 @@ else
                 ':nomina_operador' => $nominaPC, 
                 ':nombre' => $nombrePC
             ]);
+
+            // Obtener el ID del registro insertado
+            $insertedId = $conn->lastInsertId();
 
             // Confirmar la transacción
             $conn->commit();
@@ -814,6 +819,7 @@ else
             echo json_encode([
                 'estatus' => 'ok',
                 'mensaje' => 'Punto de cambio registrado correctamente.',
+                'idPC' => $insertedId
             ]);
 
         } catch (PDOException $e) {
@@ -908,24 +914,31 @@ else
     }
 
 //Consulta para obtener los datos de una sola estacion
-
 else 
     if($opcion=='15'){
-        $idEstacion = $_POST['idEstacion'] ?? null;
+        $idEstacion = !empty($_POST['idEstacion']) ? $_POST['idEstacion'] : null;
 
         // Validar que se recibieron todos los datos
         if (!$idEstacion) {
             echo json_encode([
-                'status' => 'error',
+                'estatus' => 'error',
                 'mensaje' => 'Faltan datos obligatorios.'
             ]);
             exit; 
         }
 
         // Preparar la sentencia con parámetros
-        $sql= "SELECT id_estacion, nombre_estacion, descripcion, requiere_certificacion, codigo_certificacion, posicion_x, posicion_y, codigo_linea 
-                FROM SPC_ESTACIONES 
-                WHERE id_estacion= :idEstacion ";
+        $sql= "SELECT E.id_estacion, E.nombre_estacion,
+                        CASE WHEN PC.nomina IS NULL THEN EP.nomina
+                            ELSE PC.nomina
+                        END AS nomina, 
+                        CASE  WHEN PC.nombre IS NULL THEN EP.nombre
+                            ELSE PC.nombre 
+                        END AS nombre, E.codigo_linea, E.codigo_certificacion, E.posicion_x, E.posicion_y, PC.estatusPC, PC.idPC
+                                            FROM SPC_ESTACIONES E 
+                    LEFT JOIN (SELECT id_estacion, nomina, nombre from SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL) AS EP ON E.id_estacion = EP.id_estacion
+                    LEFT JOIN (select idPC, id_estacion, nomina, nombre, estatusPC from SPC_PUNTOS_CAMBIO where fechaHora_fin IS NULL) AS PC on E.id_estacion = PC.id_estacion
+                WHERE E.id_estacion = :idEstacion";
 
         $stmt = $conn->prepare($sql);
         $response= array();
@@ -934,12 +947,66 @@ else
         if($stmt->execute([':idEstacion' => $idEstacion])){
             if($estacion= $stmt->fetch(PDO::FETCH_ASSOC)){
 
-                $response = $estacion;
+            if($estacion['estatusPC'] == '1') 
+                 $coloClass = 'station-color-2'; 
+
+            else  
+                if(!empty($estacion['nomina'])) $coloClass = 'station-color-1';
+            
+            else $coloClass = 'station-color-7';  
+
+                $response = array ( 'estatus' => 'ok',
+                                    'estacion' => array( 'id' => $estacion['id_estacion'],
+                                                        'nomina' => $estacion['nomina'],
+                                                        'name' => $estacion['nombre_estacion'], 
+                                                        'operator' =>  !empty($estacion['nomina']) ? $estacion['nombre'] : '',  
+                                                        'status' => !empty($estacion['nomina']) ? 'occupied' : 'pending', //pending: sin asignar, occupied: operador asignado
+                                                        'certification' => $estacion['codigo_certificacion'],
+                                                        'idPC' => $estacion['idPC'],
+                                                        'colorClass' => $coloClass,
+                                                        )
+                                    );
+            }
+        }
+
+        else 
+            $response = array( 'estatus' => 'error',
+                               'mensaje' =>  $stmt->errorInfo()[2]);
+
+        echo json_encode($response);
+    }
+
+else 
+    if($opcion =='16'){
+
+        $codigoLinea = $_POST['codigoLinea'] ?? null;
+        
+        $sql= "SELECT p.nomina, p.nombre 
+                    FROM SPC_PERSONAL_ESTACION p left JOIN SPC_ESTACIONES AS e ON e.id_estacion = p.id_estacion 
+                WHERE p.fecha_fin IS NULL and e.codigo_linea = :codigoLinea1
+                    UNION
+                SELECT nomina, nombre
+                   FROM SPC_PUNTOS_CAMBIO
+                WHERE codigo_linea = :codigoLinea2 AND fechaHora_fin IS NULL
+                    UNION
+                SELECT nomina, nombre
+                    FROM SPC_PERSONAL_NAD
+                WHERE eliminado = '0' AND codigo_linea = :codigoLinea3";
+
+        $stmt = $conn->prepare($sql);
+        $response= array();
+
+        // Ejecutar con los parámetros
+        if($stmt->execute([':codigoLinea1' => $codigoLinea, ':codigoLinea2' => $codigoLinea, ':codigoLinea3' => $codigoLinea]))
+        {
+            while($personal= $stmt->fetch(PDO::FETCH_ASSOC)){
+                $response[] = $personal;
             }
         }
 
         else 
             $response = $stmt->errorInfo()[2];
-
+   
+        echo json_encode($response);
     }
 ?>

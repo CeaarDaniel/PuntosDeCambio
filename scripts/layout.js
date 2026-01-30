@@ -9,7 +9,7 @@
   let tablaPersonalNoAsignado = document.getElementById('tablaPersonalNoAsignado');
 
   //Inputs del modal asignar operador
-  let nominaModalAsignar = document.getElementById('nominaModalAsignar')
+  let nominaModalAsignar = document.getElementById('nominaModalAsignar');
   let nominaPC = document.getElementById('nominaPC');
 
   document.getElementById('turnoasignar').value = $('#turnoLayout option:selected').text();
@@ -38,13 +38,12 @@
 
   //Fin inputs personal disponible 
 
-  let stationName = document.getElementById('nombreEstacion')
+  let stationName = document.getElementById('nombreEstacion');
   let letstationForm = document.getElementById('stationForm');
-  let stationDescription = document.getElementById('stationdescripcion')
+  let stationDescription = document.getElementById('stationdescripcion');
   let requiredCertification = document.getElementById('requiereCertificacion');
-  let certificacionF = document.getElementById('certificacion')
-  let codigoLinea = document.getElementById('codigoLinea')
-
+  let certificacionF = document.getElementById('certificacion');
+  let codigoLinea = document.getElementById('codigoLinea');
   let assignmentForm = document.getElementById('assignmentForm');
 
 
@@ -67,8 +66,7 @@
   //Eventlistener
   btnGuardarEstacion.addEventListener('click', agregarEstacion);
   btnAsignarOperador.addEventListener('click', asignarEstaciones);
-  btnGuardarDisponible.addEventListener('click', registrarPNA);
-  
+  btnGuardarDisponible.addEventListener('click', registrarPNA);  
 
   btnInfoRPC.addEventListener('click', function(){
       changeContent('ventanasModalPC','contInfoEstacion');
@@ -574,8 +572,7 @@
           <div class="station-operator"> ${operatorIcon} </div>
           <div class="station-name">${stationData.operator || 'No asignado'}</div>
         </div>
-        <div class="station-status status-${stationData.status}"></div>
-      `;
+        <div class="station-status status-${stationData.status}"></div>`;
       
       parent.appendChild(station);
     }
@@ -718,8 +715,8 @@
               // Contenido
               //station.querySelector('.station-header').textContent = 'Estación en uso';
 
-              (newData.operator && newData.operator!= null && newData.operator !== '') 
-                      ? station.querySelector('.station-name').textContent = newData.operator : '';
+              (newData.operator) ? station.querySelector('.station-name').textContent = newData.operator 
+                                 : station.querySelector('.station-name').textContent = 'No asignado';
 
               // Clases
               if(newData.colorClass && newData.colorClass!= null && newData.colorClass !== ''){
@@ -739,13 +736,16 @@
                     status.classList.add(`status-${newData.status}`);
               }
 
-              if(newData.nomina && newData.nomina!= null && newData.nomina !== '') {
-                    const operator = station.querySelector('.station-operator');
-                    operator.innerHTML=`<img src="../img/personal/${newData.nomina}.jpg" alt="Foto del operador" 
-                                              style="width: 70px; height: 70px; border-radius: 10px; 
+       
+              //Modificar la foto de la estacion
+              const operator = station.querySelector('.station-operator');
+                   (newData.nomina) ? operator.innerHTML=`<img src="../img/personal/${newData.nomina}.jpg" alt="Foto del operador" 
+                                              style="width: 100px; height: 100px; border-radius: 10px; 
                                                     object-fit: cover; border: 3px solid #e9ecef; 
-                                                    margin-bottom: 10px;">`; 
-                }
+                                                    margin-bottom: 10px;">` 
+                                                :
+                                      operator.innerHTML='<i class="bi-person-x"></i>';
+
               // Estilos (opcional)
               //station.style.border = '2px solid #4CAF50';
         } 
@@ -765,9 +765,11 @@
            (newData.colorClass) ? estation.colorClass = newData.colorClass : '';
            (newData.status) ? estation.status = newData.status : '';
            (newData.nomina) ? estation.nomina = newData.nomina : '';
+           (newData.idPC) ? estation.idPC = newData.idPC : estation.idPC = null;
+           (newData.estatusPC) ? estation.estatusPC = newData.estatusPC :  estation.idPC = null;
         }
 
-        console.log(stationsData);  
+        //console.log(stationsData);  
     } 
 
     //Mostrar listado de estaciones
@@ -877,6 +879,7 @@
           }
     })
 
+    //Registrar personal no asignado
     function registrarPNA(){
       let formDataNoAsignado = new FormData
       let fmPersonalNoAsignado = document.getElementById('fmPersonalNoAsignado');
@@ -889,6 +892,7 @@
           }
 
             formDataNoAsignado.append('nomina', document.getElementById("nominaNoAsignado").value)
+            formDataNoAsignado.append('nombre', document.getElementById("nombreNoAsignado").value)
             formDataNoAsignado.append('turno', document.getElementById("turnoAsignarPersonalDisponible").value)
             formDataNoAsignado.append('fechaR',document.getElementById("assignmentDatePNA").value)
             formDataNoAsignado.append('comentarios', document.getElementById("comentariosNoAsignado").value)
@@ -920,6 +924,7 @@
       }
     }
 
+    //Generar tabla con los datos de la tabla de personal no asignado
     function mostrarTablaPNA(){
           let formDataNoAsignadoL = new FormData
           formDataNoAsignadoL.append('opcion', 9)
@@ -944,7 +949,7 @@
                             <td class="px-4 align-middle">
                               <div class="d-flex align-items-center">
                                 <div>
-                                  <div class="fw-medium">NOMBRE DEL EMPLEADO</div>
+                                  <div class="fw-medium">${(emp.nombre) ?? ''}</div>
                                 </div>
                               </div>
                             </td>
@@ -969,7 +974,7 @@
             });
     }
 
-  //Abrir modal de asignar personal a una estacion
+    //Abrir modal de asignar personal a una estacion
     function asignarEstacion(nomina) {
           //console.log(nomina)
       let modalPersonalDisponible = document.getElementById('modalPersonalDisponible') 
@@ -1009,13 +1014,13 @@
                       if(data.estatus=='ok'){
                         
                           alert(data.mensaje);  
-                          /* actualizarEstacion(estacionId, 
+                           actualizarEstacion(estacionId, 
                                             { 'nomina': null, 
-                                              'operator': 'No asignado', 
+                                              'operator': null, 
                                               'colorClass': 'station-color-7',
-                                              'status' : 'available'
+                                              'status' : 'pending'
                                             }
-                                          ) */
+                                          ) 
                         }
 
                         else 
@@ -1066,6 +1071,7 @@
       }
     })
 
+    //Registrar un punto de cambio
     confirmChange.addEventListener('click', function(){
       let registroCambioForm = document.getElementById('registroCambioForm');
       let formDataPuntoCambio = new FormData;
@@ -1102,7 +1108,9 @@
                                         { 'nomina': document.getElementById('nominaPC').value, 
                                           'operator': document.getElementById('nombrePC').value,
                                           'colorClass': 'station-color-2',
-                                          'status' : 'occupied'
+                                          'status' : 'occupied',
+                                          'idPC' : data.idPC, 
+                                          'estatusPC' : '1'
                                         }
                                       )
                 } 
@@ -1188,7 +1196,127 @@
         //con el que se pueda sustituir la informacion de la estacion, por lo que es necesario hacer una consulta a la BD
         //para traer la informacion de especifica de esa estacion 
 
+      let formDataEstacion = new FormData;
+      formDataEstacion.append('opcion', 15);
+      formDataEstacion.append('idEstacion', id);
+          fetch("../api/operacionesLinea.php", {
+                  method: "POST",
+                  body: formDataEstacion,
+              })
+              .then((response) => response.text())
+              .then((data) => {   
+                    data= JSON.parse(data)
+                    if(data.estatus=='ok'){ 
+                        actualizarEstacion(id, 
+                                          { 'nomina': (data.estacion.nomina) ? data.estacion.nomina : null, 
+                                            'operator': (data.estacion.nomina) ? data.estacion.nombre : 'No asignado',
+                                            'colorClass': (data.estacion.nomina != null) ? 'station-color-1' : 'station-color-7',
+                                            'status' : (data.estacion.nomina != null) ? 'occupied' : 'available'
+                                          }
+                                        )
+                    }
+                      else  alert(data.mensaje);
+                }
+              ).catch((error) => {
+                  console.log(error);
+            });
     }
 
+    //Funciion para generar la tabla de la lista de asistencia
+    function generarTablaAsistencia(){
+      let fromDataAsistencia = new FormData;
+      fromDataAsistencia.append('opcion', 16);
+      fromDataAsistencia.append('codigoLinea', codigoLinea.value);
 
-  
+        fetch("../api/operacionesLinea.php", {
+                method: "POST",
+                body: fromDataAsistencia,
+            })
+            .then((response) => response.text())
+            .then((data) => {   
+                      data= JSON.parse(data)
+                      $('#attendanceTable').DataTable({
+                        data: data,
+                        paging: false,
+                        searching: false,
+                        info: false,
+                         autoWidth: false,
+                        columnDefs: [{ width: "80px", targets: 0 },
+                                     { width: "250px", targets: 1 },
+                                     { width: "350px", targets: 2 },
+                                     { width: "250px", targets: 3 },
+                                     { width: "180px", targets: 4 }
+                                    ],
+                        columns: [
+                          {
+                            data: null,
+                            render: (data, type, row, meta) => {
+                              const station = (meta.row + 1).toString().padStart(2, '0');
+                              return `
+                                <div class="station-badge bg-primary text-white rounded text-center py-1">
+                                  <strong>${station}</strong>
+                                </div>`;
+                            }
+                          },
+                          {
+                            data: null,
+                            render: row => `
+                              <div class="fw-bold">${row.nombre}</div>
+                              <small class="text-muted">ID: ${row.nomina}</small>`
+                          },
+                          {
+                            data: null,
+                            render: row => `<select class="form-control form-control-custom attendance-status" data-employee="${row.nomina}">
+                                              <option value="present">✅ Asistió - Puntual</option>
+                                              <option value="present-late">🟡 Asistió - Tardanza</option>
+                                              <option value="permission">🟢 Permiso Autorizado</option>
+                                              <option value="permission-medical">🏥 Permiso Médico</option>
+                                              <option value="absence">❌ Falta Injustificada</option>
+                                              <option value="vacation">🏖️ Vacaciones</option>
+                                              <option value="other">⚪ Otro</option>
+                                            </select>`
+                          },
+                          {
+                            data: null,
+                            render: () => `
+                              <input type="text"
+                                    class="form-control form-control-custom"
+                                    placeholder="Observaciones...">`
+                          },
+                          {
+                            data: null,
+                            className: "text-center",
+                            render: (data, type, row) => `
+                              <div class="form-check d-flex justify-content-center">
+                                <input class="form-check-input"
+                                      type="checkbox"
+                                      id="cambio_${row.nomina}">
+                                <label class="form-check-label"
+                                      for="cambio_${row.nomina}"
+                                      data-bs-toggle="tooltip"
+                                      title="Cambio de turno">
+                                  <i class="bi bi-clock-history"></i>
+                                </label>
+                              </div>`
+                          }
+                        ]
+                      });
+                  }).catch((error) => {
+                    console.log(error);
+              });            
+    }
+
+    generarTablaAsistencia();
+/*
+    $('#attendanceTable').DataTable({
+      "paging": true,
+      "searching": true,
+      "ordering": true,
+      "info": false,
+      "columnDefs": [
+        { "orderable": false, "targets": [2, 3, 4] } // Desactiva orden en asistencia, comentarios y cambio de turno
+      ]
+    });
+*/
+
+   

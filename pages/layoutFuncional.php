@@ -12,7 +12,6 @@
   $linea = $stmt->fetch(PDO::FETCH_ASSOC);
   $descripcion = !empty($linea['descripcion']) ? $linea['descripcion'] : '';
   $encargado_supervisor = !empty($linea['encargado_supervisor']) ? $linea['encargado_supervisor'] : '';
-
 ?>
 
 <!DOCTYPE html>
@@ -36,8 +35,11 @@
 
   <!--Custom Css -->
   <link rel="stylesheet" href="../css/layout.css">
-</head>
 
+  <!--Data table -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/2.0.7/css/dataTables.dataTables.css" />
+  <script src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script>
+  
 <body>
   <div class="layout-container">
 
@@ -738,12 +740,12 @@
               </div>
             </div>
             <div class="card-body p-0">
-              <div class="table-responsive">
-                <table class="table table-striped table-hover mb-0">
+              <div class="table-responsive"> 
+                <table id="attendanceTable" class="table table-striped table-hover nowrap  mb-0" style="width:100%">
                   <thead class="table-light">
                     <tr>
-                      <th width="80">Estación</th>
-                      <th>Operador</th>
+                      <th width="80">No</th>
+                      <th>Trabajador</th>
                       <th width="300">Asistencia</th>
                       <th>Comentarios</th>
                       <th width="200" class="text-center">Cambio de turno</th>
@@ -1850,6 +1852,10 @@
 
   <!-- Bootstrap JS -->
   <script src="../scripts/bootstrap.bundle.min.js"></script>
+
+  <!-- Incluye JS de Bootstrap, jQuery y DataTables -->
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
   <!--Custmo js -->
   <script src="../scripts/layout.js"></script>
