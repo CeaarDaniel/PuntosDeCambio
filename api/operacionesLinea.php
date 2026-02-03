@@ -963,8 +963,7 @@ else
                                                         'status' => !empty($estacion['nomina']) ? 'occupied' : 'pending', //pending: sin asignar, occupied: operador asignado
                                                         'certification' => $estacion['codigo_certificacion'],
                                                         'idPC' => $estacion['idPC'],
-                                                        'colorClass' => $coloClass,
-                                                        )
+                                                        'colorClass' => $coloClass)
                                     );
             }
         }
@@ -976,20 +975,20 @@ else
         echo json_encode($response);
     }
 
+//Consulta para generar una lista de asistencia con los PC, PNAD y asignados 
 else 
     if($opcion =='16'){
-
         $codigoLinea = $_POST['codigoLinea'] ?? null;
         
-        $sql= "SELECT p.nomina, p.nombre 
+        $sql= "SELECT p.nomina, p.nombre, p.id_estacion, e.nombre_estacion
                     FROM SPC_PERSONAL_ESTACION p left JOIN SPC_ESTACIONES AS e ON e.id_estacion = p.id_estacion 
                 WHERE p.fecha_fin IS NULL and e.codigo_linea = :codigoLinea1
                     UNION
-                SELECT nomina, nombre
-                   FROM SPC_PUNTOS_CAMBIO
-                WHERE codigo_linea = :codigoLinea2 AND fechaHora_fin IS NULL
+                SELECT PC.nomina, PC.nombre, PC.id_estacion, e.nombre_estacion
+                   FROM SPC_PUNTOS_CAMBIO PC left JOIN SPC_ESTACIONES AS e ON e.id_estacion = PC.id_estacion
+                WHERE PC.codigo_linea = :codigoLinea2 AND PC.fechaHora_fin IS NULL
                     UNION
-                SELECT nomina, nombre
+                SELECT nomina, nombre, null as id_estacion, null as nombre_estacion
                     FROM SPC_PERSONAL_NAD
                 WHERE eliminado = '0' AND codigo_linea = :codigoLinea3";
 

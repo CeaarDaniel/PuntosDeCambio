@@ -1,11 +1,12 @@
 <?php 
+  require_once('../api/conexion.php');
+  
   $codigo = !empty($_GET['codigo']) ? urldecode($_GET['codigo']) : '';
   $nombre = !empty($_GET['nombre']) ? urldecode($_GET['nombre']) : '';
-  date_default_timezone_set('Etc/GMT+6');
 
   $sql= "SELECT descripcion, encargado_supervisor from SPC_LINEAS WHERE CODIGO_LINEA = :codigo_linea";
 
-  require_once('../api/conexion.php');
+
   $stmt = $conn->prepare($sql);
   $stmt->bindParam(':codigo_linea', $codigo);
   $stmt->execute();
@@ -644,7 +645,9 @@
                       <i class="bi bi-chevron-left"></i>
                     </button>
                     <button class="btn btn-outline-dark fw-bold" style="min-width: 180px;">
-                      <i class="bi bi-calendar3 me-2"></i>29 de Enero, 2026
+                      <i class="bi bi-calendar3 me-2"></i><?php  setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain');
+                                                                 echo ucfirst(strftime('%d de %B, %Y')); 
+                                                          ?>
                     </button>
                     <button class="btn btn-outline-secondary">
                       <i class="bi bi-chevron-right"></i>
@@ -741,7 +744,7 @@
             </div>
             <div class="card-body p-0">
               <div class="table-responsive"> 
-                <table id="attendanceTable" class="table table-striped table-hover nowrap  mb-0" style="width:100%">
+                <table id="attendanceTable" class="table table-striped table-hover mb-0" style="width:100%;">
                   <thead class="table-light">
                     <tr>
                       <th width="80">No</th>

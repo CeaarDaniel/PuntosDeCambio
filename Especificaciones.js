@@ -29,22 +29,11 @@
 
 //Limitarse a 
 
-  //Registro de punto de cambio indicando solo como estatus si es insesperado o programado
-  //Registrar fecha de inicio y fin del punto de cambio   
-
-  //Mostrar estatus o si existe un punto de cambio abierto en el layout
-  //Finalizar/cerrar punto de cambio
 
   //Registro de asistencia del operador
   //Validar ultima fecha de operacion (con la asistencia)
 
   //Validar certificaciones 
-
-  //Reporte sencillo de los puntos de cambios realizados
-  //Generar reportes de estadisticas simulando datos reales
-
-  //Todo esto solo como estatus o flujo de navegacion sin dar seguimiento a todo el formato. 
-
 /*  
     PUNTOS DE CAMBIO
   
@@ -135,15 +124,12 @@
 
 //Dar opcion de registrar a un operador sin punto de cambio o no si no existe la ultima fecha de operacion en la linea
 //esto para al inicio cunado se empieza a registrar a todo el personaol 
-//Aggregar id a la tabla de SPC_PUNTO_CAMBIO
-//No limpiar todos los campos de los formularios solo los que son ingresados por el usuario
 
-//revisar la atomicidad el no control generado para el punto de cambio
+//No limpiar todos los campos de los formularios solo los que son ingresados por el usuario
 
 
 //Tal vez a futuro seria buen o agregar una opcion que diga mover operaedor de estacion
 //Modifcar el codigo para generar el consecutivo de PC para que sea por linea y no uno general
-//Modificar la estructura de la tabla para cambiar la clave primaria y agregar un id en vez del consecutivo como clave
 //Agregar opcion para consultar el acomodo del layout guardado por dia o fecha
 
 

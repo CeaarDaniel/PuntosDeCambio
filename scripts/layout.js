@@ -17,7 +17,6 @@
 
   // var turnoLinea = $('#turnoasignar').val()
   //$("#miSelect").val(turnoLinea);
-
   
   //Botones de menu del modal
     //Modal de registro de PC
@@ -912,6 +911,7 @@
                           alert(data.mensaje)
                           fmPersonalNoAsignado.reset();
                           mostrarTablaPNA();
+                          generarTablaAsistencia();
                       }
                   
                         else{
@@ -1235,12 +1235,19 @@
             .then((response) => response.text())
             .then((data) => {   
                       data= JSON.parse(data)
+
+                      $('#attendanceTable').DataTable().destroy();
+
                       $('#attendanceTable').DataTable({
+                        //scrollY: '300px',
+                        //scrollCollapse: true,
+                        autoWidth: false,
+                        responsive: false,
                         data: data,
-                        paging: false,
+                        paging: true,
+                        pageLength: 10,
                         searching: false,
                         info: false,
-                         autoWidth: false,
                         columnDefs: [{ width: "80px", targets: 0 },
                                      { width: "250px", targets: 1 },
                                      { width: "350px", targets: 2 },
@@ -1267,13 +1274,15 @@
                           {
                             data: null,
                             render: row => `<select class="form-control form-control-custom attendance-status" data-employee="${row.nomina}">
-                                              <option value="present">✅ Asistió - Puntual</option>
-                                              <option value="present-late">🟡 Asistió - Tardanza</option>
-                                              <option value="permission">🟢 Permiso Autorizado</option>
-                                              <option value="permission-medical">🏥 Permiso Médico</option>
-                                              <option value="absence">❌ Falta Injustificada</option>
-                                              <option value="vacation">🏖️ Vacaciones</option>
-                                              <option value="other">⚪ Otro</option>
+                                              <option value="present">✅ ASISTENCIA</option>
+                                              <option value="absence">❌ FALTA INJUSTIFICADA</option>
+                                              <option value="permission">🟢 PERMISO SIN GOCE DE SUELDO</option>
+                                              <option value="vacation">🏖️ VACACIONES</option>
+                                              <option value="technical-stop">🟡 PARO TÉCNICO</option>
+                                              <option value="rest-day">⚪ DESCANSO</option>
+                                              <option value="sanction">🚫 SANCIÓN</option>
+                                              <option value="overtime">⏱️ TIEMPO EXTRA</option>
+                                              <option value="permission-medical">🏥 INCAPACIDAD</option>
                                             </select>`
                           },
                           {
