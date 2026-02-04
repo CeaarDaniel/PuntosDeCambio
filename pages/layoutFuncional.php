@@ -747,204 +747,207 @@
                 <table id="attendanceTable" class="table table-striped table-hover mb-0" style="width:100%;">
                   <thead class="table-light">
                     <tr>
-                      <th width="80">No</th>
+                      <!-- <th width="80">No</th> -->
                       <th>Trabajador</th>
+                      <th>Estacion</th>
                       <th width="300">Asistencia</th>
                       <th>Comentarios</th>
                       <th width="200" class="text-center">Cambio de turno</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>
-                        <div class="station-badge bg-primary text-white rounded text-center py-1">
-                          <strong>01</strong>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div>
-                            <div class="fw-bold">Juan Pérez</div>
-                            <small class="text-muted">ID: EMP-001</small>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <select class="form-control form-control-custom attendance-status" data-employee="EMP-001">
-                          <option value="present" selected>✅ Asistió - Puntual</option>
-                          <option value="present-late">🟡 Asistió - Tardanza</option>
-                          <option value="permission">🟢 Permiso Autorizado</option>
-                          <option value="permission-medical">🏥 Permiso Médico</option>
-                          <option value="absence">❌ Falta Injustificada</option>
-                          <option value="vacation">🏖️ Vacaciones</option>
-                          <option value="other">⚪ Otro</option>
-                        </select>
-                      </td>
-                      <td>
-                        <input type="text" class="form-control form-control-custom" placeholder="Observaciones..." value="">
-                      </td>
-                      <td class="text-center">
-                            <!--   
-                              <button class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Ver historial">
-                                <i class="bi bi-clock-history"></i>
-                              </button>
-                            -->
-                          <div class="form-check d-flex align-items-center justify-content-center gap-2">
-                              <input class="form-check-input" type="checkbox" id="cambioTurno">
-                              <label class="form-check-label d-flex align-items-center gap-1" for="cambioTurno" data-bs-toggle="tooltip" data-bs-placement="top" title="Cambio de turno"> 
-                                  <i class="bi bi-clock-history"></i>
-                              </label>
-                          </div>
-                      </td> 
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="station-badge bg-success text-white rounded text-center py-1">
-                          <strong>02</strong>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div>
-                            <div class="fw-bold">María González</div>
-                            <small class="text-muted">ID: EMP-002</small>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <select class="form-control form-control-custom attendance-status" data-employee="EMP-002">
-                          <option value="present">✅ Asistió - Puntual</option>
-                          <option value="present-late">🟡 Asistió - Tardanza</option>
-                          <option value="permission" selected>🟢 Permiso Autorizado</option>
-                          <option value="permission-medical">🏥 Permiso Médico</option>
-                          <option value="absence">❌ Falta Injustificada</option>
-                          <option value="vacation">🏖️ Vacaciones</option>
-                          <option value="other">⚪ Otro</option>
-                        </select>
-                      </td>
-                      <td>
-                        <input type="text" class="form-control form-control-custom" placeholder="Observaciones..." value="Consulta médica programada">
-                      </td>
-                      <td class="text-center">
-                          <div class="form-check d-flex align-items-center justify-content-center gap-2">
-                              <input class="form-check-input" type="checkbox" id="cambioTurno">
-                              <label class="form-check-label d-flex align-items-center gap-1" for="cambioTurno" data-bs-toggle="tooltip" data-bs-placement="top" title="Cambio de turno"> 
-                                  <i class="bi bi-clock-history"></i>
-                              </label>
-                          </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="station-badge bg-warning text-dark rounded text-center py-1">
-                          <strong>03</strong>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div>
-                            <div class="fw-bold">Carlos Ruiz</div>
-                            <small class="text-muted">ID: EMP-003</small>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <select class="form-control form-control-custom attendance-status" data-employee="EMP-003">
-                          <option value="present">✅ Asistió - Puntual</option>
-                          <option value="present-late">🟡 Asistió - Tardanza</option>
-                          <option value="permission">🟢 Permiso Autorizado</option>
-                          <option value="permission-medical">🏥 Permiso Médico</option>
-                          <option value="absence" selected>❌ Falta Injustificada</option>
-                          <option value="vacation">🏖️ Vacaciones</option>
-                          <option value="other">⚪ Otro</option>
-                        </select>
-                      </td>
-                      <td>
-                        <input type="text" class="form-control form-control-custom" placeholder="Observaciones..." value="">
-                      </td>
-                      <td class="text-center">
-                          <div class="form-check d-flex align-items-center justify-content-center gap-2">
-                              <input class="form-check-input" type="checkbox" id="cambioTurno">
-                              <label class="form-check-label d-flex align-items-center gap-1" for="cambioTurno" data-bs-toggle="tooltip" data-bs-placement="top" title="Cambio de turno"> 
-                                  <i class="bi bi-clock-history"></i>
-                              </label>
-                          </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="station-badge bg-info text-white rounded text-center py-1">
-                          <strong>04</strong>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div>
-                            <div class="fw-bold">Ana López</div>
-                            <small class="text-muted">ID: EMP-004</small>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <select class="form-control form-control-custom attendance-status" data-employee="EMP-004">
-                          <option value="present" selected>✅ Asistió - Puntual</option>
-                          <option value="present-late">🟡 Asistió - Tardanza</option>
-                          <option value="permission">🟢 Permiso Autorizado</option>
-                          <option value="permission-medical">🏥 Permiso Médico</option>
-                          <option value="absence">❌ Falta Injustificada</option>
-                          <option value="vacation">🏖️ Vacaciones</option>
-                          <option value="other">⚪ Otro</option>
-                        </select>
-                      </td>
-                      <td>
-                        <input type="text" class="form-control form-control-custom" placeholder="Observaciones..." value="">
-                      </td>
-                      <td class="text-center">
-                          <div class="form-check d-flex align-items-center justify-content-center gap-2">
-                              <input class="form-check-input" type="checkbox" id="cambioTurno">
-                              <label class="form-check-label d-flex align-items-center gap-1" for="cambioTurno" data-bs-toggle="tooltip" data-bs-placement="top" title="Cambio de turno"> 
-                                  <i class="bi bi-clock-history"></i>
-                              </label>
-                          </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="station-badge bg-secondary text-white rounded text-center py-1">
-                          <strong>05</strong>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div>
-                            <div class="fw-bold">Luis Fernández</div>
-                            <small class="text-muted">ID: EMP-005</small>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <select class="form-control form-control-custom attendance-status" data-employee="EMP-005">
-                          <option value="present" selected>✅ Asistió - Puntual</option>
-                          <option value="present-late">🟡 Asistió - Tardanza</option>
-                          <option value="permission">🟢 Permiso Autorizado</option>
-                          <option value="permission-medical">🏥 Permiso Médico</option>
-                          <option value="absence">❌ Falta Injustificada</option>
-                          <option value="vacation">🏖️ Vacaciones</option>
-                          <option value="other">⚪ Otro</option>
-                        </select>
-                      </td>
-                      <td>
-                        <input type="text" class="form-control form-control-custom" placeholder="Observaciones..." value="">
-                      </td>
-                      <td class="text-center">
-                          <div class="form-check d-flex align-items-center justify-content-center gap-2">
-                              <input class="form-check-input" type="checkbox">
-                              <label class="form-check-label d-flex align-items-center gap-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Cambio de turno"> 
-                                  <i class="bi bi-clock-history"></i>
-                              </label>
-                          </div>
-                      </td>
-                    </tr>
+                    <!-- 
+                        <tr>
+                          <td>
+                            <div class="station-badge bg-primary text-white rounded text-center py-1">
+                              <strong>01</strong>
+                            </div>
+                          </td>
+                          <td>
+                            <div class="d-flex align-items-center">
+                              <div>
+                                <div class="fw-bold">Juan Pérez</div>
+                                <small class="text-muted">ID: EMP-001</small>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <select class="form-control form-control-custom attendance-status" data-employee="EMP-001">
+                              <option value="present" selected>✅ Asistió - Puntual</option>
+                              <option value="present-late">🟡 Asistió - Tardanza</option>
+                              <option value="permission">🟢 Permiso Autorizado</option>
+                              <option value="permission-medical">🏥 Permiso Médico</option>
+                              <option value="absence">❌ Falta Injustificada</option>
+                              <option value="vacation">🏖️ Vacaciones</option>
+                              <option value="other">⚪ Otro</option>
+                            </select>
+                          </td>
+                          <td>
+                            <input type="text" class="form-control form-control-custom" placeholder="Observaciones..." value="">
+                          </td>
+                          <td class="text-center">
+                        
+                                  <button class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Ver historial">
+                                    <i class="bi bi-clock-history"></i>
+                                  </button>
+                        
+                              <div class="form-check d-flex align-items-center justify-content-center gap-2">
+                                  <input class="form-check-input" type="checkbox" id="cambioTurno">
+                                  <label class="form-check-label d-flex align-items-center gap-1" for="cambioTurno" data-bs-toggle="tooltip" data-bs-placement="top" title="Cambio de turno"> 
+                                      <i class="bi bi-clock-history"></i>
+                                  </label>
+                              </div>
+                          </td> 
+                        </tr>
+                        <tr>
+                          <td>
+                            <div class="station-badge bg-success text-white rounded text-center py-1">
+                              <strong>02</strong>
+                            </div>
+                          </td>
+                          <td>
+                            <div class="d-flex align-items-center">
+                              <div>
+                                <div class="fw-bold">María González</div>
+                                <small class="text-muted">ID: EMP-002</small>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <select class="form-control form-control-custom attendance-status" data-employee="EMP-002">
+                              <option value="present">✅ Asistió - Puntual</option>
+                              <option value="present-late">🟡 Asistió - Tardanza</option>
+                              <option value="permission" selected>🟢 Permiso Autorizado</option>
+                              <option value="permission-medical">🏥 Permiso Médico</option>
+                              <option value="absence">❌ Falta Injustificada</option>
+                              <option value="vacation">🏖️ Vacaciones</option>
+                              <option value="other">⚪ Otro</option>
+                            </select>
+                          </td>
+                          <td>
+                            <input type="text" class="form-control form-control-custom" placeholder="Observaciones..." value="Consulta médica programada">
+                          </td>
+                          <td class="text-center">
+                              <div class="form-check d-flex align-items-center justify-content-center gap-2">
+                                  <input class="form-check-input" type="checkbox" id="cambioTurno">
+                                  <label class="form-check-label d-flex align-items-center gap-1" for="cambioTurno" data-bs-toggle="tooltip" data-bs-placement="top" title="Cambio de turno"> 
+                                      <i class="bi bi-clock-history"></i>
+                                  </label>
+                              </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <div class="station-badge bg-warning text-dark rounded text-center py-1">
+                              <strong>03</strong>
+                            </div>
+                          </td>
+                          <td>
+                            <div class="d-flex align-items-center">
+                              <div>
+                                <div class="fw-bold">Carlos Ruiz</div>
+                                <small class="text-muted">ID: EMP-003</small>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <select class="form-control form-control-custom attendance-status" data-employee="EMP-003">
+                              <option value="present">✅ Asistió - Puntual</option>
+                              <option value="present-late">🟡 Asistió - Tardanza</option>
+                              <option value="permission">🟢 Permiso Autorizado</option>
+                              <option value="permission-medical">🏥 Permiso Médico</option>
+                              <option value="absence" selected>❌ Falta Injustificada</option>
+                              <option value="vacation">🏖️ Vacaciones</option>
+                              <option value="other">⚪ Otro</option>
+                            </select>
+                          </td>
+                          <td>
+                            <input type="text" class="form-control form-control-custom" placeholder="Observaciones..." value="">
+                          </td>
+                          <td class="text-center">
+                              <div class="form-check d-flex align-items-center justify-content-center gap-2">
+                                  <input class="form-check-input" type="checkbox" id="cambioTurno">
+                                  <label class="form-check-label d-flex align-items-center gap-1" for="cambioTurno" data-bs-toggle="tooltip" data-bs-placement="top" title="Cambio de turno"> 
+                                      <i class="bi bi-clock-history"></i>
+                                  </label>
+                              </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <div class="station-badge bg-info text-white rounded text-center py-1">
+                              <strong>04</strong>
+                            </div>
+                          </td>
+                          <td>
+                            <div class="d-flex align-items-center">
+                              <div>
+                                <div class="fw-bold">Ana López</div>
+                                <small class="text-muted">ID: EMP-004</small>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <select class="form-control form-control-custom attendance-status" data-employee="EMP-004">
+                              <option value="present" selected>✅ Asistió - Puntual</option>
+                              <option value="present-late">🟡 Asistió - Tardanza</option>
+                              <option value="permission">🟢 Permiso Autorizado</option>
+                              <option value="permission-medical">🏥 Permiso Médico</option>
+                              <option value="absence">❌ Falta Injustificada</option>
+                              <option value="vacation">🏖️ Vacaciones</option>
+                              <option value="other">⚪ Otro</option>
+                            </select>
+                          </td>
+                          <td>
+                            <input type="text" class="form-control form-control-custom" placeholder="Observaciones..." value="">
+                          </td>
+                          <td class="text-center">
+                              <div class="form-check d-flex align-items-center justify-content-center gap-2">
+                                  <input class="form-check-input" type="checkbox" id="cambioTurno">
+                                  <label class="form-check-label d-flex align-items-center gap-1" for="cambioTurno" data-bs-toggle="tooltip" data-bs-placement="top" title="Cambio de turno"> 
+                                      <i class="bi bi-clock-history"></i>
+                                  </label>
+                              </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <div class="station-badge bg-secondary text-white rounded text-center py-1">
+                              <strong>05</strong>
+                            </div>
+                          </td>
+                          <td>
+                            <div class="d-flex align-items-center">
+                              <div>
+                                <div class="fw-bold">Luis Fernández</div>
+                                <small class="text-muted">ID: EMP-005</small>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <select class="form-control form-control-custom attendance-status" data-employee="EMP-005">
+                              <option value="present" selected>✅ Asistió - Puntual</option>
+                              <option value="present-late">🟡 Asistió - Tardanza</option>
+                              <option value="permission">🟢 Permiso Autorizado</option>
+                              <option value="permission-medical">🏥 Permiso Médico</option>
+                              <option value="absence">❌ Falta Injustificada</option>
+                              <option value="vacation">🏖️ Vacaciones</option>
+                              <option value="other">⚪ Otro</option>
+                            </select>
+                          </td>
+                          <td>
+                            <input type="text" class="form-control form-control-custom" placeholder="Observaciones..." value="">
+                          </td>
+                          <td class="text-center">
+                              <div class="form-check d-flex align-items-center justify-content-center gap-2">
+                                  <input class="form-check-input" type="checkbox">
+                                  <label class="form-check-label d-flex align-items-center gap-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Cambio de turno"> 
+                                      <i class="bi bi-clock-history"></i>
+                                  </label>
+                              </div>
+                          </td>
+                        </tr>
+                    -->
                   </tbody>
                 </table>
               </div>

@@ -4,10 +4,8 @@
   let btnGuardarEdicionLinea = document.getElementById('btnGuardarEdicionLinea');
   let confirmChange = document.getElementById('confirmChange');
   let btnConfirmClose = document.getElementById('btnConfirmClose');
-
-
   let tablaPersonalNoAsignado = document.getElementById('tablaPersonalNoAsignado');
-
+  let workspaceGrid;
   //Inputs del modal asignar operador
   let nominaModalAsignar = document.getElementById('nominaModalAsignar');
   let nominaPC = document.getElementById('nominaPC');
@@ -19,22 +17,19 @@
   //$("#miSelect").val(turnoLinea);
   
   //Botones de menu del modal
-    //Modal de registro de PC
-      let btnInfoRPC = document.getElementById('btnInfoRPC');
-      let btnRegistroPc = document.getElementById('btnRegistroPc');
-      let btnLiberarPC = document.getElementById('btnLiberarPC');
+      //Modal de registro de PC
+        let btnInfoRPC = document.getElementById('btnInfoRPC');
+        let btnRegistroPc = document.getElementById('btnRegistroPc');
+        let btnLiberarPC = document.getElementById('btnLiberarPC');
 
-      //Modal de personal personal sin asignar
-      let btnTablaPNA = document.getElementById('btnTablaPNA');
-      let btnRegistroPNA = document.getElementById('btnRegistroPNA');
+        //Modal de personal personal sin asignar
+        let btnTablaPNA = document.getElementById('btnTablaPNA');
+        let btnRegistroPNA = document.getElementById('btnRegistroPNA');
   //Fin botones menu modal
 
   //Inputs del modal personal disponible
-  
-
-    //Formulario de registro de personal no asignado
-    var nominaNoAsignado= document.getElementById('nominaNoAsignado');
-
+      //Formulario de registro de personal no asignado
+      var nominaNoAsignado= document.getElementById('nominaNoAsignado');
   //Fin inputs personal disponible 
 
   let stationName = document.getElementById('nombreEstacion');
@@ -45,172 +40,11 @@
   let codigoLinea = document.getElementById('codigoLinea');
   let assignmentForm = document.getElementById('assignmentForm');
 
+  // Datos para las estaciones
+  var stationsData;
 
-   // Datos para las estaciones
-      var stationsData;
-
-  /*
-    const stationsData = [
-      { id: 1, name: 'Corte de cable', operator: 'Juan Pérez', status: 'occupied', certification: 'Proceso X - Liberado', x: 50, y: 50, colorClass: 'station-color-1' },
-      { id: 2, name: 'Removedor de tela', operator: 'María González', status: 'occupied', certification: 'Proceso Y - En curso', x: 300, y: 50, colorClass: 'station-color-2' },
-      { id: 3, name: 'Re-Corte', operator: 'Carlos Ruiz', status: 'occupied', certification: 'Proceso Z - Liberado', x: 550, y: 50, colorClass: 'station-color-3' },
-      { id: 4, name: 'Desforre de Circuito', operator: 'Ana López', status: 'pending', certification: 'Proceso X - Pendiente', x: 50, y: 300, colorClass: 'station-color-4' },
-      { id: 5, name: 'Crimpado SA No. 1', operator: '', status: 'vacant', certification: 'No asignado', x: 300, y: 300, colorClass: 'station-color-5' },
-      { id: 6, name: 'Crimpado SA No. 2', operator: 'Luis Fernández', status: 'occupied', certification: 'Proceso Y - Liberado', x: 550, y: 300, colorClass: 'station-color-6' },
-      { id: 7, name: 'Crimpado SA No. 3', operator: 'Roberto Sánchez', status: 'occupied', certification: 'Proceso W - Liberado', x: 50, y: 550, colorClass: 'station-color-7' },
-      { id: 8, name: 'Marcado Laser ', operator: '', status: 'vacant', certification: 'No asignado', x: 300, y: 550, colorClass: 'station-color-8' }
-    ]; 
-  */
-
-  //Eventlistener
-  btnGuardarEstacion.addEventListener('click', agregarEstacion);
-  btnAsignarOperador.addEventListener('click', asignarEstaciones);
-  btnGuardarDisponible.addEventListener('click', registrarPNA);  
-
-  btnInfoRPC.addEventListener('click', function(){
-      changeContent('ventanasModalPC','contInfoEstacion');
-  })
-
-  btnRegistroPc.addEventListener('click', function(){
-     changeContent('ventanasModalPC','contregistroCambioForm');
-  })
-
-  btnLiberarPC.addEventListener('click', function(){
-     changeContent('ventanasModalPC', 'contLiberarPC')
-  })
-
-  btnTablaPNA.addEventListener('click', function(){
-    changeContent('ventanadModalPersonalNA', 'contTablaDisponibles' )
-  })
-
-  btnRegistroPNA.addEventListener('click', function(){
-    changeContent('ventanadModalPersonalNA', 'contRegistroPersonalDisponible')
-  });
-   
-
-
-   document.addEventListener('DOMContentLoaded', function() {
-      let currentStep = 1;
-      const totalSteps = 4;
-      
-      // Elementos de navegación
-      const prevBtn = document.getElementById('prevStep');
-      const nextBtn = document.getElementById('nextStep');
-      const confirmBtn = document.getElementById('confirmChange');
-      const stepIndicator = document.getElementById('stepIndicator');
-      
-      // Actualizar navegación
-      function updateNavigation() {
-        stepIndicator.textContent = `Paso ${currentStep} de ${totalSteps}`;
-        
-        // Actualizar indicadores de progreso
-        document.querySelectorAll('.step-indicator').forEach((indicator, index) => {
-          if (index + 1 === currentStep) {
-            indicator.classList.add('active');
-          } else {
-            indicator.classList.remove('active');
-          }
-        });
-        
-        // Mostrar/ocultar pestañas
-        document.querySelectorAll('.tab-pane').forEach((pane, index) => {
-          if (index + 1 === currentStep) {
-            pane.classList.add('show', 'active');
-          } else {
-            pane.classList.remove('show', 'active');
-          }
-        });
-        
-        // Actualizar botones
-        prevBtn.disabled = currentStep === 1;
-        
-        if (currentStep === totalSteps) {
-          nextBtn.classList.add('d-none');
-          confirmBtn.classList.remove('d-none');
-        } else {
-          nextBtn.classList.remove('d-none');
-          confirmBtn.classList.add('d-none');
-        }
-      }
-      
-      // Event listeners para navegación
-      prevBtn.addEventListener('click', function() {
-        if (currentStep > 1) {
-          currentStep--;
-          updateNavigation();
-        }
-      });
-      
-      nextBtn.addEventListener('click', function() {
-        if (currentStep < totalSteps) {
-          currentStep++;
-          updateNavigation();
-        }
-      });
-      
-      // Inicializar navegación
-      updateNavigation();
-      
-      // Lógica para actualizar resumen en el paso 4
-      nextBtn.addEventListener('click', function() {
-        if (currentStep === 4) {
-          // Aquí iría la lógica para recopilar datos y actualizar el resumen
-          document.getElementById('resumenControlNo').textContent = document.getElementById('controlNo').value || 'CC-2025-001';
-          document.getElementById('resumenLinea').textContent = document.getElementById('linea').options[document.getElementById('linea').selectedIndex].text || 'Línea A';
-          // ... más actualizaciones de resumen
-        }
-      });
-      
-      // Confirmar cambio
-      confirmBtn.addEventListener('click', function() {
-        // Aquí iría la lógica para enviar el formulario
-        alert('Cambio de operador registrado exitosamente');
-        const modal = bootstrap.Modal.getInstance(document.getElementById('changeControlModal'));
-        modal.hide();
-      });
-    });
-
-  // Actualizar estadísticas cuando cambia el estado de asistencia
-    document.querySelectorAll('.attendance-status').forEach(select => {
-      select.addEventListener('change', function() {
-        updateAttendanceStats();
-      });
-    });
-
-
-    //Obtener las estaciones creadas y invocar la funcion para mostrarlas en el layput
-    function getEstaciones(){
-        const formData = new FormData;
-        formData.append('opcion', 5)
-        formData.append('codigoLinea', codigoLinea.value)
-
-        fetch("../api/operacionesLinea.php", {
-                    method: "POST",
-                    body: formData,
-                })
-                .then((response) => response.text())
-                .then((data) => {
-                    console.log(data);
-                     stationsData = JSON.parse(data);
-
-                    // Crear estaciones
-                    stationsData.forEach(station => {
-                      createStation(station, workspaceGrid);
-                    });
-
-                    listarEstaciones();
-                })
-                .catch((error) => {
-                  console.log(error);
-            });
-    }
-
-    // Estado del workspace
-    const workspaceState = {
-      zoomLevel: 1,
-      gridSize: 20,
-      isGridSnapEnabled: false
-    };
+  // Estado del workspace
+  const workspaceState = {zoomLevel: 1, gridSize: 20, isGridSnapEnabled: false};
 
     // Sistema de drag & drop optimizado con soporte para modales
     class OptimizedDragSystem {
@@ -239,7 +73,6 @@
         document.addEventListener('mousedown', this.handleMouseDown.bind(this));
         document.addEventListener('mousemove', this.handleMouseMove.bind(this));
         document.addEventListener('mouseup', this.handleMouseUp.bind(this));
-        
         document.addEventListener('dragstart', (e) => e.preventDefault());
       }
       
@@ -348,8 +181,6 @@
         // Aplicar límites
         newX = Math.max(0,newX); //newX = Math.max(0, Math.min(newX, this.workspaceCache.maxX));
         newY = Math.max(0,newY); //newY = Math.max(0, Math.min(newY, this.workspaceCache.maxY));
-
-
         
         if (newX !== this.lastX || newY !== this.lastY || isFinal) {
           if (isFinal) {
@@ -389,8 +220,8 @@
       
       //Actualizar y mostrar el modal de la estacion
       showStationModal(stationData) {
-       
-        document.getElementById('imgInfochangeControlModal').src=  (stationData.nomina) ? `../img/personal/${stationData.nomina}.jpg` : `../img/personal/na.jpg`;
+        console.log('Datos de la estacion: ',stationData)
+        document.getElementById('imgInfochangeControlModal').src= (stationData.nomina) ? `../img/personal/${stationData.nomina}.jpg` : `../img/personal/na.jpg`;
         document.getElementById('nombreEstacionModalPC').textContent = (stationData.name).toUpperCase();
         document.getElementById('idEstacionModalPC').value = stationData.id;
         document.getElementById('idTrabajadorAsignado').value = stationData.nomina || '';
@@ -415,28 +246,38 @@
     // Instancia del sistema de drag
     const dragSystem = new OptimizedDragSystem();
 
-    // Inicializar el workspace
-    document.addEventListener('DOMContentLoaded', function() {
-        const workspaceGrid = document.getElementById('workspaceGrid');
-        getEstaciones();
+    function saveLayout() {
+        const stations = document.querySelectorAll('.station');
+        const layoutData = [];
+       
+        stations.forEach(station => {
+          const stationId = station.getAttribute('data-station-id');
+          const left = parseInt(station.style.left);
+          const top = parseInt(station.style.top);
+          layoutData.push({id: stationId, x: left, y: top});
+        });
 
-      // Inicializar tooltips
-      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-      tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-      });
-      
-      // Configurar event listeners para los controles
-      setupControls();
-      
-      // Inicializar sistema de drag
-      dragSystem.init();
-      
-      // Actualizar indicador de zoom
-      updateZoomIndicator();
+         var formDataPosicion = new FormData;
+        formDataPosicion.append('opcion', 6);
+        formDataPosicion.append('layoutPosition', JSON.stringify(layoutData));
+        
+          // console.log("datos", layoutData)
+          fetch("../api/operacionesLinea.php", {
+                method: "POST",
+                body: formDataPosicion,
+            })
+            .then((response) => response.text())
+            .then((data) => {
+               data= JSON.parse(data)
+               if(data.estatus=='ok')
+                    alert('Layout guardado correctamente');
 
-      mostrarTablaPNA();
-    });
+                else alert(data.mensaje)
+            })
+            .catch((error) => {
+               console.log(error);
+        });
+    }
 
     // Configurar controles de zoom y cuadrícula
     function setupControls() {
@@ -444,7 +285,6 @@
       document.getElementById('zoomOutBtn').addEventListener('click', zoomOut);
       document.getElementById('snapToGridBtn').addEventListener('click', toggleGridSnap);
       document.getElementById('saveLayoutBtn').addEventListener('click', saveLayout);
-      
       document.getElementById('workspaceGrid').addEventListener('wheel', function(e) {
         if (e.ctrlKey) {
           e.preventDefault();
@@ -502,52 +342,6 @@
       });
     }
 
-    function saveLayout() {
-
-      const stations = document.querySelectorAll('.station');
-      const layoutData = [];
-      
-      stations.forEach(station => {
-        const stationId = station.getAttribute('data-station-id');
-        const left = parseInt(station.style.left);
-        const top = parseInt(station.style.top);
-        
-        layoutData.push({
-          id: stationId,
-          x: left,
-          y: top
-        });
-      });
-
-      var formDataPosicion = new FormData;
-      formDataPosicion.append('opcion', 6);
-      formDataPosicion.append('layoutPosition', JSON.stringify(layoutData));
-
-      console.log("datos", layoutData)
-
-          fetch("../api/operacionesLinea.php", {
-                method: "POST",
-                body: formDataPosicion,
-            })
-            .then((response) => response.text())
-            .then((data) => {
-            
-                console.log(data);
-                data= JSON.parse(data)
-            
-               if(data.estatus=='ok'){
-                    alert('Layout guardado correctamente');
-                }
-
-                else alert(data.mensaje)
-
-               // actualizarEstacion('5');
-            })
-            .catch((error) => {
-               console.log(error);
-        });
-    }
-
     function createStation(stationData, parent) {
       const station = document.createElement('div');
       station.className = `station ${stationData.colorClass}`;
@@ -576,6 +370,58 @@
       parent.appendChild(station);
     }
 
+    //Obtener las estaciones creadas y invocar la funcion para mostrarlas en el layput
+    function getEstaciones(){
+        const formData = new FormData;
+        formData.append('opcion', 5)
+        formData.append('codigoLinea', codigoLinea.value)
+        fetch("../api/operacionesLinea.php", {
+                    method: "POST",
+                    body: formData,
+                })
+                .then((response) => response.text())
+                .then((data) => {
+                     stationsData = JSON.parse(data);
+
+                      // Crear estaciones
+                      stationsData.forEach(station => {
+                        createStation(station, workspaceGrid);
+                      });
+                      listarEstaciones();
+                })
+                .catch((error) => {
+                  console.log(error);
+            });
+    }
+
+    //Funcion para obtener datos de una estacion en especifico. 
+    function getEstacion(id){
+     //Se usa cuando, tras finalizar un punto de cambio, es necesario recuperar la información real del usuario asignado a la estación, ya que el listado muestra datos sobrescritos por el usuario del PC
+     let formDataEstacion = new FormData;
+      formDataEstacion.append('opcion', 15);
+      formDataEstacion.append('idEstacion', id);
+          fetch("../api/operacionesLinea.php", {
+                  method: "POST",
+                  body: formDataEstacion,
+              })
+              .then((response) => response.text())
+              .then((data) => {   
+                    data= JSON.parse(data)
+                    if(data.estatus=='ok'){ 
+                        actualizarEstacion(id, { 'nomina': (data.estacion.nomina) ? data.estacion.nomina : null, 
+                                            'operator': (data.estacion.operator) ? data.estacion.operator : 'No asignado',
+                                            'colorClass': data.estacion.colorClass,
+                                            'status' : (data.estacion.status),
+                                            'idPC' : data.estacion.idPC
+                                          })
+                    }
+                      else  alert(data.mensaje);
+                }
+              ).catch((error) => {
+                  console.log(error);
+            });
+    }
+
     //Funcion para agrregar una nueva estacion
     function agregarEstacion(){
       var formDataEstacion = new FormData;
@@ -584,7 +430,6 @@
       let requiereC = (requiredCertification.value.trim() === "")  ? null : requiredCertification.value;
       let certificacion = (certificacionF.value.trim() === "")  ? null : certificacionF.value;
       let linea = (codigoLinea.value.trim() === "")  ? null : codigoLinea.value;
-
       formDataEstacion.append("opcion", "2");
       formDataEstacion.append("nombreEstacion", nombreEstacion);
       formDataEstacion.append("descripcion", descripcion);
@@ -602,18 +447,14 @@
                 })
                 .then((response) => response.text())
                 .then((data) => {
-                    console.log(data);
                     data= JSON.parse(data)
-                
                     if(data.status=='ok'){
                         alert(data.mensaje);
-                        console.log(data);
                         document.getElementById('stationForm').reset();
 
                         //Ocurtar modal
                         let modalAgregarEstacion = bootstrap.Modal.getInstance(document.getElementById('modalAgregarEstacion'));
                         modalAgregarEstacion.hide();
-
                         stationsData.push(data.dataEstacion);
                         createStation(data.dataEstacion,workspaceGrid)
                         listarEstaciones();
@@ -636,8 +477,6 @@
       let fecha  = document.getElementById('assignmentDate').value;
       let turno = document.getElementById('turnoLayout').value;
       let comentarios = document.getElementById('comentarios').value;
-
-      //console.log(fecha);
       
       formDataAsig.append("opcion", "3");
       formDataAsig.append("nomina", nomina);
@@ -654,54 +493,20 @@
               })
               .then((response) => response.text())
               .then((data) => {
-              
-                
                   data= JSON.parse(data)
-              
                   if(data.estatus=='ok'){
                       alert(data.mensaje);
                       assignmentForm.reset();
-
-                      actualizarEstacion(estacion, 
-                                          { 'nomina': nomina, 
-                                            'operator': nombre, 
-                                            'colorClass': 'station-color-1',
-                                            'status' : 'occupied'
-                                          }
-                                        )
+                      getEstacion(estacion);
                   }
 
                 else alert(data.mensaje)
-
-                  console.log(data)
               })
               .catch((error) => {
                 console.log(error);
           });
       }
     }
-
-    //Funciones para la navegacion entre las pantallas
-      function changeContent(contenedorPadre, contenidoVisible){
-          const contenedor = document.getElementById(contenedorPadre);
-          const visible = document.getElementById(contenidoVisible);
-
-          // 1. Ocultar todos los hijos
-            Array.from(contenedor.children).forEach(el => {
-              if (el.classList.contains('show')) {
-                      el.classList.remove('show');
-                      el.classList.add('d-none');
-                }
-            });
-
-        // Forzar reflow para que la animación se dispare
-        visible.offsetHeight;
-            setTimeout(() => {
-                visible.classList.add('show');
-            }, 100); 
-        visible.classList.remove('d-none');
-      }
-
 
     //Funcion para actualizar el layout y los datos de la estacion en tiempo real
     function actualizarEstacion(stationId, newData){
@@ -718,9 +523,16 @@
                                  : station.querySelector('.station-name').textContent = 'No asignado';
 
               // Clases
-              if(newData.colorClass && newData.colorClass!= null && newData.colorClass !== ''){
-                  station.classList.remove('station-color-7');
-                  station.classList.add(newData.colorClass);
+              if(newData.colorClass){
+                  //station.classList.remove('station-color-7');
+
+                     // Buscar todas las clases que comiencen con "status-"
+                    const colorActual = Array.from(station.classList).filter(clase => clase.startsWith('station-color-'));
+
+                    // Eliminarlas
+                    colorActual.forEach(clase => station.classList.remove(clase));
+
+                    station.classList.add(newData.colorClass);
               }            
 
               // Revisar esta
@@ -734,7 +546,6 @@
                     clasesParaEliminar.forEach(clase => status.classList.remove(clase));
                     status.classList.add(`status-${newData.status}`);
               }
-
        
               //Modificar la foto de la estacion
               const operator = station.querySelector('.station-operator');
@@ -760,21 +571,18 @@
 
         if (estation) {
            (newData.operator) ? estation.operator = newData.operator : '';
-              //estation.name = 'Estación en uso';
+          //estation.name =  (newData.name)'Estación en uso';
            (newData.colorClass) ? estation.colorClass = newData.colorClass : '';
            (newData.status) ? estation.status = newData.status : '';
-           (newData.nomina) ? estation.nomina = newData.nomina : '';
-           (newData.idPC) ? estation.idPC = newData.idPC : estation.idPC = null;
-           (newData.estatusPC) ? estation.estatusPC = newData.estatusPC :  estation.idPC = null;
-        }
-
-        //console.log(stationsData);  
+            estation.nomina = (newData.nomina) ?? null;
+            estation.idPC = (newData.idPC) ?? null;
+            //estation.estatusPC = (newData.estatusPC) ?? null;
+        } //console.log(stationsData);  
     } 
 
-    //Mostrar listado de estaciones
+    //Mostrar listado de estaciones registradas para colocar en los select
     function listarEstaciones(){
       const select = document.getElementById('stationSelect');
-
       select.innerHTML='';
 
         stationsData.forEach(station => {
@@ -784,99 +592,6 @@
           select.appendChild(option);
         });
     }
-
-    //Obtener nombre del numero de nomina
-    nominaModalAsignar.addEventListener('change', function (){
-      
-        let nombreModalAsignar = document.getElementById('nombreModalAsignar');
-
-        if(nominaModalAsignar && nominaModalAsignar !='') {
-            let formDataConsultarNombre = new FormData;
-            formDataConsultarNombre.append('nomina',nominaModalAsignar.value)
-            formDataConsultarNombre.append('opcion', 7)
-
-                fetch("../api/operacionesLinea.php", {
-                        method: "POST",
-                        body: formDataConsultarNombre,
-                    })
-                    .then((response) => response.text())
-                    .then((data) => {
-                        data= JSON.parse(data)
-                    
-                        if(data.estatus=='ok')
-                            nombreModalAsignar.value= data.nombre;
-                      
-                      else{
-                        nombreModalAsignar.value= ''; 
-                        console.log(data); 
-                      }
-                    })
-                    .catch((error) => {
-                      console.log(error);
-                });
-          }
-    })
-
-    nominaNoAsignado.addEventListener('change', function(){
-      let nombreNoAsignado = document.getElementById('nombreNoAsignado');
-
-        if(nominaNoAsignado && nominaNoAsignado !='') {
-            let formDataConsultarNombre = new FormData;
-            formDataConsultarNombre.append('nomina',nominaNoAsignado.value)
-            formDataConsultarNombre.append('opcion', 7)
-
-                fetch("../api/operacionesLinea.php", {
-                        method: "POST",
-                        body: formDataConsultarNombre,
-                    })
-                    .then((response) => response.text())
-                    .then((data) => {
-                  
-                          data= JSON.parse(data)
-                    
-                        if(data.estatus=='ok')
-                            nombreNoAsignado.value= data.nombre;
-                      
-                      else{
-                        nombreNoAsignado.value= ''; 
-                        console.log(data); 
-                      }
-                    })
-                    .catch((error) => {
-                      console.log(error);
-                });
-          }
-    })
-
-    nominaPC.addEventListener('change', function(){
-      let nombrePC = document.getElementById('nombrePC');
-
-        if(nominaPC && nominaPC !='') {
-            let formDataConsultarNombre = new FormData;
-            formDataConsultarNombre.append('nomina',nominaPC.value)
-            formDataConsultarNombre.append('opcion', 7)
-
-                fetch("../api/operacionesLinea.php", {
-                        method: "POST",
-                        body: formDataConsultarNombre,
-                    })
-                    .then((response) => response.text())
-                    .then((data) => {
-                          data= JSON.parse(data)
-                    
-                        if(data.estatus=='ok')
-                            nombrePC.value= data.nombre;
-                      
-                      else{
-                        nombrePC.value= ''; 
-                        console.log(data); 
-                      }
-                    })
-                    .catch((error) => {
-                      console.log(error);
-                });
-          }
-    })
 
     //Registrar personal no asignado
     function registrarPNA(){
@@ -904,9 +619,7 @@
                 })
                 .then((response) => response.text())
                 .then((data) => {
-                        console.log(data);
-                        data= JSON.parse(data)
-
+                      data= JSON.parse(data)
                       if(data.estatus=='ok'){
                           alert(data.mensaje)
                           fmPersonalNoAsignado.reset();
@@ -914,9 +627,8 @@
                           generarTablaAsistencia();
                       }
                   
-                        else{
+                        else
                             alert(data.mensaje)
-                      }
                 })
                 .catch((error) => {
                   console.log(error);
@@ -956,7 +668,7 @@
                             <td class="px-4 align-middle text-center">
                               <button 
                                 class="btn btn-sm btn-outline-primary d-inline-flex align-items-center"
-                                onclick="asignarEstacion('${emp.nomina}')"
+                                onclick="openAsignarEstacion('${emp.nomina}')"
                               >
                                 <i class="bi bi-gear me-1"></i>
                                 Asignar a Estación
@@ -970,254 +682,6 @@
                       body.innerHTML = filasHTML;
                 })
                 .catch((error) => {
-                  console.log(error);
-            });
-    }
-
-    //Abrir modal de asignar personal a una estacion
-    function asignarEstacion(nomina) {
-          //console.log(nomina)
-      let modalPersonalDisponible = document.getElementById('modalPersonalDisponible') 
-      let modalAsignarOperador = document.getElementById('modalAsignarOperador');
-
-      let modalActual = bootstrap.Modal.getInstance(modalPersonalDisponible);
-      (modalActual) ? modalActual.hide() : '';
-
-      newModal = new bootstrap.Modal(modalAsignarOperador);
-      newModal.show();   
-    }
-
-    //Remover trabajador de la estacion
-    btnRemoverTrabajadorPC.addEventListener('click', function(){
-       let formDataReniver = new FormData;
- 
-      let estacionId = document.getElementById('idEstacionModalPC').value;
-      let nominaTrabajador = document.getElementById('idTrabajadorAsignado').value; 
-
-        formDataReniver.append("opcion", "10");
-        formDataReniver.append("idEstacion", estacionId);
-        formDataReniver.append("nomina", nominaTrabajador);
-
-      if(nominaTrabajador == '' || nominaTrabajador == null){
-          alert('No hay trabajador asignado a esta estación');
-          return;
-      }
-
-      fetch("../api/operacionesLinea.php", {
-                    method: "POST",
-                    body: formDataReniver,
-                })
-                .then((response) => response.text())
-                .then((data) => {
-                
-                    data = JSON.parse(data)
-                      if(data.estatus=='ok'){
-                        
-                          alert(data.mensaje);  
-                           actualizarEstacion(estacionId, 
-                                            { 'nomina': null, 
-                                              'operator': null, 
-                                              'colorClass': 'station-color-7',
-                                              'status' : 'pending'
-                                            }
-                                          ) 
-                        }
-
-                        else 
-                          alert(data.mensaje);
-                })
-                .catch((error) => {
-                  console.log(error);
-            });
-    })
-
-    //Actualizar informacion de la linea
-    btnGuardarEdicionLinea.addEventListener('click', function(){
-      let formDataActualizarLinea = new FormData; 
-
-      let lineForm = document.getElementById('lineForm');
-
-      let descripcionLinea = document.getElementById('lineDescription').value;
-      let encargadoLinea = document.getElementById('supervisorSearch').value; 
-      let lineName = document.getElementById('lineName').value;
-
-
-
-      if (lineForm.reportValidity()){
-        formDataActualizarLinea.append('opcion', 11);
-        formDataActualizarLinea.append('codigoLinea', codigoLinea.value);
-        formDataActualizarLinea.append('descripcion', descripcionLinea);
-        formDataActualizarLinea.append('encargado', encargadoLinea);
-        formDataActualizarLinea.append('nombreLinea', lineName);
-
-
-        fetch("../api/operacionesLinea.php", {
-                    method: "POST",
-                    body: formDataActualizarLinea,
-                })
-                .then((response) => response.text())
-                .then((data) => { 
-        
-                    data= JSON.parse(data)
-                    if(data.estatus=='ok'){ 
-                        alert(data.mensaje);
-                        location.reload();
-                    }
-                    else  alert(data.mensaje);
-                })
-                .catch((error) => {
-                  console.log(error);
-            });
-      }
-    })
-
-    //Registrar un punto de cambio
-    confirmChange.addEventListener('click', function(){
-      let registroCambioForm = document.getElementById('registroCambioForm');
-      let formDataPuntoCambio = new FormData;
-      let  idEstacion = document.getElementById('id_estacion').value;
-
-      if(!registroCambioForm.reportValidity()) return;
-
-      if(document.getElementById('nombrePC').value == '' || document.getElementById('nombrePC').value == null){
-            alert('No se encontro registro del empleado ingresado') 
-            return;
-      }
-
-      formDataPuntoCambio.append('nominaPC', document.getElementById('nominaPC').value);
-      formDataPuntoCambio.append('nombrePC', document.getElementById('nombrePC').value);
-      formDataPuntoCambio.append('tipoCambio', document.getElementById('tipo_cambio').value);
-      formDataPuntoCambio.append('fechaInicio', document.getElementById('fechaHora_inicio').value);
-      formDataPuntoCambio.append('turno', document.getElementById('turnoPuntoCambio').value);
-      formDataPuntoCambio.append('motivo', document.getElementById('motivo').value);
-      formDataPuntoCambio.append('idEstacion', idEstacion);
-      formDataPuntoCambio.append('codigoLinea', codigoLinea.value);
-      formDataPuntoCambio.append('opcion', 13);
-
-      fetch("../api/operacionesLinea.php", {
-                method: "POST",
-                body: formDataPuntoCambio,  
-            })
-            .then((response) => response.text())
-            .then((data) => { 
-                console.log(data);
-                data= JSON.parse(data)  
-                if(data.estatus=='ok'){ 
-                    alert(data.mensaje);
-                    actualizarEstacion(idEstacion, 
-                                        { 'nomina': document.getElementById('nominaPC').value, 
-                                          'operator': document.getElementById('nombrePC').value,
-                                          'colorClass': 'station-color-2',
-                                          'status' : 'occupied',
-                                          'idPC' : data.idPC, 
-                                          'estatusPC' : '1'
-                                        }
-                                      )
-                } 
-                else  alert(data.mensaje);
-            })
-            .catch((error) => {
-              console.log(error);
-        }); 
-    });
-
-    //Funcion para obtener el numero de control del ultimo registro del punto de cambio
-    function getNoControl() {
-      const formDataNoControles = new FormData();
-      formDataNoControles.append('opcion', 12);
-
-      return fetch("../api/operacionesLinea.php", {
-        method: "POST",
-        body: formDataNoControles,
-      })
-        .then(response => response.json())
-        .then(data => {
-          if (data.estatus === 'ok') {
-            return data.noControl;
-          }
-          return '';
-        })
-        .catch(error => {
-          console.error(error);
-          return '';
-        });
-    }
-
-    //funcion para cerrar el punto de cambio
-    btnConfirmClose.addEventListener('click', function(){
-        let formDataCerrarPC = new FormData;
-        let idPC = document.getElementById('idPC');
-        let idEstacion = document.getElementById('idEstacionModalPC').value;
-        let cierreControlCambioForm = document.getElementById('cierreControlCambioForm')
-
-        if(idPC.value == '' || idPC.value == null){
-            alert('No hay un punto de cambio activo en esta estación');
-            return;
-        }
-
-        if(!cierreControlCambioForm.reportValidity()) return;
-
-        formDataCerrarPC.append('opcion', 14);
-        formDataCerrarPC.append('idEstacion', idEstacion);
-        formDataCerrarPC.append('idPC', idPC.value);
-        formDataCerrarPC.append('notasAdicionales', document.getElementById('notasAdicionales').value);
-        formDataCerrarPC.append('fechaCierre', document.getElementById('fechaCierre').value); 
-
-          fetch("../api/operacionesLinea.php", {
-                  method: "POST",
-                  body: formDataCerrarPC,
-              })
-              .then((response) => response.text())
-              .then((data) => {
-
-                console.log(data);
-                  data= JSON.parse(data)
-                  if(data.estatus=='ok'){ 
-                      alert(data.mensaje);
-                      //Actualizar informacion de la estacion
-                       getEstacion(idEstacion);
-                  }
-
-                    else  alert(data.mensaje);
-
-                    }).catch((error) => {
-                      console.log(error);
-            });
-      })
-
-    //Funcion para obtener datos de una estacion en especifico. 
-    function getEstacion(id){
-        //Esta funcion sirve para obtener los datos de una estaciones desde el servidor 
-        // despues de haber modificado sus valores en la base de datos
-        //Por ejemplo, si se finaliza el puto de cambio hay que cambiar el usuario del PC al usuario que esta
-        //asignado en la estacion, pero esta informaion no esta en el data del listado de las estaciones, por 
-        //ya que este valor se sobreescribe si hay un punto de cambio activo y muestra la inforacion de el usuario
-        //registrado en el pc, por lo que al finalizar el punto del cambio no se hace algun registro de un nuevo usuari
-        //con el que se pueda sustituir la informacion de la estacion, por lo que es necesario hacer una consulta a la BD
-        //para traer la informacion de especifica de esa estacion 
-
-      let formDataEstacion = new FormData;
-      formDataEstacion.append('opcion', 15);
-      formDataEstacion.append('idEstacion', id);
-          fetch("../api/operacionesLinea.php", {
-                  method: "POST",
-                  body: formDataEstacion,
-              })
-              .then((response) => response.text())
-              .then((data) => {   
-                    data= JSON.parse(data)
-                    if(data.estatus=='ok'){ 
-                        actualizarEstacion(id, 
-                                          { 'nomina': (data.estacion.nomina) ? data.estacion.nomina : null, 
-                                            'operator': (data.estacion.nomina) ? data.estacion.nombre : 'No asignado',
-                                            'colorClass': (data.estacion.nomina != null) ? 'station-color-1' : 'station-color-7',
-                                            'status' : (data.estacion.nomina != null) ? 'occupied' : 'available'
-                                          }
-                                        )
-                    }
-                      else  alert(data.mensaje);
-                }
-              ).catch((error) => {
                   console.log(error);
             });
     }
@@ -1248,28 +712,36 @@
                         pageLength: 10,
                         searching: false,
                         info: false,
-                        columnDefs: [{ width: "80px", targets: 0 },
-                                     { width: "250px", targets: 1 },
-                                     { width: "350px", targets: 2 },
-                                     { width: "250px", targets: 3 },
-                                     { width: "180px", targets: 4 }
+                        /*columnDefs: [{ width: "80px", targets: 0 },
+                                     { width: "100px", targets: 1 },
+                                     { width: "250px", targets: 2 },
+                                     { width: "350px", targets: 3 },
+                                     { width: "250px", targets: 4 },
+                                     { width: "180px", targets: 5 }
                                     ],
+                        */
                         columns: [
-                          {
-                            data: null,
-                            render: (data, type, row, meta) => {
-                              const station = (meta.row + 1).toString().padStart(2, '0');
-                              return `
-                                <div class="station-badge bg-primary text-white rounded text-center py-1">
-                                  <strong>${station}</strong>
-                                </div>`;
-                            }
-                          },
+                          /*
+                            {
+                              data: null,
+                              render: (data, type, row, meta) => {
+                                const station = (meta.row + 1).toString().padStart(2, '0');
+                                return `
+                                  <div class="station-badge bg-primary text-white rounded text-center py-1">
+                                    <strong>${station}</strong>
+                                  </div>`;
+                              }
+                            },
+                          */
                           {
                             data: null,
                             render: row => `
                               <div class="fw-bold">${row.nombre}</div>
                               <small class="text-muted">ID: ${row.nomina}</small>`
+                          },
+                          {
+                            data:null,
+                            render: row =>`<div> ${(row.nombre_estacion) ?? 'SIN ASIGNAR' }</div>`
                           },
                           {
                             data: null,
@@ -1315,17 +787,354 @@
               });            
     }
 
-    generarTablaAsistencia();
-/*
-    $('#attendanceTable').DataTable({
-      "paging": true,
-      "searching": true,
-      "ordering": true,
-      "info": false,
-      "columnDefs": [
-        { "orderable": false, "targets": [2, 3, 4] } // Desactiva orden en asistencia, comentarios y cambio de turno
-      ]
-    });
-*/
+    //Abrir modal de asignar personal a una estacion
+    function openAsignarEstacion(nomina) {
+      //console.log(nomina)
+      let modalPersonalDisponible = document.getElementById('modalPersonalDisponible') 
+      let modalAsignarOperador = document.getElementById('modalAsignarOperador');
 
-   
+      let modalActual = bootstrap.Modal.getInstance(modalPersonalDisponible);
+      (modalActual) ? modalActual.hide() : '';
+
+      newModal = new bootstrap.Modal(modalAsignarOperador);
+      newModal.show();   
+    }
+
+    //Funciones para la navegacion entre las pantallas de los modales
+    function changeContent(contenedorPadre, contenidoVisible){
+        const contenedor = document.getElementById(contenedorPadre);
+        const visible = document.getElementById(contenidoVisible);
+        // 1. Ocultar todos los hijos
+          Array.from(contenedor.children).forEach(el => {
+            if (el.classList.contains('show')) {
+                    el.classList.remove('show');
+                    el.classList.add('d-none');
+              }
+          });
+
+      // Forzar reflow para que la animación se dispare
+          visible.offsetHeight;
+          setTimeout(() => { visible.classList.add('show')}, 100); 
+          visible.classList.remove('d-none');
+    }
+
+    //Funcion para obtener el numero de control del ultimo registro del punto de cambio
+    function getNoControl() {
+      const formDataNoControles = new FormData();
+      formDataNoControles.append('opcion', 12);
+      return fetch("../api/operacionesLinea.php", {
+        method: "POST",
+        body: formDataNoControles,
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.estatus === 'ok') {
+            return data.noControl;
+          }
+          return '';
+        })
+        .catch(error => {
+          console.error(error);
+          return '';
+        });
+    }
+
+    // Inicializar el workspace
+    document.addEventListener('DOMContentLoaded', function() {
+        workspaceGrid = document.getElementById('workspaceGrid');
+        getEstaciones();
+
+      // Inicializar tooltips
+      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.map(function (tooltipTriggerEl) {return new bootstrap.Tooltip(tooltipTriggerEl);});
+      
+      // Configurar event listeners para los controles
+      setupControls();
+      
+      // Inicializar sistema de drag
+      dragSystem.init();
+      
+      // Actualizar indicador de zoom
+      updateZoomIndicator();
+
+      //Generar tabla de personal no asignado
+      mostrarTablaPNA();
+
+      //Generar listado de personal perteneciente a la linea
+      generarTablaAsistencia();
+
+    //Eventlistener
+        //Obtener nombre del numero de nomina
+        nominaModalAsignar.addEventListener('change', function (){
+          
+            let nombreModalAsignar = document.getElementById('nombreModalAsignar');
+
+            if(nominaModalAsignar && nominaModalAsignar !='') {
+                let formDataConsultarNombre = new FormData;
+                formDataConsultarNombre.append('nomina',nominaModalAsignar.value)
+                formDataConsultarNombre.append('opcion', 7)
+
+                    fetch("../api/operacionesLinea.php", {
+                            method: "POST",
+                            body: formDataConsultarNombre,
+                        })
+                        .then((response) => response.text())
+                        .then((data) => {
+                            data= JSON.parse(data)
+                        
+                            if(data.estatus=='ok')
+                                nombreModalAsignar.value= data.nombre;
+                          
+                          else{
+                            nombreModalAsignar.value= ''; 
+                            console.log(data); 
+                          }
+                        })
+                        .catch((error) => {
+                          console.log(error);
+                    });
+              }
+        })
+
+        nominaNoAsignado.addEventListener('change', function(){
+          let nombreNoAsignado = document.getElementById('nombreNoAsignado');
+
+            if(nominaNoAsignado && nominaNoAsignado !='') {
+                let formDataConsultarNombre = new FormData;
+                formDataConsultarNombre.append('nomina',nominaNoAsignado.value)
+                formDataConsultarNombre.append('opcion', 7)
+
+                    fetch("../api/operacionesLinea.php", {
+                            method: "POST",
+                            body: formDataConsultarNombre,
+                        })
+                        .then((response) => response.text())
+                        .then((data) => {
+                      
+                              data= JSON.parse(data)
+                        
+                            if(data.estatus=='ok')
+                                nombreNoAsignado.value= data.nombre;
+                          
+                          else{
+                            nombreNoAsignado.value= ''; 
+                            console.log(data); 
+                          }
+                        })
+                        .catch((error) => {
+                          console.log(error);
+                    });
+              }
+        })
+
+        nominaPC.addEventListener('change', function(){
+          let nombrePC = document.getElementById('nombrePC');
+
+            if(nominaPC && nominaPC !='') {
+                let formDataConsultarNombre = new FormData;
+                formDataConsultarNombre.append('nomina',nominaPC.value)
+                formDataConsultarNombre.append('opcion', 7)
+
+                    fetch("../api/operacionesLinea.php", {
+                            method: "POST",
+                            body: formDataConsultarNombre,
+                        })
+                        .then((response) => response.text())
+                        .then((data) => {
+                              data= JSON.parse(data)
+                        
+                            if(data.estatus=='ok')
+                                nombrePC.value= data.nombre;
+                          
+                          else{
+                            nombrePC.value= ''; 
+                            console.log(data); 
+                          }
+                        })
+                        .catch((error) => {
+                          console.log(error);
+                    });
+              }
+        })
+
+        //Remover trabajador de la estacion
+        btnRemoverTrabajadorPC.addEventListener('click', function(){
+          let formDataReniver = new FormData;
+          let idPC = document.getElementById('idPC');
+          let estacionId = document.getElementById('idEstacionModalPC').value;
+          let nominaTrabajador = document.getElementById('idTrabajadorAsignado').value; 
+
+            formDataReniver.append("opcion", "10");
+            formDataReniver.append("idEstacion", estacionId);
+            formDataReniver.append("nomina", nominaTrabajador);
+
+          if(idPC.value){
+              alert('Debe finalizar el punto de cambio activo');
+              return;
+          }
+
+          if(nominaTrabajador == '' || nominaTrabajador == null){
+              alert('No hay trabajador asignado a esta estación');
+              return;
+          }
+
+          fetch("../api/operacionesLinea.php", {
+                        method: "POST",
+                        body: formDataReniver,
+                    })
+                    .then((response) => response.text())
+                    .then((data) => {
+                    
+                        data = JSON.parse(data)
+                          if(data.estatus=='ok'){
+                              alert(data.mensaje);  
+                              getEstacion(estacionId)
+                            }
+
+                            else 
+                              alert(data.mensaje);
+                    })
+                    .catch((error) => {
+                      console.log(error);
+                });
+        })
+
+        //Actualizar informacion de la linea
+        btnGuardarEdicionLinea.addEventListener('click', function(){
+          let formDataActualizarLinea = new FormData; 
+
+          let lineForm = document.getElementById('lineForm');
+
+          let descripcionLinea = document.getElementById('lineDescription').value;
+          let encargadoLinea = document.getElementById('supervisorSearch').value; 
+          let lineName = document.getElementById('lineName').value;
+
+
+
+          if (lineForm.reportValidity()){
+            formDataActualizarLinea.append('opcion', 11);
+            formDataActualizarLinea.append('codigoLinea', codigoLinea.value);
+            formDataActualizarLinea.append('descripcion', descripcionLinea);
+            formDataActualizarLinea.append('encargado', encargadoLinea);
+            formDataActualizarLinea.append('nombreLinea', lineName);
+
+
+            fetch("../api/operacionesLinea.php", {
+                        method: "POST",
+                        body: formDataActualizarLinea,
+                    })
+                    .then((response) => response.text())
+                    .then((data) => { 
+            
+                        data= JSON.parse(data)
+                        if(data.estatus=='ok'){ 
+                            alert(data.mensaje);
+                            location.reload();
+                        }
+                        else  alert(data.mensaje);
+                    })
+                    .catch((error) => {
+                      console.log(error);
+                });
+          }
+        })
+
+        //Registrar un punto de cambio
+        confirmChange.addEventListener('click', function(){
+          let registroCambioForm = document.getElementById('registroCambioForm');
+          let formDataPuntoCambio = new FormData;
+          let  idEstacion = document.getElementById('id_estacion').value;
+
+          if(!registroCambioForm.reportValidity()) return;
+
+          if(document.getElementById('nombrePC').value == '' || document.getElementById('nombrePC').value == null){
+                alert('No se encontro registro del empleado ingresado') 
+                return;
+          }
+
+          formDataPuntoCambio.append('nominaPC', document.getElementById('nominaPC').value);
+          formDataPuntoCambio.append('nombrePC', document.getElementById('nombrePC').value);
+          formDataPuntoCambio.append('tipoCambio', document.getElementById('tipo_cambio').value);
+          formDataPuntoCambio.append('fechaInicio', document.getElementById('fechaHora_inicio').value);
+          formDataPuntoCambio.append('turno', document.getElementById('turnoPuntoCambio').value);
+          formDataPuntoCambio.append('motivo', document.getElementById('motivo').value);
+          formDataPuntoCambio.append('idEstacion', idEstacion);
+          formDataPuntoCambio.append('codigoLinea', codigoLinea.value);
+          formDataPuntoCambio.append('opcion', 13);
+
+          fetch("../api/operacionesLinea.php", {
+                    method: "POST",
+                    body: formDataPuntoCambio,  
+                })
+                .then((response) => response.text())
+                .then((data) => { 
+                    console.log(data);
+                    data= JSON.parse(data)  
+                    if(data.estatus=='ok'){ 
+                        alert(data.mensaje);
+                        let modalActual = bootstrap.Modal.getInstance(document.getElementById('changeControlModal'));
+                        (modalActual) ? modalActual.hide() : '';
+                        getEstacion(idEstacion)
+                    } 
+                    else  alert(data.mensaje);
+                })
+                .catch((error) => {
+                  console.log(error);
+            }); 
+        });
+
+        //funcion para cerrar el punto de cambio
+        btnConfirmClose.addEventListener('click', function(){
+            let formDataCerrarPC = new FormData;
+            let idPC = document.getElementById('idPC');
+            let idEstacion = document.getElementById('idEstacionModalPC').value;
+            let cierreControlCambioForm = document.getElementById('cierreControlCambioForm')
+
+            if(!idPC.value){
+                alert('No hay un punto de cambio activo en esta estación');
+                return;
+            }
+
+            if(!cierreControlCambioForm.reportValidity()) return;
+
+            formDataCerrarPC.append('opcion', 14);
+            formDataCerrarPC.append('idEstacion', idEstacion);
+            formDataCerrarPC.append('idPC', idPC.value);
+            formDataCerrarPC.append('notasAdicionales', document.getElementById('notasAdicionales').value);
+            formDataCerrarPC.append('fechaCierre', document.getElementById('fechaCierre').value); 
+
+              fetch("../api/operacionesLinea.php", {
+                      method: "POST",
+                      body: formDataCerrarPC,
+                  })
+                  .then((response) => response.text())
+                  .then((data) => {
+
+                    console.log(data);
+                      data= JSON.parse(data)
+                      if(data.estatus=='ok'){ 
+                          alert(data.mensaje);
+
+                          let modalActual = bootstrap.Modal.getInstance(document.getElementById('changeControlModal'));
+                          (modalActual) ? modalActual.hide() : '';
+
+                          //Actualizar informacion de la estacion
+                          getEstacion(idEstacion);
+                      }
+
+                        else  alert(data.mensaje);
+
+                        }).catch((error) => {
+                          console.log(error);
+                });
+        })
+
+        btnGuardarEstacion.addEventListener('click', agregarEstacion);
+        btnAsignarOperador.addEventListener('click', asignarEstaciones);
+        btnGuardarDisponible.addEventListener('click', registrarPNA);  
+        btnInfoRPC.addEventListener('click', function(){changeContent('ventanasModalPC','contInfoEstacion')})
+        btnRegistroPc.addEventListener('click', function(){changeContent('ventanasModalPC','contregistroCambioForm')})
+        btnLiberarPC.addEventListener('click', function(){changeContent('ventanasModalPC', 'contLiberarPC')})
+        btnTablaPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contTablaDisponibles')})
+        btnRegistroPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contRegistroPersonalDisponible')});
+    });

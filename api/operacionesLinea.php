@@ -963,7 +963,10 @@ else
                                                         'status' => !empty($estacion['nomina']) ? 'occupied' : 'pending', //pending: sin asignar, occupied: operador asignado
                                                         'certification' => $estacion['codigo_certificacion'],
                                                         'idPC' => $estacion['idPC'],
-                                                        'colorClass' => $coloClass)
+                                                        'colorClass' => $coloClass
+                                                           //'estatusPC' => $estacion['estatusPC']
+                                                        )
+                                                        
                                     );
             }
         }
@@ -978,19 +981,22 @@ else
 //Consulta para generar una lista de asistencia con los PC, PNAD y asignados 
 else 
     if($opcion =='16'){
-        $codigoLinea = $_POST['codigoLinea'] ?? null;
+        $codigoLinea = empty(!$_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
         
-        $sql= "SELECT p.nomina, p.nombre, p.id_estacion, e.nombre_estacion
-                    FROM SPC_PERSONAL_ESTACION p left JOIN SPC_ESTACIONES AS e ON e.id_estacion = p.id_estacion 
-                WHERE p.fecha_fin IS NULL and e.codigo_linea = :codigoLinea1
-                    UNION
-                SELECT PC.nomina, PC.nombre, PC.id_estacion, e.nombre_estacion
+        $sql= "WITH union_tablas AS (SELECT PC.nomina, PC.nombre, PC.id_estacion, e.nombre_estacion, 1 AS prioridad
                    FROM SPC_PUNTOS_CAMBIO PC left JOIN SPC_ESTACIONES AS e ON e.id_estacion = PC.id_estacion
                 WHERE PC.codigo_linea = :codigoLinea2 AND PC.fechaHora_fin IS NULL
                     UNION
-                SELECT nomina, nombre, null as id_estacion, null as nombre_estacion
+                SELECT p.nomina, p.nombre, p.id_estacion, e.nombre_estacion,  2 AS prioridad 
+                    FROM SPC_PERSONAL_ESTACION p left JOIN SPC_ESTACIONES AS e ON e.id_estacion = p.id_estacion 
+                WHERE p.fecha_fin IS NULL and e.codigo_linea = :codigoLinea1
+                    UNION
+                SELECT nomina, nombre, null as id_estacion, null as nombre_estacion, 3 AS prioridad
                     FROM SPC_PERSONAL_NAD
-                WHERE eliminado = '0' AND codigo_linea = :codigoLinea3";
+                WHERE eliminado = '0' AND codigo_linea = :codigoLinea3) 
+                SELECT nomina, nombre, id_estacion, nombre_estacion
+                    FROM ( SELECT *, ROW_NUMBER() OVER(PARTITION BY id_estacion ORDER BY prioridad) AS rn
+                        FROM union_tablas ) t WHERE rn = 1;";
 
         $stmt = $conn->prepare($sql);
         $response= array();

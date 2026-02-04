@@ -140,3 +140,16 @@
 //Tal vez validar al momento de remover al empleado si este es un punto de cambio que se finalice el punto de cambio
 //Y dejar otra opcion para que se puede finalizar y/o asignar al operador como titular de la estacion
 //Falta agregar el filtro de turno a las consultas
+
+//Revisar que pasa con las personas cuando no estan trabajando en la estacion y tienen un punto de cambio
+//Si a una estacion se le crea un punto de cambio mostrara la persona del punto de cambio pero no mostrara a la persona 
+//que esta como titular de la estacion, si esta no esta porque se le sansiono o suspendio no se le va a poder hacer el registro de la sistencia 
+//Tal vez seria conveniente mostrar todas las personas y dar prioridad a mostrar los PC y si el titular 
+// no esta en ninguna estacion mas que en la estacion con el PC mostrar la persona que esta como PC y al titular
+//indicando si es titular o PC
+
+//Y como se guardaria la asistencia o el registro del layout si la persona esta asignada en dos estaciones sin que excista un punto de cambio
+//si no que esta como titular
+//o tener dos tabla uno para el registro de la estacion y otro del acomodo del layout 
+
+//Eliminar(ocultar ) una estacion
