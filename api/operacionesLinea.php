@@ -981,6 +981,7 @@ else
 //Consulta para generar una lista de asistencia con los PC, PNAD y asignados 
 else 
     if($opcion =='16'){
+        //Generar lista de asistencia 
         $codigoLinea = empty(!$_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
         
         $sql= "WITH union_tablas AS (SELECT PC.nomina, PC.nombre, PC.id_estacion, e.nombre_estacion, 1 AS prioridad
@@ -1011,7 +1012,110 @@ else
 
         else 
             $response = $stmt->errorInfo()[2];
+
+        //Consultar lista de asistencia 
    
         echo json_encode($response);
+    }
+
+//Registro de asistencia
+else 
+    if($opcion =='17'){
+           $datosAsistencia =  json_decode($_POST['datosAsistencia'], true);
+           $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
+           $turno = !empty($_POST['turno']) ? $_POST['turno'] : null;
+           $results = '';
+
+            if (!$datosAsistencia || !is_array($datosAsistencia) || !$codigoLinea || !$turno ) {
+                echo json_encode(['error' => 'Datos inválidos']);
+                exit;
+            }
+
+        try {
+            $conn->beginTransaction();
+            $sql = "INSERT INTO SPC_REGISTRO_ASISTENCIA (nomina, nombre, estatus, codigo_linea, turno) 
+                        VALUES (:nomina, :nombre, :estatus, :codigo_linea, :turno)";
+
+            $stmt = $conn->prepare($sql);
+            foreach ($datosAsistencia as $row) {
+                //if (empty($row['nomina']) || empty($row['nombre']) || empty($row['estatus'])) { throw new Exception('Datos incompletos en asistencia');}
+                $stmt->execute([
+                    ':nomina' => $row['nomina'],
+                    ':nombre' => $row['nombre'],
+                    ':estatus' => $row['estatus'],
+                    ':codigo_linea' => $codigoLinea,
+                    ':turno' => $turno
+                ]);
+            }
+
+            $conn->commit();
+            $results = array([
+                              'estatus' => 'ok',
+                              'mensaje' => 'Se ha hecho el registro de asistencia'
+                            ]);
+
+        } catch (Exception $e) {
+            $conn->rollBack();
+              $results = array([
+                'estatus' => 'error',
+                'mensaje' => 'Ocurrió un error al realizar el registro',
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        // Devolver resultado
+        echo json_encode($results);
+}
+
+//Actualizaqr registro de asistencia 
+else 
+    if($opcion == '18'){
+        $ahora = new DateTime();
+        $ahora->format('Y-m-d H:i:s');
+
+        $turno = !empty($_POST['turno']) ? $_POST['turno'] : null;
+        $inicio;
+        $fin;
+
+    //Verificar si ya existe un registro de asistencia
+
+        //Turno 1
+        if($turno == '1'){
+            $inicio = new DateTime('today 08:00');
+            $fin    = new DateTime('today 19:59');
+        }
+
+        //Turno 2
+        else 
+            if($turno == '2'){
+
+                if($ahora>= new DateTime())
+
+                $inicio = new DateTime('today 20:00');
+                $fin    = new DateTime('today 07:59');
+                $fecha->modify('-1 day');
+            }
+
+            $sql = "SELECT count (id_registro) FROM SPC_REGISTRO_ASISTENCIA 
+                            WHERE turno = '1' AND fecha_operacion > CONVERT(DATEtime, :fechaInicio)  
+                        AND fecha_operacion < CONVERT(DATETIME, :fechaFin)";
+
+            $stmt->execute([
+                            ':turno' => 1,
+                            ':fechaInicio' => $inicio->format('Y-m-d H:i'),
+                            ':fechaFin' => $fin->format('Y-m-d H:i')
+                           ]);
+
+            if(stmt->fetchColumn()){
+
+            }
+
+            else {
+
+
+            }
+
+            //Despues de la 8 de la noche la fecha de inicio es hoy 8:00 pm fecha de fin mañana 8:00 am
+            //Antes de 8 de la noche la fecha de inicio es ayer 8:00 pm y la fecha de fin hoy 8:00 am 
     }
 ?>

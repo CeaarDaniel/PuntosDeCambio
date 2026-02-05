@@ -737,9 +737,6 @@
               </h6>
               <div>
                 <span class="badge bg-light text-dark me-2">Total: 15 operadores</span>
-                <button class="btn btn-success btn-sm">
-                  <i class="bi bi-check-lg"></i> Guardar Cambios
-                </button>
               </div>
             </div>
             <div class="card-body p-0">
@@ -1016,9 +1013,9 @@
         <!-- Footer del Modal -->
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-primary">
-              <i class="bi bi-floppy"></i> Guardar Cambios
-            </button>
+             <button class="btn btn-success btn-sm" id="btnRegistrarAsistencia">
+                  <i class="bi bi-check-lg"></i> Registrar asistencia
+              </button>
         </div>
       </div>
     </div>

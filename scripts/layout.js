@@ -4,6 +4,8 @@
   let btnGuardarEdicionLinea = document.getElementById('btnGuardarEdicionLinea');
   let confirmChange = document.getElementById('confirmChange');
   let btnConfirmClose = document.getElementById('btnConfirmClose');
+
+  let btnRegistrarAsistencia = document.getElementById('btnRegistrarAsistencia');
   let tablaPersonalNoAsignado = document.getElementById('tablaPersonalNoAsignado');
   let workspaceGrid;
   //Inputs del modal asignar operador
@@ -699,9 +701,7 @@
             .then((response) => response.text())
             .then((data) => {   
                       data= JSON.parse(data)
-
                       $('#attendanceTable').DataTable().destroy();
-
                       $('#attendanceTable').DataTable({
                         //scrollY: '300px',
                         //scrollCollapse: true,
@@ -721,70 +721,113 @@
                                     ],
                         */
                         columns: [
-                          /*
+                            /*
+                              {
+                                data: null,
+                                render: (data, type, row, meta) => {
+                                  const station = (meta.row + 1).toString().padStart(2, '0');
+                                  return `
+                                    <div class="station-badge bg-primary text-white rounded text-center py-1">
+                                      <strong>${station}</strong>
+                                    </div>`;
+                                }
+                              },
+                            */
                             {
                               data: null,
-                              render: (data, type, row, meta) => {
-                                const station = (meta.row + 1).toString().padStart(2, '0');
-                                return `
-                                  <div class="station-badge bg-primary text-white rounded text-center py-1">
-                                    <strong>${station}</strong>
-                                  </div>`;
-                              }
+                              render: row => `<div class="fw-bold" data-nombre="${row.nombre}" data-nomina="${row.nomina}">${row.nombre}</div>
+                                              <small class="text-muted">ID: ${row.nomina}</small>`
                             },
-                          */
-                          {
-                            data: null,
-                            render: row => `
-                              <div class="fw-bold">${row.nombre}</div>
-                              <small class="text-muted">ID: ${row.nomina}</small>`
-                          },
-                          {
-                            data:null,
-                            render: row =>`<div> ${(row.nombre_estacion) ?? 'SIN ASIGNAR' }</div>`
-                          },
-                          {
-                            data: null,
-                            render: row => `<select class="form-control form-control-custom attendance-status" data-employee="${row.nomina}">
-                                              <option value="present">✅ ASISTENCIA</option>
-                                              <option value="absence">❌ FALTA INJUSTIFICADA</option>
-                                              <option value="permission">🟢 PERMISO SIN GOCE DE SUELDO</option>
-                                              <option value="vacation">🏖️ VACACIONES</option>
-                                              <option value="technical-stop">🟡 PARO TÉCNICO</option>
-                                              <option value="rest-day">⚪ DESCANSO</option>
-                                              <option value="sanction">🚫 SANCIÓN</option>
-                                              <option value="overtime">⏱️ TIEMPO EXTRA</option>
-                                              <option value="permission-medical">🏥 INCAPACIDAD</option>
-                                            </select>`
-                          },
-                          {
-                            data: null,
-                            render: () => `
-                              <input type="text"
-                                    class="form-control form-control-custom"
-                                    placeholder="Observaciones...">`
-                          },
-                          {
-                            data: null,
-                            className: "text-center",
-                            render: (data, type, row) => `
-                              <div class="form-check d-flex justify-content-center">
-                                <input class="form-check-input"
-                                      type="checkbox"
-                                      id="cambio_${row.nomina}">
-                                <label class="form-check-label"
-                                      for="cambio_${row.nomina}"
-                                      data-bs-toggle="tooltip"
-                                      title="Cambio de turno">
-                                  <i class="bi bi-clock-history"></i>
-                                </label>
-                              </div>`
-                          }
-                        ]
+                            {
+                              data:null,
+                              render: row =>`<div> ${(row.nombre_estacion) ?? 'SIN ASIGNAR' }</div>`
+                            },
+                            {
+                              data: null,
+                              render: row => `<select name="estatusAsistencia" class="form-control form-control-custom attendance-status" data-employee="${row.nomina}">
+                                                <option value="1">✅ ASISTENCIA</option>
+                                                <option value="2">❌ FALTA INJUSTIFICADA</option>
+                                                <option value="3">🟢 PERMISO SIN GOCE DE SUELDO</option>
+                                                <option value="4">🏖️ VACACIONES</option>
+                                                <option value="5">🟡 PARO TÉCNICO</option>
+                                                <option value="6">⚪ DESCANSO</option>
+                                                <option value="7">🚫 SANCIÓN</option>
+                                                <option value="8">⏱️ TIEMPO EXTRA</option>
+                                                <option value="9">🏥 INCAPACIDAD</option>
+                                              </select>`
+                            },
+                            {
+                              data: null,
+                              render: () => `
+                                <input type="text" name="observacionesAsistencia"
+                                      class="form-control form-control-custom"
+                                      placeholder="Observaciones...">`
+                            },
+                            {
+                              data: null,
+                              className: "text-center",
+                              render: (data, type, row) => `
+                                <div class="form-check d-flex justify-content-center">
+                                  <input class="form-check-input"
+                                        type="checkbox"
+                                        id="cambio_${row.nomina}">
+                                  <label class="form-check-label"
+                                        for="cambio_${row.nomina}"
+                                        data-bs-toggle="tooltip"
+                                        title="Cambio de turno">
+                                    <i class="bi bi-clock-history"></i>
+                                  </label>
+                                </div>`
+                            }
+                          ]
                       });
                   }).catch((error) => {
                     console.log(error);
               });            
+    }
+
+    function registrarAsistencia(){
+          let datosAsistencia = [];
+          let fromDataAsistencia = new FormData;
+          let turno = $('#turnoLayout').val();
+
+          $('#attendanceTable').DataTable().rows({ page:'all'}).every(function () {
+              const data = this.data();
+              const fila = this.node();
+              datosAsistencia.push({
+                  nomina: data.nomina,
+                  nombre: data.nombre,
+                  estatus: $(fila).find('select[name="estatusAsistencia"]').val()
+                  //observaciones: $(fila).find('input[name="observacionesAsistencia"]').val()
+              });
+          });
+
+          fromDataAsistencia.append('opcion', 17);
+          fromDataAsistencia.append('turno', turno);
+          fromDataAsistencia.append('codigoLinea', codigoLinea.value);
+          fromDataAsistencia.append('datosAsistencia', JSON.stringify(datosAsistencia));
+
+          fetch("../api/operacionesLinea.php", {
+            method: "POST",
+            body: fromDataAsistencia,
+          })
+            .then(response => response.text())
+            .then(data => {
+
+
+              data = JSON.parse(data)
+
+              if(data.estatus == 'ok')
+                  alert(data.mensaje)
+
+              else {
+                  alert('Ocurrio un error al realizar el registro') 
+                  console.log(data);
+              }
+            })
+            .catch(error => {
+              console.log(error);
+            });
     }
 
     //Abrir modal de asignar personal a una estacion
@@ -1131,10 +1174,14 @@
 
         btnGuardarEstacion.addEventListener('click', agregarEstacion);
         btnAsignarOperador.addEventListener('click', asignarEstaciones);
-        btnGuardarDisponible.addEventListener('click', registrarPNA);  
+        btnGuardarDisponible.addEventListener('click', registrarPNA); 
+        btnRegistrarAsistencia.addEventListener('click', registrarAsistencia)
         btnInfoRPC.addEventListener('click', function(){changeContent('ventanasModalPC','contInfoEstacion')})
         btnRegistroPc.addEventListener('click', function(){changeContent('ventanasModalPC','contregistroCambioForm')})
         btnLiberarPC.addEventListener('click', function(){changeContent('ventanasModalPC', 'contLiberarPC')})
         btnTablaPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contTablaDisponibles')})
         btnRegistroPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contRegistroPersonalDisponible')});
     });
+
+  /*
+  */
