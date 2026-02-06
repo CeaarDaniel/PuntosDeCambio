@@ -228,7 +228,6 @@
         document.getElementById('idEstacionModalPC').value = stationData.id;
         document.getElementById('idTrabajadorAsignado').value = stationData.nomina || '';
 
-
         //Setear valores del formulario de registro de PC
           getNoControl().then(resultado => { document.getElementById('no_controlCambio').value = resultado;});
           document.getElementById('fechaHora_inicio').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
@@ -693,6 +692,7 @@
       let fromDataAsistencia = new FormData;
       fromDataAsistencia.append('opcion', 16);
       fromDataAsistencia.append('codigoLinea', codigoLinea.value);
+      fromDataAsistencia.append('turno', $('#turnoLayout').val());
 
         fetch("../api/operacionesLinea.php", {
                 method: "POST",
@@ -733,8 +733,7 @@
                                 }
                               },
                             */
-                            {
-                              data: null,
+                            { data: null,
                               render: row => `<div class="fw-bold" data-nombre="${row.nombre}" data-nomina="${row.nomina}">${row.nombre}</div>
                                               <small class="text-muted">ID: ${row.nomina}</small>`
                             },
@@ -745,15 +744,15 @@
                             {
                               data: null,
                               render: row => `<select name="estatusAsistencia" class="form-control form-control-custom attendance-status" data-employee="${row.nomina}">
-                                                <option value="1">✅ ASISTENCIA</option>
-                                                <option value="2">❌ FALTA INJUSTIFICADA</option>
-                                                <option value="3">🟢 PERMISO SIN GOCE DE SUELDO</option>
-                                                <option value="4">🏖️ VACACIONES</option>
-                                                <option value="5">🟡 PARO TÉCNICO</option>
-                                                <option value="6">⚪ DESCANSO</option>
-                                                <option value="7">🚫 SANCIÓN</option>
-                                                <option value="8">⏱️ TIEMPO EXTRA</option>
-                                                <option value="9">🏥 INCAPACIDAD</option>
+                                                <option value="1" ${(row.estatus && row.estatus=='1') ? 'selected' : ''}>✅ ASISTENCIA</option>
+                                                <option value="2" ${(row.estatus && row.estatus=='2') ? 'selected' : ''}>❌ FALTA INJUSTIFICADA</option>
+                                                <option value="3" ${(row.estatus && row.estatus=='3') ? 'selected' : ''}>🟢 PERMISO SIN GOCE DE SUELDO</option>
+                                                <option value="4" ${(row.estatus && row.estatus=='4') ? 'selected' : ''}>🏖️ VACACIONES</option>
+                                                <option value="5" ${(row.estatus && row.estatus=='5') ? 'selected' : ''}>🟡 PARO TÉCNICO</option>
+                                                <option value="6" ${(row.estatus && row.estatus=='6') ? 'selected' : ''}>⚪ DESCANSO</option>
+                                                <option value="7" ${(row.estatus && row.estatus=='7') ? 'selected' : ''}>🚫 SANCIÓN</option>
+                                                <option value="8" ${(row.estatus && row.estatus=='8') ? 'selected' : ''}>⏱️ TIEMPO EXTRA</option>
+                                                <option value="9" ${(row.estatus && row.estatus=='9') ? 'selected' : ''}>🏥 INCAPACIDAD</option>
                                               </select>`
                             },
                             {
@@ -813,11 +812,8 @@
           })
             .then(response => response.text())
             .then(data => {
-
-
               data = JSON.parse(data)
-
-              if(data.estatus == 'ok')
+              if(data.estatus && data.estatus == 'ok')
                   alert(data.mensaje)
 
               else {
@@ -833,7 +829,7 @@
     //Abrir modal de asignar personal a una estacion
     function openAsignarEstacion(nomina) {
       //console.log(nomina)
-      let modalPersonalDisponible = document.getElementById('modalPersonalDisponible') 
+      let modalPersonalDisponible = document.getElementById('modalPersonalDisponible');
       let modalAsignarOperador = document.getElementById('modalAsignarOperador');
 
       let modalActual = bootstrap.Modal.getInstance(modalPersonalDisponible);
@@ -906,7 +902,7 @@
       //Generar listado de personal perteneciente a la linea
       generarTablaAsistencia();
 
-    //Eventlistener
+      //Eventlistener
         //Obtener nombre del numero de nomina
         nominaModalAsignar.addEventListener('change', function (){
           
@@ -1152,7 +1148,6 @@
                   })
                   .then((response) => response.text())
                   .then((data) => {
-
                     console.log(data);
                       data= JSON.parse(data)
                       if(data.estatus=='ok'){ 
@@ -1183,5 +1178,15 @@
         btnRegistroPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contRegistroPersonalDisponible')});
     });
 
-  /*
-  */
+
+    /*
+      Lo mejor podria ser mostrar el listado de todo el personal obteniendo las personas unicas o el distinc por Nomina
+      y colocar en el campo de estaciones todas las estaciones en las que esta registrada la persona, 
+      registrar esto en la tabla de asistencia y al registrar la asistencia registrar aparte en una tabla llamada historial
+      de layout el acomodo actual del layout en una fecha y hora determinada, guardar el data del listado de las estaciones para guardar 
+      tambien la informacion si es un punto de cambio, esta vacia el operador del punto de cambio etc, 
+      tal vez podria guardar cada que se haga un cambio informacion en la tabla de historia del layou al asignar o remover un operador, al agregar una estacion, 
+      o al generar un punto de cambio. 
+      
+      
+    */

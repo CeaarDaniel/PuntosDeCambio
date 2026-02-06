@@ -40,7 +40,7 @@
   <!--Data table -->
   <link rel="stylesheet" href="https://cdn.datatables.net/2.0.7/css/dataTables.dataTables.css" />
   <script src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script>
-  
+</head>  
 <body>
   <div class="layout-container">
 
@@ -1036,40 +1036,62 @@
         
         <!-- Body del Modal -->
         <div class="modal-body">
-
-            <!-- NOMBRE DE LA ESTACION-->
-            <div id="nombreEstacionModalPC" class="text-center fw-bold"></div>
             <input type="hidden" id="idEstacionModalPC" value="">
 
             <!--Contenedor de los botones del menu -->
-            <div class="m-0 p-0" id="menuModalPC">
-                  <!-- MAQUINARIA-->
-                  <i class="bi bi-gear-fill" id="btnRegistroPc"></i>
+            <div class="container-fluid py-3">
+              <div class="row g-3 text-center" id="menuModalPC">
+                  <div class="col-4 col-md-2">
+                  <button class="menu-btn" id="btnRegistroPc" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de mano de obra">
+                    <i class="bi bi-person-gear"></i>
+                    <span>MANO DE OBRA</span>
+                  </button>
+                </div>
 
-                  <!--MATERIA PRIMA --> 
-                  <i class="bi bi-box-seam"></i>
+                <div class="col-4 col-md-2">
+                  <button class="menu-btn" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de maquinaria">
+                    <i class="bi bi-gear-fill"></i>
+                    <span>MAQUINARIA</span>
+                  </button>
+                </div>
 
-                  <!--METODO -->
-                  <i class="bi bi-diagram-3"></i>
-                  
-                  <!-- MANO DE OBRA-->
-                  <i class="bi bi-person-gear"></i>
+                <div class="col-4 col-md-2">
+                  <button class="menu-btn" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de materia prima">
+                    <i class="bi bi-box-seam"></i>
+                    <span>MATERIA PRIMA</span>
+                  </button>
+                </div>
 
-                  <!-- Informacion de la estacion -->
-                  <i class="bi bi-info-circle m-0 p-0" id="btnInfoRPC"></i>
+                <div class="col-4 col-md-2">
+                  <button class="menu-btn" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de metodo">
+                    <i class="bi bi-diagram-3"></i>
+                    <span>MÉTODO</span>
+                  </button>
+                </div>
 
-                  <!--Liberar punto de cambio -->
-                  <i class="bi bi-unlock" id="btnLiberarPC"></i>
+                <div class="col-4 col-md-2">
+                  <button class="menu-btn" id="btnInfoRPC" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Informacion del trabajador asignado">
+                    <i class="bi bi-info-circle"></i>
+                    <span>INFORMACION</span>
+                  </button>
+                </div>
 
-                  <!-- Alternativa a person-gear
-                    <span class="position-relative">
-                      <i class="bi bi-person"></i>
-                      <i class="bi bi-arrow-repeat position-absolute top-10 start-100 translate-middle"></i>
-                    </span>
-                  -->
+                <div class="col-4 col-md-2">
+                  <button class="menu-btn danger" id="btnLiberarPC" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Liberar punto de cambio">
+                    <i class="bi bi-unlock"></i>
+                    <span>LIBERAR</span>
+                  </button>
+                </div>
+
+              </div>
             </div>
 
             <hr>
+
+            <!-- NOMBRE DE LA ESTACION-->
+                <p class="text-center fw-bold fs-5"> 
+                    ESTACIÓN DE <span id="nombreEstacionModalPC"></span> 
+                </p>
 
             <div id="ventanasModalPC">
                 <!-- Formulario de registro de punto de cambio -->

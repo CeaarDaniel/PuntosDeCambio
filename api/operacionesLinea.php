@@ -981,40 +981,82 @@ else
 //Consulta para generar una lista de asistencia con los PC, PNAD y asignados 
 else 
     if($opcion =='16'){
-        //Generar lista de asistencia 
         $codigoLinea = empty(!$_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
-        
-        $sql= "WITH union_tablas AS (SELECT PC.nomina, PC.nombre, PC.id_estacion, e.nombre_estacion, 1 AS prioridad
-                   FROM SPC_PUNTOS_CAMBIO PC left JOIN SPC_ESTACIONES AS e ON e.id_estacion = PC.id_estacion
-                WHERE PC.codigo_linea = :codigoLinea2 AND PC.fechaHora_fin IS NULL
-                    UNION
-                SELECT p.nomina, p.nombre, p.id_estacion, e.nombre_estacion,  2 AS prioridad 
-                    FROM SPC_PERSONAL_ESTACION p left JOIN SPC_ESTACIONES AS e ON e.id_estacion = p.id_estacion 
-                WHERE p.fecha_fin IS NULL and e.codigo_linea = :codigoLinea1
-                    UNION
-                SELECT nomina, nombre, null as id_estacion, null as nombre_estacion, 3 AS prioridad
-                    FROM SPC_PERSONAL_NAD
-                WHERE eliminado = '0' AND codigo_linea = :codigoLinea3) 
-                SELECT nomina, nombre, id_estacion, nombre_estacion
-                    FROM ( SELECT *, ROW_NUMBER() OVER(PARTITION BY id_estacion ORDER BY prioridad) AS rn
-                        FROM union_tablas ) t WHERE rn = 1;";
+        $ahora = new DateTime();
+        $turno = !empty($_POST['turno']) ? $_POST['turno'] : null;
 
-        $stmt = $conn->prepare($sql);
-        $response= array();
+        //Verificar si ya existe un registro de asistencia
+            //Turno 1
+                $inicio = new DateTime('today 08:00');
+                $fin    = new DateTime('today 19:59');
 
-        // Ejecutar con los parámetros
-        if($stmt->execute([':codigoLinea1' => $codigoLinea, ':codigoLinea2' => $codigoLinea, ':codigoLinea3' => $codigoLinea]))
-        {
-            while($personal= $stmt->fetch(PDO::FETCH_ASSOC)){
-                $response[] = $personal;
+            //Turno 2
+            if ($turno == '2') {
+                if ($ahora >= new DateTime('today 20:00')) { // Después de las 8 pm
+                    $inicio = new DateTime('today 20:00');
+                    $fin    = new DateTime('tomorrow 07:59');
+                } else { // Antes de las 8 pm
+                    $inicio = new DateTime('yesterday 20:00');
+                    $fin    = new DateTime('today 07:59');
+                }
+                //Despues de la 8 de la noche la fecha de inicio es hoy 8:00 pm fecha de fin mañana 8:00 am
+                //Antes de 8 de la noche la fecha de inicio es ayer 8:00 pm y la fecha de fin hoy 8:00 am 
             }
-        }
 
-        else 
-            $response = $stmt->errorInfo()[2];
+            $sqlV = "SELECT id_registro, nomina, nombre, codigo_linea, estatus, id_estacion, turno as nombre_estacion FROM SPC_REGISTRO_ASISTENCIA WHERE turno = :turno AND fecha_operacion >= :fechaInicio AND fecha_operacion <= :fechaFin";
+            $stmtV = $conn->prepare($sqlV);
+            $stmtV->execute([':turno' => $turno,
+                             ':fechaInicio' => $inicio->format('Y-m-d H:i'),
+                             ':fechaFin'    => $fin->format('Y-m-d H:i')
+                           ]);
+            
+                    $personal = $stmtV->fetchAll(PDO::FETCH_ASSOC);
+                    if (!empty($personal)) $response = $personal;
+            
+           
+        //Generar lista de asistencia 
+            //Si existe un registro de asistencia mostrar el registro
+            //if ($stmtV->rowCount() > 0) {
+            //    while($personal = $stmtV->fetch(PDO::FETCH_ASSOC)) {
+            //        $response[] = $personal;
+            //    }
+           // }
 
-        //Consultar lista de asistencia 
-   
+            //Si no existe un registro de asistencia generar uno
+            else {
+                $sql= "WITH union_tablas AS (SELECT PC.nomina, PC.nombre, PC.id_estacion, e.nombre_estacion, 1 AS prioridad
+                                FROM SPC_PUNTOS_CAMBIO PC left JOIN SPC_ESTACIONES AS e ON e.id_estacion = PC.id_estacion
+                                    WHERE PC.codigo_linea = :codigoLinea2 AND PC.fechaHora_fin IS NULL and PC.turno = :turno1
+                                        UNION
+                            SELECT p.nomina, p.nombre, p.id_estacion, e.nombre_estacion,  2 AS prioridad 
+                                    FROM SPC_PERSONAL_ESTACION p left JOIN SPC_ESTACIONES AS e ON e.id_estacion = p.id_estacion 
+                                        WHERE p.fecha_fin IS NULL and e.codigo_linea = :codigoLinea1 and p.turno = :turno2
+                                            UNION
+                            SELECT nomina, nombre, null as id_estacion, null as nombre_estacion, 3 AS prioridad
+                                    FROM SPC_PERSONAL_NAD
+                                        WHERE eliminado = '0' AND codigo_linea = :codigoLinea3 and turno = :turno3) 
+                            SELECT nomina, nombre, id_estacion, nombre_estacion
+                                    FROM ( SELECT *, ROW_NUMBER() OVER(PARTITION BY id_estacion ORDER BY prioridad) AS rn
+                                        FROM union_tablas ) t WHERE rn = 1;";
+
+                $stmt = $conn->prepare($sql);
+                $response= array();
+
+                // Ejecutar con los parámetros
+                if($stmt->execute([':codigoLinea1' => $codigoLinea, 
+                                   ':codigoLinea2' => $codigoLinea, 
+                                   ':codigoLinea3' => $codigoLinea,
+                                   ':turno1' => $turno,
+                                   ':turno2' => $turno,
+                                   ':turno3' => $turno,
+                                   ])
+                                   )
+                    while($personal= $stmt->fetch(PDO::FETCH_ASSOC))
+                        $response[] = $personal;
+                else 
+                    $response = $stmt->errorInfo()[2];
+            }
+
         echo json_encode($response);
     }
 
@@ -1049,73 +1091,24 @@ else
             }
 
             $conn->commit();
-            $results = array([
-                              'estatus' => 'ok',
-                              'mensaje' => 'Se ha hecho el registro de asistencia'
-                            ]);
+            $results = array('estatus' => 'ok',
+                              'mensaje' => 'Se ha hecho el registro de asistencia');
 
         } catch (Exception $e) {
             $conn->rollBack();
-              $results = array([
-                'estatus' => 'error',
-                'mensaje' => 'Ocurrió un error al realizar el registro',
-                'error' => $e->getMessage()
-            ]);
+              $results = array('estatus' => 'error',
+                               'mensaje' => 'Ocurrió un error al realizar el registro',
+                               'error' => $e->getMessage());
         }
 
         // Devolver resultado
         echo json_encode($results);
-}
+    }
 
-//Actualizaqr registro de asistencia 
+//Actualizar registro de asistencia 
 else 
     if($opcion == '18'){
-        $ahora = new DateTime();
-        $ahora->format('Y-m-d H:i:s');
-
-        $turno = !empty($_POST['turno']) ? $_POST['turno'] : null;
-        $inicio;
-        $fin;
-
-    //Verificar si ya existe un registro de asistencia
-
-        //Turno 1
-        if($turno == '1'){
-            $inicio = new DateTime('today 08:00');
-            $fin    = new DateTime('today 19:59');
-        }
-
-        //Turno 2
-        else 
-            if($turno == '2'){
-
-                if($ahora>= new DateTime())
-
-                $inicio = new DateTime('today 20:00');
-                $fin    = new DateTime('today 07:59');
-                $fecha->modify('-1 day');
-            }
-
-            $sql = "SELECT count (id_registro) FROM SPC_REGISTRO_ASISTENCIA 
-                            WHERE turno = '1' AND fecha_operacion > CONVERT(DATEtime, :fechaInicio)  
-                        AND fecha_operacion < CONVERT(DATETIME, :fechaFin)";
-
-            $stmt->execute([
-                            ':turno' => 1,
-                            ':fechaInicio' => $inicio->format('Y-m-d H:i'),
-                            ':fechaFin' => $fin->format('Y-m-d H:i')
-                           ]);
-
-            if(stmt->fetchColumn()){
-
-            }
-
-            else {
 
 
-            }
-
-            //Despues de la 8 de la noche la fecha de inicio es hoy 8:00 pm fecha de fin mañana 8:00 am
-            //Antes de 8 de la noche la fecha de inicio es ayer 8:00 pm y la fecha de fin hoy 8:00 am 
     }
 ?>

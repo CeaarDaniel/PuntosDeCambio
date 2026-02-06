@@ -984,3 +984,62 @@
 
     }
 /*Fin estilo de transiciones*/
+
+
+
+
+
+
+
+
+
+.menu-btn {
+  width: 100%;
+  height: 100px;
+  border: none;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.25s ease;
+}
+
+.menu-btn i {
+  font-size: 1.8rem;
+  color: #0d6efd;
+}
+
+.menu-btn span {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.menu-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+  background: #f8f9fa;
+}
+
+.menu-btn:active {
+  transform: scale(0.97);
+}
+
+.menu-btn.danger i {
+  color: #dc3545;
+}
+
+/* Mobile ajustes */
+@media (max-width: 576px) {
+  .menu-btn {
+    height: 90px;
+  }
+
+  .menu-btn i {
+    font-size: 1.5rem;
+  }
+}

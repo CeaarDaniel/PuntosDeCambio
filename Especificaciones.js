@@ -1,6 +1,5 @@
-/*  SISTEMA SAPC
-    Registros por línea, para cada línea se captura para turno 1 y 2:
-    Asistencia
+/*  
+    SISTEMA SAPC
     Agregar una seccion done el operaor realice una prueba para que este se libere o certifique en alguna operacion
 
     Condiciones 
@@ -9,9 +8,7 @@
     
     PUNTOS DE CAMBIO
     En el diseño actual falta
-        Dar seguimiento a las estaciones asignadas a los operadoras (consultar en que estacion esta)
-            --De momento lo dejara para que sea visible solo en el layout, se supone que en una estacion solo debe de
-              haber una sola persona a si que con el layout debe de ser suficiente.
+            --Se supone que en una estacion solo debe de haber una sola persona
             --en la info del operadro asignado agregar un boton que permita hacer el registro de una asignacion. 
               
               Tener esta tabla tambien puede servir para ver la cantidad de gente en el area independientete de si esta o no en 
@@ -28,39 +25,33 @@
             --Hay que validar que la persona que se va ha colocar para el punto de cambio este capasitada para la operacion
 
         Registro de asistencia 
-            --Tal vez en un futuro sea mejor crear una lista de personal, que sea especifica para la persolnas quue estan
+            --Tal vez en un futuro sea mejor crear una lista de personal, que sea especifica para la personas quue estan
               en el area de sensor o electronicos para registrar informacion mas especifica y poder hacer consultas mas rapido
               ya existe una pero es general de varias plantas
 
-        Agregar seccion de registrar y visualizar al personal disponible.
-         --Restringir la asignacion a esta tabla si la persona se encuentra aisgnada a alguna otra estacion
+         --Restringir la asignacion de personal disponible si la persona se encuentra aisgnada a alguna otra estacion
 
     ¿Si la operacion o en la estacion no es necesaria una certificacion como se libera o comprueba el conocimiento del operador en a linea?
-
-    --Agregar alguna alerta o etiqueta de warning para mostrar cuando el PC lleva ya 30 días
-    --validar la asignacion de un trabajador en una estacion cuando se registra un punto de cambio
-    --modificar el diseño para que sea mas rapido como se asignan y se eliminan los operadores de las estaciones, tal vez haciendo esto dentro del mismo modal de la estacion
-    --mostrar en el el layout algun indicador si el trabajadore falto o asistio
 */  
 
-//Registro de asistencia del operador
-//Validar ultima fecha de operacion (con la asistencia)
 //Validar certificaciones 
 //Cambio de turno
 //Reflejar cambios y registros incertados en el layout
+
+//Agregar alguna alerta o etiqueta de warning para mostrar cuando el PC lleva ya 30 días
+//validar la asignacion de un trabajador en una estacion cuando se registra un punto de cambio
+//modificar el diseño para que sea mas rapido como se asignan y se eliminan los operadores de las estaciones, tal vez haciendo esto dentro del mismo modal de la estacion
+//mostrar en el el layout algun indicador si el trabajadore falto o asistio
 
 //Generar mostrar el contenido dinamico de los formularios
 //Hacer restricciones y validaciones correspondientes
 //Generar permisos de usuarios
 //Generar usuarios
 //Registrar y Retirar certificacion 
-//Validar capacitaciones
 
 //Pruebas
 //Falta registrar las fechas con la hora
 //Falta validar que el empleado no este dado de baja 
-
-//Continuar con la parte de las certificaciones
 //Hacer el contenido responsivo
 
 //Dar opcion de registrar a un operador sin punto de cambio o no si no existe la ultima fecha de operacion en la linea
@@ -82,12 +73,15 @@
 //indicando si es titular o PC
 
 //De momento solo guardare el registro de asistencia del personal sin las estaciones, pero hay que considerar lo siguiente: 
-//como se guardaria la asistencia o el registro del layout si la persona esta asignada en dos estaciones sin que excista un punto de cambio
+//como se guardaria la asistencia o el registro del layout si la persona esta asignada en dos estaciones sin que exista un punto de cambio
 //si no que esta como titular
-//o tener dos tabla uno para el registro de la estacion y otro del acomodo del layout 
+//Podria tener dos tabla uno para el registro de la estacion y otro del acomodo del layout 
 //otra opcion seria guardar la sistencia colocando todas las estaciones del trabajador en vez de mostrar solo una
 //Agregar una tabla para guardar el historial del layut para que se registre el comodo con todo el data de las estaciones al presionar guardar layout
 
 //QUITAR EL INPUT DE OBSERVACIONES de la tabla de asistencia
 //Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del orario correspondiente al turno
 //Agregar la funcion de recargar la lista de asistencia al cambiar el turno
+//Cargar una nueva la lista de asistencia o llamar la funcion al abrir el modal de asistencia
+
+//Para mostrar el estatus de la asistencia en la estacion del layout hay que comparar el personal de las estaciones con su registro de la tabla de asistencia y el estatus de registro de asistencia (1,2,3... etc)
