@@ -321,8 +321,8 @@ else
                                      'x' => $estacion['posicion_x'],
                                      'y' => $estacion['posicion_y'] ,
                                      'colorClass' => $coloClass,  //1 asistencia, 3 falta, 2 o 6 punto de cambio
-                                     'idPC' => $estacion['idPC']
-                                     //'estatusPC' => $estacion['estatusPC']
+                                     'idPC' => $estacion['idPC'],
+                                     'estatusPC' => $estacion['estatusPC']
                                    );
             }
         }
@@ -998,59 +998,45 @@ else
                 } else { // Antes de las 8 pm
                     $inicio = new DateTime('yesterday 20:00');
                     $fin    = new DateTime('today 07:59');
-                }
-                //Despues de la 8 de la noche la fecha de inicio es hoy 8:00 pm fecha de fin mañana 8:00 am
+                } //Despues de la 8 de la noche la fecha de inicio es hoy 8:00 pm fecha de fin mañana 8:00 am
                 //Antes de 8 de la noche la fecha de inicio es ayer 8:00 pm y la fecha de fin hoy 8:00 am 
             }
 
-            $sqlV = "SELECT id_registro, nomina, nombre, codigo_linea, estatus, id_estacion, turno as nombre_estacion FROM SPC_REGISTRO_ASISTENCIA WHERE turno = :turno AND fecha_operacion >= :fechaInicio AND fecha_operacion <= :fechaFin";
+            $sqlV = "SELECT id_registro, nomina, nombre, codigo_linea, estatus, id_estacion, turno, nombres_estaciones AS nombre_estacion FROM SPC_REGISTRO_ASISTENCIA WHERE turno = :turno AND fecha_operacion >= :fechaInicio AND fecha_operacion <= :fechaFin";
             $stmtV = $conn->prepare($sqlV);
             $stmtV->execute([':turno' => $turno,
                              ':fechaInicio' => $inicio->format('Y-m-d H:i'),
                              ':fechaFin'    => $fin->format('Y-m-d H:i')
                            ]);
             
-                    $personal = $stmtV->fetchAll(PDO::FETCH_ASSOC);
-                    if (!empty($personal)) $response = $personal;
-            
-           
         //Generar lista de asistencia 
             //Si existe un registro de asistencia mostrar el registro
-            //if ($stmtV->rowCount() > 0) {
-            //    while($personal = $stmtV->fetch(PDO::FETCH_ASSOC)) {
-            //        $response[] = $personal;
-            //    }
-           // }
-
+            $personal = $stmtV->fetchAll(PDO::FETCH_ASSOC);
+            if (!empty($personal)) $response = $personal;
+           
             //Si no existe un registro de asistencia generar uno
             else {
-                $sql= "WITH union_tablas AS (SELECT PC.nomina, PC.nombre, PC.id_estacion, e.nombre_estacion, 1 AS prioridad
-                                FROM SPC_PUNTOS_CAMBIO PC left JOIN SPC_ESTACIONES AS e ON e.id_estacion = PC.id_estacion
-                                    WHERE PC.codigo_linea = :codigoLinea2 AND PC.fechaHora_fin IS NULL and PC.turno = :turno1
-                                        UNION
-                            SELECT p.nomina, p.nombre, p.id_estacion, e.nombre_estacion,  2 AS prioridad 
-                                    FROM SPC_PERSONAL_ESTACION p left JOIN SPC_ESTACIONES AS e ON e.id_estacion = p.id_estacion 
-                                        WHERE p.fecha_fin IS NULL and e.codigo_linea = :codigoLinea1 and p.turno = :turno2
-                                            UNION
-                            SELECT nomina, nombre, null as id_estacion, null as nombre_estacion, 3 AS prioridad
-                                    FROM SPC_PERSONAL_NAD
-                                        WHERE eliminado = '0' AND codigo_linea = :codigoLinea3 and turno = :turno3) 
-                            SELECT nomina, nombre, id_estacion, nombre_estacion
-                                    FROM ( SELECT *, ROW_NUMBER() OVER(PARTITION BY id_estacion ORDER BY prioridad) AS rn
-                                        FROM union_tablas ) t WHERE rn = 1;";
+                $sql= "SELECT t.nomina, MAX(t.nombre) AS nombre, 
+                              STRING_AGG(CAST(t.id_estacion AS NVARCHAR(10)), ',') AS id_estacion,
+                              STRING_AGG(COALESCE(e.nombre_estacion, 'SIN ASIGNAR'), ', ') AS nombre_estacion
+                        FROM (SELECT pc.nomina, pc.nombre, pc.id_estacion FROM SPC_PUNTOS_CAMBIO pc
+                                WHERE PC.codigo_linea = :codigoLinea2 AND PC.fechaHora_fin IS NULL AND PC.turno = :turno1
+                                        UNION ALL
+                                SELECT p.nomina, p.nombre, p.id_estacion FROM SPC_PERSONAL_ESTACION p
+                                    WHERE p.fecha_fin IS NULL AND p.turno = :turno2
+                                      AND EXISTS ( SELECT 1 FROM SPC_ESTACIONES e WHERE e.id_estacion = p.id_estacion AND e.codigo_linea = :codigoLinea1)
+                                        UNION ALL
+                                SELECT nomina, nombre, NULL AS id_estacion FROM SPC_PERSONAL_NAD
+                                    WHERE eliminado = '0' AND codigo_linea = :codigoLinea3 and turno = :turno3
+                              ) t LEFT JOIN SPC_ESTACIONES e ON e.id_estacion = t.id_estacion  
+                        GROUP BY t.nomina ORDER BY t.nomina;";
 
                 $stmt = $conn->prepare($sql);
                 $response= array();
 
                 // Ejecutar con los parámetros
-                if($stmt->execute([':codigoLinea1' => $codigoLinea, 
-                                   ':codigoLinea2' => $codigoLinea, 
-                                   ':codigoLinea3' => $codigoLinea,
-                                   ':turno1' => $turno,
-                                   ':turno2' => $turno,
-                                   ':turno3' => $turno,
-                                   ])
-                                   )
+                if($stmt->execute([':codigoLinea1' => $codigoLinea, ':codigoLinea2' => $codigoLinea, ':codigoLinea3' => $codigoLinea,
+                                   ':turno1' => $turno, ':turno2' => $turno, ':turno3' => $turno,]))
                     while($personal= $stmt->fetch(PDO::FETCH_ASSOC))
                         $response[] = $personal;
                 else 
@@ -1075,8 +1061,8 @@ else
 
         try {
             $conn->beginTransaction();
-            $sql = "INSERT INTO SPC_REGISTRO_ASISTENCIA (nomina, nombre, estatus, codigo_linea, turno) 
-                        VALUES (:nomina, :nombre, :estatus, :codigo_linea, :turno)";
+            $sql = "INSERT INTO SPC_REGISTRO_ASISTENCIA (nomina, nombre, estatus, codigo_linea, turno, id_estacion, nombres_estaciones) 
+                        VALUES (:nomina, :nombre, :estatus, :codigo_linea, :turno, :id_estacion, :nombres_estaciones)";
 
             $stmt = $conn->prepare($sql);
             foreach ($datosAsistencia as $row) {
@@ -1085,6 +1071,8 @@ else
                     ':nomina' => $row['nomina'],
                     ':nombre' => $row['nombre'],
                     ':estatus' => $row['estatus'],
+                    ':id_estacion' => $row['id_estacion'],
+                    ':nombres_estaciones' => $row['nombres_estaciones'], 
                     ':codigo_linea' => $codigoLinea,
                     ':turno' => $turno
                 ]);

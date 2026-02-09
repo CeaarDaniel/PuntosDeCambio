@@ -270,8 +270,10 @@
             .then((response) => response.text())
             .then((data) => {
                data= JSON.parse(data)
-               if(data.estatus=='ok')
+               if(data.estatus=='ok'){
                     alert('Layout guardado correctamente');
+                    console.log( JSON.stringify(stationsData))
+                  }
 
                 else alert(data.mensaje)
             })
@@ -734,16 +736,22 @@
                               },
                             */
                             { data: null,
-                              render: row => `<div class="fw-bold" data-nombre="${row.nombre}" data-nomina="${row.nomina}">${row.nombre}</div>
+                              render: row => `<div class="fw-bold" data-nombre="${row.nombre}" 
+                                                                   data-nomina="${row.nomina}"
+                                                                   data-id_estacion="${row.id_estacion}"
+                                                                   data-nombre_estacion= "${row.nombre_estacion}">
+                                                      ${row.nombre}</div>
                                               <small class="text-muted">ID: ${row.nomina}</small>`
                             },
                             {
                               data:null,
-                              render: row =>`<div> ${(row.nombre_estacion) ?? 'SIN ASIGNAR' }</div>`
+                              render: row =>`<div> 
+                                                          ${(row.nombre_estacion).toUpperCase()}
+                                              </div>`
                             },
                             {
                               data: null,
-                              render: row => `<select name="estatusAsistencia" class="form-control form-control-custom attendance-status" data-employee="${row.nomina}">
+                              render: row => `<select name="estatusAsistencia" class="form-control form-control-custom attendance-status">
                                                 <option value="1" ${(row.estatus && row.estatus=='1') ? 'selected' : ''}>✅ ASISTENCIA</option>
                                                 <option value="2" ${(row.estatus && row.estatus=='2') ? 'selected' : ''}>❌ FALTA INJUSTIFICADA</option>
                                                 <option value="3" ${(row.estatus && row.estatus=='3') ? 'selected' : ''}>🟢 PERMISO SIN GOCE DE SUELDO</option>
@@ -791,11 +799,14 @@
           let turno = $('#turnoLayout').val();
 
           $('#attendanceTable').DataTable().rows({ page:'all'}).every(function () {
-              const data = this.data();
+            //obtenere l data cargado en el datatable correspondiente a esta fila, data: data,
+              const data = this.data(); 
               const fila = this.node();
               datosAsistencia.push({
                   nomina: data.nomina,
-                  nombre: data.nombre,
+                  nombre: data.nombre, 
+                  id_estacion: data.id_estacion,
+                  nombres_estaciones: data.nombre_estacion,
                   estatus: $(fila).find('select[name="estatusAsistencia"]').val()
                   //observaciones: $(fila).find('input[name="observacionesAsistencia"]').val()
               });
@@ -813,8 +824,10 @@
             .then(response => response.text())
             .then(data => {
               data = JSON.parse(data)
-              if(data.estatus && data.estatus == 'ok')
-                  alert(data.mensaje)
+              if(data.estatus && data.estatus == 'ok'){
+                  alert(data.mensaje);
+                  generarTablaAsistencia();
+              }
 
               else {
                   alert('Ocurrio un error al realizar el registro') 
@@ -876,6 +889,33 @@
           console.error(error);
           return '';
         });
+    }
+
+    function updateAsistencia(element){
+          let table = $('#attendanceTable').DataTable();
+          let $row = $(element).closest('tr');
+          let data = table.row($row).data();
+
+          if(data['id_registro']){
+              let nuevoValor = $(element).val();
+              let campo = $(element).attr('name');
+
+              //console.log('Fila:', data);
+              //console.log('Campo:', campo);
+              //console.log('Nuevo valor:', nuevoValor);
+
+              // actualizar el data interno de DataTables
+              if (campo) {
+                  data[campo] = nuevoValor;
+                  //table.row($row).data(data).invalidate();
+              }
+              
+              //Logica para actualizar el registro de la tabla
+            }
+
+          else {
+            //Sconsole.log('Aun no se ha registrado la asistencia')
+          }
     }
 
     // Inicializar el workspace
@@ -1176,8 +1216,21 @@
         btnLiberarPC.addEventListener('click', function(){changeContent('ventanasModalPC', 'contLiberarPC')})
         btnTablaPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contTablaDisponibles')})
         btnRegistroPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contRegistroPersonalDisponible')});
-    });
 
+        // SELECT → change
+        $('#attendanceTable tbody').on('change', 'select', function () {
+            updateAsistencia(this);
+        });
+
+        // INPUT → Enter
+        $('#attendanceTable tbody').on('keydown', 'input', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                updateAsistencia(this);
+                //$(this).blur(); // opcional
+            }
+        });
+    });
 
     /*
       Lo mejor podria ser mostrar el listado de todo el personal obteniendo las personas unicas o el distinc por Nomina
@@ -1187,6 +1240,4 @@
       tambien la informacion si es un punto de cambio, esta vacia el operador del punto de cambio etc, 
       tal vez podria guardar cada que se haga un cambio informacion en la tabla de historia del layou al asignar o remover un operador, al agregar una estacion, 
       o al generar un punto de cambio. 
-      
-      
     */

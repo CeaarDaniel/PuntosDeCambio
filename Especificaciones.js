@@ -72,16 +72,11 @@
 // no esta en ninguna estacion mas que en la estacion con el PC mostrar la persona que esta como PC y al titular
 //indicando si es titular o PC
 
-//De momento solo guardare el registro de asistencia del personal sin las estaciones, pero hay que considerar lo siguiente: 
-//como se guardaria la asistencia o el registro del layout si la persona esta asignada en dos estaciones sin que exista un punto de cambio
-//si no que esta como titular
-//Podria tener dos tabla uno para el registro de la estacion y otro del acomodo del layout 
-//otra opcion seria guardar la sistencia colocando todas las estaciones del trabajador en vez de mostrar solo una
-//Agregar una tabla para guardar el historial del layut para que se registre el comodo con todo el data de las estaciones al presionar guardar layout
-
 //QUITAR EL INPUT DE OBSERVACIONES de la tabla de asistencia
-//Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del orario correspondiente al turno
+//Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
 //Agregar la funcion de recargar la lista de asistencia al cambiar el turno
 //Cargar una nueva la lista de asistencia o llamar la funcion al abrir el modal de asistencia
 
 //Para mostrar el estatus de la asistencia en la estacion del layout hay que comparar el personal de las estaciones con su registro de la tabla de asistencia y el estatus de registro de asistencia (1,2,3... etc)
+
+//Revisar que la variable stationsData se actualice al hacer cualquier cambio en el layout
