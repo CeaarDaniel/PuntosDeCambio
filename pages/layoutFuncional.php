@@ -1040,49 +1040,48 @@
 
             <!--Contenedor de los botones del menu -->
             <div class="container-fluid py-3">
-              <div class="row g-3 text-center" id="menuModalPC">
-                  <div class="col-4 col-md-2">
-                  <button class="menu-btn" id="btnRegistroPc" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de mano de obra">
-                    <i class="bi bi-person-gear"></i>
-                    <span>MANO DE OBRA</span>
-                  </button>
-                </div>
+              <div class="row g-3 d-flex justify-content-center text-center" id="menuModalPC">
+                  <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                    <button class="menu-btn" id="btnRegistroPc" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de mano de obra">
+                      <i class="bi bi-person-gear"></i>
+                      <span>MANO DE OBRA</span>
+                    </button>
+                  </div>
 
-                <div class="col-4 col-md-2">
-                  <button class="menu-btn" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de maquinaria">
-                    <i class="bi bi-gear-fill"></i>
-                    <span>MAQUINARIA</span>
-                  </button>
-                </div>
+                  <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                    <button class="menu-btn" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de maquinaria">
+                      <i class="bi bi-gear-fill"></i>
+                      <span>MAQUINARIA</span>
+                    </button>
+                  </div>
 
-                <div class="col-4 col-md-2">
-                  <button class="menu-btn" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de materia prima">
-                    <i class="bi bi-box-seam"></i>
-                    <span>MATERIA PRIMA</span>
-                  </button>
-                </div>
+                  <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                    <button class="menu-btn" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de materia prima">
+                      <i class="bi bi-box-seam"></i>
+                      <span>MATERIA PRIMA</span>
+                    </button>
+                  </div>
 
-                <div class="col-4 col-md-2">
-                  <button class="menu-btn" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de metodo">
-                    <i class="bi bi-diagram-3"></i>
-                    <span>MÉTODO</span>
-                  </button>
-                </div>
+                  <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                    <button class="menu-btn" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de metodo">
+                      <i class="bi bi-diagram-3"></i>
+                      <span>MÉTODO</span>
+                    </button>
+                  </div>
 
-                <div class="col-4 col-md-2">
-                  <button class="menu-btn" id="btnInfoRPC" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Informacion del trabajador asignado">
-                    <i class="bi bi-info-circle"></i>
-                    <span>INFORMACION</span>
-                  </button>
-                </div>
+                  <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                    <button class="menu-btn" id="btnInfoRPC" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Informacion del trabajador asignado">
+                      <i class="bi bi-info-circle"></i>
+                      <span>INFORMACION</span>
+                    </button>
+                  </div>
 
-                <div class="col-4 col-md-2">
-                  <button class="menu-btn danger" id="btnLiberarPC" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Liberar punto de cambio">
-                    <i class="bi bi-unlock"></i>
-                    <span>LIBERAR</span>
-                  </button>
-                </div>
-
+                  <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                    <button class="menu-btn danger" id="btnLiberarPC" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Liberar punto de cambio">
+                      <i class="bi bi-unlock"></i>
+                      <span>LIBERAR</span>
+                    </button>
+                  </div>
               </div>
             </div>
 
@@ -1525,12 +1524,26 @@
         
         <!-- Body del Modal -->
         <div class="modal-body">
-          <!--Contenedor de los botones del MENU -->
-            <div id="m-0 p-0">
-                  <i class="bi bi-table" id="btnTablaPNA" ></i> 
-                  <i class="bi bi-person-plus" id="btnRegistroPNA"></i> 
+          <!--Contenedor de los botones del menu -->
+            <div class="container-fluid py-3">
+              <div class="row g-3 d-flex justify-content-center" id="menuModalPNA">
+                <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                  <button class="menu-btn" id="btnTablaPNA" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Listado de personal no asignado">
+                    <i class="bi bi-table"></i> 
+                    <span>Listado de personal</span>
+                  </button>
+                </div>
+
+                <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                  <button class="menu-btn" id="btnRegistroPNA" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Registrar personal sin una estacion asignada">
+                    <i class="bi bi-person-plus"></i>
+                    <span>Registrar personal</span>
+                  </button>
+                </div>
+              </div>
             </div>
-          <!--Fin MENU -->
+          <!--FIN MENU MODAL -->
+
 
             <hr>
 
@@ -1844,8 +1857,7 @@
               <!-- Sección: Descripción -->
               <div class="form-section">
                 <h5 class="modal-title mb-1">
-                  <i class="bi bi-text-paragraph"></i>
-                  Descripción
+                  <i class="bi bi-text-paragraph"></i> Descripción
                 </h5>
 
                 <div class="mb-1">

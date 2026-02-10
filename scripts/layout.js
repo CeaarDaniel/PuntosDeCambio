@@ -5,6 +5,8 @@
   let confirmChange = document.getElementById('confirmChange');
   let btnConfirmClose = document.getElementById('btnConfirmClose');
 
+  let btnMenuRegistroAs = document.getElementById('btnMenuRegistroAs');
+
   let btnRegistrarAsistencia = document.getElementById('btnRegistrarAsistencia');
   let tablaPersonalNoAsignado = document.getElementById('tablaPersonalNoAsignado');
   let workspaceGrid;
@@ -258,9 +260,11 @@
           layoutData.push({id: stationId, x: left, y: top});
         });
 
-         var formDataPosicion = new FormData;
+        var formDataPosicion = new FormData;
         formDataPosicion.append('opcion', 6);
         formDataPosicion.append('layoutPosition', JSON.stringify(layoutData));
+        formDataPosicion.append('stationsData', JSON.stringify(stationsData));
+        formDataPosicion.append('codigoLinea', codigoLinea.value)
         
           // console.log("datos", layoutData)
           fetch("../api/operacionesLinea.php", {
@@ -269,10 +273,10 @@
             })
             .then((response) => response.text())
             .then((data) => {
+              console.log(data);
                data= JSON.parse(data)
                if(data.estatus=='ok'){
                     alert('Layout guardado correctamente');
-                    console.log( JSON.stringify(stationsData))
                   }
 
                 else alert(data.mensaje)
@@ -411,11 +415,12 @@
               .then((data) => {   
                     data= JSON.parse(data)
                     if(data.estatus=='ok'){ 
-                        actualizarEstacion(id, { 'nomina': (data.estacion.nomina) ? data.estacion.nomina : null, 
-                                            'operator': (data.estacion.operator) ? data.estacion.operator : 'No asignado',
-                                            'colorClass': data.estacion.colorClass,
-                                            'status' : (data.estacion.status),
-                                            'idPC' : data.estacion.idPC
+                        actualizarEstacion(id, {'nomina': (data.estacion.nomina) ? data.estacion.nomina : null, 
+                                                'operator': (data.estacion.operator) ? data.estacion.operator : 'No asignado',
+                                                'colorClass': data.estacion.colorClass,
+                                                'status' : data.estacion.status,
+                                                'idPC' : data.estacion.idPC,
+                                                'estatusPC': data.estacion.estatusPC
                                           })
                     }
                       else  alert(data.mensaje);
@@ -579,7 +584,7 @@
            (newData.status) ? estation.status = newData.status : '';
             estation.nomina = (newData.nomina) ?? null;
             estation.idPC = (newData.idPC) ?? null;
-            //estation.estatusPC = (newData.estatusPC) ?? null;
+            estation.estatusPC = (newData.estatusPC) ?? null;
         } //console.log(stationsData);  
     } 
 
@@ -797,10 +802,17 @@
           let datosAsistencia = [];
           let fromDataAsistencia = new FormData;
           let turno = $('#turnoLayout').val();
+          let asistenciaRegistrada = false;
 
-          $('#attendanceTable').DataTable().rows({ page:'all'}).every(function () {
-            //obtenere l data cargado en el datatable correspondiente a esta fila, data: data,
+          $('#attendanceTable').DataTable().rows({page:'all'}).every(function () {
+
+            //obtenere el data cargado en el datatable correspondiente a cada fila, data: data,
               const data = this.data(); 
+              if(data.id_registro){
+                asistenciaRegistrada = true;
+                return;
+              }
+    
               const fila = this.node();
               datosAsistencia.push({
                   nomina: data.nomina,
@@ -812,10 +824,18 @@
               });
           });
 
+
+        if(asistenciaRegistrada) {
+          alert('Ya se ha registrado la asistencia')
+          return;
+        }
+
           fromDataAsistencia.append('opcion', 17);
           fromDataAsistencia.append('turno', turno);
           fromDataAsistencia.append('codigoLinea', codigoLinea.value);
           fromDataAsistencia.append('datosAsistencia', JSON.stringify(datosAsistencia));
+          //Registro del layout
+          fromDataAsistencia.append('stationsData', JSON.stringify(stationsData));
 
           fetch("../api/operacionesLinea.php", {
             method: "POST",
@@ -832,7 +852,7 @@
               else {
                   alert('Ocurrio un error al realizar el registro') 
                   console.log(data);
-              }
+                }
             })
             .catch(error => {
               console.log(error);
@@ -897,24 +917,44 @@
           let data = table.row($row).data();
 
           if(data['id_registro']){
-              let nuevoValor = $(element).val();
-              let campo = $(element).attr('name');
-
               //console.log('Fila:', data);
               //console.log('Campo:', campo);
               //console.log('Nuevo valor:', nuevoValor);
 
-              // actualizar el data interno de DataTables
-              if (campo) {
-                  data[campo] = nuevoValor;
-                  //table.row($row).data(data).invalidate();
-              }
-              
               //Logica para actualizar el registro de la tabla
+              let nuevoValor = $(element).val();
+              let campo = $(element).attr('name');
+
+              let formDataUpdate = new FormData();
+              formDataUpdate.append('opcion', 18);
+              formDataUpdate.append('id_registro', data['id_registro'])
+              formDataUpdate.append('estatus', nuevoValor);
+
+               fetch("../api/operacionesLinea.php", {
+                      method: "POST",
+                      body: formDataUpdate,
+                  })
+                  .then((response) => response.text())
+                  .then((data) => {
+                    console.log(data);
+                      data= JSON.parse(data)
+
+                      if(data.error) 
+                          alert(data.mensaje);
+
+                      else  // actualizar el data interno de DataTables
+                        if (campo) {
+                            data[campo] = nuevoValor;
+                            //table.row($row).data(data).invalidate();
+                        }
+
+                    }).catch((error) => {
+                      console.log(error);
+                });
             }
 
           else {
-            //Sconsole.log('Aun no se ha registrado la asistencia')
+            //console.log('Aun no se ha registrado la asistencia')
           }
     }
 
@@ -1216,6 +1256,7 @@
         btnLiberarPC.addEventListener('click', function(){changeContent('ventanasModalPC', 'contLiberarPC')})
         btnTablaPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contTablaDisponibles')})
         btnRegistroPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contRegistroPersonalDisponible')});
+        btnMenuRegistroAs.addEventListener('click', generarTablaAsistencia)
 
         // SELECT → change
         $('#attendanceTable tbody').on('change', 'select', function () {
@@ -1231,13 +1272,3 @@
             }
         });
     });
-
-    /*
-      Lo mejor podria ser mostrar el listado de todo el personal obteniendo las personas unicas o el distinc por Nomina
-      y colocar en el campo de estaciones todas las estaciones en las que esta registrada la persona, 
-      registrar esto en la tabla de asistencia y al registrar la asistencia registrar aparte en una tabla llamada historial
-      de layout el acomodo actual del layout en una fecha y hora determinada, guardar el data del listado de las estaciones para guardar 
-      tambien la informacion si es un punto de cambio, esta vacia el operador del punto de cambio etc, 
-      tal vez podria guardar cada que se haga un cambio informacion en la tabla de historia del layou al asignar o remover un operador, al agregar una estacion, 
-      o al generar un punto de cambio. 
-    */

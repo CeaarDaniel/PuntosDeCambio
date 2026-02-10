@@ -337,16 +337,22 @@ else
 else 
     if($opcion == '6'){
             $layoutPosition =  json_decode($_POST['layoutPosition'], true);
+            $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
+            $stationsData= !empty($_POST['stationsData']) ? $_POST['stationsData'] : null;
 
-            if (!$layoutPosition || !is_array($layoutPosition)) {
+            if (!$layoutPosition || !is_array($layoutPosition) || !$stationsData || !$codigoLinea) {
                 echo json_encode(['error' => 'Datos inválidos']);
                 exit;
             }
-
          
             $sql = "UPDATE SPC_ESTACIONES SET posicion_x = :x, posicion_y = :y
                       WHERE id_estacion = :id";
             $stmt = $conn->prepare($sql);
+
+            $sqlI = "INSERT INTO SPC_HISTORIAL_LAYOUT (codigo_linea, layout) 
+                        VALUES(:codigoLinea, :stationsData)";
+                        
+            $stmtI = $conn->prepare($sqlI);
 
             $results = [];
 
@@ -371,6 +377,9 @@ else
                     }
                 }
 
+                 $stmtI->execute([':codigoLinea' => $codigoLinea, 
+                                  ':stationsData' => $stationsData]);
+
                 // Confirmar transacción
                 $conn->commit();
 
@@ -389,7 +398,6 @@ else
 
         // Devolver resultado
         echo json_encode($results);
-    
     }
 
 //Bucscar operador
@@ -721,12 +729,12 @@ else
                                                             LEN(no_controlCambio)
                                                         ) AS INT ) ), 0 ) + 1 AS VARCHAR), 3 ) AS no_control
                                         FROM SPC_PUNTOS_CAMBIO WITH (UPDLOCK, HOLDLOCK)
-                                 WHERE fechaHora_inicio >= DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1)
+                                 WHERE codigo_linea = :codigoLinea AND fechaHora_inicio >= DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1)
                                     AND fechaHora_inicio <  DATEADD(MONTH, 1,
                                          DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1));";
 
             $stmtNoControl = $conn->prepare($sqlNoControl);
-            $stmtNoControl->execute();
+            $stmtNoControl->execute([':codigoLinea' => $codigoLinea]);
             $noControlResult = $stmtNoControl->fetch(PDO::FETCH_ASSOC);
 
             if($noControlResult === false) {
@@ -920,10 +928,8 @@ else
 
         // Validar que se recibieron todos los datos
         if (!$idEstacion) {
-            echo json_encode([
-                'estatus' => 'error',
-                'mensaje' => 'Faltan datos obligatorios.'
-            ]);
+            echo json_encode(['estatus' => 'error',
+                              'mensaje' => 'Faltan datos obligatorios.']);
             exit; 
         }
 
@@ -963,10 +969,9 @@ else
                                                         'status' => !empty($estacion['nomina']) ? 'occupied' : 'pending', //pending: sin asignar, occupied: operador asignado
                                                         'certification' => $estacion['codigo_certificacion'],
                                                         'idPC' => $estacion['idPC'],
-                                                        'colorClass' => $coloClass
-                                                           //'estatusPC' => $estacion['estatusPC']
+                                                        'colorClass' => $coloClass,
+                                                        'estatusPC' => $estacion['estatusPC']
                                                         )
-                                                        
                                     );
             }
         }
@@ -1051,6 +1056,8 @@ else
     if($opcion =='17'){
            $datosAsistencia =  json_decode($_POST['datosAsistencia'], true);
            $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
+           $stationsData= !empty($_POST['stationsData']) ? $_POST['stationsData'] : null;
+
            $turno = !empty($_POST['turno']) ? $_POST['turno'] : null;
            $results = '';
 
@@ -1063,8 +1070,11 @@ else
             $conn->beginTransaction();
             $sql = "INSERT INTO SPC_REGISTRO_ASISTENCIA (nomina, nombre, estatus, codigo_linea, turno, id_estacion, nombres_estaciones) 
                         VALUES (:nomina, :nombre, :estatus, :codigo_linea, :turno, :id_estacion, :nombres_estaciones)";
-
             $stmt = $conn->prepare($sql);
+
+            $sqlI = "INSERT INTO SPC_HISTORIAL_LAYOUT (codigo_linea, layout) VALUES(:codigoLinea, :stationsData)";
+            $stmtI = $conn->prepare($sqlI);
+
             foreach ($datosAsistencia as $row) {
                 //if (empty($row['nomina']) || empty($row['nombre']) || empty($row['estatus'])) { throw new Exception('Datos incompletos en asistencia');}
                 $stmt->execute([
@@ -1077,6 +1087,8 @@ else
                     ':turno' => $turno
                 ]);
             }
+        
+            $stmtI->execute([':codigoLinea' => $codigoLinea, ':stationsData' => $stationsData]);
 
             $conn->commit();
             $results = array('estatus' => 'ok',
@@ -1096,7 +1108,28 @@ else
 //Actualizar registro de asistencia 
 else 
     if($opcion == '18'){
+        $idRegistro = $_POST['id_registro'];
+        $estatus = $_POST['estatus'];
+        $sql= 'UPDATE SPC_REGISTRO_ASISTENCIA SET estatus = :estatus WHERE id_registro = :idRegistro';
 
+        try {
+            $conn->beginTransaction();
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([':estatus' => $estatus,
+                            ':idRegistro' => $idRegistro]);
 
+            $conn->commit();
+            $results = array('estatus' => 'ok',
+                             'mensaje' => 'Se ha actualizado el registro');
+
+        } catch (Exception $e) {
+            $conn->rollBack();
+              $results = array('estatus' => 'error',
+                               'mensaje' => 'Ocurrió un error al realizar el registro',
+                               'error' => $e->getMessage());
+        }
+
+        // Devolver resultado
+        echo json_encode($results);
     }
 ?>

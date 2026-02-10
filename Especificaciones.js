@@ -1,10 +1,12 @@
 /*  
     SISTEMA SAPC
     Agregar una seccion done el operaor realice una prueba para que este se libere o certifique en alguna operacion
+    Validar certificaciones 
+    Registrar y Retirar certificacion 
 
-    Condiciones 
+    Condiciones
     El operador debe de estar certificado(ILU) o liberado en la operacion
-    Si a un operador se le retira su certificacion en una operacion ya no se puede volder a certificar
+    Si a un operador se le retira su certificacion en una operacion ya no se puede volver a certificar
     
     PUNTOS DE CAMBIO
     En el diseño actual falta
@@ -25,7 +27,7 @@
             --Hay que validar que la persona que se va ha colocar para el punto de cambio este capasitada para la operacion
 
         Registro de asistencia 
-            --Tal vez en un futuro sea mejor crear una lista de personal, que sea especifica para la personas quue estan
+            --Tal vez en un futuro sea mejor crear una lista de personal, que sea especifica para la personas que estan
               en el area de sensor o electronicos para registrar informacion mas especifica y poder hacer consultas mas rapido
               ya existe una pero es general de varias plantas
 
@@ -34,7 +36,7 @@
     ¿Si la operacion o en la estacion no es necesaria una certificacion como se libera o comprueba el conocimiento del operador en a linea?
 */  
 
-//Validar certificaciones 
+
 //Cambio de turno
 //Reflejar cambios y registros incertados en el layout
 
@@ -42,22 +44,22 @@
 //validar la asignacion de un trabajador en una estacion cuando se registra un punto de cambio
 //modificar el diseño para que sea mas rapido como se asignan y se eliminan los operadores de las estaciones, tal vez haciendo esto dentro del mismo modal de la estacion
 //mostrar en el el layout algun indicador si el trabajadore falto o asistio
-
+//No limpiar todos los campos de los formularios solo los que son ingresados por el usuario
 //Generar mostrar el contenido dinamico de los formularios
 //Hacer restricciones y validaciones correspondientes
-//Generar permisos de usuarios
-//Generar usuarios
-//Registrar y Retirar certificacion 
-
-//Pruebas
 //Falta registrar las fechas con la hora
 //Falta validar que el empleado no este dado de baja 
+
 //Hacer el contenido responsivo
+//Pruebas
+//Generar permisos de usuarios
+//Generar usuarios
+
 
 //Dar opcion de registrar a un operador sin punto de cambio o no si no existe la ultima fecha de operacion en la linea
 //esto para al inicio cunado se empieza a registrar a todo el personaol 
-//No limpiar todos los campos de los formularios solo los que son ingresados por el usuario
-//Tal vez a futuro seria buen o agregar una opcion que diga mover operaedor de estacion
+
+//Tal vez a futuro seria buen o agregar una opcion que diga mover operedor de estacion
 //Modifcar el codigo para generar el consecutivo de PC para que sea por linea y no uno general
 //Agregar opcion para consultar el acomodo del layout guardado por dia o fecha
 //Eliminar(ocultar ) una estacion
@@ -80,3 +82,5 @@
 //Para mostrar el estatus de la asistencia en la estacion del layout hay que comparar el personal de las estaciones con su registro de la tabla de asistencia y el estatus de registro de asistencia (1,2,3... etc)
 
 //Revisar que la variable stationsData se actualice al hacer cualquier cambio en el layout
+//Modificar el codigo de la linea por un numero consecutivo
+//Agregar algun estatus que indique si la estacion es certificada o no, como por ejemplo el contorno de la estacion en otro color

@@ -36,7 +36,7 @@
       </button>
 
       <!--REGISTRO DE ASISTENCIA -->
-      <button class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Registro de asistencia">
+      <button id="btnMenuRegistroAs" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Registro de asistencia">
         <span data-bs-toggle="modal" data-bs-target="#attendanceModal">
           <i class="bi bi-check2-square"></i>
           <span>Asistencia</span>
