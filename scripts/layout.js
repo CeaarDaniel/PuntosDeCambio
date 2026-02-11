@@ -5,6 +5,10 @@
   let confirmChange = document.getElementById('confirmChange');
   let btnConfirmClose = document.getElementById('btnConfirmClose');
 
+  let checkPadre = document.getElementById("checkPadre");
+  var seleccionadosGlobal = [];
+  var datosAsistenciaCheck; 
+  let btnCambioTurno = document.getElementById('btnCambioTurno');
   let btnMenuRegistroAs = document.getElementById('btnMenuRegistroAs');
 
   let btnRegistrarAsistencia = document.getElementById('btnRegistrarAsistencia');
@@ -708,6 +712,8 @@
             .then((response) => response.text())
             .then((data) => {   
                       data= JSON.parse(data)
+                      datosAsistenciaCheck = data.map(item => Number(item.nomina));
+
                       $('#attendanceTable').DataTable().destroy();
                       $('#attendanceTable').DataTable({
                         //scrollY: '300px',
@@ -750,9 +756,7 @@
                             },
                             {
                               data:null,
-                              render: row =>`<div> 
-                                                          ${(row.nombre_estacion).toUpperCase()}
-                                              </div>`
+                              render: row =>`<div> ${(row.nombre_estacion).toUpperCase()}</div>`
                             },
                             {
                               data: null,
@@ -781,13 +785,11 @@
                               render: (data, type, row) => `
                                 <div class="form-check d-flex justify-content-center">
                                   <input class="form-check-input"
-                                        type="checkbox"
-                                        id="cambio_${row.nomina}">
-                                  <label class="form-check-label"
-                                        for="cambio_${row.nomina}"
-                                        data-bs-toggle="tooltip"
-                                        title="Cambio de turno">
-                                    <i class="bi bi-clock-history"></i>
+                                         data-nomina="${row.nomina}"
+                                        type="checkbox" id="cambio_${row.nomina}">
+                                        
+                                  <label class="form-check-label mx-1" for="cambio_${row.nomina}"> 
+                                      <i class="bi bi-clock-history"></i> 
                                   </label>
                                 </div>`
                             }
@@ -805,7 +807,6 @@
           let asistenciaRegistrada = false;
 
           $('#attendanceTable').DataTable().rows({page:'all'}).every(function () {
-
             //obtenere el data cargado en el datatable correspondiente a cada fila, data: data,
               const data = this.data(); 
               if(data.id_registro){
@@ -956,6 +957,15 @@
           else {
             //console.log('Aun no se ha registrado la asistencia')
           }
+    }
+
+    //Funcion para cambiar el turno de los trabajadores registrados en la linea
+    function cambiarTurno(){
+      let turno = ($('#turnoLayout').val() == '1') ? '2' : '1';
+      let fromDataCambioTurno = new FormData();
+      fromDataCambioTurno.append('opcion', 19);
+      fromDataCambioTurno.append('datosAsistenciaCheck',seleccionadosGlobal)
+      fromDataCambioTurno.append('turno', turno)
     }
 
     // Inicializar el workspace
@@ -1250,13 +1260,14 @@
         btnGuardarEstacion.addEventListener('click', agregarEstacion);
         btnAsignarOperador.addEventListener('click', asignarEstaciones);
         btnGuardarDisponible.addEventListener('click', registrarPNA); 
-        btnRegistrarAsistencia.addEventListener('click', registrarAsistencia)
-        btnInfoRPC.addEventListener('click', function(){changeContent('ventanasModalPC','contInfoEstacion')})
-        btnRegistroPc.addEventListener('click', function(){changeContent('ventanasModalPC','contregistroCambioForm')})
-        btnLiberarPC.addEventListener('click', function(){changeContent('ventanasModalPC', 'contLiberarPC')})
-        btnTablaPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contTablaDisponibles')})
+        btnRegistrarAsistencia.addEventListener('click', registrarAsistencia);
+        btnInfoRPC.addEventListener('click', function(){changeContent('ventanasModalPC','contInfoEstacion')});
+        btnRegistroPc.addEventListener('click', function(){changeContent('ventanasModalPC','contregistroCambioForm')});
+        btnLiberarPC.addEventListener('click', function(){changeContent('ventanasModalPC', 'contLiberarPC')});
+        btnTablaPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contTablaDisponibles')});
         btnRegistroPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contRegistroPersonalDisponible')});
-        btnMenuRegistroAs.addEventListener('click', generarTablaAsistencia)
+        btnMenuRegistroAs.addEventListener('click', generarTablaAsistencia);
+        btnCambioTurno.addEventListener('click', cambiarTurno);
 
         // SELECT → change
         $('#attendanceTable tbody').on('change', 'select', function () {
@@ -1271,4 +1282,44 @@
                 //$(this).blur(); // opcional
             }
         });
+
+        checkPadre.addEventListener('change', function(){
+          if (checkPadre.checked) {
+                  seleccionadosGlobal = [...datosAsistenciaCheck] //Esto genera un nuevo arreglo
+                  $('#attendanceTable').DataTable().rows({ page: 'all' }).every(function () {
+                      $(this.node()).find('input[type="checkbox"]').prop('checked', true);
+                  });
+            }
+
+          else {
+                  seleccionadosGlobal = [];
+                  $('#attendanceTable').DataTable().rows({ page: 'all' }).every(function () {
+                    $(this.node()).find('input[type="checkbox"]').prop('checked', false);
+                  });
+          }
+        })
+
+        // Delegación de eventos para checkboxes dinámicos
+        $('#attendanceTable tbody').on('change', 'input[type="checkbox"]', function(){
+            const nomina = $(this).data('nomina');
+            const index = seleccionadosGlobal.indexOf(nomina);
+            
+            //AGREGA EL ELEMENTO
+            if(this.checked && index === -1) 
+                seleccionadosGlobal.push(nomina);
+            
+            //ELIMINA EL ELEMENTO
+            else if(!this.checked && index > -1) 
+                seleccionadosGlobal.splice(index, 1);
+
+            checkPadre.checked = (seleccionadosGlobal.length < datosAsistenciaCheck.length) ? false : true;
+        });
     });
+
+
+/* seleccionadosGlobal = datosAsistenciaCheck 
+  Esto es un error ya que en vez de generar un nuevo arreglo asignado a la variable seleccionadosGlobal 
+  pasa la referencia de la ubicacion en memoria de la variable datosAsistenciaCheck entonces ambas variables 
+  apuntan a la mimsa ubicacion de la memoria por lo que al modificar cualquiera de las dos, los cambios se 
+  Se veran reflejados en ambas variables
+*/

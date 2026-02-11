@@ -36,7 +36,6 @@
     ¿Si la operacion o en la estacion no es necesaria una certificacion como se libera o comprueba el conocimiento del operador en a linea?
 */  
 
-
 //Cambio de turno
 //Reflejar cambios y registros incertados en el layout
 
@@ -54,7 +53,6 @@
 //Pruebas
 //Generar permisos de usuarios
 //Generar usuarios
-
 
 //Dar opcion de registrar a un operador sin punto de cambio o no si no existe la ultima fecha de operacion en la linea
 //esto para al inicio cunado se empieza a registrar a todo el personaol 
@@ -84,3 +82,7 @@
 //Revisar que la variable stationsData se actualice al hacer cualquier cambio en el layout
 //Modificar el codigo de la linea por un numero consecutivo
 //Agregar algun estatus que indique si la estacion es certificada o no, como por ejemplo el contorno de la estacion en otro color
+//Descargar la libreria de jquery y los datatable
+
+//Para hacer el cambio de turno podria solo registrar otro turno en la asignacion actual, o finalizar el 
+// registro actual y crear uno nuevo con los mismos y con el turno cambiado 

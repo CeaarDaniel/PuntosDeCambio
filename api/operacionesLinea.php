@@ -1123,7 +1123,7 @@ else
                              'mensaje' => 'Se ha actualizado el registro');
 
         } catch (Exception $e) {
-            $conn->rollBack();
+              $conn->rollBack();
               $results = array('estatus' => 'error',
                                'mensaje' => 'Ocurrió un error al realizar el registro',
                                'error' => $e->getMessage());
@@ -1131,5 +1131,37 @@ else
 
         // Devolver resultado
         echo json_encode($results);
+    }
+
+//Registro de cambio de turno
+else 
+    if($opcion == '19'){
+       $datosAsistenciaCheck = $_POST['datosAsistenciaCheck'];
+       $turno = $_POST['turno'];
+
+       $sql1= "UPDATE SPC_PERSONAL_NAD SET turno = :turno WHERE id_registro = :idRegistro";
+       $sql2= "UPDATE SPC_PERSONAL_ESTACION SET turno = :turno WHERE id_registro = :idRegistro";
+       $sql3= "UPDATE SPC_PUNTOS_CAMBIO SET turno = :turno WHERE id_registro = :idRegistro";
+
+        try {
+            $conn->beginTransaction();
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([':estatus' => $estatus,
+                            ':idRegistro' => $idRegistro]);
+
+            $conn->commit();
+            $results = array('estatus' => 'ok',
+                             'mensaje' => 'Se ha actualizado el registro');
+
+        } catch (Exception $e) {
+              $conn->rollBack();
+              $results = array('estatus' => 'error',
+                               'mensaje' => 'Ocurrió un error al realizar el registro',
+                               'error' => $e->getMessage());
+        }
+
+        // Devolver resultado
+        echo json_encode($results);
+
     }
 ?>
