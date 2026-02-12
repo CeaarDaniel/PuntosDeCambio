@@ -52,6 +52,7 @@
 //Revisar las condiciones de la consulta para el cambio de turno
 //Mostrar datos por turno
 //Descargar la libreria de jquery y los datatable
+//Validar los turnos de los empleados al hacer registros para que sean coeherentes no tener personal activo registrado en diferentes tablas con distintos turnos
 
 //Agregar algun estatus que indique si la estacion es certificada o no, como por ejemplo el contorno de la estacion en otro color
 //Dar opcion de registrar a un operador sin punto de cambio o no si no existe la ultima fecha de operacion en la linea
@@ -68,11 +69,11 @@
 //Eliminar(ocultar ) una estacion
 
 //Modificar el codigo de la linea por un numero consecutivo
+//Para hacer el cambio de turno podria solo registrar otro turno en la asignacion actual, o finalizar el registro actual y crear uno nuevo con los mismos y con el turno cambiado 
 //Hacer el contenido responsivo
 //Pruebas
 //Generar permisos de usuarios
 //Generar usuarios
-
 
 //Revisar que pasa con las personas cuando no estan trabajando en la estacion y tienen un punto de cambio
 //Investigar que sucede con el punto de cambio si hay un cambio de turno
