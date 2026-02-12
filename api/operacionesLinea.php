@@ -283,6 +283,7 @@ else
   if($opcion=='5'){
       $codigoLinea = $_POST['codigoLinea'];
 
+      //AGREGAR FILTROS DE TURNO
         // Preparar la sentencia con parámetros
         $sql= "SELECT E.id_estacion, E.nombre_estacion,
                         CASE WHEN PC.nomina IS NULL THEN EP.nomina
@@ -962,7 +963,7 @@ else
             else $coloClass = 'station-color-7';  
 
                 $response = array ( 'estatus' => 'ok',
-                                    'estacion' => array( 'id' => $estacion['id_estacion'],
+                                    'estacion' => array('id' => $estacion['id_estacion'],
                                                         'nomina' => $estacion['nomina'],
                                                         'name' => $estacion['nombre_estacion'], 
                                                         'operator' =>  !empty($estacion['nomina']) ? $estacion['nombre'] : '',  
@@ -970,8 +971,7 @@ else
                                                         'certification' => $estacion['codigo_certificacion'],
                                                         'idPC' => $estacion['idPC'],
                                                         'colorClass' => $coloClass,
-                                                        'estatusPC' => $estacion['estatusPC']
-                                                        )
+                                                        'estatusPC' => $estacion['estatusPC'])
                                     );
             }
         }
@@ -1136,32 +1136,74 @@ else
 //Registro de cambio de turno
 else 
     if($opcion == '19'){
-       $datosAsistenciaCheck = $_POST['datosAsistenciaCheck'];
-       $turno = $_POST['turno'];
+       $datosAsistenciaCheck = !empty($_POST['datosAsistenciaCheck']) ? json_decode($_POST['datosAsistenciaCheck']) : null;
+       $turnoActual = !empty($_POST['turnoActual']) ? $_POST['turnoActual'] : null;
+       $turnoCambio = !empty($_POST['turnoCambio']) ? $_POST['turnoCambio'] : null;
+       $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
+       //$placeholders = [];
 
-       $sql1= "UPDATE SPC_PERSONAL_NAD SET turno = :turno WHERE id_registro = :idRegistro";
-       $sql2= "UPDATE SPC_PERSONAL_ESTACION SET turno = :turno WHERE id_registro = :idRegistro";
-       $sql3= "UPDATE SPC_PUNTOS_CAMBIO SET turno = :turno WHERE id_registro = :idRegistro";
+        if (!$codigoLinea || !is_array($datosAsistenciaCheck) || !$turnoActual || !$turnoCambio) {
+                echo json_encode(['error' => 'Faltan datos obligatorios']);
+                exit;
+            }
+        
+        //foreach ($datosAsistenciaCheck as $indice => $nomina) $placeholders[] = ':nomina'.$indice;        
+        $sql = "UPDATE SPC_PUNTOS_CAMBIO SET turno = :turnoCambio WHERE turno = :turnoActual 
+                    AND codigo_linea = :codigoLinea AND fechaHora_fin IS NULL 
+                    AND nomina IN (". implode(',', $datosAsistenciaCheck).")";
+                //AND nomina IN (" . implode(',', $placeholders) . ")";
+
+        $sql2 = "UPDATE SPC_PERSONAL_NAD SET turno = :turnoCambio WHERE turno = :turnoActual 
+                    AND codigo_linea = :codigoLinea AND eliminado = 0 
+                    AND nomina IN (". implode(',', $datosAsistenciaCheck).")";
+
+        $sql3 = "UPDATE PE SET PE.turno = :turnoCambio from SPC_PERSONAL_ESTACION AS PE
+                        LEFT JOIN SPC_ESTACIONES as E ON PE.id_estacion = E.id_estacion
+                    WHERE PE.turno = :turnoActual AND E.codigo_linea = :codigoLinea AND PE.fecha_fin IS NULL 
+                         AND PE.nomina IN (". implode(',', $datosAsistenciaCheck).")";
 
         try {
             $conn->beginTransaction();
             $stmt = $conn->prepare($sql);
-            $stmt->execute([':estatus' => $estatus,
-                            ':idRegistro' => $idRegistro]);
+            $stmt2 = $conn->prepare($sql2);
+            $stmt3 = $conn->prepare($sql3);
+
+            $stmt->bindParam(':turnoCambio', $turnoCambio);
+            $stmt->bindParam(':turnoActual', $turnoActual);
+            $stmt->bindParam(':codigoLinea', $codigoLinea);
+
+            $stmt2->bindParam(':turnoCambio', $turnoCambio);
+            $stmt2->bindParam(':turnoActual', $turnoActual);
+            $stmt2->bindParam(':codigoLinea', $codigoLinea);
+
+            $stmt3->bindParam(':turnoCambio', $turnoCambio);
+            $stmt3->bindParam(':turnoActual', $turnoActual);
+            $stmt3->bindParam(':codigoLinea', $codigoLinea);
+
+            // Vincular cada valor de nómina
+            //foreach ($datosAsistenciaCheck as $indice => $nomina) $stmt->bindParam(':nomina' . $indice, $datosAsistenciaCheck[$indice]);
+            $stmt->execute();
+            $stmt2->execute();
+            $stmt3->execute();
 
             $conn->commit();
             $results = array('estatus' => 'ok',
                              'mensaje' => 'Se ha actualizado el registro');
 
         } catch (Exception $e) {
-              $conn->rollBack();
-              $results = array('estatus' => 'error',
-                               'mensaje' => 'Ocurrió un error al realizar el registro',
-                               'error' => $e->getMessage());
+            $conn->rollBack();
+            $results = array('estatus' => 'error',
+                            'mensaje' => 'Ocurrió un error al realizar el registro',
+                            'error' => $e->getMessage());
         }
 
         // Devolver resultado
         echo json_encode($results);
+    }
 
+    //Obtener los datos de un trabajdor 
+    else 
+        if($opcion == '20'){
+            $sql= ''
     }
 ?>

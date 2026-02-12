@@ -36,53 +36,43 @@
     ¿Si la operacion o en la estacion no es necesaria una certificacion como se libera o comprueba el conocimiento del operador en a linea?
 */  
 
-//Cambio de turno
-//Reflejar cambios y registros incertados en el layout
+//Revisar que la variable stationsData se actualice al hacer cualquier cambio en el layout
+//Revisr los valores enviadoes y recibidos de la variabla layoputData o en el json que lista las estaciones
 
-//Agregar alguna alerta o etiqueta de warning para mostrar cuando el PC lleva ya 30 días
 //validar la asignacion de un trabajador en una estacion cuando se registra un punto de cambio
-//modificar el diseño para que sea mas rapido como se asignan y se eliminan los operadores de las estaciones, tal vez haciendo esto dentro del mismo modal de la estacion
-//mostrar en el el layout algun indicador si el trabajadore falto o asistio
 //No limpiar todos los campos de los formularios solo los que son ingresados por el usuario
 //Generar mostrar el contenido dinamico de los formularios
 //Hacer restricciones y validaciones correspondientes
 //Falta registrar las fechas con la hora
 //Falta validar que el empleado no este dado de baja 
+//Falta agregar el filtro de turno a las consultas
+//Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
+//Agregar la funcion de recargar la lista de asistencia al cambiar el turno (update: replantear esta instruccion)
+//Cargar una nueva la lista de asistencia o llamar la funcion al abrir el modal de asistencia
+//Revisar las condiciones de la consulta para el cambio de turno
+//Mostrar datos por turno
+//Descargar la libreria de jquery y los datatable
 
+//Agregar algun estatus que indique si la estacion es certificada o no, como por ejemplo el contorno de la estacion en otro color
+//Dar opcion de registrar a un operador sin punto de cambio o no si no existe la ultima fecha de operacion en la linea
+//Y dejar otra opcion para que se puede finalizar y/o asignar al operador como titular de la estacion
+//esto para al inicio cunado se empieza a registrar a todo el personaol 
+//Agregar alguna alerta o etiqueta de warning para mostrar cuando el PC lleva ya 30 días
+//modificar el diseño para que sea mas rapido como se asignan y se eliminan los operadores de las estaciones, tal vez haciendo esto dentro del mismo modal de la estacion
+//mostrar en el el layout algun indicador si el trabajadore falto o asistio
+//Para mostrar el estatus de la asistencia en la estacion del layout hay que comparar el personal de las estaciones con su registro de la tabla de asistencia y el estatus de registro de asistencia (1,2,3... etc)
+//Reflejar cambios y registros incertados en el layout
+//Tal vez a futuro seria buen o agregar una opcion que diga mover operedor de estacion
+//Agregar opcion para consultar el acomodo del layout guardado por dia o fecha
+//QUITAR EL INPUT DE OBSERVACIONES de la tabla de asistencia
+//Eliminar(ocultar ) una estacion
+
+//Modificar el codigo de la linea por un numero consecutivo
 //Hacer el contenido responsivo
 //Pruebas
 //Generar permisos de usuarios
 //Generar usuarios
 
-//Dar opcion de registrar a un operador sin punto de cambio o no si no existe la ultima fecha de operacion en la linea
-//esto para al inicio cunado se empieza a registrar a todo el personaol 
-
-//Tal vez a futuro seria buen o agregar una opcion que diga mover operedor de estacion
-//Modifcar el codigo para generar el consecutivo de PC para que sea por linea y no uno general
-//Agregar opcion para consultar el acomodo del layout guardado por dia o fecha
-//Eliminar(ocultar ) una estacion
-
-//Y dejar otra opcion para que se puede finalizar y/o asignar al operador como titular de la estacion
-//Falta agregar el filtro de turno a las consultas
 
 //Revisar que pasa con las personas cuando no estan trabajando en la estacion y tienen un punto de cambio
-//Si a una estacion se le crea un punto de cambio mostrara la persona del punto de cambio pero no mostrara a la persona 
-//que esta como titular de la estacion, si esta no esta porque se le sansiono o suspendio no se le va a poder hacer el registro de la sistencia 
-//Tal vez seria conveniente mostrar todas las personas y dar prioridad a mostrar los PC y si el titular 
-// no esta en ninguna estacion mas que en la estacion con el PC mostrar la persona que esta como PC y al titular
-//indicando si es titular o PC
-
-//QUITAR EL INPUT DE OBSERVACIONES de la tabla de asistencia
-//Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
-//Agregar la funcion de recargar la lista de asistencia al cambiar el turno
-//Cargar una nueva la lista de asistencia o llamar la funcion al abrir el modal de asistencia
-
-//Para mostrar el estatus de la asistencia en la estacion del layout hay que comparar el personal de las estaciones con su registro de la tabla de asistencia y el estatus de registro de asistencia (1,2,3... etc)
-
-//Revisar que la variable stationsData se actualice al hacer cualquier cambio en el layout
-//Modificar el codigo de la linea por un numero consecutivo
-//Agregar algun estatus que indique si la estacion es certificada o no, como por ejemplo el contorno de la estacion en otro color
-//Descargar la libreria de jquery y los datatable
-
-//Para hacer el cambio de turno podria solo registrar otro turno en la asignacion actual, o finalizar el 
-// registro actual y crear uno nuevo con los mismos y con el turno cambiado 
+//Investigar que sucede con el punto de cambio si hay un cambio de turno

@@ -6,7 +6,6 @@
 
   $sql= "SELECT descripcion, encargado_supervisor from SPC_LINEAS WHERE CODIGO_LINEA = :codigo_linea";
 
-
   $stmt = $conn->prepare($sql);
   $stmt->bindParam(':codigo_linea', $codigo);
   $stmt->execute();

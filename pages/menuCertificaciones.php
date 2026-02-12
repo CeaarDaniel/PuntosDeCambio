@@ -104,50 +104,50 @@
 <!--Seccion de modales  -->
     <!-- Modal agregar certificacion-->
         <div class="modal fade" id="modalAgregar" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Registrar Nueva Certificación</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form>
-                <div class="mb-3">
-                    <label for="certificationCode" class="form-label">Código de Certificación</label>
-                    <input type="text" class="form-control" id="certificationCode" placeholder="Ej: CERT-005">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Registrar Nueva Certificación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="mb-3">
-                    <label for="certificationName" class="form-label">Nombre de Certificación</label>
-                    <input type="text" class="form-control" id="certificationName" placeholder="Ej: Proceso X">
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="certificationCode" class="form-label">Código de Certificación</label>
+                            <input type="text" class="form-control" id="certificationCode" placeholder="Ej: CERT-005">
+                        </div>
+                        <div class="mb-3">
+                            <label for="certificationName" class="form-label">Nombre de Certificación</label>
+                            <input type="text" class="form-control" id="certificationName" placeholder="Ej: Proceso X">
+                        </div>
+                        <div class="mb-3">
+                            <label for="processType" class="form-label">Tipo de Proceso</label>
+                            <select class="form-select" id="processType">
+                            <option selected>Seleccionar proceso</option>
+                            <option>Ensamblaje</option>
+                            <option>Control de Calidad</option>
+                            <option>Embalaje</option>
+                            <option>Soldadura</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="lineAssignment" class="form-label">Línea Asignada</label>
+                            <select class="form-select" id="lineAssignment">
+                            <option selected>Seleccionar línea</option>
+                            <option>Línea A</option>
+                            <option>Línea B</option>
+                            <option>Línea C</option>
+                            <option>Línea D</option>
+                            </select>
+                        </div>
+                    </form>
                 </div>
-                <div class="mb-3">
-                    <label for="processType" class="form-label">Tipo de Proceso</label>
-                    <select class="form-select" id="processType">
-                    <option selected>Seleccionar proceso</option>
-                    <option>Ensamblaje</option>
-                    <option>Control de Calidad</option>
-                    <option>Embalaje</option>
-                    <option>Soldadura</option>
-                    </select>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary-custom">Guardar Certificación</button>
                 </div>
-                <div class="mb-3">
-                    <label for="lineAssignment" class="form-label">Línea Asignada</label>
-                    <select class="form-select" id="lineAssignment">
-                    <option selected>Seleccionar línea</option>
-                    <option>Línea A</option>
-                    <option>Línea B</option>
-                    <option>Línea C</option>
-                    <option>Línea D</option>
-                    </select>
                 </div>
-                </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary-custom">Guardar Certificación</button>
-            </div>
-            </div>
-        </div>
         </div>
 
     <!-- Modal registrar operador Certificado -->

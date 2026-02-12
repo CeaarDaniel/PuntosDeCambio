@@ -226,7 +226,7 @@
         element.style.top = `${top}px`;
       }
       
-      //Actualizar y mostrar el modal de la estacion
+      //Actualizar y mostrar el modal de la estacion al abrirlo
       showStationModal(stationData) {
         console.log('Datos de la estacion: ',stationData)
         document.getElementById('imgInfochangeControlModal').src= (stationData.nomina) ? `../img/personal/${stationData.nomina}.jpg` : `../img/personal/na.jpg`;
@@ -961,17 +961,50 @@
 
     //Funcion para cambiar el turno de los trabajadores registrados en la linea
     function cambiarTurno(){
+      if(!seleccionadosGlobal || seleccionadosGlobal.length<=0){
+        alert("No a seleccionado informacion para actualizar");
+        return;
+      }
+
       let turno = ($('#turnoLayout').val() == '1') ? '2' : '1';
       let fromDataCambioTurno = new FormData();
       fromDataCambioTurno.append('opcion', 19);
-      fromDataCambioTurno.append('datosAsistenciaCheck',seleccionadosGlobal)
-      fromDataCambioTurno.append('turno', turno)
+      fromDataCambioTurno.append('datosAsistenciaCheck', JSON.stringify(seleccionadosGlobal))
+      fromDataCambioTurno.append('turnoCambio', turno)
+      fromDataCambioTurno.append('codigoLinea', codigoLinea.value)
+      fromDataCambioTurno.append('turnoActual', $('#turnoLayout').val())
+      
+      fetch("../api/operacionesLinea.php", {
+              method: "POST",
+              body: fromDataCambioTurno,
+          })
+          .then((response) => response.text())
+          .then((data) => {
+            console.log(data);
+            data= JSON.parse(data)
+
+            if(data.estatus == 'ok')
+                alert(data.mensaje)
+
+            else{
+              alert(data.mensaje);
+              console.log(data.error)
+            }
+
+            }).catch((error) => {
+              console.log(error);
+        });
+    }
+
+    //Funcion para actualizar los datos del operador
+    function getOperator(nomina, estacion){
+
     }
 
     // Inicializar el workspace
     document.addEventListener('DOMContentLoaded', function() {
-        workspaceGrid = document.getElementById('workspaceGrid');
-        getEstaciones();
+      workspaceGrid = document.getElementById('workspaceGrid');
+      getEstaciones();
 
       // Inicializar tooltips
       const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -1316,8 +1349,8 @@
         });
     });
 
-
-/* seleccionadosGlobal = datosAsistenciaCheck 
+/* 
+  seleccionadosGlobal = datosAsistenciaCheck 
   Esto es un error ya que en vez de generar un nuevo arreglo asignado a la variable seleccionadosGlobal 
   pasa la referencia de la ubicacion en memoria de la variable datosAsistenciaCheck entonces ambas variables 
   apuntan a la mimsa ubicacion de la memoria por lo que al modificar cualquiera de las dos, los cambios se 
