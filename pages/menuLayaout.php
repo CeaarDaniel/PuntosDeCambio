@@ -12,7 +12,7 @@
       </button>     
 
       <!-- ASIGNAR OPERADOR -->
-      <button class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Asignar operador">
+      <button id="btnMenuAsignar" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Asignar operador">
         <span data-bs-toggle="modal" data-bs-target="#modalAsignarOperador">
           <i class="bi bi-person-plus"></i>
           <span>Asignar</span>

@@ -243,6 +243,8 @@
 
         //Setear input de id del punto de cambio en el formulario de cierre de PC
           document.getElementById('idPC').value = stationData.idPC || '';
+
+          getOperator(stationData.nomina, stationData.id);
   
         //Modal creado registro de punto de cambio
             const stationModal = new bootstrap.Modal(document.getElementById('changeControlModal'));
@@ -371,17 +373,25 @@
       }
       
       station.innerHTML = `
-        <div class="station-header">${stationData.name}</div>
+        <div class="station-header">
+          ${stationData.name}
+        </div>
         <div class="station-content">
           <div class="station-operator"> ${operatorIcon} </div>
           <div class="station-name">${stationData.operator || 'No asignado'}</div>
         </div>
         <div class="station-status status-${stationData.status}"></div>`;
-      
+
+        if (stationData.isCertificate == 1) {
+            station.querySelector('.station-header').style.background = "#ffc107";
+            station.querySelector('.station-header').style.color = "rgb(0, 0, 0, 1)";
+            station.querySelector('.station-header').style.textShadow = "0 0px 0px rgba(0,0,0)";
+          }
+
       parent.appendChild(station);
     }
 
-    //Obtener las estaciones creadas y invocar la funcion para mostrarlas en el layput
+    //Obtener las estaciones creadas e invocar la funcion para mostrarlas en el layput
     function getEstaciones(){
         const formData = new FormData;
         formData.append('opcion', 5)
@@ -418,13 +428,14 @@
               .then((response) => response.text())
               .then((data) => {   
                     data= JSON.parse(data)
-                    if(data.estatus=='ok'){ 
+                    if(data.estatus=='ok'){
                         actualizarEstacion(id, {'nomina': (data.estacion.nomina) ? data.estacion.nomina : null, 
                                                 'operator': (data.estacion.operator) ? data.estacion.operator : 'No asignado',
                                                 'colorClass': data.estacion.colorClass,
                                                 'status' : data.estacion.status,
                                                 'idPC' : data.estacion.idPC,
-                                                'estatusPC': data.estacion.estatusPC
+                                                'estatusPC': data.estacion.estatusPC,
+                                                'isCertificate' : data.estacion.isCertificate
                                           })
                     }
                       else  alert(data.mensaje);
@@ -543,7 +554,6 @@
 
                     // Eliminarlas
                     colorActual.forEach(clase => station.classList.remove(clase));
-
                     station.classList.add(newData.colorClass);
               }            
 
@@ -568,8 +578,18 @@
                                                 :
                                       operator.innerHTML='<i class="bi-person-x"></i>';
 
-              // Estilos (opcional)
-              //station.style.border = '2px solid #4CAF50';
+                 if (newData.isCertificate == 1) {
+                      station.querySelector('.station-header').style.background = "#ffc107";
+                      station.querySelector('.station-header').style.color = "rgb(0, 0, 0, 1)";
+                      station.querySelector('.station-header').style.textShadow = "0 0px 0px rgba(0,0,0)";
+                    } 
+                  
+                 else{
+                  station.querySelector('.station-header').style.background = "";
+                  station.querySelector('.station-header').style.color = "";
+                  station.querySelector('.station-header').style.textShadow = "";
+                }
+
         } 
 
         else 
@@ -974,13 +994,12 @@
       fromDataCambioTurno.append('codigoLinea', codigoLinea.value)
       fromDataCambioTurno.append('turnoActual', $('#turnoLayout').val())
       
-      fetch("../api/operacionesLinea.php", {
+        fetch("../api/operacionesLinea.php", {
               method: "POST",
               body: fromDataCambioTurno,
           })
           .then((response) => response.text())
           .then((data) => {
-            console.log(data);
             data= JSON.parse(data)
 
             if(data.estatus == 'ok')
@@ -996,9 +1015,48 @@
         });
     }
 
-    //Funcion para actualizar los datos del operador
+    //Funcion para obtener los datos del operador y mostrarlos en la estacion
     function getOperator(nomina, estacion){
+        if(nomina){
+          let fromDataGetOperador = new FormData();
+          fromDataGetOperador.append('opcion', 20);
+          fromDataGetOperador.append('nomina', nomina);
+          fromDataGetOperador.append('idEstacion', estacion)
 
+          fetch("../api/operacionesLinea.php", {
+                method: "POST",
+                body: fromDataGetOperador,
+            })
+            .then((response) => response.text())
+            .then((data) => {
+          
+              data= JSON.parse(data)
+
+              if(data.estatus == 'ok'){
+                  $("#changeControlInfoNomina").text(data.nomina);
+                  $("#changeControlInfoNombre").text(data.nombre);
+                  $("#changeControlInfFecha").text(data.fecha_inicio);
+                  $("#changeControlInfoTurno").text("TURNO "+data.turno);
+                  $("#changeControlInfoComentarios").text( (data.descripcion && data.descripcion != '') 
+                                                            ? data.descripcion : 'SIN COMENTARIOS');
+                  return;
+              }
+
+              else
+                console.log(data.error);
+
+              }).catch((error) => {
+                console.log(error);
+          });
+        }
+
+        else{
+          $("#changeControlInfoNomina").text("");
+          $("#changeControlInfoNombre").text("");
+          $("#changeControlInfFecha").text("");
+          $("#changeControlInfoTurno").text("NA");
+          $("#changeControlInfoComentarios").text("SIN COMENTARIOS");
+        }
     }
 
     // Inicializar el workspace
@@ -1288,6 +1346,11 @@
                         }).catch((error) => {
                           console.log(error);
                 });
+        })
+
+        //Detectar cuando se abra el modal de asignar estacion
+        document.getElementById('btnMenuAsignar').addEventListener('click', function (){
+          document.getElementById('assignmentDate').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
         })
 
         btnGuardarEstacion.addEventListener('click', agregarEstacion);

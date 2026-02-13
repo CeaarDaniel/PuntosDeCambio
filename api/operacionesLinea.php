@@ -144,7 +144,7 @@ else
 //Asignar un operador a una estacion
 else 
     if($opcion == '3'){
-        $nomina = $_POST['nomina'] ?? null;
+        $nomina =  $_POST['nomina'] ?? null;
         $nombre = $_POST['nombre'] ?? null;
         $estacion = $_POST['estacion'] ?? null;
         $fecha = $_POST['fecha'] ?? null;
@@ -152,13 +152,15 @@ else
         $comentarios = $_POST['comentarios'] ?? null;
 
         // Validar que se recibieron todos los datos
-        if (!$nomina) {
+        if (!$nomina && !$fecha) {
             echo json_encode([
                 'estatus' => 'error',
                 'mensaje' => 'Faltan datos obligatorios.'
             ]);
             exit; 
         }
+
+        $fecha = str_replace('T', ' ', $fecha);
 
 
         try { // Iniciar transacción
@@ -285,7 +287,7 @@ else
 
       //AGREGAR FILTROS DE TURNO
         // Preparar la sentencia con parámetros
-        $sql= "SELECT E.id_estacion, E.nombre_estacion,
+        $sql= "SELECT E.id_estacion, E.nombre_estacion, E.requiere_certificacion AS isCertificate,
                         CASE WHEN PC.nomina IS NULL THEN EP.nomina
                             ELSE PC.nomina
                         END AS nomina, 
@@ -323,7 +325,8 @@ else
                                      'y' => $estacion['posicion_y'] ,
                                      'colorClass' => $coloClass,  //1 asistencia, 3 falta, 2 o 6 punto de cambio
                                      'idPC' => $estacion['idPC'],
-                                     'estatusPC' => $estacion['estatusPC']
+                                     'estatusPC' => $estacion['estatusPC'],
+                                     'isCertificate' => $estacion['isCertificate']
                                    );
             }
         }
@@ -935,7 +938,7 @@ else
         }
 
         // Preparar la sentencia con parámetros
-        $sql= "SELECT E.id_estacion, E.nombre_estacion,
+        $sql= "SELECT E.id_estacion, E.nombre_estacion, E.requiere_certificacion AS isCertificate,
                         CASE WHEN PC.nomina IS NULL THEN EP.nomina
                             ELSE PC.nomina
                         END AS nomina, 
@@ -971,7 +974,9 @@ else
                                                         'certification' => $estacion['codigo_certificacion'],
                                                         'idPC' => $estacion['idPC'],
                                                         'colorClass' => $coloClass,
-                                                        'estatusPC' => $estacion['estatusPC'])
+                                                        'estatusPC' => $estacion['estatusPC'],
+                                                        'isCertificate' => $estacion['isCertificate']
+                                                        )
                                     );
             }
         }
@@ -1142,10 +1147,10 @@ else
        $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
        //$placeholders = [];
 
-        if (!$codigoLinea || !is_array($datosAsistenciaCheck) || !$turnoActual || !$turnoCambio) {
+        if(!$codigoLinea || !is_array($datosAsistenciaCheck) || !$turnoActual || !$turnoCambio) {
                 echo json_encode(['error' => 'Faltan datos obligatorios']);
                 exit;
-            }
+        }
         
         //foreach ($datosAsistenciaCheck as $indice => $nomina) $placeholders[] = ':nomina'.$indice;        
         $sql = "UPDATE SPC_PUNTOS_CAMBIO SET turno = :turnoCambio WHERE turno = :turnoActual 
@@ -1201,9 +1206,43 @@ else
         echo json_encode($results);
     }
 
-    //Obtener los datos de un trabajdor 
-    else 
-        if($opcion == '20'){
-            $sql= ''
+//Obtener los datos de un trabajdor 
+else 
+    if($opcion == '20'){
+        $nomina = !empty($_POST['nomina']) ? $_POST['nomina'] : null;
+        $idEstacion = !empty($_POST['idEstacion']) ? $_POST['idEstacion'] : null;
+
+        $sql= "SELECT nomina, nombre,  FORMAT(fecha_asignacion, 'yyyy/MM/dd HH:mm') AS fecha_inicio, fecha_fin, turno, 
+                        comentarios AS descripcion, 'ESTACION' AS origen FROM SPC_PERSONAL_ESTACION 
+                WHERE nomina = :nomina AND id_estacion = :idEstacion AND fecha_fin IS NULL
+                    UNION ALL
+                SELECT nomina, nombre, FORMAT(fechaHora_inicio, 'yyyy/MM/dd HH:mm') AS fecha_inicio, fechaHora_fin AS fecha_fin, 
+                        turno, motivo AS descripcion, 'PUNTO_CAMBIO' AS origen FROM SPC_PUNTOS_CAMBIO 
+                WHERE nomina = :nomina2 AND id_estacion = :idEstacion2 AND fechaHora_fin IS NULL";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(':nomina', $nomina);
+            $stmt->bindParam(':idEstacion', $idEstacion);
+            $stmt->bindParam(':nomina2', $nomina);
+            $stmt->bindParam(':idEstacion2', $idEstacion);
+            $response= array();
+
+            if($stmt->execute()){
+                $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+                  $response = array('estatus' => 'ok',
+                                    'nomina' => $fila['nomina'],
+                                    'nombre'=> $fila['nombre'],
+                                    'fecha_inicio'=> $fila['fecha_inicio'],
+                                    //'fecha_fin'=> $fila['fecha_fin'],
+                                    'turno'=> $fila['turno'],
+                                    'descripcion'=> $fila['descripcion'],
+                                    //'origen'=> $fial['origen'] Tabla de la que probiene el valor
+                                    );
+            }      
+
+            else 
+                $response = $stmt->errorInfo()[2];
+
+        echo json_encode($response);
     }
 ?>

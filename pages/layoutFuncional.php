@@ -37,8 +37,13 @@
   <link rel="stylesheet" href="../css/layout.css">
 
   <!--Data table -->
-  <link rel="stylesheet" href="https://cdn.datatables.net/2.0.7/css/dataTables.dataTables.css" />
-  <script src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script>
+  <link href="../DataTables/datatables.min.css" rel="stylesheet">
+
+  <!--
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.7/css/dataTables.dataTables.css" />
+    <script src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script> 
+  -->
+    
 </head>  
 <body>
   <div class="layout-container">
@@ -339,8 +344,8 @@
                           <i class="bi bi-calendar"></i>
                           Fecha de Asignación
                       </label>
-                      <input type="date" class="form-control form-control-custom" 
-                        id="assignmentDate" value="<?php echo date('Y-m-d'); ?>" required>
+                      <input type="datetime-local" class="form-control form-control-custom" 
+                        id="assignmentDate"  required>
                       <div class="form-help">Fecha en la que inicia la asignación</div>
                     </div>
                   </div>
@@ -1093,7 +1098,7 @@
 
             <div id="ventanasModalPC">
                 <!-- Formulario de registro de punto de cambio -->
-                  <div id="contregistroCambioForm" class="fade-page show">
+                  <div id="contregistroCambioForm" class="fade-page show" style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border-left: 4px solid #000000; margin-bottom: 30px;">
                       <form class="form-body" id="registroCambioForm">
                         <!-- Header de la sección -->
                         <div class="form-section">
@@ -1232,55 +1237,58 @@
                               <!-- Nómina -->
                               <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
                                   <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Nómina:</span>
-                                  <span style="color: #212529; flex: 1;">EMP-04582</span>
+                                  <span id="changeControlInfoNomina" style="color: #212529; flex: 1;"></span>
                               </div>
                               
                               <!-- Nombre -->
                               <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
                                   <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Nombre:</span>
-                                  <span style="color: #212529; flex: 1;">Carlos Alberto Rodríguez Martínez</span>
+                                  <span id="changeControlInfoNombre" style="color: #212529; flex: 1;"></span>
                               </div>
                               
+                              <!-- Fecha de registro-->
                               <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
                                   <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Fecha de asignacion:</span>
-                                  <span style="color: #212529; flex: 1;">15/12/2024</span>
+                                  <span id="changeControlInfFecha" style="color: #212529; flex: 1;"></span>
                               </div>
 
                               <!-- Turno -->
                               <div style="margin-bottom: 15px; display: flex; align-items: center;">
                                   <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Turno:</span>
                                   <span style="color: #212529; flex: 1;">
-                                      <span class="badge bg-primary" style="font-size: 0.85rem; padding: 5px 12px; border-radius: 20px;">Matutino</span>
+                                      <span id="changeControlInfoTurno" class="badge bg-primary" style="font-size: 0.85rem; padding: 5px 12px; border-radius: 20px;"></span>
                                   </span>
                               </div>
                           </div>
                       
-                          <div class="col-md-12">
-                              <!-- Nivel ILU -->
-                              <div style="margin-bottom: 15px; display: flex; align-items: center;">
-                                  <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Nivel ILU:</span>
-                                  <span style="color: #212529; flex: 1;">
-                                      <span class="badge bg-info text-dark" style="font-size: 0.85rem; padding: 5px 12px; border-radius: 20px;"> ILU</span>
-                                  </span>
-                              </div>
-                              
-                              <!-- Fecha de vencimiento de certificación -->
-                              <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
-                                  <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Fecha de vencimiento de certificación:</span>
-                                  <span style="color: #212529; flex: 1;">
-                                      <span style="color: #dc3545; font-weight: 600;">15/12/2024</span>
-                                      <small style="color: #6c757d; display: block; margin-top: 5px;">(Faltan 45 días)</small>
-                                  </span>
-                              </div>
-                          </div>
+                          <!-- Informacion de certificacion
+                            <div class="col-md-12">
+                                <!-- Nivel ILU 
+                                <div style="margin-bottom: 15px; display: flex; align-items: center;">
+                                    <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Nivel de certificacion:</span>
+                                    <span style="color: #212529; flex: 1;">
+                                        <span class="badge bg-info text-dark" style="font-size: 0.85rem; padding: 5px 12px; border-radius: 20px;"> ILU</span>
+                                    </span>
+                                </div>
+                                
+                                <!-- Fecha de vencimiento de certificación
+                                <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
+                                    <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Fecha de vencimiento <br> de certificación:</span>
+                                    <span style="color: #212529; flex: 1;">
+                                        <span style="color: #dc3545; font-weight: 600;">15/12/2024</span>
+                                        <small style="color: #6c757d; display: block; margin-top: 5px;">(Faltan 45 días)</small>
+                                    </span>
+                                </div>
+                            </div>
+                           -->
 
+                          <!-- Comentario -->
                           <div class="col-md-12">  
-                              <!-- Comentario -->
                               <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
                                   <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Comentario:</span>
                                   <div style="color: #212529; flex: 1;">
                                       <div style="background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 15px; border-radius: 5px;">
-                                          Operador con excelente desempeño en los últimos 6 meses. Ha completado satisfactoriamente el entrenamiento de seguridad avanzada.
+                                        <p id="changeControlInfoComentarios"></p>
                                       </div>
                                   </div>
                               </div>
@@ -1887,11 +1895,15 @@
   <!-- Bootstrap JS -->
   <script src="../scripts/bootstrap.bundle.min.js"></script>
 
-  <!-- Incluye JS de Bootstrap, jQuery y DataTables -->
+  <!-- DataTables 
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-
+  <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script> 
+  <script src="DataTables/datatables.min.js"></script>  -->
+  <script src="../DataTables/datatables.min.js"></script>
+  
   <!--Custmo js -->
-  <script src="../scripts/layout.js"></script>
+    <script src="../scripts/layout.js"></script> 
+
+
 </body>
 </html>
