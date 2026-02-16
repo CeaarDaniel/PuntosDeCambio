@@ -391,7 +391,7 @@
       parent.appendChild(station);
     }
 
-    //Obtener las estaciones creadas e invocar la funcion para mostrarlas en el layput
+    //Obtener las estaciones creadas e invocar la funcion para mostrarlas en el layout
     function getEstaciones(){
         const formData = new FormData;
         formData.append('opcion', 5)
@@ -508,6 +508,7 @@
       formDataAsig.append("fecha", fecha);
       formDataAsig.append("turno", turno);
       formDataAsig.append("comentarios", comentarios);
+      formDataAsig.append('codigoLinea', codigoLinea.value)
 
       if(assignmentForm.reportValidity()){
           fetch("../api/operacionesLinea.php", {
@@ -523,7 +524,10 @@
                       getEstacion(estacion);
                   }
 
-                else alert(data.mensaje)
+                else {
+                  alert(data.mensaje)
+                  console.log(data.error)
+                }
               })
               .catch((error) => {
                 console.log(error);
@@ -609,6 +613,7 @@
             estation.nomina = (newData.nomina) ?? null;
             estation.idPC = (newData.idPC) ?? null;
             estation.estatusPC = (newData.estatusPC) ?? null;
+            estation.isCertificate = newData.isCertificate
         } //console.log(stationsData);  
     } 
 
@@ -915,6 +920,7 @@
     function getNoControl() {
       const formDataNoControles = new FormData();
       formDataNoControles.append('opcion', 12);
+      formDataNoControles.append('codigoLinea', codigoLinea.value)
       return fetch("../api/operacionesLinea.php", {
         method: "POST",
         body: formDataNoControles,
@@ -1086,9 +1092,7 @@
       //Eventlistener
         //Obtener nombre del numero de nomina
         nominaModalAsignar.addEventListener('change', function (){
-          
             let nombreModalAsignar = document.getElementById('nombreModalAsignar');
-
             if(nominaModalAsignar && nominaModalAsignar !='') {
                 let formDataConsultarNombre = new FormData;
                 formDataConsultarNombre.append('nomina',nominaModalAsignar.value)
@@ -1208,6 +1212,9 @@
                         data = JSON.parse(data)
                           if(data.estatus=='ok'){
                               alert(data.mensaje);  
+                               let modalActual = bootstrap.Modal.getInstance(document.getElementById('changeControlModal'));
+                              (modalActual) ? modalActual.hide() : '';
+
                               getEstacion(estacionId)
                             }
 
@@ -1270,6 +1277,15 @@
           if(document.getElementById('nombrePC').value == '' || document.getElementById('nombrePC').value == null){
                 alert('No se encontro registro del empleado ingresado') 
                 return;
+          }
+
+
+          let nominaEtiqueta = $("#changeControlInfoNomina").text().trim();
+          let nominaInput = $("#nominaPC").val().trim();
+
+          if (nominaInput !== "" && Number(nominaEtiqueta) === Number(nominaInput)) {
+              alert("No se puede crear el punto de cambio ya que el trabajador está asignado a esta estación.");
+              return;
           }
 
           formDataPuntoCambio.append('nominaPC', document.getElementById('nominaPC').value);
@@ -1351,6 +1367,11 @@
         //Detectar cuando se abra el modal de asignar estacion
         document.getElementById('btnMenuAsignar').addEventListener('click', function (){
           document.getElementById('assignmentDate').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
+        })
+
+        //Generar fecha de registro de personal NAD en el formulario
+        document.getElementById('btnMenuRegiswtroNAD').addEventListener('click', function(){
+          document.getElementById('assignmentDatePNA').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
         })
 
         btnGuardarEstacion.addEventListener('click', agregarEstacion);

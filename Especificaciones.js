@@ -43,12 +43,10 @@
 //No limpiar todos los campos de los formularios solo los que son ingresados por el usuario
 //Generar mostrar el contenido dinamico de los formularios
 //Hacer restricciones y validaciones correspondientes
-//Falta registrar las fechas con la hora
 //Falta validar que el empleado no este dado de baja 
 //Falta agregar el filtro de turno a las consultas
 //Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
 //Agregar la funcion de recargar la lista de asistencia al cambiar el turno (update: replantear esta instruccion)
-//Cargar una nueva la lista de asistencia o llamar la funcion al abrir el modal de asistencia
 //Revisar las condiciones de la consulta para el cambio de turno
 //Mostrar datos por turno
 //Validar los turnos de los empleados al hacer registros para que sean coeherentes no tener personal activo registrado en diferentes tablas con distintos turnos
@@ -80,4 +78,46 @@
 
 /*
     Agregar al modal de gestion de estaciones una opcion para asignar al operador, movel operador, editar y eliminar estacion
+*/
+
+
+/*
+    ESPICIFICACIONES/MODIFICACIONES OK
+
+    //Falta registrar las fechas con la hora
+
+
+
+
+*/
+
+
+/*
+    Claro 🤍 Aquí tienes frases que alguien con baja autoestima puede repetirse cada día. Están pensadas para ser realistas, no forzadas, y ayudar a reconstruir la confianza poco a poco:
+
+    🌱 Para empezar el día
+    “No tengo que ser perfecto/a para ser valioso/a.”
+    “Estoy haciendo lo mejor que puedo con lo que tengo.”
+    “Merezco respeto, incluso de mí mismo/a.”
+    “Hoy puedo dar un pequeño paso, y eso es suficiente.”
+
+    💛 Para momentos de inseguridad
+    “Mis errores no definen quién soy.”
+    “No necesito compararme para tener valor.”
+    “Mi proceso es diferente, y eso está bien.”
+    “Puedo aprender y mejorar sin castigarme.”
+
+    🌤️ Para fortalecer la autoestima
+    “Tengo cualidades que aportan cosas buenas a los demás.”
+    “Mi voz y mis opiniones importan.”
+    “No tengo que agradar a todo el mundo.”
+    “Soy suficiente tal y como soy, incluso mientras crezco.”
+
+    🔥 Para cuando la mente es muy crítica
+    “Me hablo con la misma amabilidad que le daría a alguien que quiero.”
+    “Un pensamiento negativo no es un hecho.”
+    “Puedo cuestionar lo que mi mente me dice.”
+    “No todo lo que siento es una verdad absoluta.”
+
+    Si quieres, puedo adaptarlas para un caso más específico (adolescente, ruptura amorosa, fracaso académico, bullying, etc.).
 */
