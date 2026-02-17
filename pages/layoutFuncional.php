@@ -297,11 +297,8 @@
                           <i class="bi bi-list"></i>
                             Listado de estaciones asignadas
                         </label>
-                          <div class="form-control" style="min-height: 120px; resize: vertical; overflow-y: auto;">
-                            Listado de estaciones asignadas al operador colocado para el registro en este forulario <br>
-                            -Estacion 1 <br>
-                            -Estacion 2 <br>
-                            -Estacion 3 <br>
+                          <div class="form-control" id="listaOperacionesOperador" style="min-height: 100px; resize: vertical; overflow-y: auto;">
+                              <span class="form-help">Lista de operaciones asignadas del trabajador </span>
                           </div>
                       </div>
                   </div>
@@ -374,13 +371,17 @@
                     Configuración Adicional
                   </h4>
                   
+                  <!-- TURNO ASIGNAR -->
                   <div class="row">
                     <div class="col-md-6 mb-3">
                       <label for="turnoAsignar" class="form-label">
                         <i class="bi bi-clock-history"></i>
                         Turno
                       </label>
-                      <input class="form-control form-control-custom" id="turnoasignar" placeholder="Turno" readonly>
+                      <select id="turnoasignar" class="form-control form-control-custom form-select">
+                        <option value="1">Turno 1</option>
+                        <option value="2">Turno 2</option>
+                      </select>
                     </div>
                   </div>
 
@@ -1198,7 +1199,7 @@
 
                             <div class="col-md-6 mb-3">
                               <label for="nombre_estacion" class="form-label"><i class="bi bi-geo-alt"></i> Estación</label>
-                              <input type="text" class="form-control form-control-custom" id="nombre_estacion">
+                              <input type="text" class="form-control form-control-custom" id="nombre_estacion" readonly>
                               <input type="hidden" id="id_estacion">
                             </div>
                           </div>
@@ -1572,9 +1573,9 @@
                           <table class="table table-hover mb-0" id="tablaPersonalNoAsignado">
                               <thead class="table-light">
                                   <tr>
-                                      <th style="width: 15%;" class="py-3 px-4">Nómina</th>
-                                      <th style="width: 30%;" class="py-3 px-4">Nombre del Empleado</th>
-                                      <th style="width: 25%;" class="py-3 px-4 text-center">Acciones</th>
+                                              <th style="width: 15%;" class="py-3 px-4">Nómina</th>
+                                              <th style="width: 30%;" class="py-3 px-4">Nombre del Empleado</th>
+                                              <th style="width: 55%;" class="py-3 px-4 text-center">Acciones</th>
                                   </tr>
                               </thead>
                               <tbody id="tablaBodyPersonalNoAsignado">

@@ -484,14 +484,12 @@ else
         $fechaR = $_POST['fechaR'] ?? null;
         $comentarios = $_POST['comentarios'] ?? null;
         $codigoLinea = $_POST['codigoLinea'] ?? null;
-        $eliminado = 0;
-        
-        $fechaR = str_replace('T', ' ', $_POST['fechaR']) . ':00';
+        $eliminado = 0;        
+ 
         // 2026-01-26 14:30:00
 
-
         // Validar que se recibieron todos los datos
-        if (!$nomina || !$fechaR) {
+        if (empty($nomina) || empty($fechaR) || empty($codigoLinea)) {
             echo json_encode([
                 'estatus' => 'error',
                 'mensaje' => 'Faltan datos obligatorios.'
@@ -499,21 +497,91 @@ else
             exit; 
         }
 
+        $fechaR = str_replace('T', ' ', $fechaR) . ':00';
+
         //Validar que no exita un registro previo sin cerrar
-            $sqlCheck = "SELECT id_registro, nomina from SPC_PERSONAL_NAD where eliminado = 0 and nomina = :nomina";
+            $sqlCheck = "SELECT NADexist = CASE WHEN EXISTS (SELECT 1 from SPC_PERSONAL_NAD WHERE eliminado = 0
+                            AND nomina = :nominaNAD AND codigo_linea = :codigoLineaNAD) THEN 1 ELSE 0 END,
+                            otraLinea = CASE WHEN EXISTS
+                            (SELECT 1 FROM
+                                (SELECT PE.nomina FROM SPC_PERSONAL_ESTACION PE
+                                        INNER JOIN SPC_ESTACIONES E on PE.id_estacion = E.id_estacion
+                                    WHERE PE.fecha_fin IS NULL AND PE.nomina= :nomina AND E.codigo_linea <> :codigoLinea
+                                        UNION  ALL
+                                    SELECT nomina FROM SPC_PERSONAL_NAD WHERE fechaE IS NULL AND nomina= :nomina2 
+                                            AND codigo_linea <> :codigoLinea2
+                                        UNION ALL
+                                    SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina3 
+                                            AND codigo_linea <> :codigoLinea3
+                                ) X
+                            )THEN 1 ELSE 0 END,
+                            lineaActual = CASE WHEN EXISTS
+                            (SELECT 1 FROM
+                                (SELECT PE.nomina FROM SPC_PERSONAL_ESTACION PE
+                                        INNER JOIN SPC_ESTACIONES E on PE.id_estacion = E.id_estacion
+                                    WHERE PE.fecha_fin IS NULL AND PE.nomina= :nomina4 AND E.codigo_linea = :codigoLinea4
+                                        UNION  ALL
+                                    SELECT nomina FROM SPC_PERSONAL_NAD WHERE fechaE IS NULL AND nomina= :nomina5
+                                            AND codigo_linea = :codigoLinea5
+                                        UNION ALL
+                                    SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina6 
+                                            AND codigo_linea = :codigoLinea6
+                                ) Y
+                            )THEN 1 ELSE 0 END;";
 
             $stmtCheck = $conn->prepare($sqlCheck);
-            $stmtCheck->execute([':nomina' => $nomina]);
+            $stmtCheck->execute([   ':nominaNAD' => $nomina,
+                                    ':codigoLineaNAD' => $codigoLinea,
+                                    ':nomina' => $nomina,
+                                    ':codigoLinea' => $codigoLinea,
+                                    ':nomina2' => $nomina,
+                                    ':codigoLinea2' => $codigoLinea,
+                                    ':nomina3' => $nomina,
+                                    ':codigoLinea3' => $codigoLinea,
+                                    ':nomina4' => $nomina,
+                                    ':codigoLinea4' => $codigoLinea,
+                                    ':nomina5' => $nomina,
+                                    ':codigoLinea5' => $codigoLinea,
+                                    ':nomina6' => $nomina,
+                                    ':codigoLinea6' => $codigoLinea
+                                ]);
+
             $registro = $stmtCheck->fetch(PDO::FETCH_ASSOC);
 
-                if ($registro) {
-                    // Nómina NO existe
-                    echo json_encode([
-                        'estatus' => 'error', 
-                        'mensaje' => 'Este empleado ya ha sido agregado al personal no asignado'
-                    ]);
-                    exit;
-                }
+            /*
+                if (!$registro) {
+                        echo json_encode([
+                            'estatus' => 'error', 
+                            'mensaje' => 'Ocurrio un error al verificar la informacion',
+                            'error' => $stmtCheck->errorInfo()
+                        ]);
+                        exit;
+                } 
+            */
+
+            if ((int)$registro['NADexist'] == 1) {
+                echo json_encode([
+                    'estatus' => 'error', 
+                    'mensaje' => 'Este empleado ya ha sido agregado al personal no asignado'
+                ]);
+                exit;
+            }
+
+            if ((int)$registro['otraLinea'] == 1) {
+                echo json_encode([
+                    'estatus' => 'error', 
+                    'mensaje' => 'Este trabajador se encuentra asignado en otra linea'
+                ]);
+                exit;
+            }
+
+            if ((int)$registro['lineaActual'] == 1) {
+                echo json_encode([
+                    'estatus' => 'error', 
+                    'mensaje' => 'Este trabajador ya se encuentra asignado a una estación.'
+                ]);
+                exit;
+            }
         //Fin validar registro duplicado
 
 
@@ -564,12 +632,14 @@ else
 //Listar personal no asignado
 else 
      if($opcion== '9'){
-            $sql= "SELECT id_registro, nomina, nombre, turno from SPC_PERSONAL_NAD where eliminado = 0";
+        $codigoLinea =  !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
+
+            $sql= "SELECT id_registro, nomina, nombre, turno from SPC_PERSONAL_NAD where eliminado = 0 and codigo_linea= :codigoLinea";
 
             $registro = $conn->prepare($sql);
             $response= array();
 
-            if($registro -> execute()){
+            if($registro -> execute([':codigoLinea' => $codigoLinea])){
                 while($dsc= $registro->fetch(PDO::FETCH_ASSOC))
                     $response[] = $dsc;
             }
@@ -741,9 +811,9 @@ else
 
         $fechaHoraInicio = str_replace('T', ' ', $fechaInicio) . ':00';
 
-
         // Validar que se recibieron todos los datos
-        if (!$codigoLinea || !$idEstacion || !$fechaInicio || !$turno || !$nominaPC || !$tipoCambio) {
+        if ( is_null($codigoLinea) || is_null($idEstacion) || is_null($fechaInicio) || is_null($turno) || 
+             is_null($nominaPC) || is_null($tipoCambio)) {
             echo json_encode([
                 'estatus' => 'error',
                 'mensaje' => 'Faltan datos obligatorios.'
@@ -751,89 +821,35 @@ else
             exit; 
         }   
 
-
-        /*
-          //Verificar si el trabajdor esta asignado en otra linea o si la estacion ya tiene un trabajador asignado
-            $sql_check = "SELECT estacion_ocupada = CASE WHEN EXISTS (SELECT 1 FROM SPC_PERSONAL_ESTACION 
-                            WHERE id_estacion = :id_estacion AND fecha_fin IS NULL) THEN 1 ELSE 0 END,
-                        trabajador_asignado = CASE WHEN EXISTS
-                        (SELECT 1 FROM
-                            ( SELECT PE.nomina FROM SPC_PERSONAL_ESTACION PE 
-                                    INNER JOIN SPC_ESTACIONES E on PE.id_estacion = E.id_estacion
-                                WHERE PE.fecha_fin IS NULL AND PE.nomina= :nomina AND E.codigo_linea <> :codigoLinea
-                                    UNION  ALL
-                                SELECT nomina FROM SPC_PERSONAL_NAD WHERE fechaE IS NULL AND nomina= :nomina2 
-                                        AND codigo_linea <> :codigoLinea2
-                                    UNION ALL
-                                SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina3 
-                                        AND codigo_linea <> :codigoLinea3
-                            ) X 
-                        )THEN 1 ELSE 0 END;";
-
-            $stmt_check = $conn->prepare($sql_check);
-            $stmt_check->execute([
-                ':id_estacion' => $estacion,
-                ':nomina' => $nomina,
-                ':codigoLinea' => $codigoLinea,
-                ':nomina2' => $nomina,
-                ':codigoLinea2' => $codigoLinea,
-                ':nomina3' => $nomina,
-                ':codigoLinea3' => $codigoLinea
-            ]);
-
-            $result = $stmt_check->fetch(PDO::FETCH_ASSOC);
-
-            if (!$result) {
-                throw new Exception("Error al verificar asignación.");
-            }
-
-            if ($result['estacion_ocupada'] == 1) {
-                // Ya existe
-                    $conn->rollBack();
-                        echo json_encode([
-                            'estatus' => 'error',
-                            //'mensaje' => 'Esta persona ya cuenta con una asignación en la estación seleccionada'
-                            'mensaje' => 'Esta estación ya cuenta con un trabajador asignado'
-                        ]);
-                    exit;
-            }
-
-            else 
-                if ($result['trabajador_asignado'] == 1){
-                    // Ya existe
-                        $conn->rollBack();
-                            echo json_encode([
-                                'estatus' => 'error',
-                                //'mensaje' => 'Esta persona ya cuenta con una asignación en la estación seleccionada'
-                                'mensaje' => 'Este trabajador se encuentra asignado en otra linea'
-                            ]);
-                        exit;
-                }
-        */
-
         //Validar la existencia de un punto de cambio 
-            $sqlCheckPC = 'SELECT no_controlCambio from SPC_PUNTOS_CAMBIO WHERE id_estacion = :id_estacion and fechaHora_fin IS NULL';
+        $sqlCheckPC = "SELECT PCexist = CASE WHEN EXISTS (SELECT 1 from SPC_PUNTOS_CAMBIO WHERE id_estacion = :id_estacion 
+                        AND fechaHora_fin IS NULL) THEN 1 ELSE 0 END,
+                            trabajador_asignado = CASE WHEN EXISTS
+                            (SELECT 1 FROM
+                                (SELECT PE.nomina FROM SPC_PERSONAL_ESTACION PE 
+                                        INNER JOIN SPC_ESTACIONES E on PE.id_estacion = E.id_estacion
+                                    WHERE PE.fecha_fin IS NULL AND PE.nomina= :nomina AND E.codigo_linea <> :codigoLinea
+                                        UNION  ALL
+                                    SELECT nomina FROM SPC_PERSONAL_NAD WHERE fechaE IS NULL AND nomina= :nomina2 
+                                            AND codigo_linea <> :codigoLinea2
+                                        UNION ALL
+                                    SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina3 
+                                            AND codigo_linea <> :codigoLinea3
+                                ) X
+                            )THEN 1 ELSE 0 END;";
+
             $stmtCheckPC = $conn->prepare($sqlCheckPC);
-            $stmtCheckPC->execute([':id_estacion' => $idEstacion]);
+            $stmtCheckPC->execute([
+                                    ':id_estacion' => $idEstacion,
+                                    ':nomina' => $nominaPC,
+                                    ':codigoLinea' => $codigoLinea,
+                                    ':nomina2' => $nominaPC,
+                                    ':codigoLinea2' => $codigoLinea,
+                                    ':nomina3' => $nominaPC,
+                                    ':codigoLinea3' => $codigoLinea
+                                ]);
+
             $registroPC = $stmtCheckPC->fetch(PDO::FETCH_ASSOC);
-
-            $sql_check = "SELECT estacion_ocupada = CASE WHEN EXISTS (SELECT 1 from SPC_PUNTOS_CAMBIO WHERE id_estacion = :id_estacion 
-                            AND fechaHora_fin IS NULL) THEN 1 ELSE 0 END,
-                                trabajador_asignado = CASE WHEN EXISTS
-                                (SELECT 1 FROM
-                                    ( SELECT PE.nomina FROM SPC_PERSONAL_ESTACION PE 
-                                            INNER JOIN SPC_ESTACIONES E on PE.id_estacion = E.id_estacion
-                                        WHERE PE.fecha_fin IS NULL AND PE.nomina= :nomina AND E.codigo_linea <> :codigoLinea
-                                            UNION  ALL
-                                        SELECT nomina FROM SPC_PERSONAL_NAD WHERE fechaE IS NULL AND nomina= :nomina2 
-                                                AND codigo_linea <> :codigoLinea2
-                                            UNION ALL
-                                        SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina3 
-                                                AND codigo_linea <> :codigoLinea3
-                                    ) X 
-                                )THEN 1 ELSE 0 END;";
-
-
 
             if (!$registroPC) {
                     echo json_encode([
@@ -844,7 +860,7 @@ else
                     exit;
             }
 
-            if ($registroPC) {
+            if ($registroPC['PCexist'] == 1) {
                 echo json_encode([
                     'estatus' => 'error', 
                     'mensaje' => 'Esta estacion cuenta con un punto de cambio abierto. Favor de cerrarlo antes de registrar uno nuevo.'
@@ -852,7 +868,13 @@ else
                 exit;
             }
 
-
+            if ($registroPC['trabajador_asignado'] == 1) {
+                echo json_encode([
+                    'estatus' => 'error', 
+                    'mensaje' => 'Este trabajador se encuentra asignado en otra linea'
+                ]);
+                exit;
+            }
 
         try { 
             // Iniciar transacción
@@ -877,6 +899,7 @@ else
             $noControlResult = $stmtNoControl->fetch(PDO::FETCH_ASSOC);
 
             if($noControlResult === false) {
+                $conn->rollBack();
                 echo json_encode([
                     'estatus' => 'error',
                     'mensaje' => 'No se pudo generar el No. de Control'

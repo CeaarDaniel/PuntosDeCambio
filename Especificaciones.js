@@ -39,28 +39,28 @@
 //Revisar que la variable stationsData se actualice al hacer cualquier cambio en el layout
 //Revisr los valores enviadoes y recibidos de la variabla layoputData o en el json que lista las estaciones
 
-//validar la asignacion de un trabajador en una estacion cuando se registra un punto de cambio
-//No limpiar todos los campos de los formularios solo los que son ingresados por el usuario
-//Generar mostrar el contenido dinamico de los formularios
-//Hacer restricciones y validaciones correspondientes
-//Falta validar que el empleado no este dado de baja 
-//Falta agregar el filtro de turno a las consultas
-//Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
-//Agregar la funcion de recargar la lista de asistencia al cambiar el turno (update: replantear esta instruccion)
-//Revisar las condiciones de la consulta para el cambio de turno
-//Mostrar datos por turno
-//Validar los turnos de los empleados al hacer registros para que sean coeherentes no tener personal activo registrado en diferentes tablas con distintos turnos
 
-//Agregar algun estatus que indique si la estacion es certificada o no, como por ejemplo el contorno de la estacion en otro color
+
+
+//Generar mostrar el contenido dinamico de los formularios
+
+//Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
+//Revisar las condiciones de la consulta para el cambio de turno
+//Validar los turnos de los empleados al hacer registros para que sean coeherentes no tener personal activo registrado en diferentes tablas con distintos turnos
+//Falta agregar el filtro de turno a las consultas
+//Mostrar datos por turno
+//Hacer restricciones y validaciones correspondientes
+//Revisar las consultas donde el json_decod manda un 'error
+// revisar la validacion del registro de personal NAD ya que puede evitarse una consulta quitando el filtro de codigo_Linea <> :codigoLinea
+
+
+
 //Dar opcion de registrar a un operador sin punto de cambio o no si no existe la ultima fecha de operacion en la linea
 //Y dejar otra opcion para que se puede finalizar y/o asignar al operador como titular de la estacion
 //esto para al inicio cunado se empieza a registrar a todo el personaol 
 //Agregar alguna alerta o etiqueta de warning para mostrar cuando el PC lleva ya 30 días
-//modificar el diseño para que sea mas rapido como se asignan y se eliminan los operadores de las estaciones, tal vez haciendo esto dentro del mismo modal de la estacion
 //mostrar en el el layout algun indicador si el trabajadore falto o asistio
 //Para mostrar el estatus de la asistencia en la estacion del layout hay que comparar el personal de las estaciones con su registro de la tabla de asistencia y el estatus de registro de asistencia (1,2,3... etc)
-//Reflejar cambios y registros incertados en el layout
-//Tal vez a futuro seria buen o agregar una opcion que diga mover operedor de estacion
 //Agregar opcion para consultar el acomodo del layout guardado por dia o fecha
 //QUITAR EL INPUT DE OBSERVACIONES de la tabla de asistencia
 //Eliminar(ocultar ) una estacion
@@ -72,28 +72,30 @@
 //Generar permisos de usuarios
 //Generar usuarios
 
-//Revisar que pasa con las personas cuando no estan trabajando en la estacion y tienen un punto de cambio
+//Revisar que pasa con las personas cuando no estan trabajando en la estacion o faltan y tienen un punto de cambio
 //Investigar que sucede con el punto de cambio si hay un cambio de turno
 
 
 /*
-    Agregar al modal de gestion de estaciones una opcion para asignar al operador, movel operador, editar y eliminar estacion
+    Agregar al modal de gestion de estaciones una opcion para 
+        asignar al operador, 
+        movel operador, 
+        editar
+        eliminar estacion
+        eliminar registro de NAD
 */
 
 
 /*
     ESPICIFICACIONES/MODIFICACIONES OK
-
     //Falta registrar las fechas con la hora
-
-
-
-
+    //validar la asignacion de un trabajador en una estacion cuando se registra un punto de cambio
+    //No limpiar todos los campos de los formularios solo los que son ingresados por el usuario
+    //Falta validar que el empleado no este dado de baja 
 */
 
 
 /*
-    Claro 🤍 Aquí tienes frases que alguien con baja autoestima puede repetirse cada día. Están pensadas para ser realistas, no forzadas, y ayudar a reconstruir la confianza poco a poco:
 
     🌱 Para empezar el día
     “No tengo que ser perfecto/a para ser valioso/a.”
@@ -120,4 +122,48 @@
     “No todo lo que siento es una verdad absoluta.”
 
     Si quieres, puedo adaptarlas para un caso más específico (adolescente, ruptura amorosa, fracaso académico, bullying, etc.).
+
+
+
+🌿 1. Hierbas frescas (naturales desodorantes internos)
+    Perejil
+    Cilantro
+    Menta
+    Albahaca
+
+Contienen clorofila, que puede ayudar a neutralizar compuestos olorosos.
+Tip: agregarlos frescos a ensaladas o licuados.
+
+🥬 2. Verduras de hoja verde
+    Espinaca
+    Acelga
+    Lechuga
+    Kale
+
+Ricas en antioxidantes y clorofila → ayudan al proceso natural de desintoxicación del hígado.
+
+🍊 3. Frutas ricas en agua
+    Piña
+    Sandía
+    Naranja
+    Manzana
+
+Hidratan y ayudan a diluir compuestos que podrían intensificar el olor.
+
+🥣 4. Alimentos probióticos
+    Yogur natural
+    Kéfir
+    Chucrut
+
+Mejoran la flora intestinal. Un intestino equilibrado produce menos compuestos olorosos.
+
+🌾 5. Granos integrales
+    Avena
+    Arroz integral
+    Quinoa
+
+Mejor digestión = menos subproductos fuertes eliminados por sudor.
+
+💧 6. Mucha agua (lo más importante)
+La deshidratación concentra compuestos y puede intensificar el olor.
 */

@@ -240,9 +240,10 @@
           document.getElementById('id_estacion').value = stationData.id;
           document.getElementById('nombre_estacion').value = stationData.name;
           document.getElementById('turnoPuntoCambio').value =  $('#turnoLayout').val();
-
+          
         //Setear input de id del punto de cambio en el formulario de cierre de PC
           document.getElementById('idPC').value = stationData.idPC || '';
+          document.getElementById('fechaCierre').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
 
           getOperator(stationData.nomina, stationData.id);
   
@@ -474,7 +475,7 @@
                     if(data.status=='ok'){
                         alert(data.mensaje);
                         document.getElementById('stationForm').reset();
-
+                        
                         //Ocurtar modal
                         let modalAgregarEstacion = bootstrap.Modal.getInstance(document.getElementById('modalAgregarEstacion'));
                         modalAgregarEstacion.hide();
@@ -520,7 +521,13 @@
                   data= JSON.parse(data)
                   if(data.estatus=='ok'){
                       alert(data.mensaje);
-                      assignmentForm.reset();
+                      //assignmentForm.reset();
+
+                      $('#nominaModalAsignar').val('');
+                      $('#nombreModalAsignar').val('');
+                      $('#stationSelect').val('');
+                      $('#comentarios').val('');
+                      $('#listaOperacionesOperador').html('<span class="form-help">Lista de operaciones asignadas del trabajador </span>');
                       getEstacion(estacion);
                   }
 
@@ -620,12 +627,18 @@
     //Mostrar listado de estaciones registradas para colocar en los select
     function listarEstaciones(){
       const select = document.getElementById('stationSelect');
-      select.innerHTML='';
+      select.innerHTML='';  
+
+        //Agregar opcion vacia por defecto
+          let none = document.createElement('option');
+          none.value = '';  
+          none.textContent =  'Selecciona una estación...';
+          select.appendChild(none);
 
         stationsData.forEach(station => {
           const option = document.createElement('option');
-          option.value = station.id;     // value = id
-          option.textContent = station.name; // texto = name
+          option.value = station.id;   
+          option.textContent = station.name; 
           select.appendChild(option);
         });
     }
@@ -656,16 +669,24 @@
                 })
                 .then((response) => response.text())
                 .then((data) => {
+                     console.log(data);
                       data= JSON.parse(data)
                       if(data.estatus=='ok'){
                           alert(data.mensaje)
-                          fmPersonalNoAsignado.reset();
+                          //fmPersonalNoAsignado.reset();
+
+                          $('#nominaNoAsignado').val('')
+                          $('#nombreNoAsignado').val('')
+                          $('#comentariosNoAsignado').val('')
+
                           mostrarTablaPNA();
                           generarTablaAsistencia();
                       }
                   
-                        else
-                            alert(data.mensaje)
+                        else{
+                            alert(data.mensaje);
+                            console.log(data);
+                        }
                 })
                 .catch((error) => {
                   console.log(error);
@@ -675,7 +696,8 @@
 
     //Generar tabla con los datos de la tabla de personal no asignado
     function mostrarTablaPNA(){
-          let formDataNoAsignadoL = new FormData
+          let formDataNoAsignadoL = new FormData 
+          formDataNoAsignadoL.append('codigoLinea', codigoLinea.value)
           formDataNoAsignadoL.append('opcion', 9)
           
             fetch("../api/operacionesLinea.php", {
@@ -703,13 +725,18 @@
                               </div>
                             </td>
                             <td class="px-4 align-middle text-center">
-                              <button 
-                                class="btn btn-sm btn-outline-primary d-inline-flex align-items-center"
-                                onclick="openAsignarEstacion('${emp.nomina}')"
-                              >
-                                <i class="bi bi-gear me-1"></i>
-                                Asignar a Estación
-                              </button>
+                              <div class="d-flex justify-content-center gap-2">
+                                <button 
+                                  class="btn btn-sm btn-outline-primary d-inline-flex align-items-center"
+                                  onclick="openAsignarEstacion('${emp.nomina}')"">
+                                  <i class="bi bi-gear me-1"></i>Asignar a Estación
+                                </button>
+                                <button 
+                                  class="btn btn-sm btn-outline-danger d-inline-flex align-items-center"
+                                  onclick="confirmarEliminar('107528')">
+                                   <i class="bi bi-trash me-1"></i>Borrar registro
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         `;
@@ -1085,7 +1112,6 @@
 
       //Generar tabla de personal no asignado
       mostrarTablaPNA();
-
       //Generar listado de personal perteneciente a la linea
       generarTablaAsistencia();
 
@@ -1236,8 +1262,6 @@
           let encargadoLinea = document.getElementById('supervisorSearch').value; 
           let lineName = document.getElementById('lineName').value;
 
-
-
           if (lineForm.reportValidity()){
             formDataActualizarLinea.append('opcion', 11);
             formDataActualizarLinea.append('codigoLinea', codigoLinea.value);
@@ -1245,14 +1269,12 @@
             formDataActualizarLinea.append('encargado', encargadoLinea);
             formDataActualizarLinea.append('nombreLinea', lineName);
 
-
             fetch("../api/operacionesLinea.php", {
                         method: "POST",
                         body: formDataActualizarLinea,
                     })
                     .then((response) => response.text())
-                    .then((data) => { 
-            
+                    .then((data) => {
                         data= JSON.parse(data)
                         if(data.estatus=='ok'){ 
                             alert(data.mensaje);
@@ -1367,11 +1389,14 @@
         //Detectar cuando se abra el modal de asignar estacion
         document.getElementById('btnMenuAsignar').addEventListener('click', function (){
           document.getElementById('assignmentDate').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
+           document.getElementById('turnoasignar').value =  $('#turnoLayout').val();
         })
 
         //Generar fecha de registro de personal NAD en el formulario
         document.getElementById('btnMenuRegiswtroNAD').addEventListener('click', function(){
           document.getElementById('assignmentDatePNA').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
+            document.getElementById('turnoAsignarPersonalDisponible').value =  $('#turnoLayout').val();
+            mostrarTablaPNA();
         })
 
         btnGuardarEstacion.addEventListener('click', agregarEstacion);
