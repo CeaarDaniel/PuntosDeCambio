@@ -442,34 +442,56 @@ else
 //Bucscar operador
 else 
     if($opcion== '7'){
+        //Variable donde se trae $connE
         include('./conexionEmpleado.php');
         $nomina = $_POST['nomina'] ?? null;
-
+        $codigolinea = (!empty($_POST['codigoLinea'])) ? $_POST['codigoLinea'] : null;
 
         try {
                 $sql = "SELECT nombre FROM empleado_mst WHERE No_Nomina = :nomina";
-            
                 $stmt = $connE->prepare($sql);
                 $stmt->bindParam(':nomina', $nomina, PDO::PARAM_INT);
                 $stmt->execute();
-
                 $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+                $estaciones = null;
 
+                if(!empty($codigolinea)){
+                    $sqlEstaciones = "SELECT STRING_AGG(E.nombre_estacion, ', ') AS ESTACIONES FROM SPC_ESTACIONES E
+                                        INNER JOIN (
+                                            SELECT id_estacion FROM SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL AND nomina = :nomina
+                                                UNION ALL
+                                            SELECT id_estacion FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina2
+                                        ) T ON E.id_estacion = T.id_estacion
+                                    WHERE E.codigo_linea = :codigoLinea;";
+
+                    $stmtE = $conn->prepare($sqlEstaciones);
+                    $stmtE->bindParam(':nomina', $nomina, PDO::PARAM_INT);
+                    $stmtE->bindParam(':nomina2', $nomina, PDO::PARAM_INT);
+                    $stmtE->bindParam(':codigoLinea', $codigolinea);
+       
+                    $stmtE->execute();
+                    $dataEstaciones = $stmtE->fetch(PDO::FETCH_ASSOC);
+                    $estaciones = $dataEstaciones['ESTACIONES'] ?? null;
+                }
+                
                 if ($resultado) {
                     echo json_encode([
                         'estatus' => 'ok',
-                        'nombre' => $resultado['nombre']
+                        'nombre' => $resultado['nombre'],
+                        'estaciones' => $estaciones
                     ]);
                 } else {
                     echo json_encode([
-                        'status' => 'false'
+                        'estatus' => 'error',
+                        'error' => "Error al buscar al trabajador"
                     ]);
                 }
 
         } catch (PDOException $e) {
             // Error de conexión o consulta
+        
             echo json_encode([
-                'status' => 'error',
+                'estatus' => 'error',
                 'mensaje' => $e->getMessage()
             ]);
         }
@@ -1403,4 +1425,16 @@ else
 
         echo json_encode($response);
     }
+
+
+    /*
+        Trabajo como desarrollador de software en una empresa, por temas de "ciberseguridad" en una auditorioa
+        quitaron los accesos a los servidores a todas las personas de la planta, ahora el servidor en el que subo
+        las aplicaciones, hago modificaciones y gestiono los servicioes de las aplicaciones que desarrollo esta
+        restringido su acceso a unas 4 personas, por lo que ya no puedo hacer cualquier modificacion, subir, eliminar o
+        descargar algun archivo de los programas y el codigo o moficicaciones en las bases de datos, solo el personal
+        del area de infrestructura pueden acceder a los servidores, lo cual me parce algo muy estupido, siendo que 
+        yo tambien deberia de contar con los persmisos para poder acceder a mi servidor. tu que opinas
+        yo creo que esto es una practica mal aplicada 
+    */
 ?>

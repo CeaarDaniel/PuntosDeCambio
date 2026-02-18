@@ -346,22 +346,6 @@
                       <div class="form-help">Fecha en la que inicia la asignación</div>
                     </div>
                   </div>
-
-                  <!-- Información de la estación seleccionada -->
-                  <div id="stationInfo" class="station-info d-none mt-3">
-                    <div class="alert alert-info">
-                      <div class="d-flex align-items-center">
-                        <i class="bi bi-info-circle me-2"></i>
-                        <div>
-                          <strong id="stationName">Estación 1 - Ensamblaje Principal</strong>
-                          <div class="small" id="stationDetails">
-                            Certificación requerida: <span class="badge bg-success">Proceso A</span> | 
-                            Operador actual: <span class="text-muted">Vacante</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 <!-- Configuración Adicional -->

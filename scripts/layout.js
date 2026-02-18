@@ -511,6 +511,11 @@
       formDataAsig.append("comentarios", comentarios);
       formDataAsig.append('codigoLinea', codigoLinea.value)
 
+      if(!nombre) {
+        alert("No se encontró el trabajador o se perdió la conexión con el servidor.")
+        return;
+      }
+
       if(assignmentForm.reportValidity()){
           fetch("../api/operacionesLinea.php", {
                   method: "POST",
@@ -921,8 +926,16 @@
       let modalActual = bootstrap.Modal.getInstance(modalPersonalDisponible);
       (modalActual) ? modalActual.hide() : '';
 
+
       newModal = new bootstrap.Modal(modalAsignarOperador);
       newModal.show();   
+      
+      $('#assignmentDate').val((new Date()).toLocaleString('sv-SE').slice(0, 16));
+      $('#stationSelect').val('');
+      $('#turnoasignar').val($('#turnoLayout').val());
+
+      $('#nominaModalAsignar').val(nomina);
+      nominaModalAsignar.dispatchEvent(new Event("change"));
     }
 
     //Funciones para la navegacion entre las pantallas de los modales
@@ -1123,6 +1136,8 @@
                 let formDataConsultarNombre = new FormData;
                 formDataConsultarNombre.append('nomina',nominaModalAsignar.value)
                 formDataConsultarNombre.append('opcion', 7)
+                formDataConsultarNombre.append('codigoLinea', codigoLinea.value)
+                 nombreModalAsignar.value= ''; 
 
                     fetch("../api/operacionesLinea.php", {
                             method: "POST",
@@ -1131,13 +1146,14 @@
                         .then((response) => response.text())
                         .then((data) => {
                             data= JSON.parse(data)
-                        
-                            if(data.estatus=='ok')
-                                nombreModalAsignar.value= data.nombre;
+                            if(data.estatus=='ok'){
+                                nombreModalAsignar.value= data.nombre;                              
+                                $('#listaOperacionesOperador').html(`${(data.estaciones) ? data.estaciones : 'SIN OPERACIONES ASIGNADAS'}`)
+                              }
                           
                           else{
-                            nombreModalAsignar.value= ''; 
-                            console.log(data); 
+                              $('#listaOperacionesOperador').html(`<span class="form-help">Lista de operaciones asignadas del trabajador </span>`)
+                            console.log(data.error); 
                           }
                         })
                         .catch((error) => {
@@ -1464,4 +1480,10 @@
   pasa la referencia de la ubicacion en memoria de la variable datosAsistenciaCheck entonces ambas variables 
   apuntan a la mimsa ubicacion de la memoria por lo que al modificar cualquiera de las dos, los cambios se 
   Se veran reflejados en ambas variables
+
+  //Validar que se registren bien los nombres de las nominas en todos los formularios, verificar o revisar
+  como validar esto cuando haya problemas de conexion o el servidore no responda
+  evaluar que el nombre exista para validar que se encontro al trabajador al realizar el registro
+  Otra opcion es bloquear los botones y los inputs en lo que se resive la respuesta del servidor 
+  revisar el funcionamiento de las funciones asincronas
 */

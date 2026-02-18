@@ -39,11 +39,7 @@
 //Revisar que la variable stationsData se actualice al hacer cualquier cambio en el layout
 //Revisr los valores enviadoes y recibidos de la variabla layoputData o en el json que lista las estaciones
 
-
-
-
 //Generar mostrar el contenido dinamico de los formularios
-
 //Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
 //Revisar las condiciones de la consulta para el cambio de turno
 //Validar los turnos de los empleados al hacer registros para que sean coeherentes no tener personal activo registrado en diferentes tablas con distintos turnos
@@ -96,7 +92,6 @@
 
 
 /*
-
     🌱 Para empezar el día
     “No tengo que ser perfecto/a para ser valioso/a.”
     “Estoy haciendo lo mejor que puedo con lo que tengo.”
