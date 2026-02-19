@@ -511,8 +511,8 @@
       formDataAsig.append("comentarios", comentarios);
       formDataAsig.append('codigoLinea', codigoLinea.value)
 
-      if(!nombre) {
-        alert("No se encontró el trabajador o se perdió la conexión con el servidor.")
+      if(!nombre) { 
+        alert("No se encontro registro del empleado ingresado o se perdió la conexión con el servidor.")
         return;
       }
 
@@ -656,7 +656,7 @@
       if(fmPersonalNoAsignado.reportValidity()){
 
           if( document.getElementById('nombreNoAsignado').value == '' || document.getElementById('nombreNoAsignado').value == null){
-                alert('No se encontro registro del empleado ingresado') 
+                alert('No se encontro registro del empleado ingresado o se perdió la conexión con el servidor.') 
                 return;
           }
 
@@ -1128,100 +1128,127 @@
       //Generar listado de personal perteneciente a la linea
       generarTablaAsistencia();
 
-      //Eventlistener
-        //Obtener nombre del numero de nomina
-        nominaModalAsignar.addEventListener('change', function (){
-            let nombreModalAsignar = document.getElementById('nombreModalAsignar');
-            if(nominaModalAsignar && nominaModalAsignar !='') {
-                let formDataConsultarNombre = new FormData;
-                formDataConsultarNombre.append('nomina',nominaModalAsignar.value)
-                formDataConsultarNombre.append('opcion', 7)
-                formDataConsultarNombre.append('codigoLinea', codigoLinea.value)
-                 nombreModalAsignar.value= ''; 
+      //DECLARACION DE EVENTOS
+        //OBTENER NUMERO DE NOMINA
+            nominaModalAsignar.addEventListener('change', function (){
+                let nombreModalAsignar = document.getElementById('nombreModalAsignar');
+                if(nominaModalAsignar && nominaModalAsignar !='') {
+                    let formDataConsultarNombre = new FormData;
+                    formDataConsultarNombre.append('nomina',nominaModalAsignar.value)
+                    formDataConsultarNombre.append('opcion', 7)
+                    formDataConsultarNombre.append('codigoLinea', codigoLinea.value)
+                    
+            
+                    nominaModalAsignar.disabled = true
+                    nombreModalAsignar.value= ''; 
+                    nombreModalAsignar.placeholder= "Consultando datos del empleado...";  
 
-                    fetch("../api/operacionesLinea.php", {
-                            method: "POST",
-                            body: formDataConsultarNombre,
-                        })
-                        .then((response) => response.text())
-                        .then((data) => {
-                            data= JSON.parse(data)
-                            if(data.estatus=='ok'){
-                                nombreModalAsignar.value= data.nombre;                              
-                                $('#listaOperacionesOperador').html(`${(data.estaciones) ? data.estaciones : 'SIN OPERACIONES ASIGNADAS'}`)
+                        fetch("../api/operacionesLinea.php", {
+                                method: "POST",
+                                body: formDataConsultarNombre,
+                            })
+                            .then((response) => response.text())
+                            .then((data) => {
+                                data= JSON.parse(data)
+                                if(data.estatus=='ok'){
+                                    nombreModalAsignar.value= data.nombre;                              
+                                    $('#listaOperacionesOperador').html(`${(data.estaciones) ? data.estaciones : 'SIN OPERACIONES ASIGNADAS'}`)
+                                  }
+                              
+                              else{
+                                  nombreModalAsignar.placeholder= "Nombre del empleado...";  
+                                  $('#listaOperacionesOperador').html(`<span class="form-help">Lista de operaciones asignadas del trabajador </span>`)
+                                console.log(data.error); 
                               }
-                          
-                          else{
-                              $('#listaOperacionesOperador').html(`<span class="form-help">Lista de operaciones asignadas del trabajador </span>`)
-                            console.log(data.error); 
-                          }
-                        })
-                        .catch((error) => {
-                          console.log(error);
-                    });
-              }
-        })
 
-        nominaNoAsignado.addEventListener('change', function(){
-          let nombreNoAsignado = document.getElementById('nombreNoAsignado');
+                              nominaModalAsignar.disabled = false;
+                            })
+                            .catch((error) => {
+                              nombreModalAsignar.placeholder= "Nombre del empleado..."; 
+                              nominaModalAsignar.disabled = false;
+                              console.log(error);
+                        });
+                  }
+            })
 
-            if(nominaNoAsignado && nominaNoAsignado !='') {
-                let formDataConsultarNombre = new FormData;
-                formDataConsultarNombre.append('nomina',nominaNoAsignado.value)
-                formDataConsultarNombre.append('opcion', 7)
+            nominaNoAsignado.addEventListener('change', function(){
+              let nombreNoAsignado = document.getElementById('nombreNoAsignado');
 
-                    fetch("../api/operacionesLinea.php", {
-                            method: "POST",
-                            body: formDataConsultarNombre,
-                        })
-                        .then((response) => response.text())
-                        .then((data) => {
-                      
-                              data= JSON.parse(data)
-                        
-                            if(data.estatus=='ok')
-                                nombreNoAsignado.value= data.nombre;
-                          
-                          else{
-                            nombreNoAsignado.value= ''; 
-                            console.log(data); 
-                          }
-                        })
-                        .catch((error) => {
-                          console.log(error);
-                    });
-              }
-        })
+                if(nominaNoAsignado && nominaNoAsignado !='') {
 
-        nominaPC.addEventListener('change', function(){
-          let nombrePC = document.getElementById('nombrePC');
+                    let formDataConsultarNombre = new FormData;
+                    formDataConsultarNombre.append('nomina',nominaNoAsignado.value)
+                    formDataConsultarNombre.append('opcion', 7)
 
-            if(nominaPC && nominaPC !='') {
-                let formDataConsultarNombre = new FormData;
-                formDataConsultarNombre.append('nomina',nominaPC.value)
-                formDataConsultarNombre.append('opcion', 7)
+                    nominaNoAsignado.disabled = true
+                    nombreNoAsignado.value= ''; 
+                    nombreNoAsignado.placeholder= "Consultando datos del empleado...";  
 
-                    fetch("../api/operacionesLinea.php", {
-                            method: "POST",
-                            body: formDataConsultarNombre,
-                        })
-                        .then((response) => response.text())
-                        .then((data) => {
-                              data= JSON.parse(data)
-                        
-                            if(data.estatus=='ok')
-                                nombrePC.value= data.nombre;
-                          
-                          else{
-                            nombrePC.value= ''; 
-                            console.log(data); 
-                          }
-                        })
-                        .catch((error) => {
-                          console.log(error);
-                    });
-              }
-        })
+                        fetch("../api/operacionesLinea.php", {
+                                method: "POST",
+                                body: formDataConsultarNombre,
+                            })
+                            .then((response) => response.text())
+                            .then((data) => {
+                                data= JSON.parse(data)
+                            
+                                if(data.estatus=='ok')
+                                    nombreNoAsignado.value= data.nombre;
+                              
+                              else{
+                                nombreNoAsignado.placeholder= "Nombre del empleado..."; 
+                                console.log(data); 
+                              }
+
+                              nominaNoAsignado.disabled = false
+                            })
+                            .catch((error) => {
+                              nominaNoAsignado.disabled = false
+                               nombreNoAsignado.placeholder= "Nombre del empleado...";  
+                              console.log(error);
+                        });
+                  }
+            })
+
+            nominaPC.addEventListener('change', function(){
+              let nombrePC = document.getElementById('nombrePC');
+            
+                if(nominaPC && nominaPC !='') {
+
+                    nominaPC.disabled = true
+                    nombrePC.value= ''; 
+                    nombrePC.placeholder= "Consultando datos del empleado..."; 
+
+                    let formDataConsultarNombre = new FormData;
+                    formDataConsultarNombre.append('nomina',nominaPC.value)
+                    formDataConsultarNombre.append('opcion', 7)
+
+                        fetch("../api/operacionesLinea.php", {
+                                method: "POST",
+                                body: formDataConsultarNombre,
+                            })
+                            .then((response) => response.text())
+                            .then((data) => {
+                                  data= JSON.parse(data)
+                            
+                                if(data.estatus=='ok')
+                                    nombrePC.value= data.nombre;
+                              
+                                else{
+                                   nombrePC.placeholder= "Nombre del empleado..."; 
+                                   console.log(data); 
+                                }
+
+                              nominaPC.disabled = false
+                            })
+                            .catch((error) => {
+                                nominaPC.disabled = false
+                                nombrePC.placeholder= "Nombre del empleado...";  
+                              console.log(error);
+                        });
+                  }
+            })
+        //FIN OBTENER NUMERO DE NOMINA
 
         //Remover trabajador de la estacion
         btnRemoverTrabajadorPC.addEventListener('click', function(){
@@ -1313,7 +1340,7 @@
           if(!registroCambioForm.reportValidity()) return;
 
           if(document.getElementById('nombrePC').value == '' || document.getElementById('nombrePC').value == null){
-                alert('No se encontro registro del empleado ingresado') 
+                alert('No se encontro registro del empleado ingresado o se perdió la conexión con el servidor.') 
                 return;
           }
 
@@ -1475,15 +1502,9 @@
     });
 
 /* 
-  seleccionadosGlobal = datosAsistenciaCheck 
-  Esto es un error ya que en vez de generar un nuevo arreglo asignado a la variable seleccionadosGlobal 
-  pasa la referencia de la ubicacion en memoria de la variable datosAsistenciaCheck entonces ambas variables 
-  apuntan a la mimsa ubicacion de la memoria por lo que al modificar cualquiera de las dos, los cambios se 
-  Se veran reflejados en ambas variables
-
-  //Validar que se registren bien los nombres de las nominas en todos los formularios, verificar o revisar
-  como validar esto cuando haya problemas de conexion o el servidore no responda
-  evaluar que el nombre exista para validar que se encontro al trabajador al realizar el registro
-  Otra opcion es bloquear los botones y los inputs en lo que se resive la respuesta del servidor 
-  revisar el funcionamiento de las funciones asincronas
+    seleccionadosGlobal = datosAsistenciaCheck 
+    Esto es un error ya que en vez de generar un nuevo arreglo asignado a la variable seleccionadosGlobal 
+    pasa la referencia de la ubicacion en memoria de la variable datosAsistenciaCheck entonces ambas variables 
+    apuntan a la mimsa ubicacion de la memoria por lo que al modificar cualquiera de las dos, los cambios se 
+    Se veran reflejados en ambas variables
 */

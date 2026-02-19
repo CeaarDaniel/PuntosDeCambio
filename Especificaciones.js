@@ -39,12 +39,16 @@
 //Revisar que la variable stationsData se actualice al hacer cualquier cambio en el layout
 //Revisr los valores enviadoes y recibidos de la variabla layoputData o en el json que lista las estaciones
 
-//Generar mostrar el contenido dinamico de los formularios
-//Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
-//Revisar las condiciones de la consulta para el cambio de turno
+
+
 //Validar los turnos de los empleados al hacer registros para que sean coeherentes no tener personal activo registrado en diferentes tablas con distintos turnos
+//Osea que esten en el mismo turno en las tres tablas, que no suceda que por ejempplo en la tabla PC esta en el 2 y en la de NAD y la tabla personal_estacion en el turno 1
+//Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
 //Falta agregar el filtro de turno a las consultas
 //Mostrar datos por turno
+
+//Registrar el historial de layout al anes o despues de hacer el cambio de turno o entes y despues y agregar el turno en el registro del historial del layout
+//Al asignar a una persona que esta en la tabla de personal NAD a otra tabla como de PC, eliminarla de esta tabla o cambiar su estatus
 //Hacer restricciones y validaciones correspondientes
 //Revisar las consultas donde el json_decod manda un 'error
 // revisar la validacion del registro de personal NAD ya que puede evitarse una consulta quitando el filtro de codigo_Linea <> :codigoLinea
@@ -84,10 +88,12 @@
 
 /*
     ESPICIFICACIONES/MODIFICACIONES OK
+    //Generar mostrar el contenido dinamico de los formularios
     //Falta registrar las fechas con la hora
     //validar la asignacion de un trabajador en una estacion cuando se registra un punto de cambio
     //No limpiar todos los campos de los formularios solo los que son ingresados por el usuario
     //Falta validar que el empleado no este dado de baja 
+    //Revisar las condiciones de la consulta para el cambio de turno
 */
 
 
