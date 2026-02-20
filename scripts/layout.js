@@ -18,7 +18,7 @@
   let nominaModalAsignar = document.getElementById('nominaModalAsignar');
   let nominaPC = document.getElementById('nominaPC');
 
-  document.getElementById('turnoasignar').value = $('#turnoLayout option:selected').text();
+  //document.getElementById('turnoasignar').value = $('#turnoLayout option:selected').text();
   document.getElementById('turnoAsignarPersonalDisponible').value =  $('#turnoLayout').val();
 
   // var turnoLinea = $('#turnoasignar').val()
@@ -256,7 +256,7 @@
     // Instancia del sistema de drag
     const dragSystem = new OptimizedDragSystem();
 
-    function saveLayout() {
+    function saveLayout(showMessage) {
         const stations = document.querySelectorAll('.station');
         const layoutData = [];
        
@@ -272,7 +272,8 @@
         formDataPosicion.append('layoutPosition', JSON.stringify(layoutData));
         formDataPosicion.append('stationsData', JSON.stringify(stationsData));
         formDataPosicion.append('codigoLinea', codigoLinea.value)
-        
+        formDataPosicion.append('turno', $('#turnoLayout').val())
+
           // console.log("datos", layoutData)
           fetch("../api/operacionesLinea.php", {
                 method: "POST",
@@ -281,6 +282,9 @@
             .then((response) => response.text())
             .then((data) => {
               console.log(data);
+
+              if(showMessage) return;
+
                data= JSON.parse(data)
                if(data.estatus=='ok'){
                     alert('Layout guardado correctamente');
@@ -499,7 +503,7 @@
       let nombre = document.getElementById('nombreModalAsignar').value;
       let estacion = document.getElementById('stationSelect').value;
       let fecha  = document.getElementById('assignmentDate').value;
-      let turno = document.getElementById('turnoLayout').value;
+      let turno = document.getElementById('turnoasignar').value;
       let comentarios = document.getElementById('comentarios').value;
       
       formDataAsig.append("opcion", "3");
@@ -755,12 +759,13 @@
             });
     }
 
-    //Funciion para generar la tabla de la lista de asistencia
+    //Funcion para generar la tabla de la lista de asistencia
     function generarTablaAsistencia(){
       let fromDataAsistencia = new FormData;
       fromDataAsistencia.append('opcion', 16);
       fromDataAsistencia.append('codigoLinea', codigoLinea.value);
       fromDataAsistencia.append('turno', $('#turnoLayout').val());
+      document.getElementById('checkPadre').checked = false
 
         fetch("../api/operacionesLinea.php", {
                 method: "POST",
@@ -778,6 +783,7 @@
                         autoWidth: false,
                         responsive: false,
                         data: data,
+                        deferRender: false,
                         paging: true,
                         pageLength: 10,
                         searching: false,
@@ -882,7 +888,6 @@
               });
           });
 
-
         if(asistenciaRegistrada) {
           alert('Ya se ha registrado la asistencia')
           return;
@@ -901,6 +906,7 @@
           })
             .then(response => response.text())
             .then(data => {
+              console.log(data)
               data = JSON.parse(data)
               if(data.estatus && data.estatus == 'ok'){
                   alert(data.mensaje);
@@ -917,7 +923,7 @@
             });
     }
 
-    //Abrir modal de asignar personal a una estacion
+    //Abrir modal de asignar personal a una estacion desde la tabla de personal no asignado
     function openAsignarEstacion(nomina) {
       //console.log(nomina)
       let modalPersonalDisponible = document.getElementById('modalPersonalDisponible');
@@ -1039,23 +1045,27 @@
       fromDataCambioTurno.append('turnoCambio', turno)
       fromDataCambioTurno.append('codigoLinea', codigoLinea.value)
       fromDataCambioTurno.append('turnoActual', $('#turnoLayout').val())
-      
+      saveLayout(true);
+
         fetch("../api/operacionesLinea.php", {
               method: "POST",
               body: fromDataCambioTurno,
           })
           .then((response) => response.text())
           .then((data) => {
-            data= JSON.parse(data)
+                  data= JSON.parse(data)
 
-            if(data.estatus == 'ok')
-                alert(data.mensaje)
+                  if(data.estatus == 'ok'){
+                        //Ocurtar modal
+                        let modalAgregarEstacion = bootstrap.Modal.getInstance(document.getElementById('attendanceModal'));
+                        modalAgregarEstacion.hide();
+                        alert(data.mensaje)
+                    }
 
-            else{
-              alert(data.mensaje);
-              console.log(data.error)
-            }
-
+                  else{
+                    alert(data.mensaje);
+                    console.log(data.error)
+                  }
             }).catch((error) => {
               console.log(error);
         });
@@ -1125,6 +1135,7 @@
 
       //Generar tabla de personal no asignado
       mostrarTablaPNA();
+
       //Generar listado de personal perteneciente a la linea
       generarTablaAsistencia();
 

@@ -153,7 +153,7 @@ else
         $codigoLinea = $_POST['codigoLinea'] ?? null;
 
         // Validar que se recibieron todos los datos
-        if (!$nomina || !$fecha) {
+        if (!$nomina || !$fecha || !$turno) {
             echo json_encode([
                 'estatus' => 'error',
                 'mensaje' => 'Faltan datos obligatorios.'
@@ -169,23 +169,33 @@ else
 
             //Verificar si el trabajdor esta asignado en otra linea o si la estacion ya tiene un trabajador asignado
             $sql_check = "SELECT estacion_ocupada = CASE WHEN EXISTS (SELECT 1 FROM SPC_PERSONAL_ESTACION 
-                            WHERE id_estacion = :id_estacion AND fecha_fin IS NULL) THEN 1 ELSE 0 END,
+                            WHERE id_estacion = :id_estacion AND fecha_fin IS NULL AND turno = :turno) THEN 1 ELSE 0 END,
                         trabajador_asignado = CASE WHEN EXISTS
-                        (SELECT 1 FROM
-                            ( SELECT PE.nomina FROM SPC_PERSONAL_ESTACION PE 
-                                    INNER JOIN SPC_ESTACIONES E on PE.id_estacion = E.id_estacion
-                                WHERE PE.fecha_fin IS NULL AND PE.nomina= :nomina AND E.codigo_linea <> :codigoLinea
-                                    UNION  ALL
-                                SELECT nomina FROM SPC_PERSONAL_NAD WHERE fechaE IS NULL AND nomina= :nomina2 
-                                        AND codigo_linea <> :codigoLinea2
-                                    UNION ALL
-                                SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina3 
-                                        AND codigo_linea <> :codigoLinea3
-                            ) X 
-                        )THEN 1 ELSE 0 END;";
+                            (SELECT 1 FROM
+                                ( SELECT PE.nomina FROM SPC_PERSONAL_ESTACION PE 
+                                        INNER JOIN SPC_ESTACIONES E on PE.id_estacion = E.id_estacion
+                                    WHERE PE.fecha_fin IS NULL AND PE.nomina= :nomina AND E.codigo_linea <> :codigoLinea
+                                        UNION  ALL
+                                    SELECT nomina FROM SPC_PERSONAL_NAD WHERE fechaE IS NULL AND nomina= :nomina2 
+                                            AND codigo_linea <> :codigoLinea2
+                                        UNION ALL
+                                    SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina3 
+                                            AND codigo_linea <> :codigoLinea3
+                                ) X 
+                            )THEN 1 ELSE 0 END, 
+                        otroTurno = CASE WHEN EXISTS 
+                        (select 1 from (
+                            select nomina, turno from SPC_PERSONAL_ESTACION PE inner JOIN SPC_ESTACIONES E ON PE.id_estacion = E.id_estacion 
+                                WHERE PE.fecha_fin is null AND PE.nomina='103693' and PE.turno <> 1 AND E.codigo_linea ='crv23'
+                            union all
+                            select nomina, turno from SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina='103693' and turno <> 1 and codigo_linea ='crv23'
+                            union all
+                            select nomina, turno from SPC_PERSONAL_NAD WHERE fechaE IS NULL AND nomina = '103693' and turno <> 1 AND codigo_linea ='crv23') as x
+                        );";
 
             $stmt_check = $conn->prepare($sql_check);
             $stmt_check->execute([
+                ':turno' => $turno,
                 ':id_estacion' => $estacion,
                 ':nomina' => $nomina,
                 ':codigoLinea' => $codigoLinea,
@@ -378,6 +388,7 @@ else
             $layoutPosition =  json_decode($_POST['layoutPosition'], true);
             $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
             $stationsData= !empty($_POST['stationsData']) ? $_POST['stationsData'] : null;
+            $turno= !empty($_POST['turno']) ? $_POST['turno'] : null;
 
             if (!$layoutPosition || !is_array($layoutPosition) || !$stationsData || !$codigoLinea) {
                 echo json_encode(['error' => 'Datos inválidos']);
@@ -388,8 +399,8 @@ else
                       WHERE id_estacion = :id";
             $stmt = $conn->prepare($sql);
 
-            $sqlI = "INSERT INTO SPC_HISTORIAL_LAYOUT (codigo_linea, layout) 
-                        VALUES(:codigoLinea, :stationsData)";
+            $sqlI = "INSERT INTO SPC_HISTORIAL_LAYOUT (codigo_linea, turno, layout) 
+                        VALUES(:codigoLinea, :turno, :stationsData)";
                         
             $stmtI = $conn->prepare($sqlI);
 
@@ -417,7 +428,8 @@ else
                 }
 
                  $stmtI->execute([':codigoLinea' => $codigoLinea, 
-                                  ':stationsData' => $stationsData]);
+                                  ':stationsData' => $stationsData,
+                                  ':turno' => $turno]);
 
                 // Confirmar transacción
                 $conn->commit();
@@ -529,7 +541,7 @@ else
                                 (SELECT PE.nomina FROM SPC_PERSONAL_ESTACION PE
                                         INNER JOIN SPC_ESTACIONES E on PE.id_estacion = E.id_estacion
                                     WHERE PE.fecha_fin IS NULL AND PE.nomina= :nomina AND E.codigo_linea <> :codigoLinea
-                                        UNION  ALL
+                                        UNION ALL
                                     SELECT nomina FROM SPC_PERSONAL_NAD WHERE fechaE IS NULL AND nomina= :nomina2 
                                             AND codigo_linea <> :codigoLinea2
                                         UNION ALL
@@ -1242,7 +1254,6 @@ else
            $datosAsistencia =  json_decode($_POST['datosAsistencia'], true);
            $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
            $stationsData= !empty($_POST['stationsData']) ? $_POST['stationsData'] : null;
-
            $turno = !empty($_POST['turno']) ? $_POST['turno'] : null;
            $results = '';
 
@@ -1257,7 +1268,7 @@ else
                         VALUES (:nomina, :nombre, :estatus, :codigo_linea, :turno, :id_estacion, :nombres_estaciones)";
             $stmt = $conn->prepare($sql);
 
-            $sqlI = "INSERT INTO SPC_HISTORIAL_LAYOUT (codigo_linea, layout) VALUES(:codigoLinea, :stationsData)";
+            $sqlI = "INSERT INTO SPC_HISTORIAL_LAYOUT(codigo_linea, turno, layout) VALUES(:codigoLinea, :turno, :stationsData)";
             $stmtI = $conn->prepare($sqlI);
 
             foreach ($datosAsistencia as $row) {
@@ -1273,7 +1284,10 @@ else
                 ]);
             }
         
-            $stmtI->execute([':codigoLinea' => $codigoLinea, ':stationsData' => $stationsData]);
+            $stmtI->execute([':codigoLinea' => $codigoLinea, 
+                             ':stationsData' => $stationsData,
+                             ':turno' => $turno
+                            ]);
 
             $conn->commit();
             $results = array('estatus' => 'ok',

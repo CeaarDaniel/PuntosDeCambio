@@ -1071,6 +1071,34 @@
                       <span>LIBERAR</span>
                     </button>
                   </div>
+
+                <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                  <button class="menu-btn warning" id="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Mover trabajador de estacion">
+                    <i class="bi bi-arrow-left-right"></i>
+                    <span>Mover de estacion</span>
+                  </button>
+                </div>
+
+                <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                  <button class="menu-btn info" id="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Asignar un trabajador a esta estacion">
+                    <i class="bi bi-person-plus"></i>
+                    <span>Asignar</span>
+                  </button>
+                </div>
+
+                <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                  <button class="menu-btn" id="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Editar informacion de la estacion">
+                    <i class="bi bi-pencil-square"></i>
+                    <span>Editar</span>
+                  </button>
+                </div>
+
+                <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                  <button class="menu-btn danger" id="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Eliminar">
+                    <i class="bi bi-trash"></i>
+                    <span>Eliminar</span>
+                  </button>
+                </div>
               </div>
             </div>
 
