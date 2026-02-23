@@ -536,7 +536,7 @@
                       $('#nombreModalAsignar').val('');
                       $('#stationSelect').val('');
                       $('#comentarios').val('');
-                      $('#listaOperacionesOperador').html('<span class="form-help">Lista de operaciones asignadas del trabajador </span>');
+                      $('#listaOperacionesOperador').html('<span class="form-help">Lista de operaciones asignadas del trabajador en la linea </span>');
                       getEstacion(estacion);
                   }
 
@@ -707,6 +707,7 @@
     function mostrarTablaPNA(){
           let formDataNoAsignadoL = new FormData 
           formDataNoAsignadoL.append('codigoLinea', codigoLinea.value)
+          formDataNoAsignadoL.append('turno', $('#turnoLayout').val())
           formDataNoAsignadoL.append('opcion', 9)
           
             fetch("../api/operacionesLinea.php", {
@@ -1163,12 +1164,12 @@
                                 data= JSON.parse(data)
                                 if(data.estatus=='ok'){
                                     nombreModalAsignar.value= data.nombre;                              
-                                    $('#listaOperacionesOperador').html(`${(data.estaciones) ? data.estaciones : 'SIN OPERACIONES ASIGNADAS'}`)
+                                    $('#listaOperacionesOperador').html(`${(data.estaciones) ? data.estaciones : 'SIN OPERACIONES ASIGNADAS EN LA LINEA'}`)
                                   }
                               
                               else{
                                   nombreModalAsignar.placeholder= "Nombre del empleado...";  
-                                  $('#listaOperacionesOperador').html(`<span class="form-help">Lista de operaciones asignadas del trabajador </span>`)
+                                  $('#listaOperacionesOperador').html(`<span class="form-help">Lista de operaciones asignadas del trabajador en la linea</span>`)
                                 console.log(data.error); 
                               }
 

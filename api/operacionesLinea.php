@@ -164,8 +164,9 @@ else
         $fecha = str_replace('T', ' ', $fecha);
 
 
-        try { // Iniciar transacción
-            $conn->beginTransaction();
+        try {
+             // Iniciar transacción
+             $conn->beginTransaction();
 
             //Verificar si el trabajdor esta asignado en otra linea o si la estacion ya tiene un trabajador asignado
             $sql_check = "SELECT estacion_ocupada = CASE WHEN EXISTS (SELECT 1 FROM SPC_PERSONAL_ESTACION 
@@ -182,18 +183,26 @@ else
                                     SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina3 
                                             AND codigo_linea <> :codigoLinea3
                                 ) X 
-                            )THEN 1 ELSE 0 END, 
-                        otroTurno = CASE WHEN EXISTS 
-                        (select 1 from (
-                            select nomina, turno from SPC_PERSONAL_ESTACION PE inner JOIN SPC_ESTACIONES E ON PE.id_estacion = E.id_estacion 
-                                WHERE PE.fecha_fin is null AND PE.nomina='103693' and PE.turno <> 1 AND E.codigo_linea ='crv23'
-                            union all
-                            select nomina, turno from SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina='103693' and turno <> 1 and codigo_linea ='crv23'
-                            union all
-                            select nomina, turno from SPC_PERSONAL_NAD WHERE fechaE IS NULL AND nomina = '103693' and turno <> 1 AND codigo_linea ='crv23') as x
-                        );";
+                            )THEN 1 ELSE 0 END;";
+        
+           
+            /*Revisar que el trabajador no este registrado en otro turno en esta linea*/
+            $sqlCheckT = 'SELECT otroTurno = CASE WHEN EXISTS 
+                            (SELECT 1 FROM 
+                                (SELECT nomina FROM SPC_PERSONAL_ESTACION PE inner JOIN SPC_ESTACIONES E ON PE.id_estacion = E.id_estacion 
+                                        WHERE PE.fecha_fin IS NULL AND PE.nomina= :nomina AND E.codigo_linea = :codigoLinea AND PE.turno <> :turno
+                                            UNION ALL
+                                    SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina= :nomina and codigo_linea =:codigoLinea AND turno <> :turno
+                                            UNION ALL
+                                    SELECT nomina FROM SPC_PERSONAL_NAD WHERE fechaE IS NULL AND nomina = :nomina AND codigo_linea = :codigoLinea and turno <> :turno
+                                ) as Z
+                            ) THEN 1 ELSE 0 END;';
 
+
+            
             $stmt_check = $conn->prepare($sql_check);
+            $stmtCT = $conn->prepare($sqlCheckT);
+
             $stmt_check->execute([
                 ':turno' => $turno,
                 ':id_estacion' => $estacion,
@@ -202,18 +211,25 @@ else
                 ':nomina2' => $nomina,
                 ':codigoLinea2' => $codigoLinea,
                 ':nomina3' => $nomina,
-                ':codigoLinea3' => $codigoLinea
+                ':codigoLinea3' => $codigoLinea,
+            ]);
+
+            $stmtCT->execute([
+                 ':nomina' => $nomina,
+                 ':codigoLinea' => $codigoLinea,
+                 ':turno' => $turno,
             ]);
 
             $result = $stmt_check->fetch(PDO::FETCH_ASSOC);
-
-            if (!$result) {
-                throw new Exception("Error al verificar asignación.");
+            $resultT = $stmtCT->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$result || !$resultT) {
+                throw new Exception("Error al verificar la asignación.");
             }
 
             if ($result['estacion_ocupada'] == 1) {
                 // Ya existe
-                    $conn->rollBack();
+                $conn->rollBack();
                         echo json_encode([
                             'estatus' => 'error',
                             //'mensaje' => 'Esta persona ya cuenta con una asignación en la estación seleccionada'
@@ -222,75 +238,86 @@ else
                     exit;
             }
 
-            else 
-                if ($result['trabajador_asignado'] == 1){
-                    // Ya existe
-                        $conn->rollBack();
-                            echo json_encode([
-                                'estatus' => 'error',
-                                //'mensaje' => 'Esta persona ya cuenta con una asignación en la estación seleccionada'
-                                'mensaje' => 'Este trabajador se encuentra asignado en otra linea'
-                            ]);
-                        exit;
-                }
             
-                else {
-                    // Insertar
-                    $sql_insert = "INSERT INTO SPC_PERSONAL_ESTACION 
-                                (id_estacion, nomina, nombre, fecha_asignacion, turno, comentarios)
-                                VALUES (:id_estacion, :nomina, :nombre, :fecha_asignacion, :turno, :comentarios)";
+            if ($result['trabajador_asignado'] == 1){
+                // Ya existe
+                $conn->rollBack();
+                        echo json_encode([
+                            'estatus' => 'error',
+                            //'mensaje' => 'Esta persona ya cuenta con una asignación en la estación seleccionada'
+                            'mensaje' => 'Este trabajador se encuentra asignado en otra linea'
+                        ]);
+                    exit;
+            }
 
-                    $stmt_insert = $conn->prepare($sql_insert);
-                    $stmt_insert->execute([
-                        ':id_estacion' => $estacion,
-                        ':nomina' => $nomina,
-                        ':nombre' => $nombre,
-                        ':fecha_asignacion' => $fecha,
-                        ':turno' => $turno,
-                        ':comentarios' => $comentarios,
-                    ]);
+            
+            if($resultT['otroTurno'] == 1){
+                    // Ya existe
+                    $conn->rollBack();
+                        echo json_encode([
+                            'estatus' => 'error',
+                            //'mensaje' => 'Esta persona ya cuenta con una asignación en la estación seleccionada'
+                            'mensaje' => 'Este trabajador se encuentra asignado en otro turno'
+                        ]);
+                    exit;
+            }
+            
+                // Insertar
+                $sql_insert = "INSERT INTO SPC_PERSONAL_ESTACION 
+                            (id_estacion, nomina, nombre, fecha_asignacion, turno, comentarios)
+                            VALUES (:id_estacion, :nomina, :nombre, :fecha_asignacion, :turno, :comentarios)";
 
-                    $conn->commit();
+                $stmt_insert = $conn->prepare($sql_insert);
+                $stmt_insert->execute([
+                    ':id_estacion' => $estacion,
+                    ':nomina' => $nomina,
+                    ':nombre' => $nombre,
+                    ':fecha_asignacion' => $fecha,
+                    ':turno' => $turno,
+                    ':comentarios' => $comentarios,
+                ]);
 
-                    include('./conexionEmpleado.php');
+                $conn->commit();
 
-                            //Guardar la imagen del trabajador
-                            $sqlCheck = "SELECT No_Nomina as nomina, nombre, foto FROM empleado_mst WHERE No_Nomina = :nomina";
-                            $stmtCheck = $connE->prepare($sqlCheck);
-                            $stmtCheck->execute([':nomina' => $nomina]);
-                            $empleado = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+                include('./conexionEmpleado.php');
 
-                            $nombre_archivo = ""; // Valor por defecto
+                        //Guardar la imagen del trabajador
+                        $sqlCheck = "SELECT No_Nomina as nomina, nombre, foto FROM empleado_mst WHERE No_Nomina = :nomina";
+                        $stmtCheck = $connE->prepare($sqlCheck);
+                        $stmtCheck->execute([':nomina' => $nomina]);
+                        $empleado = $stmtCheck->fetch(PDO::FETCH_ASSOC);
 
-                            if ($empleado && !empty($empleado['foto'])) {
-                                // Detectar tipo de imagen
-                                $finfo = new finfo(FILEINFO_MIME_TYPE);
-                                $tipo_mime = $finfo->buffer($empleado['foto']);
+                        $nombre_archivo = ""; // Valor por defecto
 
-                                // Mapear extensión según MIME type
-                                $extensiones = [
-                                    'image/jpeg' => 'jpg',
-                                    'image/jpg' => 'jpg',
-                                    'image/png' => 'png',
-                                    'image/gif' => 'gif',
-                                    'image/bmp' => 'bmp'
-                                ];
+                        if ($empleado && !empty($empleado['foto'])) {
+                            // Detectar tipo de imagen
+                            $finfo = new finfo(FILEINFO_MIME_TYPE);
+                            $tipo_mime = $finfo->buffer($empleado['foto']);
 
-                                $extension = $extensiones[$tipo_mime] ?? 'bin';
-                                $nombre_archivo = $nomina . "." . $extension;
+                            // Mapear extensión según MIME type
+                            $extensiones = [
+                                'image/jpeg' => 'jpg',
+                                'image/jpg' => 'jpg',
+                                'image/png' => 'png',
+                                'image/gif' => 'gif',
+                                'image/bmp' => 'bmp'
+                            ];
 
-                                $ruta = "../img/personal/" . $nombre_archivo;
+                            $extension = $extensiones[$tipo_mime] ?? 'bin';
+                            $nombre_archivo = $nomina . "." . $extension;
 
-                                // Guardar la imagen en el directorio
-                                file_put_contents($ruta, $empleado['foto']);
-                            }
-                    
+                            $ruta = "../img/personal/" . $nombre_archivo;
 
-                    echo json_encode([
-                        'estatus' => 'ok',
-                        'mensaje' => 'Registro insertado correctamente.',
-                    ]);
-                }
+                            // Guardar la imagen en el directorio
+                            file_put_contents($ruta, $empleado['foto']);
+                        }
+                
+
+                echo json_encode([
+                    'estatus' => 'ok',
+                    'mensaje' => 'Registro insertado correctamente.',
+                ]);
+            
         } catch (PDOException $e) {
             // Si ocurre algún error, revertir la transacción
             if ($conn->inTransaction()) {
@@ -667,13 +694,14 @@ else
 else 
      if($opcion== '9'){
         $codigoLinea =  !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
+        $turno = !empty($_POST['turno']) ? $_POST['turno'] : null;
 
-            $sql= "SELECT id_registro, nomina, nombre, turno from SPC_PERSONAL_NAD where eliminado = 0 and codigo_linea= :codigoLinea";
+            $sql= "SELECT id_registro, nomina, nombre, turno from SPC_PERSONAL_NAD where eliminado = 0 and codigo_linea= :codigoLinea and turno= :turno";
 
             $registro = $conn->prepare($sql);
             $response= array();
 
-            if($registro -> execute([':codigoLinea' => $codigoLinea])){
+            if($registro -> execute([':codigoLinea' => $codigoLinea, ':turno' => $turno])){
                 while($dsc= $registro->fetch(PDO::FETCH_ASSOC))
                     $response[] = $dsc;
             }
@@ -872,7 +900,22 @@ else
                                 ) X
                             )THEN 1 ELSE 0 END;";
 
+            /*Revisar que el trabajador no este registrado en otro turno en esta linea*/
+            $sqlCheckT = 'SELECT otroTurno = CASE WHEN EXISTS 
+                            (SELECT 1 FROM 
+                                (SELECT nomina FROM SPC_PERSONAL_ESTACION PE inner JOIN SPC_ESTACIONES E ON PE.id_estacion = E.id_estacion 
+                                        WHERE PE.fecha_fin IS NULL AND PE.nomina= :nomina AND E.codigo_linea = :codigoLinea AND PE.turno <> :turno
+                                            UNION ALL
+                                    SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina= :nomina and codigo_linea =:codigoLinea AND turno <> :turno
+                                            UNION ALL
+                                    SELECT nomina FROM SPC_PERSONAL_NAD WHERE fechaE IS NULL AND nomina = :nomina AND codigo_linea = :codigoLinea and turno <> :turno
+                                ) as Z
+                            ) THEN 1 ELSE 0 END;';
+
+
             $stmtCheckPC = $conn->prepare($sqlCheckPC);
+            $stmtCT = $conn->prepare($sqlCheckT);
+
             $stmtCheckPC->execute([
                                     ':id_estacion' => $idEstacion,
                                     ':nomina' => $nominaPC,
@@ -883,9 +926,17 @@ else
                                     ':codigoLinea3' => $codigoLinea
                                 ]);
 
-            $registroPC = $stmtCheckPC->fetch(PDO::FETCH_ASSOC);
+            
+            $stmtCT->execute([
+                                ':nomina' => $nominaPC,
+                                ':codigoLinea' => $codigoLinea,
+                                ':turno' => $turno,
+                            ]);
 
-            if (!$registroPC) {
+            $registroPC = $stmtCheckPC->fetch(PDO::FETCH_ASSOC);
+            $resultT = $stmtCT->fetch(PDO::FETCH_ASSOC);
+
+            if (!$registroPC  || !$resultT) {
                     echo json_encode([
                         'estatus' => 'error', 
                         'mensaje' => 'Ocurrio un error al verificar la informacion',
@@ -909,6 +960,16 @@ else
                 ]);
                 exit;
             }
+
+            if($resultT['otroTurno'] == 1){
+                    // Ya existe
+                        echo json_encode([
+                            'estatus' => 'error',
+                            'mensaje' => 'Este trabajador se encuentra asignado en otro turno'
+                        ]);
+                    exit;
+            }
+
 
         try { 
             // Iniciar transacción
@@ -1439,16 +1500,4 @@ else
 
         echo json_encode($response);
     }
-
-
-    /*
-        Trabajo como desarrollador de software en una empresa, por temas de "ciberseguridad" en una auditorioa
-        quitaron los accesos a los servidores a todas las personas de la planta, ahora el servidor en el que subo
-        las aplicaciones, hago modificaciones y gestiono los servicioes de las aplicaciones que desarrollo esta
-        restringido su acceso a unas 4 personas, por lo que ya no puedo hacer cualquier modificacion, subir, eliminar o
-        descargar algun archivo de los programas y el codigo o moficicaciones en las bases de datos, solo el personal
-        del area de infrestructura pueden acceder a los servidores, lo cual me parce algo muy estupido, siendo que 
-        yo tambien deberia de contar con los persmisos para poder acceder a mi servidor. tu que opinas
-        yo creo que esto es una practica mal aplicada 
-    */
 ?>

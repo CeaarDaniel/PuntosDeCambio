@@ -298,7 +298,7 @@
                             Listado de estaciones asignadas
                         </label>
                           <div class="form-control" id="listaOperacionesOperador" style="min-height: 100px; resize: vertical; overflow-y: auto;">
-                              <span class="form-help">Lista de operaciones asignadas del trabajador </span>
+                              <span class="form-help">Lista de operaciones asignadas del trabajador en la linea</span>
                           </div>
                       </div>
                   </div>

@@ -38,6 +38,7 @@
 
 
 //Al asignar a una persona que esta en la tabla de personal NAD a otra tabla como de PC, eliminarla de esta tabla o cambiar su estatus
+//Creo que falta agregar la validacion de el turno en los demas registros de PC y asignacion
 //Hacer restricciones y validaciones correspondientes
 //Revisar las consultas donde el json_decod manda un 'error
 // revisar la validacion del registro de personal NAD ya que puede evitarse una consulta quitando el filtro de codigo_Linea <> :codigoLinea
@@ -50,7 +51,7 @@
 //mostrar en el el layout algun indicador si el trabajadore falto o asistio
 //Para mostrar el estatus de la asistencia en la estacion del layout hay que comparar el personal de las estaciones con su registro de la tabla de asistencia y el estatus de registro de asistencia (1,2,3... etc)
 //Agregar opcion para consultar el acomodo del layout guardado por dia o fecha
-//QUITAR EL INPUT DE OBSERVACIONES de la tabla de asistencia
+//Actualizar el campo de observaciones de la tabla de asistencia
 //Se ha elimiado a esta persona del registro de todas las estaciones, ¿desea agregalo al listado de personal disponible o personal no asignado?)
 
 //Modificar el codigo de la linea por un numero consecutivo
