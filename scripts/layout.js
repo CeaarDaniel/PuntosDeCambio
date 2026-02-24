@@ -984,13 +984,13 @@
           return '';
         });
     }
-
+    
     function updateAsistencia(element){
           let table = $('#attendanceTable').DataTable();
           let $row = $(element).closest('tr');
           let data = table.row($row).data();
 
-          if(data['id_registro']){
+            if(data['id_registro']){
               //console.log('Fila:', data);
               //console.log('Campo:', campo);
               //console.log('Nuevo valor:', nuevoValor);
@@ -998,7 +998,6 @@
               //Logica para actualizar el registro de la tabla
               let nuevoValor = $(element).val();
               let campo = $(element).attr('name');
-
               let formDataUpdate = new FormData();
               formDataUpdate.append('opcion', 18);
               formDataUpdate.append('id_registro', data['id_registro'])
@@ -1027,9 +1026,9 @@
                 });
             }
 
-          else {
+          //else {
             //console.log('Aun no se ha registrado la asistencia')
-          }
+          //}
     }
 
     //Funcion para cambiar el turno de los trabajadores registrados en la linea
@@ -1055,7 +1054,6 @@
           .then((response) => response.text())
           .then((data) => {
                   data= JSON.parse(data)
-
                   if(data.estatus == 'ok'){
                         //Ocurtar modal
                         let modalAgregarEstacion = bootstrap.Modal.getInstance(document.getElementById('attendanceModal'));
@@ -1518,5 +1516,5 @@
     Esto es un error ya que en vez de generar un nuevo arreglo asignado a la variable seleccionadosGlobal 
     pasa la referencia de la ubicacion en memoria de la variable datosAsistenciaCheck entonces ambas variables 
     apuntan a la mimsa ubicacion de la memoria por lo que al modificar cualquiera de las dos, los cambios se 
-    Se veran reflejados en ambas variables
+    Se veran reflejados en ambas variables  
 */

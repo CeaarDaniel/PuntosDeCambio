@@ -1170,6 +1170,7 @@
                               <select type="text" class="form-select" id="tipo_cambio" required>
                                 <option value="1">Inesperado</option>
                                 <option value="2">Programado</option>
+                                <option value="3">Otro</option>
                               </select>
                             </div>
                           </div>
