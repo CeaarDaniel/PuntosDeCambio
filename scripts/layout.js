@@ -1462,7 +1462,7 @@
         btnTablaPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contTablaDisponibles')});
         btnRegistroPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contRegistroPersonalDisponible')});
         btnMenuRegistroAs.addEventListener('click', generarTablaAsistencia);
-        btnCambioTurno.addEventListener('click', cambiarTurno);
+        btnCambioTurno.addEventListener('click', cabiarTurno);
 
         // SELECT → change
         $('#attendanceTable tbody').on('change', 'select', function () {
@@ -1517,4 +1517,174 @@
     pasa la referencia de la ubicacion en memoria de la variable datosAsistenciaCheck entonces ambas variables 
     apuntan a la mimsa ubicacion de la memoria por lo que al modificar cualquiera de las dos, los cambios se 
     Se veran reflejados en ambas variables  
+
+
+TABLERO DE ENSAMBLES Y ENSAMBLES DE PARTES SON LO MISMO
+
+CRV
+CORTE CABLE 	                      CRV-CORTE
+RE-CORTE	                          CRV-RECORTE
+DESFORRE CIRCUITO	                  CRV-DESFORRE
+REDUCCION DE TUBO TERMO-CONTRACTIL	CRV-REDUCCION
+CRIMPADO 1	                        CRV-CRIMPADO1
+INSERCION DE TERMINAL 1	            CRV-INSERT1
+CRIMPADO 2	                        CRV-CRIMPADO2
+CRIMPADO 3	                        CRV-CRIMPADO3
+INSERCION DE TERMINAL 2	            CRV-INSERT2
+MARCADO LASER                 	    CRVR-MARCADOL    CRVL-MARCADOL
+DESF TWST CABEZAL 	                CRVR-DESFTWSTCAB CRVL-DESFTWSTCAB
+SOLDADURA AUTOMATICA	              CRVR-SOLDADURA   CRVL-SOLDADURA
+MOLDEO DE CABEZAL 	                CRVR-MOLDCABEZAL CRVL-MOLDCABEZAL
+MOLDEO URETANO Y	                  CRVR-MOLDUY      CRVL-MOLDUY
+ENCINTADO 	                        CRVR-ENCINTADO   CRVL-ENCINTADO
+MARCADO PUNTOS 	                    CRVR-MARCADOP    CRVL-MARCADOP
+MOLDEO URETANO  L	                  CRVR-MOLDUL      CRVL-MOLDUL
+MOLDEO URETANO  BRKT 1	            CRVR-BRKT1       CRVL-BRKT1
+MOLDEO URETANO  BRKT 2	            CRVR-BRKT2       CRVL-BRKT2 
+TABLERO DE CLIP	                    CRVR-CLIP        CRVL-CLIP 
+ENSAMBLE DE PARTES o ASSY POSCA	    CRVR-ENSAMBLE    CRVL-ENSAMBLE
+FUGA AIRE	                          CRVR-FUGA        CRVL-FUGA
+PRUEBA ELECTRICA	                  CRVR-PRUEBAELEC  CRVL-PRUEBAELEC
+INSPECCION FINAL 	                  CRVR-INSPFINAL   CRVL-INSPFINAL
+EMPAQUE	                            CRVR-EMPAQUE     CRVL-EMPAQUE
+MOLDEO DE INSERT BRAKET	            CRV-MOLDINBRKT
+MOLDEO DE IC	                      CRV-MOLDIC
+
+
+
+MDX
+CORTE CABLE	                              MDX-CORTE
+RE-CORTE	                                MDX-RECORTE
+MARCADO LASER	                            MDX-MARCADOL
+DESFORRE ABS	                            MDX-DESFORREABS
+REDUCCION DE TUBO	                        MDX-REDUCCION
+MOLDEO URETANO Y	                        MDX-MOLDUY
+MOLDEO BRKT-1	                            MDX-BRKT1
+MOLDEO BRKT-2	                            MDX-BRKT2
+CRIMPADO 1	                              MDX-CRIMPADO1
+INSERCION DE CONECTOR DE DOS CABIDADES	  MDX-INSERCON2CAB
+CRIMPADO 2	                              MDX-CRIMPADO2
+CRIMPADO 3	                              MDX-CRIMPADO3
+INSERCION DE CONECTOR DE CUATRO CABIDADES	MDX-INSERCON4CAB
+TABLERO DE ENSAMBLE	                      MDX-ENSAMBLE
+TABLERO CLIP	                            MDX-CLIP
+DESF TWST CAB	                            MDX-DESFTWSTCAB
+SOLD CABEZAL	                            MDX-SOLDADURACAB
+MOLDEO CABEZAL	                          MDX-MOLDCABEZAL
+CERRADO BRKT	                            MDX-CERRADOBRKT
+FUGA AIRE 1	                              MDX-FUGA1
+FUGA AIRE 2                             	MDX-FUGA2
+PRUEBA ELECTRICA 1	                      MDX-PRUEBAELEC1
+PRUEBA ELECTRICA 2	                      MDX-PRUEBAELEC2
+INSPECCION FINAL	                        MDX-INSPFINAL
+EMPAQUE	                                  MDX-EMPAQUE
+MOLDE DE IC                             	MDX-MOLDIC
+MOLDEO DE INSERT BRAKET	                  MDX-MOLDINBRKT
+
+
+ODY
+CORTE CABLE	                              ODY-CORTE
+RE-CORTE	                                ODY-RECORTE
+INSER GROMMET	                            ODY-INSERGROMMET
+CRIMPADO 1	                              ODY-CRIMPADO1
+CRIMPADO 2	                              ODY-CRIMPADO2
+CRIMPADO 3	                              ODY-CRIMPADO3
+CRIMPADO 4	                              ODY-CRIMPADO4
+ENCINTADO	                                ODY-ENCINTADO
+TABLERO CLIP	                            ODY-CLIP
+CERRADO BRKT 1	                          ODY-CERRADOBRKT1
+CERRADO BRKT 2	                          ODY-CERRADOBRKT2
+ASSY EPB	                                ODY-ASSYEPB
+PRUEBA ELECTRICA	                        ODY-PRUEBAELEC1
+INSPECCION FINAL	                        ODY-INSPFINAL
+CORTE CABLE 1.1	                          ODY-CORTE1.1
+DESF TWST CONECT	                        ODY-DESFTWSTCON
+MOLD CONECT	                              ODY-MOLDCONECT
+DESF TWST CABEZAL	                        ODY-DESFTWSTCAB
+INSPECCION AL 200%	                      ODY-INSP200
+MOLDEO CABEZAL	                          ODY-MOLDCABEZAL
+FUGA DE AIRE	                            ODY-FUGA
+MOLD- SIB-COMPONENT	                      ODY-MOLDSIBCOMP
+
+
+FORD
+CORTE CABLE	                              FRD-CORTE
+MARCADO LASER	                            FRD-MARCADOL
+INSER GROMMET	                            FRD-INSERGROMMET
+DESF TWST CONECT	                        FRD-DESFTWSTCON
+SOLD CONECTOR	                            FRD-SOLDADURACON
+MOLDEO CONECT	                            FRD-MOLDCONECT
+ADHESION PARTES	                          FRD-ADHESION
+DESF TWST CABEZAL	                        FRD-DESFTWSTCAB
+SOLD CABEZAL	                            FRD-SOLDADURACAB
+MOLDEO CABEZAL	                          FRD-MOLDCABEZAL
+PRUEBA TENSION	                          FRD-TENSION
+COLOCACION CLIPS	                        FRD-COLCLIPS
+COLOCACION DE BRKT	                      FRD-COLBRKT
+FUGA AIRE	                                FRD-FUGA
+PRUEBA ELECTRICA	                        FRD-PRUEBAELEC
+INSP VISUAL	                              FRD-INSPVISUAL
+MOLDEO SIB COMPONENTE	                    FRD-MOLDSIBCOMP
+
+
+LINEA DE ASSY 1
+Comprobacion de Producto 		
+Insercion de terminal de fusible 		
+insercion de terminal TH		
+Insercion de terminal NS		
+Insercion de terminal M		
+Insercion de terminal L		
+Ensamble de relevador 		
+Aplicación de Flux 1		
+Aplicación de flux 2		
+Precalentamiento y soldadura 		
+Enfriamiento 		
+Inspeccion visual de PCB		
+Inspeccion de circuito 1		
+Inspeccion de circuito 2		
+Aplicación de desecante 		
+Ensamble de cubierte superior con tornillo 		
+Marcador Laser 		
+Inspeccion de ranura de terminal 		
+Ensamble de fusible 		
+Presion de fusible y camara de inspeccion 		
+Inpeccion de funcionamiento 		
+Inpeccion de alineacion 		
+Empaque 		
+
+
+AOI
+Aplicación de Flux
+Aplicación de desecante
+Comprobacion de Producto
+Cargador
+Conveyor
+Descargador
+Empaque
+Enfriamiento
+Ensamble de fusible
+Ensamble de relevador
+Ensamble de cubierte superior con tornillo
+Horno
+ICT
+Impresora Laser
+Impresora de soldadura
+Insercion de terminal
+Inspeccion de circuito
+Inspeccion de ranura de terminal
+Inpeccion de funcionamiento
+Inpeccion de alineacion
+Inspeccion visual de PCB
+Inspecion visual de soldadura
+Lector de Rom
+Limpiador de PCB
+Marcador Laser
+Montaje de componentes
+Presion de fusible y camara de inspeccion
+Precalentamiento y soldadura
+Separador de PCB
+SPI
+Transverser sorting
+Transverser collecting
+Volteador
 */

@@ -102,4 +102,26 @@ Investigar que sucede con el punto de cambio si hay un cambio de turno
     ¿Tambien en el modal de gestion de la estion, esta echa para mostrar la informacion de un solo trabajador
 
     lo que pienso que se podria hacer mostrar a ambos trabajdores y mostrar al que esta en la estacion hasta despues de pasar la lista
+
+
+    TNA TERMINAL NO ACENTADA
+    FALTA DE RECINA
+    MOLDE ABIERTO
+    FALTA DE PEGAMENTO
+
+    TIEMPOS DE ESPERA
+    BUGGY
+    SAE 
+
+
+    hay lineas que cuando paran por mas de un minuto se deben de volver a liberar
+    para liberar las lineas en las estaciones los operadores deben de revisar una checklist
+    donde estan los parametros y condiciones que deben de tener las estaciones antes de arrancar 
+    o de comnezar con la operacion
+    Que significa Passport? 
+
+
+
+    Mejora
+    Llenar o abastecer el material de las lineas cuando llegue a cierto porcentaje de cantedidad pero sin llegar a 0
 */
