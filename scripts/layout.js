@@ -1462,7 +1462,7 @@
         btnTablaPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contTablaDisponibles')});
         btnRegistroPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contRegistroPersonalDisponible')});
         btnMenuRegistroAs.addEventListener('click', generarTablaAsistencia);
-        btnCambioTurno.addEventListener('click', cabiarTurno);
+        btnCambioTurno.addEventListener('click', cambiarTurno);
 
         // SELECT → change
         $('#attendanceTable tbody').on('change', 'select', function () {
@@ -1509,8 +1509,19 @@
 
             checkPadre.checked = (seleccionadosGlobal.length < datosAsistenciaCheck.length) ? false : true;
         });
-    });
 
+
+        //Funcion para actualizar el layout al cambiar el turno
+
+        document.getElementById('turnoLayout').addEventListener('change', function(){
+            let turno = $("#turnoLayout").val()
+
+            if(turno){
+              document.getElementById('workspaceGrid').innerHTML = '';
+                getEstaciones();
+            }
+        })
+    });
 /* 
     seleccionadosGlobal = datosAsistenciaCheck 
     Esto es un error ya que en vez de generar un nuevo arreglo asignado a la variable seleccionadosGlobal 

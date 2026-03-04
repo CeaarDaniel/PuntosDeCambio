@@ -16,7 +16,7 @@
           otro otros tantos ya asi  
           
           ¿Una persona puede estar en una estacion o puede estar en varias estaciones? Por lo que vi hoy parece que solo una persona
-          solo puede operar en una estacion a la vez, 
+          solo puede operar en una estacion a la vez, a menos que los procesos esten combinados entonces una persona puede estar en varios procesos
 
 
         Registro del punto de cambio.
@@ -48,12 +48,19 @@
 */  
 
 /*
+
 Revisar que la variable stationsData se actualice al hacer cualquier cambio en el layout
 Reviasr los valores enviados y recibidos de la variabla layoputData o en el json que lista las estaciones
+
 Al parecer hay algo que llaman los desplazados, todos los dias descansan 5 personas por lo que esto hace que deban de poder estar mas de una persona asignadas
-a la estacion, el viernes solo es medio turno, un turno copleto son 24hrs por lo que medio turno es de 12hrs osea solo el perimer turno de 8:00 am a 8:00pm trabajan,
-Hay que cambiar el cdigo para que se puedan registrar por lo menos dos trabajadores por estacion y modificar todas las validaciones, los registros, los formularios, cabiar
+a la estacion.
+Hay que cambiar el cdigo para que se puedan registrar por lo menos dos trabajadores por estacion y modificar todas las validaciones, los registros, los formularios, cambiar
 parte de la logica del codigo para gestionar las estaciones 
+
+Tal vez sea mejor quitar la opcion de inseperado en el registro del punto de cambio, o la de otro y cambiar el concepto del punto de cambio inseperado
+ya que por lo que vi en la linea la mayoria de los puntos de cabio serian inesperados, que sean solo de uno dia, ya que estos se registraran cuando el operador falte por cualquier motivo
+o se preste a alguna otra linea o le presten a la linea un operador que viene de otra, que como tal no es un punto de cambio, pero en el sistema anterior a eso es a lo que llamaban punto 
+de cambio, 
 
 Validar los turnos de los empleados al hacer registros para que sean coeherentes no tener personal activo registrado en diferentes tablas con distintos turnos
 Osea que esten en el mismo turno en las tres tablas, que no suceda que por ejempplo en la tabla PC esta en el 2 y en la de NAD y la tabla personal_estacion en el turno 1
@@ -64,10 +71,11 @@ Mostrar datos por turno
 
 Al asignar a una persona que esta en la tabla de personal NAD a otra tabla como de PC, eliminarla de esta tabla o cambiar su estatus
 Hacer restricciones y validaciones correspondientes
-Revisar las consultas donde el json_decod manda un 'error
+Revisar las consultas donde el json_decod manda un 'error'
 
 Al asignar al operador mostrar un listado de las personas asignadas en la estacion similar al listado de estaciones de la persona
 Dar opcion de registrar a un operador sin punto de cambio o no si no existe la ultima fecha de operacion en la linea
+    -tal vez sea conveniente solo mostrar una alerta o un mensaje en rojo que indique la feha de ultina operacion en la estacion o si tiene registro de operacion en la estacion
 Y dejar otra opcion para que se puede finalizar y/o asignar al operador como titular de la estacion
 esto para al inicio cunado se empieza a registrar a todo el personaol 
 Agregar alguna alerta o etiqueta de warning para mostrar cuando el PC lleva ya 30 días
@@ -111,16 +119,21 @@ Investigar que sucede con el punto de cambio si hay un cambio de turno
 
     TIEMPOS DE ESPERA
     BUGGY
+
     SAE 
+    Es una oja que se usa cuando se quiere cambiar algun proceso, donde se debe de analisar todos los riesgos y beneficios que pouede 
+    incluir dicho cambio para determinar si se implementa o no
 
 
-    hay lineas que cuando paran por mas de un minuto se deben de volver a liberar
-    para liberar las lineas en las estaciones los operadores deben de revisar una checklist
-    donde estan los parametros y condiciones que deben de tener las estaciones antes de arrancar 
-    o de comnezar con la operacion
-    Que significa Passport? 
+    el viernes solo es medio turno, un turno copleto son 24hrs por lo que medio turno es de 12hrs osea solo el perimer turno de 8:00 am a 8:00pm trabajan
 
 
+    hay lineas que cuando paran por mas de un minuto se deben de volver a liberar para liberar las lineas en las 
+    estaciones los operadores deben de revisar una checklist donde estan los parametros y condiciones que deben 
+    de tener las estaciones antes de arrancar o de comnezar con la operacion 
+    
+    
+    Que significa Passport? Creo que es el nombre de un modelo o parte de un arness
 
     Mejora
     Llenar o abastecer el material de las lineas cuando llegue a cierto porcentaje de cantedidad pero sin llegar a 0
