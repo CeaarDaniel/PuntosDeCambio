@@ -400,6 +400,7 @@
     function getEstaciones(){
         const formData = new FormData;
         formData.append('opcion', 5)
+        formData.append('turno', $('#turnoLayout').val())
         formData.append('codigoLinea', codigoLinea.value)
         fetch("../api/operacionesLinea.php", {
                     method: "POST",
@@ -426,6 +427,7 @@
      let formDataEstacion = new FormData;
       formDataEstacion.append('opcion', 15);
       formDataEstacion.append('idEstacion', id);
+      formDataEstacion.append('turno', $('#turnoLayout').val())
           fetch("../api/operacionesLinea.php", {
                   method: "POST",
                   body: formDataEstacion,
@@ -1270,6 +1272,7 @@
             formDataReniver.append("opcion", "10");
             formDataReniver.append("idEstacion", estacionId);
             formDataReniver.append("nomina", nominaTrabajador);
+            formDataReniver.append("turno", $('#turnoLayout').val());
 
           if(idPC.value){
               alert('Debe finalizar el punto de cambio activo');
@@ -1281,7 +1284,7 @@
               return;
           }
 
-          fetch("../api/operacionesLinea.php", {
+                  fetch("../api/operacionesLinea.php", {
                         method: "POST",
                         body: formDataReniver,
                     })
@@ -1308,9 +1311,7 @@
         //Actualizar informacion de la linea
         btnGuardarEdicionLinea.addEventListener('click', function(){
           let formDataActualizarLinea = new FormData; 
-
           let lineForm = document.getElementById('lineForm');
-
           let descripcionLinea = document.getElementById('lineDescription').value;
           let encargadoLinea = document.getElementById('supervisorSearch').value; 
           let lineName = document.getElementById('lineName').value;
@@ -1353,7 +1354,6 @@
                 alert('No se encontro registro del empleado ingresado o se perdió la conexión con el servidor.') 
                 return;
           }
-
 
           let nominaEtiqueta = $("#changeControlInfoNomina").text().trim();
           let nominaInput = $("#nominaPC").val().trim();
@@ -1510,9 +1510,7 @@
             checkPadre.checked = (seleccionadosGlobal.length < datosAsistenciaCheck.length) ? false : true;
         });
 
-
         //Funcion para actualizar el layout al cambiar el turno
-
         document.getElementById('turnoLayout').addEventListener('change', function(){
             let turno = $("#turnoLayout").val()
 

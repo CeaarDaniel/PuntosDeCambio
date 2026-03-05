@@ -55,12 +55,12 @@ Reviasr los valores enviados y recibidos de la variabla layoputData o en el json
 Al parecer hay algo que llaman los desplazados, todos los dias descansan 5 personas por lo que esto hace que deban de poder estar mas de una persona asignadas
 a la estacion.
 Hay que cambiar el cdigo para que se puedan registrar por lo menos dos trabajadores por estacion y modificar todas las validaciones, los registros, los formularios, cambiar
-parte de la logica del codigo para gestionar las estaciones 
+parte de la logica del codigo para gestionar las estaciones
 
 Tal vez sea mejor quitar la opcion de inseperado en el registro del punto de cambio, o la de otro y cambiar el concepto del punto de cambio inseperado
 ya que por lo que vi en la linea la mayoria de los puntos de cabio serian inesperados, que sean solo de uno dia, ya que estos se registraran cuando el operador falte por cualquier motivo
-o se preste a alguna otra linea o le presten a la linea un operador que viene de otra, que como tal no es un punto de cambio, pero en el sistema anterior a eso es a lo que llamaban punto 
-de cambio, 
+o se preste a alguna otra linea o le presten a la linea un operador que viene de otra, que como tal no es un punto de cambio, pero en el sistema anterior a eso es a lo que llamaban punto
+de cambio,
 
 Validar los turnos de los empleados al hacer registros para que sean coeherentes no tener personal activo registrado en diferentes tablas con distintos turnos
 Osea que esten en el mismo turno en las tres tablas, que no suceda que por ejempplo en la tabla PC esta en el 2 y en la de NAD y la tabla personal_estacion en el turno 1
@@ -68,6 +68,11 @@ Agregar una restriccion para no poder registrar la asistencia si no se esta dent
 Falta agregar el filtro de turno a las consultas
 Mostrar datos por turno
 
+
+
+
+Al cerrar un punto de cambio me muestra la persona asignada en el otro turno
+Al asignar una persona a la estacion me muestra la inforacion de la persona que esta en el otro turno
 
 Al asignar a una persona que esta en la tabla de personal NAD a otra tabla como de PC, eliminarla de esta tabla o cambiar su estatus
 Hacer restricciones y validaciones correspondientes
@@ -78,6 +83,7 @@ Dar opcion de registrar a un operador sin punto de cambio o no si no existe la u
     -tal vez sea conveniente solo mostrar una alerta o un mensaje en rojo que indique la feha de ultina operacion en la estacion o si tiene registro de operacion en la estacion
 Y dejar otra opcion para que se puede finalizar y/o asignar al operador como titular de la estacion
 esto para al inicio cunado se empieza a registrar a todo el personaol 
+
 Agregar alguna alerta o etiqueta de warning para mostrar cuando el PC lleva ya 30 días
 mostrar en el el layout algun indicador si el trabajadore falto o asistio
 Para mostrar el estatus de la asistencia en la estacion del layout hay que comparar el personal de las estaciones con su registro de la tabla de asistencia y el estatus de registro de asistencia (1,2,3... etc)
@@ -93,6 +99,14 @@ Generar permisos de usuarios
 Generar usuarios
 Revisar que pasa con las personas cuando no estan trabajando en la estacion o faltan y tienen un punto de cambio
 Investigar que sucede con el punto de cambio si hay un cambio de turno
+--Preguntar si el nomero de control de punto de cambio es por linea y turno o solo por linea
+
+
+--En la consulta dopnde se valida que el trabajador no este registrado en otro turno, seria mejor que no ponga como filtro la linea y lo revise en general para todas las lineas
+
+El punto de cambio de maquionaria lo registran los de ingieneria
+El punto de cambio por mano de obra y metodo lo registra manufactura o el que hace el cambio del metodo
+El punto de cambio por materia prima lo registra el personal de materiales que segun yo son los de control de produccion como el molis 
 */
 
 /*
@@ -104,12 +118,18 @@ Investigar que sucede con el punto de cambio si hay un cambio de turno
     Falta validar que el empleado no este dado de baja 
     Revisar las condiciones de la consulta para el cambio de turno
 
+    Al remover una persona de una estacion, la quita de ambos turnos, de cualquier manera no deberia de haber una persona registrada en ambos turnos pero igual hauy que validar que solo se elimine del turno actual
+    al agregar una persona a una estacion en un turno diferente al turno actual el layout se actualiza como si se ubiera actualiozado o agregado en el turno actual
+    por ejemplo si estoy en el turno 2 y la agrege al turno 1 me lo muestra como si lo hubiera agregado en el turno 2, hasta despues de recargar la pagina es cuando se muestra como en realidad se registro, hay que corregir esto
+
+
 
     Lo priero es quitar las restricciones en la asignacion de los trabajadores a una estacion para que se puedan registrar varios trabajadores en una estacion
     ¿como mostraer los trabajadores en el layout, actualmente solo se puede mostrar uno? 
     ¿Tambien en el modal de gestion de la estion, esta echa para mostrar la informacion de un solo trabajador
 
     lo que pienso que se podria hacer mostrar a ambos trabajdores y mostrar al que esta en la estacion hasta despues de pasar la lista
+
 
 
     TNA TERMINAL NO ACENTADA
