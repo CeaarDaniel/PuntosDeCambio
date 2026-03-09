@@ -27,13 +27,14 @@
         </span>
       </button>
 
-      <!--CONSULTAR PUNTO DE CAMBIO -->
+      <!--CONSULTAR PUNTO DE CAMBIO 
       <button class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Punto de cambio">
         <span data-bs-toggle="modal" data-bs-target="#changePointsModal">
         <i class="bi bi-arrow-repeat"></i>
         <span>Cambio</span>
         </span>
       </button>
+      -->
 
       <!--REGISTRO DE ASISTENCIA -->
       <button id="btnMenuRegistroAs" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Registro de asistencia">
@@ -51,8 +52,9 @@
         </span>
       </button>
 
-      <!-- Botón para mostrar modal de error -->
+      <!-- Botón para mostrar modal de error 
       <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#errorModal">
         <i class="bi bi-exclamation-triangle-fill" style=""></i>
       </button>
+      -->
     </div>

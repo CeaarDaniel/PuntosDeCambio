@@ -2,7 +2,7 @@
     SISTEMA SAPC
     Agregar una seccion done el operaor realice una prueba para que este se libere o certifique en alguna operacion
     Validar certificaciones 
-    Registrar y Retirar certificacion 
+    Registrar y Retirar certificacion
 
     CONDICIONES
     El operador debe de estar certificado(ILU) o liberado en la operacion
@@ -17,7 +17,6 @@
           
           ¿Una persona puede estar en una estacion o puede estar en varias estaciones? Por lo que vi hoy parece que solo una persona
           solo puede operar en una estacion a la vez, a menos que los procesos esten combinados entonces una persona puede estar en varios procesos
-
 
         Registro del punto de cambio.
         Mejorar la manera en la que se le da seguimiento a los puntos de cambio (consulta, liberacion o finalizacion)
@@ -69,12 +68,8 @@ Falta agregar el filtro de turno a las consultas
 Mostrar datos por turno
 
 
-
-
-Al cerrar un punto de cambio me muestra la persona asignada en el otro turno
-Al asignar una persona a la estacion me muestra la inforacion de la persona que esta en el otro turno
-
 Al asignar a una persona que esta en la tabla de personal NAD a otra tabla como de PC, eliminarla de esta tabla o cambiar su estatus
+Se ha elimiado a esta persona del registro de todas las estaciones, ¿desea agregalo al listado de personal disponible o personal no asignado?)
 Hacer restricciones y validaciones correspondientes
 Revisar las consultas donde el json_decod manda un 'error'
 
@@ -89,7 +84,6 @@ mostrar en el el layout algun indicador si el trabajadore falto o asistio
 Para mostrar el estatus de la asistencia en la estacion del layout hay que comparar el personal de las estaciones con su registro de la tabla de asistencia y el estatus de registro de asistencia (1,2,3... etc)
 Agregar opcion para consultar el acomodo del layout guardado por dia o fecha
 Actualizar el campo de observaciones de la tabla de asistencia
-Se ha elimiado a esta persona del registro de todas las estaciones, ¿desea agregalo al listado de personal disponible o personal no asignado?)
 
 Modificar el codigo de la linea por un numero consecutivo
 Para hacer el cambio de turno podria solo registrar otro turno en la asignacion actual, o finalizar el registro actual y crear uno nuevo con los mismos y con el turno cambiado 
@@ -101,12 +95,25 @@ Revisar que pasa con las personas cuando no estan trabajando en la estacion o fa
 Investigar que sucede con el punto de cambio si hay un cambio de turno
 --Preguntar si el nomero de control de punto de cambio es por linea y turno o solo por linea
 
+Creo que los datos que se agregan a la variable de stationData al crear/agregar la estacion no coinciden con los datos que existen al acutalizar los datos  de las estaciones, 
 
 --En la consulta dopnde se valida que el trabajador no este registrado en otro turno, seria mejor que no ponga como filtro la linea y lo revise en general para todas las lineas
 
-El punto de cambio de maquionaria lo registran los de ingieneria
+El punto de cambio de maquinaria lo registran los de ingieneria
 El punto de cambio por mano de obra y metodo lo registra manufactura o el que hace el cambio del metodo
 El punto de cambio por materia prima lo registra el personal de materiales que segun yo son los de control de produccion como el molis 
+Creo que es posible que una persona que esta como disponible opere en alguna otra linea, hay que validar que el codigo permita hacer eso
+Hay que evaluar la logica de la opcion 19 en las operacionesLinea para tratar de encontrar algun posible error o falla en la logica del codigo
+Revisar la consulta 20
+
+Lo priero es quitar las restricciones en la asignacion de los trabajadores a una estacion para que se puedan registrar varios trabajadores en una estacion
+¿como mostraer los trabajadores en el layout, actualmente solo se puede mostrar uno? 
+¿Tambien en el modal de gestion de la estion, esta echa para mostrar la informacion de un solo trabajador
+
+lo que pienso que se podria hacer mostrar a ambos trabajdores y mostrar al que esta en la estacion hasta despues de pasar la lista
+En caso de hacer esto cambiaria los datos de el stationdata, la nomina seria un arreglo [] con las nominas de la persona registrada en la estacion
+
+verificar que el trabajador pueda registrarse en otro turno al registrarlo en otra linea
 */
 
 /*
@@ -119,17 +126,6 @@ El punto de cambio por materia prima lo registra el personal de materiales que s
     Revisar las condiciones de la consulta para el cambio de turno
 
     Al remover una persona de una estacion, la quita de ambos turnos, de cualquier manera no deberia de haber una persona registrada en ambos turnos pero igual hauy que validar que solo se elimine del turno actual
-    al agregar una persona a una estacion en un turno diferente al turno actual el layout se actualiza como si se ubiera actualiozado o agregado en el turno actual
-    por ejemplo si estoy en el turno 2 y la agrege al turno 1 me lo muestra como si lo hubiera agregado en el turno 2, hasta despues de recargar la pagina es cuando se muestra como en realidad se registro, hay que corregir esto
-
-
-
-    Lo priero es quitar las restricciones en la asignacion de los trabajadores a una estacion para que se puedan registrar varios trabajadores en una estacion
-    ¿como mostraer los trabajadores en el layout, actualmente solo se puede mostrar uno? 
-    ¿Tambien en el modal de gestion de la estion, esta echa para mostrar la informacion de un solo trabajador
-
-    lo que pienso que se podria hacer mostrar a ambos trabajdores y mostrar al que esta en la estacion hasta despues de pasar la lista
-
 
 
     TNA TERMINAL NO ACENTADA
@@ -141,12 +137,11 @@ El punto de cambio por materia prima lo registra el personal de materiales que s
     BUGGY
 
     SAE 
-    Es una oja que se usa cuando se quiere cambiar algun proceso, donde se debe de analisar todos los riesgos y beneficios que pouede 
+    Es una oja que se usa cuando se quiere cambiar algun proceso, donde se debe de analisar todos los riesgos y beneficios que pouede
     incluir dicho cambio para determinar si se implementa o no
 
 
     el viernes solo es medio turno, un turno copleto son 24hrs por lo que medio turno es de 12hrs osea solo el perimer turno de 8:00 am a 8:00pm trabajan
-
 
     hay lineas que cuando paran por mas de un minuto se deben de volver a liberar para liberar las lineas en las 
     estaciones los operadores deben de revisar una checklist donde estan los parametros y condiciones que deben 

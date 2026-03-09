@@ -120,12 +120,12 @@ else
                                      'name'=> $nombreEstacion, 
                                      'operator' => 'No asignado', 
                                      'status' => 'pending', 
+                                     'isCertificate' => $requiereC,
                                      'certification'=> $certificacion, 
                                      'x' => $x, 
                                      'y'=> $y, 
                                      'colorClass'=> 'station-color-7' ]
             ]);
-
         } catch (PDOException $e) {
             // Si ocurre algún error, revertir la transacción
             if ($conn->inTransaction()) {
@@ -1509,6 +1509,28 @@ else
 
             else 
                 $response = $stmt->errorInfo()[2];
+
+        echo json_encode($response);
+    }
+
+//Eliminar personal NAD
+else 
+    if($opcion == '21'){
+        $idRegistro = !empty($_POST['idRegistro']) ? $_POST['idRegistro'] : null;
+
+        $sql = "UPDATE SPC_PERSONAL_NAD SET fechaE = getDate(), eliminado = 1 WHERE id_registro = :idRegistro";        
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(':idRegistro', $idRegistro);
+
+        if($stmt->execute()){
+            $response = array('estatus' => 'ok',
+                              'mensaje' => 'Se ha eliminado el registro'
+                            );
+        }      
+
+        else 
+            $response = array('estatus' => 'error',
+                              'mensaje' => $stmt->errorInfo()[2]);
 
         echo json_encode($response);
     }

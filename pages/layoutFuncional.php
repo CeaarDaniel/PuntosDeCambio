@@ -1037,6 +1037,7 @@
                     </button>
                   </div>
 
+                <!--
                   <div class="col-7 col-sm-6 col-md-4 col-lg-2">
                     <button class="menu-btn" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de maquinaria">
                       <i class="bi bi-gear-fill"></i>
@@ -1056,7 +1057,8 @@
                       <i class="bi bi-diagram-3"></i>
                       <span>MÉTODO</span>
                     </button>
-                  </div>
+                  </div> 
+                -->
 
                   <div class="col-7 col-sm-6 col-md-4 col-lg-2">
                     <button class="menu-btn" id="btnInfoRPC" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Informacion del trabajador asignado">
@@ -1065,40 +1067,45 @@
                     </button>
                   </div>
 
-                  <div class="col-7 col-sm-6 col-md-4 col-lg-2">
-                    <button class="menu-btn danger" id="btnLiberarPC" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Liberar punto de cambio">
-                      <i class="bi bi-unlock"></i>
-                      <span>LIBERAR</span>
-                    </button>
-                  </div>
+                  
+                    <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                      <button class="menu-btn danger" id="btnLiberarPC" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Liberar punto de cambio">
+                        <i class="bi bi-unlock"></i>
+                        <span>LIBERAR</span>
+                      </button>
+                    </div>
 
-                <div class="col-7 col-sm-6 col-md-4 col-lg-2">
-                  <button class="menu-btn warning" id="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Mover trabajador de estacion">
-                    <i class="bi bi-arrow-left-right"></i>
-                    <span>Mover de estacion</span>
-                  </button>
-                </div>
+                <!--
 
-                <div class="col-7 col-sm-6 col-md-4 col-lg-2">
-                  <button class="menu-btn info" id="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Asignar un trabajador a esta estacion">
-                    <i class="bi bi-person-plus"></i>
-                    <span>Asignar</span>
-                  </button>
-                </div>
+                    <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                      <button class="menu-btn warning" id="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Mover trabajador de estacion">
+                        <i class="bi bi-arrow-left-right"></i>
+                        <span>Mover de estacion</span>
+                      </button>
+                    </div>
 
-                <div class="col-7 col-sm-6 col-md-4 col-lg-2">
-                  <button class="menu-btn" id="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Editar informacion de la estacion">
-                    <i class="bi bi-pencil-square"></i>
-                    <span>Editar</span>
-                  </button>
-                </div>
+                    <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                      <button class="menu-btn info" id="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Asignar un trabajador a esta estacion">
+                        <i class="bi bi-person-plus"></i>
+                        <span>Asignar</span>
+                      </button>
+                    </div>
 
-                <div class="col-7 col-sm-6 col-md-4 col-lg-2">
-                  <button class="menu-btn danger" id="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Eliminar">
-                    <i class="bi bi-trash"></i>
-                    <span>Eliminar</span>
-                  </button>
-                </div>
+                    <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                      <button class="menu-btn" id="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Editar informacion de la estacion">
+                        <i class="bi bi-pencil-square"></i>
+                        <span>Editar</span>
+                      </button>
+                    </div> 
+                
+
+                    <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                      <button class="menu-btn danger" id="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Eliminar">
+                        <i class="bi bi-trash"></i>
+                        <span>Eliminar</span>
+                      </button>
+                    </div>
+                -->
               </div>
             </div>
 
@@ -1391,23 +1398,24 @@
                               <textarea class="form-control form-control-custom" id="notasAdicionales" rows="3" placeholder="Agregue cualquier observación o comentario adicional sobre el cierre del control de cambio..."></textarea>
                             </div>
 
-                            <!--FIRMAS PARA EL CIERRE DEL PC -->
-                              <div class="row mt-4">
-                                <div class="col-md-6 mb-3">
-                                  <div class="signature-box">
-                                    <div class="signature-label">Firma de Utility/Líder</div>
-                                    <div class="signature-hint">Haga clic para firmar</div>
-                                    <i class="bi bi-pen text-muted mt-2"></i>
+                            <!--FIRMAS PARA EL CIERRE DEL PC 
+                                <div class="row mt-4">
+                                  <div class="col-md-6 mb-3">
+                                    <div class="signature-box">
+                                      <div class="signature-label">Firma de Utility/Líder</div>
+                                      <div class="signature-hint">Haga clic para firmar</div>
+                                      <i class="bi bi-pen text-muted mt-2"></i>
+                                    </div>
                                   </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                  <div class="signature-box">
-                                    <div class="signature-label">Firma de Supervisor</div>
-                                    <div class="signature-hint">Haga clic para firmar</div>
-                                    <i class="bi bi-pen text-muted mt-2"></i>
+                                  <div class="col-md-6 mb-3">
+                                    <div class="signature-box">
+                                      <div class="signature-label">Firma de Supervisor</div>
+                                      <div class="signature-hint">Haga clic para firmar</div>
+                                      <i class="bi bi-pen text-muted mt-2"></i>
+                                    </div>
                                   </div>
-                                </div>
-                              </div>
+                                </div> 
+                              -->
                         </form>
                       </div>
 

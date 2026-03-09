@@ -745,7 +745,7 @@
                                 </button>
                                 <button 
                                   class="btn btn-sm btn-outline-danger d-inline-flex align-items-center"
-                                  onclick="confirmarEliminar('107528')">
+                                  onclick="confirmarEliminar('${emp.id_registro}')">
                                    <i class="bi bi-trash me-1"></i>Borrar registro
                                 </button>
                               </div>
@@ -1114,6 +1114,36 @@
           $("#changeControlInfoTurno").text("NA");
           $("#changeControlInfoComentarios").text("SIN COMENTARIOS");
         }
+    }
+
+    //Eliminnar/finalizar registro de personal disponible
+    function confirmarEliminar(idRegistro){
+      let fromDataEliminar = new FormData();
+      fromDataEliminar.append('opcion', 21);
+      fromDataEliminar.append('idRegistro', idRegistro);
+
+      fetch("../api/operacionesLinea.php", {
+            method: "POST",
+            body: fromDataEliminar,
+        })
+        .then((response) => response.text())
+        .then((data) => {
+            data= JSON.parse(data)
+        
+            if(data.estatus=='ok'){
+                alert(data.mensaje);
+                mostrarTablaPNA();
+              }
+          
+            else{
+              alert(data.mensaje)
+              console.log(data); 
+            }
+        })
+        .catch((error) => {
+          alert('No fue posible eliminar el registro')
+          console.error(error);
+        });
     }
 
     // Inicializar el workspace
