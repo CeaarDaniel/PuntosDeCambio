@@ -705,6 +705,40 @@
       }
     }
 
+    //Registrar personal disponible sin formulario
+    function registrarDisponible(nomina, nombre, turno){
+      let formDataNoAsignado = new FormData
+      let fecha = (new Date()).toLocaleString('sv-SE').slice(0, 16)
+
+      formDataNoAsignado.append('nomina', nomina)
+      formDataNoAsignado.append('nombre', nombre)
+      formDataNoAsignado.append('turno', turno)
+      formDataNoAsignado.append('fechaR', fecha)
+      formDataNoAsignado.append('codigoLinea',  codigoLinea.value)
+      formDataNoAsignado.append('opcion', 8)
+        
+          fetch("../api/operacionesLinea.php", {
+                method: "POST",
+                body: formDataNoAsignado,
+            })
+            .then((response) => response.text())
+            .then((data) => {
+                  data= JSON.parse(data)
+
+                  if(data.estatus=='ok'){
+                      console.log('Se ha registrado al trabajador')
+                      mostrarTablaPNA();
+                  }
+              
+                    else{
+                        console.log(data);
+                    }
+            })
+            .catch((error) => {
+              console.log(error);
+        });
+    }
+
     //Generar tabla con los datos de la tabla de personal no asignado
     function mostrarTablaPNA(){
           let formDataNoAsignadoL = new FormData 
@@ -909,7 +943,7 @@
           })
             .then(response => response.text())
             .then(data => {
-              console.log(data)
+              //console.log(data)
               data = JSON.parse(data)
               if(data.estatus && data.estatus == 'ok'){
                   alert(data.mensaje);
@@ -1065,7 +1099,7 @@
 
                   else{
                     alert(data.mensaje);
-                    console.log(data.error)
+                    console.log(data)
                   }
             }).catch((error) => {
               console.log(error);
@@ -1298,11 +1332,13 @@
           let idPC = document.getElementById('idPC');
           let estacionId = document.getElementById('idEstacionModalPC').value;
           let nominaTrabajador = document.getElementById('idTrabajadorAsignado').value; 
+          let nombreTrabajador = $("#changeControlInfoNombre").text()
+          let turno = $('#turnoLayout').val()
 
             formDataReniver.append("opcion", "10");
             formDataReniver.append("idEstacion", estacionId);
             formDataReniver.append("nomina", nominaTrabajador);
-            formDataReniver.append("turno", $('#turnoLayout').val());
+            formDataReniver.append("turno", turno);
 
           if(idPC.value){
               alert('Debe finalizar el punto de cambio activo');
@@ -1320,14 +1356,18 @@
                     })
                     .then((response) => response.text())
                     .then((data) => {
-                    
                         data = JSON.parse(data)
                           if(data.estatus=='ok'){
                               alert(data.mensaje);  
                                let modalActual = bootstrap.Modal.getInstance(document.getElementById('changeControlModal'));
                               (modalActual) ? modalActual.hide() : '';
-
                               getEstacion(estacionId)
+
+
+                              if(data.asignacion==0){
+                                 let registrar = confirm('¿Desea agregar a esta persona al personal disponible?');
+                                    if(registrar) registrarDisponible(nominaTrabajador, nombreTrabajador, $('#turnoLayout').val())
+                              }
                             }
 
                             else 
@@ -1335,7 +1375,7 @@
                     })
                     .catch((error) => {
                       console.log(error);
-                });
+                    });
         })
 
         //Actualizar informacion de la linea
@@ -1424,12 +1464,14 @@
             }); 
         });
 
-        //funcion para cerrar el punto de cambio
+        //funcion para cerrar e lpunto de cambio
         btnConfirmClose.addEventListener('click', function(){
             let formDataCerrarPC = new FormData;
             let idPC = document.getElementById('idPC');
             let idEstacion = document.getElementById('idEstacionModalPC').value;
             let cierreControlCambioForm = document.getElementById('cierreControlCambioForm')
+            let nominaAPC = document.getElementById('idTrabajadorAsignado')
+            let nombreTrabajador = $("#changeControlInfoNombre").text()
 
             if(!idPC.value){
                 alert('No hay un punto de cambio activo en esta estación');
@@ -1443,6 +1485,7 @@
             formDataCerrarPC.append('idPC', idPC.value);
             formDataCerrarPC.append('notasAdicionales', document.getElementById('notasAdicionales').value);
             formDataCerrarPC.append('fechaCierre', document.getElementById('fechaCierre').value); 
+            formDataCerrarPC.append('nomina', nominaAPC.value)
 
               fetch("../api/operacionesLinea.php", {
                       method: "POST",
@@ -1450,23 +1493,26 @@
                   })
                   .then((response) => response.text())
                   .then((data) => {
-                    console.log(data);
+              
                       data= JSON.parse(data)
-                      if(data.estatus=='ok'){ 
+                      if(data.estatus=='ok'){
                           alert(data.mensaje);
-
                           let modalActual = bootstrap.Modal.getInstance(document.getElementById('changeControlModal'));
                           (modalActual) ? modalActual.hide() : '';
 
                           //Actualizar informacion de la estacion
                           getEstacion(idEstacion);
-                      }
+                            if(data.asignacion==0){
+                              let registrar = confirm('¿Desea agregar a esta persona al personal disponible?');
+                              if(registrar) registrarDisponible(nominaAPC.value, nombreTrabajador, $('#turnoLayout').val());
+                            }
+                        }
 
-                        else  alert(data.mensaje);
+                      else  alert(data.mensaje);
 
-                        }).catch((error) => {
-                          console.log(error);
-                });
+                  }).catch((error) => {
+                      console.log(error);
+              });
         })
 
         //Detectar cuando se abra el modal de asignar estacion
@@ -1550,6 +1596,9 @@
             }
         })
     });
+
+
+
 /* 
     seleccionadosGlobal = datosAsistenciaCheck 
     Esto es un error ya que en vez de generar un nuevo arreglo asignado a la variable seleccionadosGlobal 
@@ -1559,7 +1608,6 @@
 
 
 TABLERO DE ENSAMBLES Y ENSAMBLES DE PARTES SON LO MISMO
-
 CRV
 CORTE CABLE 	                      CRV-CORTE
 RE-CORTE	                          CRV-RECORTE

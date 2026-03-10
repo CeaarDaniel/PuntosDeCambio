@@ -47,9 +47,30 @@
 */  
 
 /*
+Creo que los datos que se agregan a la variable de stationData al crear/agregar la estacion no coinciden con los datos que existen al acutalizar los datos de las estaciones,
+Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
+Al asignar al operador mostrar un listado de las personas asignadas en la estacion similar al listado de estaciones de la persona
+Hacer restricciones y validaciones correspondientes
+Agregar alguna alerta o etiqueta de warning para mostrar cuando el PC lleva ya 30 días o solo mostrar el tiempo de duracion del PC
+mostrar en el el layout algun indicador si el trabajadore falto o asistio hay que comparar el personal de las estaciones con su registro de la tabla de asistencia y el estatus de registro de asistencia (1,2,3... etc)
+Agregar opcion para consultar el acomodo del layout guardado por dia o fecha
+Actualizar el campo de observaciones de la tabla de asistencia
+Modificar el codigo de la linea por un numero consecutivo
+Para hacer el cambio de turno podria solo registrar otro turno en la asignacion actual, o finalizar el registro actual y crear uno nuevo con los mismos y con el turno cambiado 
+Hacer el contenido responsivo
+Pruebas
+Generar permisos de usuarios
+Generar usuarios
+Revisar que pasa con las personas cuando no estan trabajando en la estacion o faltan y tienen un punto de cambio (Se cancela si falta dos dias seguidos)
+Investigar que sucede con el punto de cambio si hay un cambio de turno
+--Preguntar si el nomero de control de punto de cambio es por linea y turno o solo por linea 
+En la consulta donde se valida que el trabajador no este registrado en otro turno, seria mejor que no ponga como filtro la linea y lo revise en general para todas las lineas
+Hay que evaluar la logica de la opcion 19 en las operacionesLinea para tratar de encontrar algun posible error o falla en la logica del codigo
+verificar que el trabajador no pueda registrarse en otro turno al registrarlo en otra linea
 
-Revisar que la variable stationsData se actualice al hacer cualquier cambio en el layout
-Reviasr los valores enviados y recibidos de la variabla layoputData o en el json que lista las estaciones
+En el procesos de agregar o eliminar personal a la tabla pNAD al finalizar o registramr un PC puede que de problemas si la persona es prestada 
+de otra linea, al finalizar el registro preguntar si se quiere registrar al personal_nad de la linea actual y no de la linea de la que se presto
+podria poner una condicion para que solo se elimine de la tabla personal_nad si el registro o asignacion o PC se dentro de la misma linea
 
 Al parecer hay algo que llaman los desplazados, todos los dias descansan 5 personas por lo que esto hace que deban de poder estar mas de una persona asignadas
 a la estacion.
@@ -61,59 +82,22 @@ ya que por lo que vi en la linea la mayoria de los puntos de cabio serian inespe
 o se preste a alguna otra linea o le presten a la linea un operador que viene de otra, que como tal no es un punto de cambio, pero en el sistema anterior a eso es a lo que llamaban punto
 de cambio,
 
-Validar los turnos de los empleados al hacer registros para que sean coeherentes no tener personal activo registrado en diferentes tablas con distintos turnos
-Osea que esten en el mismo turno en las tres tablas, que no suceda que por ejempplo en la tabla PC esta en el 2 y en la de NAD y la tabla personal_estacion en el turno 1
-Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
-Falta agregar el filtro de turno a las consultas
-Mostrar datos por turno
-
+agregar un boton para incertar un registro individual en la tabla de asistencia despues de haver registrado la asistenia en caso de que halla faltado algun valor 
+ya que puede haber problema si les falto removoer algun registro del día anterior, como por ejemplo que no hayan cargado el personal disponible, o no hallan cerrado algun punto de cambio
+y por lo tanto no se haya cargado el trabajador como disponible
 
 Al asignar a una persona que esta en la tabla de personal NAD a otra tabla como de PC, eliminarla de esta tabla o cambiar su estatus
 Se ha elimiado a esta persona del registro de todas las estaciones, ¿desea agregalo al listado de personal disponible o personal no asignado?)
-Hacer restricciones y validaciones correspondientes
-Revisar las consultas donde el json_decod manda un 'error'
 
-Al asignar al operador mostrar un listado de las personas asignadas en la estacion similar al listado de estaciones de la persona
 Dar opcion de registrar a un operador sin punto de cambio o no si no existe la ultima fecha de operacion en la linea
     -tal vez sea conveniente solo mostrar una alerta o un mensaje en rojo que indique la feha de ultina operacion en la estacion o si tiene registro de operacion en la estacion
-Y dejar otra opcion para que se puede finalizar y/o asignar al operador como titular de la estacion
-esto para al inicio cunado se empieza a registrar a todo el personaol 
+Y dejar otra opcion para que se puede finalizar y/o asignar al operador como titular de la estacion esto para al inicio cunado se empieza a registrar a todo el personaol 
 
-Agregar alguna alerta o etiqueta de warning para mostrar cuando el PC lleva ya 30 días
-mostrar en el el layout algun indicador si el trabajadore falto o asistio
-Para mostrar el estatus de la asistencia en la estacion del layout hay que comparar el personal de las estaciones con su registro de la tabla de asistencia y el estatus de registro de asistencia (1,2,3... etc)
-Agregar opcion para consultar el acomodo del layout guardado por dia o fecha
-Actualizar el campo de observaciones de la tabla de asistencia
-
-Modificar el codigo de la linea por un numero consecutivo
-Para hacer el cambio de turno podria solo registrar otro turno en la asignacion actual, o finalizar el registro actual y crear uno nuevo con los mismos y con el turno cambiado 
-Hacer el contenido responsivo
-Pruebas
-Generar permisos de usuarios
-Generar usuarios
-Revisar que pasa con las personas cuando no estan trabajando en la estacion o faltan y tienen un punto de cambio
-Investigar que sucede con el punto de cambio si hay un cambio de turno
---Preguntar si el nomero de control de punto de cambio es por linea y turno o solo por linea
-
-Creo que los datos que se agregan a la variable de stationData al crear/agregar la estacion no coinciden con los datos que existen al acutalizar los datos  de las estaciones, 
-
---En la consulta dopnde se valida que el trabajador no este registrado en otro turno, seria mejor que no ponga como filtro la linea y lo revise en general para todas las lineas
-
-El punto de cambio de maquinaria lo registran los de ingieneria
-El punto de cambio por mano de obra y metodo lo registra manufactura o el que hace el cambio del metodo
-El punto de cambio por materia prima lo registra el personal de materiales que segun yo son los de control de produccion como el molis 
-Creo que es posible que una persona que esta como disponible opere en alguna otra linea, hay que validar que el codigo permita hacer eso
-Hay que evaluar la logica de la opcion 19 en las operacionesLinea para tratar de encontrar algun posible error o falla en la logica del codigo
-Revisar la consulta 20
-
-Lo priero es quitar las restricciones en la asignacion de los trabajadores a una estacion para que se puedan registrar varios trabajadores en una estacion
+Quitar las restricciones en la asignacion de los trabajadores a una estacion para que se puedan registrar varios trabajadores en una estacion
 ¿como mostraer los trabajadores en el layout, actualmente solo se puede mostrar uno? 
 ¿Tambien en el modal de gestion de la estion, esta echa para mostrar la informacion de un solo trabajador
-
 lo que pienso que se podria hacer mostrar a ambos trabajdores y mostrar al que esta en la estacion hasta despues de pasar la lista
 En caso de hacer esto cambiaria los datos de el stationdata, la nomina seria un arreglo [] con las nominas de la persona registrada en la estacion
-
-verificar que el trabajador pueda registrarse en otro turno al registrarlo en otra linea
 */
 
 /*
@@ -124,9 +108,13 @@ verificar que el trabajador pueda registrarse en otro turno al registrarlo en ot
     No limpiar todos los campos de los formularios solo los que son ingresados por el usuario
     Falta validar que el empleado no este dado de baja 
     Revisar las condiciones de la consulta para el cambio de turno
-
+    Validar los turnos de los empleados al hacer registros para que sean coeherentes no tener personal activo registrado en diferentes tablas con distintos turnos
+    Osea que esten en el mismo turno en las tres tablas, que no suceda que por ejempplo en la tabla PC esta en el 2 y en la de NAD y la tabla personal_estacion en el turno 1
     Al remover una persona de una estacion, la quita de ambos turnos, de cualquier manera no deberia de haber una persona registrada en ambos turnos pero igual hauy que validar que solo se elimine del turno actual
-
+    Falta agregar el filtro de turno a las consultas
+    Mostrar datos por turno
+    Revisar las consultas donde el json_decod manda un 'error'
+    Revisar que la variable stationsData se actualice al hacer cualquier cambio en el layout
 
     TNA TERMINAL NO ACENTADA
     FALTA DE RECINA
@@ -140,13 +128,16 @@ verificar que el trabajador pueda registrarse en otro turno al registrarlo en ot
     Es una oja que se usa cuando se quiere cambiar algun proceso, donde se debe de analisar todos los riesgos y beneficios que pouede
     incluir dicho cambio para determinar si se implementa o no
 
-
+    En moldeo de cabezal ocurrio un problema ya que se veia opaca la pieza que estaba saliendo,
     el viernes solo es medio turno, un turno copleto son 24hrs por lo que medio turno es de 12hrs osea solo el perimer turno de 8:00 am a 8:00pm trabajan
 
     hay lineas que cuando paran por mas de un minuto se deben de volver a liberar para liberar las lineas en las 
     estaciones los operadores deben de revisar una checklist donde estan los parametros y condiciones que deben 
     de tener las estaciones antes de arrancar o de comnezar con la operacion 
-    
+
+    El punto de cambio de maquinaria lo registran los de ingieneria
+    El punto de cambio por mano de obra y metodo lo registra manufactura o el que hace el cambio del metodo
+    El punto de cambio por materia prima lo registra el personal de materiales que segun yo son los de control de produccion como el molis     
     
     Que significa Passport? Creo que es el nombre de un modelo o parte de un arness
 
