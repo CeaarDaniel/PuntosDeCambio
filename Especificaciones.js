@@ -139,8 +139,12 @@ En caso de hacer esto cambiaria los datos de el stationdata, la nomina seria un 
     El punto de cambio por mano de obra y metodo lo registra manufactura o el que hace el cambio del metodo
     El punto de cambio por materia prima lo registra el personal de materiales que segun yo son los de control de produccion como el molis     
     
-    Que significa Passport? Creo que es el nombre de un modelo o parte de un arness
-
+    Que significa Passport Creo que es el nombre de un modelo o parte de un arness
+    Al parecer en las HOE de las estaciones tienen o deberian de tener la informacion de los defectos que puede haber en la estacion o en el proceso
+    pero parece ser que estas hojas no estan actualizadas, los tipos de defectos que existen los tienen el personal de capacitacion, tienen un muestrario
+    con las piezas en fisico con los defectos que se pueden generar por porcesos, y en su presentaciones de las capacitaciones tienen esta 
+    informacion 
+    
     Mejora
     Llenar o abastecer el material de las lineas cuando llegue a cierto porcentaje de cantedidad pero sin llegar a 0
 */

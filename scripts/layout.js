@@ -294,7 +294,7 @@
             })
             .catch((error) => {
                console.log(error);
-        });
+          });
     }
 
     // Configurar controles de zoom y cuadrícula
@@ -948,6 +948,10 @@
               if(data.estatus && data.estatus == 'ok'){
                   alert(data.mensaje);
                   generarTablaAsistencia();
+              }
+
+              else if (data.estatus && data.estatus == 'error'){
+                  alert(data.mensaje)
               }
 
               else {

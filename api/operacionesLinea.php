@@ -1401,6 +1401,43 @@ else
                 exit;
             }
 
+            // Validar horario según turno
+            $hora_actual = new DateTime();
+            $turno = $_POST['turno'] ?? null;
+
+                if ($turno == '1') {
+                    $inicio_turno = new DateTime('today 08:00');
+                    $fin_turno = new DateTime('today 19:59');
+                    if ($hora_actual < $inicio_turno || $hora_actual > $fin_turno) {
+                        echo json_encode([
+                            'estatus' => 'error',
+                            'mensaje' => 'El registro de asistencia para el Turno 1 solo puede realizarse entre las 8:00 AM y las 7:59 PM.'
+                        ]);
+                        exit;
+                    }
+                } 
+
+                else 
+                    if ($turno == '2') {
+                    $inicio_turno = new DateTime('today 20:00');
+                    $fin_turno = new DateTime('tomorrow 07:59');
+                    if ($hora_actual < $inicio_turno || $hora_actual > $fin_turno) {
+                        echo json_encode([
+                            'estatus' => 'error',
+                            'mensaje' => 'El registro de asistencia para el Turno 2 solo puede realizarse entre las 8:00 PM y las 7:59 AM del día siguiente.'
+                        ]);
+                        exit;
+                    }
+                } 
+                
+                else {
+                    echo json_encode([
+                        'estatus' => 'error',
+                        'mensaje' => 'Turno no válido.'
+                    ]);
+                    exit;
+                }
+
         try {
             $conn->beginTransaction();
             $sql = "INSERT INTO SPC_REGISTRO_ASISTENCIA (nomina, nombre, estatus, codigo_linea, turno, id_estacion, nombres_estaciones) 
