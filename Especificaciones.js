@@ -47,7 +47,6 @@
 */  
 
 /*
-Creo que los datos que se agregan a la variable de stationData al crear/agregar la estacion no coinciden con los datos que existen al acutalizar los datos de las estaciones,
 Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
 Al asignar al operador mostrar un listado de las personas asignadas en la estacion similar al listado de estaciones de la persona
 Hacer restricciones y validaciones correspondientes
@@ -56,17 +55,22 @@ mostrar en el el layout algun indicador si el trabajadore falto o asistio hay qu
 Agregar opcion para consultar el acomodo del layout guardado por dia o fecha
 Actualizar el campo de observaciones de la tabla de asistencia
 Modificar el codigo de la linea por un numero consecutivo
-Para hacer el cambio de turno podria solo registrar otro turno en la asignacion actual, o finalizar el registro actual y crear uno nuevo con los mismos y con el turno cambiado 
+Para hacer el cambio de turno podria solo registrar otro turno en la asignacion actual, o finalizar el registro actual y crear uno nuevo con los mismos y con el turno cambiado
 Hacer el contenido responsivo
 Pruebas
 Generar permisos de usuarios
 Generar usuarios
-Revisar que pasa con las personas cuando no estan trabajando en la estacion o faltan y tienen un punto de cambio (Se cancela si falta dos dias seguidos)
 Investigar que sucede con el punto de cambio si hay un cambio de turno
 --Preguntar si el nomero de control de punto de cambio es por linea y turno o solo por linea 
 En la consulta donde se valida que el trabajador no este registrado en otro turno, seria mejor que no ponga como filtro la linea y lo revise en general para todas las lineas
 Hay que evaluar la logica de la opcion 19 en las operacionesLinea para tratar de encontrar algun posible error o falla en la logica del codigo
 verificar que el trabajador no pueda registrarse en otro turno al registrarlo en otra linea
+Creo que los datos que se agregan a la variable de stationData al crear/agregar la estacion no coinciden con los datos que existen al acutalizar los datos de las estaciones,
+Revisar que sucede cuando la fecha de asignacion no es en la fecha actual sino que es antes o despues de la fecha actual
+descomentar el codigo en el registro de punto de cambio para registro de PNAD
+
+Revisar que pasa con las personas cuando no estan trabajando en la estacion o faltan y tienen un punto de cambio 
+(Se cancela si falta dos dias seguidos)
 
 En el procesos de agregar o eliminar personal a la tabla pNAD al finalizar o registramr un PC puede que de problemas si la persona es prestada 
 de otra linea, al finalizar el registro preguntar si se quiere registrar al personal_nad de la linea actual y no de la linea de la que se presto

@@ -374,43 +374,114 @@ else
   if($opcion=='5'){
       $codigoLinea = $_POST['codigoLinea'];
       $turno = $_POST['turno'];
-
+      $ahora = new DateTime();
+      $inicio;
+      $fin;
       //AGREGAR FILTROS DE TURNO
         // Preparar la sentencia con parámetros
-        $sql= "SELECT E.id_estacion, E.nombre_estacion, E.requiere_certificacion AS isCertificate,
-                CASE WHEN PC.nomina IS NULL THEN EP.nomina
-                    ELSE PC.nomina
-                END AS nomina, 
-                CASE  WHEN PC.nombre IS NULL THEN EP.nombre
-                    ELSE PC.nombre 
-                END AS nombre, E.codigo_linea, E.codigo_certificacion, E.posicion_x, E.posicion_y, PC.estatusPC, PC.idPC
-                                    FROM SPC_ESTACIONES E 
-            LEFT JOIN (SELECT id_estacion, nomina, nombre from SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL AND turno = :turno1) AS EP ON E.id_estacion = EP.id_estacion
-            LEFT JOIN (select idPC, id_estacion, nomina, nombre, estatusPC from SPC_PUNTOS_CAMBIO where fechaHora_fin IS NULL AND turno = :turno2) AS PC on E.id_estacion = PC.id_estacion
-        WHERE E.codigo_linea= :codigoLinea";
+       
+       /*
+            $sql= "SELECT E.id_estacion, E.nombre_estacion, E.requiere_certificacion AS isCertificate,
+                    CASE WHEN PC.nomina IS NULL THEN EP.nomina
+                        ELSE PC.nomina
+                    END AS nomina, 
+                    CASE  WHEN PC.nombre IS NULL THEN EP.nombre
+                        ELSE PC.nombre 
+                    END AS nombre, E.codigo_linea, E.codigo_certificacion, E.posicion_x, E.posicion_y, PC.estatusPC, PC.idPC
+                                        FROM SPC_ESTACIONES E 
+                LEFT JOIN (SELECT id_estacion, nomina, nombre from SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL AND turno = :turno1) AS EP ON E.id_estacion = EP.id_estacion
+                LEFT JOIN (select idPC, id_estacion, nomina, nombre, estatusPC from SPC_PUNTOS_CAMBIO where fechaHora_fin IS NULL AND turno = :turno2) AS PC on E.id_estacion = PC.id_estacion
+            WHERE E.codigo_linea= :codigoLinea";
+    */
+
+        //Verificar si ya existe un registro de asistencia
+            //Turno 1
+            if($turno == '1'){
+                $inicio = new DateTime('today 08:00');
+                $fin    = new DateTime('today 19:59');
+            }
+
+            //Turno 2
+            else
+                if ($turno == '2') {
+                    if ($ahora >= new DateTime('today 20:00')) { // Después de las 8 pm
+                        $inicio = new DateTime('today 20:00');
+                        $fin    = new DateTime('tomorrow 07:59');
+                    } 
+                    
+                    else { // Antes de las 8 pm
+                        $inicio = new DateTime('yesterday 20:00');
+                        $fin    = new DateTime('today 07:59');
+                    } //Despues de la 8 de la noche la fecha de inicio es hoy 8:00 pm fecha de fin mañana 8:00 am
+                    //Antes de 8 de la noche la fecha de inicio es ayer 8:00 pm y la fecha de fin hoy 8:00 am 
+                }
+            
+            else {
+                    echo json_encode(['estatus' => 'error',
+                                      'mensaje' => 'Turno no valido'
+                                    ]);
+                    exit; 
+            }
+
+        $sql= "SELECT E.id_estacion,  E.nombre_estacion, E.requiere_certificacion AS isCertificate,
+                        CASE WHEN PC.nomina IS NULL THEN EP.nomina ELSE PC.nomina END AS nomina,
+                        CASE WHEN PC.nombre IS NULL THEN EP.nombre ELSE PC.nombre END AS nombre,
+                        CASE  WHEN PC.nomina IS NULL THEN EP.fecha_asignacion ELSE PC.fechaHora_inicio END AS fecha_asignacion,
+                        E.codigo_linea, E.codigo_certificacion,  E.posicion_x,  E.posicion_y,  PC.estatusPC,  PC.idPC, A.estatus AS asistencia
+                    FROM SPC_ESTACIONES E
+                        LEFT JOIN ( SELECT id_estacion, nomina, nombre, fecha_asignacion  FROM SPC_PERSONAL_ESTACION  WHERE fecha_fin IS NULL AND turno = :turno ) AS EP ON E.id_estacion = EP.id_estacion
+                        LEFT JOIN ( SELECT idPC, id_estacion, nomina, nombre, estatusPC, fechaHora_inicio FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND turno = :turno) AS PC ON E.id_estacion = PC.id_estacion
+                        LEFT JOIN ( SELECT nomina, estatus FROM SPC_REGISTRO_ASISTENCIA WHERE turno = :turno AND fecha_operacion >= :fecha_inicio AND fecha_operacion < :fecha_fin) AS A ON A.nomina = COALESCE(PC.nomina, EP.nomina)
+                WHERE E.codigo_linea = :codigoLinea";
 
         $stmt = $conn->prepare($sql);
         $response= array();
 
+        $fechaInicio = $inicio->format('Y-m-d H:i:s');
+        $fechaFin    = $fin->format('Y-m-d H:i:s');
+
+
         // Ejecutar con los parámetros
-        if($stmt->execute([':codigoLinea' => $codigoLinea, ':turno1' => $turno, ':turno2' => $turno
-                           ]))
-        {
+        if($stmt->execute([':codigoLinea' => $codigoLinea, ':turno' => $turno, ':fecha_inicio' => $fechaInicio, ':fecha_fin' => $fechaFin])){
             while($estacion= $stmt->fetch(PDO::FETCH_ASSOC)){
+
+
                 if($estacion['estatusPC'] == '1') 
                     $coloClass = 'station-color-2'; 
 
                 else  
                     if(!empty($estacion['nomina'])) $coloClass = 'station-color-1';
                 
-                else $coloClass = 'station-color-7';  
-            
+                else $coloClass = 'station-color-7';
+
+                //Estatus de asistencia
+                    $asistencia = '';
+
+                    if(empty($estacion['nomina'])){
+                        $asistencia = 'pending';
+                    }
+
+                    else 
+                      if(!empty($estacion['asistencia'])){
+                         $asistencia = ($estacion['asistencia'] == '1' || $estacion['asistencia'] == '8') ? 'occupied' : 'absent';
+                        }
+
+                    else 
+                        if(empty($estacion['asistencia'])){
+                            $fechaAsignacion = new DateTime($estacion['fecha_asignacion']);
+
+                            if($fechaAsignacion >= $inicio && $fechaAsignacion <= $fin) {
+                                $asistencia = 'occupied';
+                            } else {
+                                $asistencia = 'absent';
+                            }
+                        }
 
                 $response[] = array( 'id' => $estacion['id_estacion'],
                                      'nomina' => $estacion['nomina'],
                                      'name' => $estacion['nombre_estacion'], 
                                      'operator' =>  !empty($estacion['nomina']) ? $estacion['nombre'] : '',  
-                                     'status' => !empty($estacion['nomina']) ? 'occupied' : 'pending', //pending: sin asignar, occupied: operador asignado
+                                     'status' => $asistencia, //pending: sin asignar, occupied: operador asignado
                                      'certification' => $estacion['codigo_certificacion'], 
                                      'x' => $estacion['posicion_x'],
                                      'y' => $estacion['posicion_y'] ,
@@ -1254,6 +1325,36 @@ else
     if($opcion=='15'){
         $idEstacion = !empty($_POST['idEstacion']) ? $_POST['idEstacion'] : null;
         $turno = !empty($_POST['turno']) ? $_POST['turno'] : null;
+        $ahora = new DateTime();
+
+        //Verificar si ya existe un registro de asistencia
+            //Turno 1
+            if($turno == '1'){
+                $inicio = new DateTime('today 08:00');
+                $fin    = new DateTime('today 19:59');
+            }
+
+            //Turno 2
+            else
+                if ($turno == '2') {
+                    if ($ahora >= new DateTime('today 20:00')) { // Después de las 8 pm
+                        $inicio = new DateTime('today 20:00');
+                        $fin    = new DateTime('tomorrow 07:59');
+                    } 
+                    
+                    else { // Antes de las 8 pm
+                        $inicio = new DateTime('yesterday 20:00');
+                        $fin    = new DateTime('today 07:59');
+                    } //Despues de la 8 de la noche la fecha de inicio es hoy 8:00 pm fecha de fin mañana 8:00 am
+                    //Antes de 8 de la noche la fecha de inicio es ayer 8:00 pm y la fecha de fin hoy 8:00 am 
+                }
+            
+            else {
+                    echo json_encode(['estatus' => 'error',
+                                      'mensaje' => 'Turno no valido'
+                                    ]);
+                    exit; 
+            }
 
         // Validar que se recibieron todos los datos
         if (!$idEstacion) {
@@ -1264,24 +1365,24 @@ else
 
         // Preparar la sentencia con parámetros
         $sql= "SELECT E.id_estacion, E.nombre_estacion, E.requiere_certificacion AS isCertificate,
-                        CASE WHEN PC.nomina IS NULL THEN EP.nomina
-                            ELSE PC.nomina
-                        END AS nomina, 
-                        CASE  WHEN PC.nombre IS NULL THEN EP.nombre
-                            ELSE PC.nombre 
-                        END AS nombre, E.codigo_linea, E.codigo_certificacion, E.posicion_x, E.posicion_y, PC.estatusPC, PC.idPC
+                        CASE WHEN PC.nomina IS NULL THEN EP.nomina ELSE PC.nomina END AS nomina, 
+                        CASE WHEN PC.nombre IS NULL THEN EP.nombre ELSE PC.nombre END AS nombre,
+                        CASE WHEN PC.nomina IS NULL THEN EP.fecha_asignacion ELSE PC.fechaHora_inicio END AS fecha_asignacion,
+                        E.codigo_linea, E.codigo_certificacion, PC.estatusPC, PC.idPC, A.estatus AS asistencia
                                             FROM SPC_ESTACIONES E 
-                    LEFT JOIN (SELECT id_estacion, nomina, nombre from SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL AND turno = :turno1) AS EP ON E.id_estacion = EP.id_estacion
-                    LEFT JOIN (select idPC, id_estacion, nomina, nombre, estatusPC from SPC_PUNTOS_CAMBIO where fechaHora_fin IS NULL AND turno = :turno2) AS PC on E.id_estacion = PC.id_estacion
+                    LEFT JOIN (SELECT id_estacion, nomina, nombre, fecha_asignacion from SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL AND turno = :turno) AS EP ON E.id_estacion = EP.id_estacion
+                    LEFT JOIN (SELECT idPC, id_estacion, nomina, nombre, estatusPC, fechaHora_inicio from SPC_PUNTOS_CAMBIO where fechaHora_fin IS NULL AND turno = :turno) AS PC on E.id_estacion = PC.id_estacion
+                    LEFT JOIN (SELECT nomina, estatus FROM SPC_REGISTRO_ASISTENCIA WHERE turno = :turno AND fecha_operacion >= :fecha_inicio AND fecha_operacion < :fecha_fin) AS A ON A.nomina = COALESCE(PC.nomina, EP.nomina)
                 WHERE E.id_estacion = :idEstacion";
 
         $stmt = $conn->prepare($sql);
         $response= array();
 
+        $fechaInicio = $inicio->format('Y-m-d H:i:s');
+        $fechaFin    = $fin->format('Y-m-d H:i:s');
+
         // Ejecutar con los parámetros
-        if($stmt->execute([':idEstacion' => $idEstacion,
-                           ':turno1' => $turno,
-                           ':turno2' => $turno,
+        if($stmt->execute([':idEstacion' => $idEstacion, ':turno' => $turno, ':fecha_inicio' => $fechaInicio, ':fecha_fin' => $fechaFin
                          ]))
         {
             if($estacion= $stmt->fetch(PDO::FETCH_ASSOC)){
@@ -1294,12 +1395,38 @@ else
             
             else $coloClass = 'station-color-7';  
 
+
+
+            //Estatus de asistencia
+                $asistencia = '';
+
+                if(empty($estacion['nomina'])){
+                    $asistencia = 'pending';
+                }
+
+                else 
+                    if(!empty($estacion['asistencia'])){
+                        $asistencia = ($estacion['asistencia'] == '1' || $estacion['asistencia'] == '8') ? 'occupied' : 'absent';
+                    }
+
+                else 
+                    if(empty($estacion['asistencia'])){
+                        $fechaAsignacion = new DateTime($estacion['fecha_asignacion']);
+
+                        if($fechaAsignacion >= $inicio && $fechaAsignacion <= $fin) {
+                            $asistencia = 'occupied';
+                        } else {
+                            $asistencia = 'absent';
+                        }
+                    }
+
+
                 $response = array ( 'estatus' => 'ok',
                                     'estacion' => array('id' => $estacion['id_estacion'],
                                                         'nomina' => $estacion['nomina'],
                                                         'name' => $estacion['nombre_estacion'], 
                                                         'operator' =>  !empty($estacion['nomina']) ? $estacion['nombre'] : '',  
-                                                        'status' => !empty($estacion['nomina']) ? 'occupied' : 'pending', //pending: sin asignar, occupied: operador asignado
+                                                        'status' => $asistencia, //pending: sin asignar, occupied: operador asignado
                                                         'certification' => $estacion['codigo_certificacion'],
                                                         'idPC' => $estacion['idPC'],
                                                         'colorClass' => $coloClass,

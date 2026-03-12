@@ -1026,6 +1026,7 @@
         <!-- Body del Modal -->
         <div class="modal-body">
             <input type="hidden" id="idEstacionModalPC" value="">
+            <div id="tiempoPC" class="badge bg-warning text-dark etiqueta-advertencia text-end"></div>
 
             <!--Contenedor de los botones del menu -->
             <div class="container-fluid py-3">

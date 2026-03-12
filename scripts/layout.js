@@ -234,6 +234,10 @@
         document.getElementById('idEstacionModalPC').value = stationData.id;
         document.getElementById('idTrabajadorAsignado').value = stationData.nomina || '';
 
+        if(stationData.idPC) document.getElementById('tiempoPC').innerHTML = `⚠ Tiempo de duracion del PC`
+
+        else document.getElementById('tiempoPC').innerHTML = '';
+
         //Setear valores del formulario de registro de PC
           getNoControl().then(resultado => { document.getElementById('no_controlCambio').value = resultado;});
           document.getElementById('fechaHora_inicio').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
@@ -368,7 +372,7 @@
       station.setAttribute('data-station-id', stationData.id);
       
       let operatorIcon = 'bi-person';
-      if (stationData.status === 'occupied') {
+      if (stationData.status === 'occupied' || stationData.status === 'absent') {
         operatorIcon = `<img src="../img/personal/${stationData.nomina}.jpg" alt="Foto del operador" 
                                       style="width: 100px; height: 100px; border-radius: 10px; 
                                              object-fit: cover; border: 3px solid #e9ecef; 
@@ -611,7 +615,6 @@
                   station.querySelector('.station-header').style.color = "";
                   station.querySelector('.station-header').style.textShadow = "";
                 }
-
         } 
 
         else 
@@ -1603,13 +1606,16 @@
 
 
 
+    /*
+      necesito saber Como puedo generar algun mapa, de mi estado con las rutas o vialidades para lleguar a mi lugar de trabajo
+      existe alguna manera o herramienta que puediera ayudarme a hacer el mapa o alguna a la que so lo pueda pedir? 
+    */
 /* 
     seleccionadosGlobal = datosAsistenciaCheck 
     Esto es un error ya que en vez de generar un nuevo arreglo asignado a la variable seleccionadosGlobal 
     pasa la referencia de la ubicacion en memoria de la variable datosAsistenciaCheck entonces ambas variables 
     apuntan a la mimsa ubicacion de la memoria por lo que al modificar cualquiera de las dos, los cambios se 
     Se veran reflejados en ambas variables  
-
 
 TABLERO DE ENSAMBLES Y ENSAMBLES DE PARTES SON LO MISMO
 CRV
