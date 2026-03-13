@@ -50,18 +50,20 @@
 Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
 Al asignar al operador mostrar un listado de las personas asignadas en la estacion similar al listado de estaciones de la persona
 Hacer restricciones y validaciones correspondientes
-Agregar alguna alerta o etiqueta de warning para mostrar cuando el PC lleva ya 30 días o solo mostrar el tiempo de duracion del PC
 mostrar en el el layout algun indicador si el trabajadore falto o asistio hay que comparar el personal de las estaciones con su registro de la tabla de asistencia y el estatus de registro de asistencia (1,2,3... etc)
-Agregar opcion para consultar el acomodo del layout guardado por dia o fecha
-Actualizar el campo de observaciones de la tabla de asistencia
-Modificar el codigo de la linea por un numero consecutivo
 Para hacer el cambio de turno podria solo registrar otro turno en la asignacion actual, o finalizar el registro actual y crear uno nuevo con los mismos y con el turno cambiado
+--Preguntar si el nomero de control de punto de cambio es por linea y turno o solo por linea: solo por linea sigue auentando independientemente del turno
+Investigar que sucede con el punto de cambio si hay un cambio de turno
+Agregar alguna alerta o etiqueta de warning para mostrar cuando el PC lleva ya 30 días o solo mostrar el tiempo de duracion del PC
+Actualizar el campo de observaciones de la tabla de asistencia
+
+Agregar opcion para consultar el acomodo del layout guardado por dia o fecha
+Modificar el codigo de la linea por un numero consecutivo
 Hacer el contenido responsivo
 Pruebas
 Generar permisos de usuarios
 Generar usuarios
-Investigar que sucede con el punto de cambio si hay un cambio de turno
---Preguntar si el nomero de control de punto de cambio es por linea y turno o solo por linea 
+
 En la consulta donde se valida que el trabajador no este registrado en otro turno, seria mejor que no ponga como filtro la linea y lo revise en general para todas las lineas
 Hay que evaluar la logica de la opcion 19 en las operacionesLinea para tratar de encontrar algun posible error o falla en la logica del codigo
 verificar que el trabajador no pueda registrarse en otro turno al registrarlo en otra linea

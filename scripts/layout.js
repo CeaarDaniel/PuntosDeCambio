@@ -228,15 +228,11 @@
       
       //Actualizar y mostrar el modal de la estacion al abrirlo
       showStationModal(stationData) {
-        console.log('Datos de la estacion: ',stationData)
+        console.log('Datos de la estacion: ', stationData)
         document.getElementById('imgInfochangeControlModal').src= (stationData.nomina) ? `../img/personal/${stationData.nomina}.jpg` : `../img/personal/na.jpg`;
         document.getElementById('nombreEstacionModalPC').textContent = (stationData.name).toUpperCase();
         document.getElementById('idEstacionModalPC').value = stationData.id;
         document.getElementById('idTrabajadorAsignado').value = stationData.nomina || '';
-
-        if(stationData.idPC) document.getElementById('tiempoPC').innerHTML = `⚠ Tiempo de duracion del PC`
-
-        else document.getElementById('tiempoPC').innerHTML = '';
 
         //Setear valores del formulario de registro de PC
           getNoControl().then(resultado => { document.getElementById('no_controlCambio').value = resultado;});
@@ -249,8 +245,9 @@
           document.getElementById('idPC').value = stationData.idPC || '';
           document.getElementById('fechaCierre').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
 
-          getOperator(stationData.nomina, stationData.id);
-  
+          getOperator(stationData.nomina, stationData.id, stationData.idPC || null);
+
+
         //Modal creado registro de punto de cambio
             const stationModal = new bootstrap.Modal(document.getElementById('changeControlModal'));
             stationModal.show();
@@ -923,8 +920,8 @@
                   nombre: data.nombre, 
                   id_estacion: data.id_estacion,
                   nombres_estaciones: data.nombre_estacion,
-                  estatus: $(fila).find('select[name="estatusAsistencia"]').val()
-                  //observaciones: $(fila).find('input[name="observacionesAsistencia"]').val()
+                  estatus: $(fila).find('select[name="estatusAsistencia"]').val(),
+                  observacionesAsistencia: $(fila).find('input[name="observacionesAsistencia"]').val()
               });
           });
 
@@ -946,11 +943,15 @@
           })
             .then(response => response.text())
             .then(data => {
-              //console.log(data)
+              console.log(data)
               data = JSON.parse(data)
               if(data.estatus && data.estatus == 'ok'){
                   alert(data.mensaje);
                   generarTablaAsistencia();
+
+                  //Actualizar el layout
+                  document.getElementById('workspaceGrid').innerHTML = '';
+                  getEstaciones();
               }
 
               else if (data.estatus && data.estatus == 'error'){
@@ -1028,7 +1029,7 @@
         });
     }
     
-    function updateAsistencia(element){
+    function updateAsistencia(element, clave){
           let table = $('#attendanceTable').DataTable();
           let $row = $(element).closest('tr');
           let data = table.row($row).data();
@@ -1044,7 +1045,8 @@
               let formDataUpdate = new FormData();
               formDataUpdate.append('opcion', 18);
               formDataUpdate.append('id_registro', data['id_registro'])
-              formDataUpdate.append('estatus', nuevoValor);
+              formDataUpdate.append(clave, nuevoValor);
+              console.log(campo)
 
                fetch("../api/operacionesLinea.php", {
                       method: "POST",
@@ -1114,7 +1116,7 @@
     }
 
     //Funcion para obtener los datos del operador y mostrarlos en la estacion
-    function getOperator(nomina, estacion){
+    function getOperator(nomina, estacion, idPC){
         if(nomina){
           let fromDataGetOperador = new FormData();
           fromDataGetOperador.append('opcion', 20);
@@ -1135,9 +1137,19 @@
                   $("#changeControlInfoNombre").text(data.nombre);
                   $("#changeControlInfFecha").text(data.fecha_inicio);
                   $("#changeControlInfoTurno").text("TURNO "+data.turno);
-                  $("#changeControlInfoComentarios").text( (data.descripcion && data.descripcion != '') 
-                                                            ? data.descripcion : 'SIN COMENTARIOS');
-                  return;
+                  $("#changeControlInfoComentarios").text( (data.descripcion && data.descripcion != '') ? data.descripcion : 'SIN COMENTARIOS');
+
+                  if(data.fecha_inicio && idPC){ 
+                      let fecha_inicio = new Date(data.fecha_inicio);
+                      let ahora = new Date();
+
+                      let diferencia_ms = ahora - fecha_inicio; // diferencia en milisegundos
+                      let dias = Math.floor(diferencia_ms / (1000 * 60 * 60 * 24));
+
+                      document.getElementById('tiempoPC').innerHTML = `⚠Tiempo activo del punto de cambio: `+dias+' dias'
+                    }
+
+                  else document.getElementById('tiempoPC').innerHTML = ''; 
               }
 
               else
@@ -1549,14 +1561,14 @@
 
         // SELECT → change
         $('#attendanceTable tbody').on('change', 'select', function () {
-            updateAsistencia(this);
+            updateAsistencia(this, 'estatus');
         });
 
         // INPUT → Enter
         $('#attendanceTable tbody').on('keydown', 'input', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                updateAsistencia(this);
+                updateAsistencia(this, 'observacionesAsistencia');
                 //$(this).blur(); // opcional
             }
         });
@@ -1599,7 +1611,7 @@
 
             if(turno){
               document.getElementById('workspaceGrid').innerHTML = '';
-                getEstaciones();
+              getEstaciones();
             }
         })
     });

@@ -1567,8 +1567,8 @@ else
 
         try {
             $conn->beginTransaction();
-            $sql = "INSERT INTO SPC_REGISTRO_ASISTENCIA (nomina, nombre, estatus, codigo_linea, turno, id_estacion, nombres_estaciones) 
-                        VALUES (:nomina, :nombre, :estatus, :codigo_linea, :turno, :id_estacion, :nombres_estaciones)";
+            $sql = "INSERT INTO SPC_REGISTRO_ASISTENCIA (nomina, nombre, estatus, codigo_linea, turno, id_estacion, nombres_estaciones, comentarioAsistencia) 
+                        VALUES (:nomina, :nombre, :estatus, :codigo_linea, :turno, :id_estacion, :nombres_estaciones, :observacionesAsistencia)";
             $stmt = $conn->prepare($sql);
 
             $sqlI = "INSERT INTO SPC_HISTORIAL_LAYOUT(codigo_linea, turno, layout) VALUES(:codigoLinea, :turno, :stationsData)";
@@ -1581,7 +1581,8 @@ else
                     ':nombre' => $row['nombre'],
                     ':estatus' => $row['estatus'],
                     ':id_estacion' => $row['id_estacion'],
-                    ':nombres_estaciones' => $row['nombres_estaciones'], 
+                    ':nombres_estaciones' => $row['nombres_estaciones'],
+                    ':observacionesAsistencia' => $row['observacionesAsistencia'],
                     ':codigo_linea' => $codigoLinea,
                     ':turno' => $turno
                 ]);
@@ -1611,23 +1612,52 @@ else
 else 
     if($opcion == '18'){
         $idRegistro = $_POST['id_registro'];
-        $estatus = $_POST['estatus'];
-        $sql= 'UPDATE SPC_REGISTRO_ASISTENCIA SET estatus = :estatus WHERE id_registro = :idRegistro';
+        $estatus = !empty($_POST['estatus']) ? $_POST['estatus'] : null;
+        $observacionesAsistencia = !empty($_POST['observacionesAsistencia']) ? $_POST['observacionesAsistencia'] : null;
+
+        if(!$estatus && !$observacionesAsistencia){
+              echo json_encode(array('estatus' => 'ok',
+                                     'mensaje' => 'No se ha modificado ningun valor'
+                                     )
+                              );
+            exit;
+        }
+
+        $set = [];
+        $params = [':idRegistro' => $idRegistro];
+
+        if (!empty($estatus)) {
+            $set[] = 'estatus = :estatus';
+            $params[':estatus'] = $estatus;
+        }
+
+        if (!empty($observacionesAsistencia)) {
+            $set[] = 'comentarioAsistencia = :comentarios';
+            $params[':comentarios'] = $observacionesAsistencia;
+        }
+
+        $sql = 'UPDATE SPC_REGISTRO_ASISTENCIA 
+                SET ' . implode(', ', $set) . ' 
+                WHERE id_registro = :idRegistro';
 
         try {
+
             $conn->beginTransaction();
+
             $stmt = $conn->prepare($sql);
-            $stmt->execute([':estatus' => $estatus,
-                            ':idRegistro' => $idRegistro]);
+            $stmt->execute($params);
 
             $conn->commit();
-            $results = array('estatus' => 'ok',
-                             'mensaje' => 'Se ha actualizado el registro');
+
+            $results = [
+                'estatus' => 'ok',
+                'mensaje' => 'Se ha actualizado el registro'
+            ];
 
         } catch (Exception $e) {
               $conn->rollBack();
               $results = array('estatus' => 'error',
-                               'mensaje' => 'Ocurrió un error al realizar el registro',
+                               'mensaje' => 'Ocurrió un error al realizar el registro: '.$sql,
                                'error' => $e->getMessage());
         }
 
@@ -1764,5 +1794,47 @@ else
                               'mensaje' => $stmt->errorInfo()[2]);
 
         echo json_encode($response);
+    }
+
+// Consultar historial de layout
+else 
+    if($opcion == '22'){
+        $codigoLinea = $_POST['codigoLinea'] ?? null;
+        $fecha = $_POST['fecha'] ?? null;  // formato YYYY-MM-DD
+        $turno = $_POST['turno'] ?? null;
+
+        if(!$codigoLinea || !$fecha || !$turno){
+            echo json_encode(['estatus' => 'error', 'mensaje' => 'Faltan datos obligatorios.']);
+            exit;
+        }
+
+        // Buscar el último layout guardado para esa fecha y turno
+        // Suponiendo que la columna layout guarda el JSON de stationsData
+        $sql = "SELECT TOP 1 layout, fecha_guardado 
+                FROM SPC_HISTORIAL_LAYOUT 
+                WHERE codigo_linea = :codigoLinea 
+                AND turno = :turno 
+                AND CAST(fecha_guardado AS DATE) = :fecha
+                ORDER BY fecha_guardado DESC";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([
+            ':codigoLinea' => $codigoLinea,
+            ':turno' => $turno,
+            ':fecha' => $fecha
+        ]);
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if($resultado){
+            echo json_encode([
+                'estatus' => 'ok',
+                'layout' => json_decode($resultado['layout']), // ya es array
+                'fecha' => $resultado['fecha_guardado']
+            ]);
+        } else {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'No hay layout guardado para la fecha y turno seleccionados.'
+            ]);
+        }
     }
 ?>
