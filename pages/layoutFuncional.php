@@ -1068,16 +1068,14 @@
                     </button>
                   </div>
 
-                  
-                    <div class="col-7 col-sm-6 col-md-4 col-lg-2">
-                      <button class="menu-btn danger" id="btnLiberarPC" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Liberar punto de cambio">
-                        <i class="bi bi-unlock"></i>
-                        <span>LIBERAR</span>
-                      </button>
-                    </div>
+                  <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                    <button class="menu-btn danger" id="btnLiberarPC" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Liberar punto de cambio">
+                      <i class="bi bi-unlock"></i>
+                      <span>LIBERAR</span>
+                    </button>
+                  </div>
 
                 <!--
-
                     <div class="col-7 col-sm-6 col-md-4 col-lg-2">
                       <button class="menu-btn warning" id="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Mover trabajador de estacion">
                         <i class="bi bi-arrow-left-right"></i>
@@ -1915,13 +1913,67 @@
     </div>
   </div> 
 
+  <!--Modal para consultar el historial de acomodo del layout -->
+  <div class="modal fade" id="historialLayoutModal" tabindex="-1" aria-labelledby="historialLayoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+      <div class="modal-content">
+        <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color), #1a2530); color: white;">
+          <h5 class="modal-title" id="historialLayoutModalLabel">
+            <i class="bi bi-clock-history me-2"></i> Historial de Layout
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Filtros -->
+            <div class="row mb-3">
+              <!--Input fecha -->
+              <div class="col-md-4 my-1">
+                <label for="fechaHistorial" class="form-label">Fecha</label>
+                <input type="date" class="form-control" id="fechaHistorial" value="<?php echo date('Y-m-d'); ?>">
+              </div>
+              <!--Select Turno-->
+              <div class="col-md-4 my-1">
+                <label for="turnoHistorial" class="form-label">Turno</label>
+                <select class="form-select" id="turnoHistorial">
+                  <option value="1">Turno 1</option>
+                  <option value="2">Turno 2</option>
+                </select>
+              </div>
+              <!--Select Registros -->
+              <div class="col-md-4 my-1">
+                <label for="turnoHistorial" class="form-label">Registros</label>
+                <!-- Select con los id's de los registros del historial guardados en el dia seleccionado -->
+                <select class="form-select" id="idRH" name="mostrarHistorialLayout">
+                  <option value="">Registros guardados</option>
+                </select>
+              </div>
+            </div>
+          <!-- Fin filtros -->
+           
+          <!-- Contenedor del layout (solo lectura) -->
+          <div class="workspace readonly-workspace" style="height: 70vh; overflow: auto; border: 1px solid #dee2e6; background: #f8f9fa;">
+            <div class="workspace-grid" id="historialWorkspaceGrid" style="position: relative; transform: scale(1); transform-origin: 0 0;">
+              <!-- Aquí se dibujarán las estaciones de forma absoluta -->
+            </div>
+          </div>
+          <div class="mt-2 text-muted small">
+            <i class="bi bi-info-circle"></i> Vista de solo consulta. No se pueden modificar las estaciones.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Bootstrap JS -->
   <script src="../scripts/bootstrap.bundle.min.js"></script>
 
   <!-- DataTables 
-  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script> 
- -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script> 
+  -->
   <script src="../DataTables/datatables.min.js"></script>
   
   <!--Custmo js -->

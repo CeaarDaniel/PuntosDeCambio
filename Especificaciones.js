@@ -57,13 +57,18 @@ Investigar que sucede con el punto de cambio si hay un cambio de turno
 Agregar alguna alerta o etiqueta de warning para mostrar cuando el PC lleva ya 30 días o solo mostrar el tiempo de duracion del PC
 Actualizar el campo de observaciones de la tabla de asistencia
 
-Agregar opcion para consultar el acomodo del layout guardado por dia o fecha
+Cambiar validacion de los comentarios para que acepte valores vacios 
+Registrar el acomodo del layout despues de hacer el registro de la asistencia
+Parece ser que hay un retraso al guardar 
+Actualizar el campo de comentarios o observaciones en la asistencia
+Actualizar los registros de historial de layout al abrir el modal de historial de layout
+
 Modificar el codigo de la linea por un numero consecutivo
 Hacer el contenido responsivo
 Pruebas
 Generar permisos de usuarios
 Generar usuarios
-
+4491073605
 En la consulta donde se valida que el trabajador no este registrado en otro turno, seria mejor que no ponga como filtro la linea y lo revise en general para todas las lineas
 Hay que evaluar la logica de la opcion 19 en las operacionesLinea para tratar de encontrar algun posible error o falla en la logica del codigo
 verificar que el trabajador no pueda registrarse en otro turno al registrarlo en otra linea
@@ -90,7 +95,7 @@ de cambio,
 
 agregar un boton para incertar un registro individual en la tabla de asistencia despues de haver registrado la asistenia en caso de que halla faltado algun valor 
 ya que puede haber problema si les falto removoer algun registro del día anterior, como por ejemplo que no hayan cargado el personal disponible, o no hallan cerrado algun punto de cambio
-y por lo tanto no se haya cargado el trabajador como disponible
+y por lo tanto no se haya cargado el trabajador como disponible, dejar esta opcion deshabilitada y solo habilitarla despues de que se halla registrado la asistencia
 
 Al asignar a una persona que esta en la tabla de personal NAD a otra tabla como de PC, eliminarla de esta tabla o cambiar su estatus
 Se ha elimiado a esta persona del registro de todas las estaciones, ¿desea agregalo al listado de personal disponible o personal no asignado?)

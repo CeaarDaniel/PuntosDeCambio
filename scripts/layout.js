@@ -14,9 +14,14 @@
   let btnRegistrarAsistencia = document.getElementById('btnRegistrarAsistencia');
   let tablaPersonalNoAsignado = document.getElementById('tablaPersonalNoAsignado');
   let workspaceGrid;
+
   //Inputs del modal asignar operador
   let nominaModalAsignar = document.getElementById('nominaModalAsignar');
   let nominaPC = document.getElementById('nominaPC');
+
+  //Inputs del modal consultar historial
+  let fechaHistorial = document.getElementById('fechaHistorial');
+  let turnoHistorial = document.getElementById('turnoHistorial');
 
   //document.getElementById('turnoasignar').value = $('#turnoLayout option:selected').text();
   document.getElementById('turnoAsignarPersonalDisponible').value =  $('#turnoLayout').val();
@@ -275,6 +280,9 @@
         formDataPosicion.append('codigoLinea', codigoLinea.value)
         formDataPosicion.append('turno', $('#turnoLayout').val())
 
+        console.log('Estaciones:'+ stations)
+        console.log('stations encontradas:', document.querySelectorAll('.station').length);
+
           // console.log("datos", layoutData)
           fetch("../api/operacionesLinea.php", {
                 method: "POST",
@@ -284,7 +292,7 @@
             .then((data) => {
               console.log(data);
 
-              if(showMessage) return;
+              if(showMessage == true) return;
 
                data= JSON.parse(data)
                if(data.estatus=='ok'){
@@ -403,7 +411,7 @@
         formData.append('opcion', 5)
         formData.append('turno', $('#turnoLayout').val())
         formData.append('codigoLinea', codigoLinea.value)
-        fetch("../api/operacionesLinea.php", {
+        return fetch("../api/operacionesLinea.php", {
                     method: "POST",
                     body: formData,
                 })
@@ -951,17 +959,21 @@
 
                   //Actualizar el layout
                   document.getElementById('workspaceGrid').innerHTML = '';
-                  getEstaciones();
+                  return getEstaciones();
               }
 
               else if (data.estatus && data.estatus == 'error'){
                   alert(data.mensaje)
+                  return Promise.reject('Error en respuesta');
               }
 
               else {
                   alert('Ocurrio un error al realizar el registro') 
                   console.log(data);
+                  return Promise.reject('Error desconocido');
                 }
+            }).then(() =>{ 
+                saveLayout();
             })
             .catch(error => {
               console.log(error);
@@ -1199,6 +1211,90 @@
         });
     }
 
+    //Consultar historiakl de layout
+    function createStationHistorial(stationData, parent) {
+        const station = document.createElement('div');
+        station.className = `station ${stationData.colorClass} station-readonly`; // clase adicional
+        station.style.left = `${stationData.x}px`;
+        station.style.top = `${stationData.y}px`;
+        // No se asigna data-station-id ni eventos
+
+        let operatorIcon = '';
+        if ((stationData.status === 'occupied' || stationData.status === 'absent') && stationData.nomina) {
+            // Intentar cargar la foto si existe
+            operatorIcon = `<img src="../img/personal/${stationData.nomina}.jpg" alt="Foto" style="width: 100px; height: 100px; border-radius: 10px; object-fit: cover; border: 3px solid #e9ecef;">`;
+        } else {
+            operatorIcon = '<i class="bi-person-x" style="font-size: 2rem;"></i>';
+        }
+
+        station.innerHTML = `<div class="station-header">${stationData.name}</div>
+                              <div class="station-content">
+                                  <div class="station-operator">${operatorIcon}</div>
+                                  <div class="station-name">${stationData.operator || 'No asignado'}</div>
+                              </div>
+                              <div class="station-status status-${stationData.status}"></div>`;
+
+        // Si la estación requiere certificación, pintar header amarillo
+        if (stationData.isCertificate == 1) {
+            station.querySelector('.station-header').style.background = "#ffc107";
+            station.querySelector('.station-header').style.color = "rgb(0,0,0,1)";
+        }
+
+        parent.appendChild(station);
+    }
+
+    //funcion para obtener los registros del historial del layout por dia
+    function getHistorialLayout(){
+      if(!fechaHistorial.value || !turnoHistorial.value  || !codigoLinea.value)
+          return;
+
+      let fromDataHistorial = new FormData();
+      fromDataHistorial.append('opcion', 22);
+      fromDataHistorial.append('codigoLinea', codigoLinea.value)
+      fromDataHistorial.append('fecha', fechaHistorial.value)
+      fromDataHistorial.append('turno', turnoHistorial.value)
+
+        fetch("../api/operacionesLinea.php", {
+              method: "POST",
+              body: fromDataHistorial
+          })
+          .then(response => response.json())
+          .then(data => {
+              if(data.estatus === 'ok') {
+                const selectHistorial = document.getElementById('idRH');
+                selectHistorial.innerHTML='';  
+
+                  //Agregar opcion vacia por defecto
+                    let none = document.createElement('option');
+                    none.value = '';  
+                    none.textContent =  'Registros guardados';
+                    selectHistorial.appendChild(none);
+
+                  data.registros.forEach(historial => {
+                    const option = document.createElement('option');
+                    option.value = historial.idR;   
+                    option.textContent = historial.fechaR; 
+                    selectHistorial.appendChild(option);
+                  });
+              } else {
+                  console.log('No se encontro algun registro')
+                  const selectHistorial = document.getElementById('idRH');
+                   selectHistorial.innerHTML='';  
+
+                  //Agregar opcion vacia por defecto
+                    let none = document.createElement('option');
+                    none.value = '';  
+                    none.textContent =  'Registros guardados';
+                    selectHistorial.appendChild(none);
+              }
+          })
+          .catch(error => {
+              console.error(error);
+              alert('Error de conexión');
+        });
+
+    }
+
     // Inicializar el workspace
     document.addEventListener('DOMContentLoaded', function() {
       workspaceGrid = document.getElementById('workspaceGrid');
@@ -1222,6 +1318,8 @@
 
       //Generar listado de personal perteneciente a la linea
       generarTablaAsistencia();
+
+      getHistorialLayout();
 
       //DECLARACION DE EVENTOS
         //OBTENER NUMERO DE NOMINA
@@ -1483,7 +1581,7 @@
             }); 
         });
 
-        //funcion para cerrar e lpunto de cambio
+        //funcion para cerrar el punto de cambio
         btnConfirmClose.addEventListener('click', function(){
             let formDataCerrarPC = new FormData;
             let idPC = document.getElementById('idPC');
@@ -1558,6 +1656,9 @@
         btnRegistroPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contRegistroPersonalDisponible')});
         btnMenuRegistroAs.addEventListener('click', generarTablaAsistencia);
         btnCambioTurno.addEventListener('click', cambiarTurno);
+        
+        fechaHistorial.addEventListener('change', getHistorialLayout)
+        turnoHistorial.addEventListener('change', getHistorialLayout)
 
         // SELECT → change
         $('#attendanceTable tbody').on('change', 'select', function () {
@@ -1614,6 +1715,46 @@
               getEstaciones();
             }
         })
+
+        //Funcion para mostrar el layout por la fecha seleccionada
+        document.getElementById('idRH').addEventListener('change', function() {
+
+          let idRH = document.getElementById('idRH').value;
+            if(!fechaHistorial.value || !idRH) {
+                alert('No se encontro algun registro en la fecha y turno seleccionados');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('opcion', 23);
+            formData.append('idR', idRH);
+
+            fetch("../api/operacionesLinea.php", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                const grid = document.getElementById('historialWorkspaceGrid');
+                grid.innerHTML = ''; // Limpiar
+
+                if(data.estatus === 'ok') {
+                    const stations = data.layout;
+                    stations.forEach(station => {
+                        // Reutilizar createStation pero en un grid diferente, y sin eventos de drag
+                        createStationHistorial(station, grid);
+                    });
+                    // Opcional: mostrar mensaje de éxito con la fecha del registro
+                } else {
+                    alert(data.mensaje || 'Error al cargar el historial');
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                alert('Error de conexión');
+            });
+        });
     });
 
 

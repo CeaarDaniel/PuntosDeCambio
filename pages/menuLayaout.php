@@ -52,6 +52,13 @@
         </span>
       </button>
 
+      <button id="historialLayoutBtn" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Consultar el acomodo del layout en alguna fecha">
+         <span data-bs-toggle="modal" data-bs-target="#historialLayoutModal">
+            <i class="bi bi-clock-history"></i>
+            <span>Historial</span>
+         </span> 
+      </button>
+
       <!-- Botón para mostrar modal de error 
       <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#errorModal">
         <i class="bi bi-exclamation-triangle-fill" style=""></i>

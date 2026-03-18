@@ -508,7 +508,7 @@ else
             $turno= !empty($_POST['turno']) ? $_POST['turno'] : null;
 
             if (!$layoutPosition || !is_array($layoutPosition) || !$stationsData || !$codigoLinea) {
-                echo json_encode(['error' => 'Datos inválidos']);
+                echo json_encode(['error' => 'Datos invalidos']);
                 exit;
             }
          
@@ -1149,10 +1149,10 @@ else
             // Obtener el ID del registro insertado
             $insertedId = $conn->lastInsertId();
               //Actualizar la tabla de personal NAD despues de incertar el punto de cambio
-              /*
+              
                 $sqlPNAD = 'SELECT id_registro from SPC_personal_NAD where nomina = :nomina and fechaE IS NULL';
                 $stmtGETPNAD = $conn->prepare($sqlPNAD);
-                $stmtGETPNAD->execute([':nomina' => $nomina]);
+                $stmtGETPNAD->execute([':nomina' => $nominaPC]);
 
                 $resultado = $stmtGETPNAD->fetch(PDO::FETCH_ASSOC);
 
@@ -1165,7 +1165,7 @@ else
                         $stmtUpdatePNAD = $conn->prepare($sqlUpdatePNAD);
                         $stmtUpdatePNAD->execute([':id_registro' => $id_registro]);
                     }  
-            */
+            
 
             // Confirmar la transacción
             $conn->commit();
@@ -1468,11 +1468,14 @@ else
                 //Antes de 8 de la noche la fecha de inicio es ayer 8:00 pm y la fecha de fin hoy 8:00 am 
             }
 
-            $sqlV = "SELECT id_registro, nomina, nombre, codigo_linea, estatus, id_estacion, turno, nombres_estaciones AS nombre_estacion FROM SPC_REGISTRO_ASISTENCIA WHERE turno = :turno AND fecha_operacion >= :fechaInicio AND fecha_operacion <= :fechaFin";
+        //Consultar el registro de asistencia de la linea en la tabla de asistencia
+            $sqlV = "SELECT id_registro, nomina, nombre, codigo_linea, estatus, id_estacion, turno, nombres_estaciones AS nombre_estacion FROM SPC_REGISTRO_ASISTENCIA 
+                            WHERE turno = :turno AND fecha_operacion >= :fechaInicio AND fecha_operacion <= :fechaFin AND codigo_linea = :codigoLinea";
             $stmtV = $conn->prepare($sqlV);
             $stmtV->execute([':turno' => $turno,
                              ':fechaInicio' => $inicio->format('Y-m-d H:i'),
-                             ':fechaFin'    => $fin->format('Y-m-d H:i')
+                             ':fechaFin'    => $fin->format('Y-m-d H:i'),
+                             ':codigoLinea' => $codigoLinea
                            ]);
             
         //Generar lista de asistencia 
@@ -1486,14 +1489,14 @@ else
                               STRING_AGG(CAST(t.id_estacion AS NVARCHAR(10)), ',') AS id_estacion,
                               STRING_AGG(COALESCE(e.nombre_estacion, 'SIN ASIGNAR'), ', ') AS nombre_estacion
                         FROM (SELECT pc.nomina, pc.nombre, pc.id_estacion FROM SPC_PUNTOS_CAMBIO pc
-                                WHERE PC.codigo_linea = :codigoLinea2 AND PC.fechaHora_fin IS NULL AND PC.turno = :turno1
+                                WHERE PC.codigo_linea = :codigoLinea AND PC.fechaHora_fin IS NULL AND PC.turno = :turno
                                         UNION ALL
                                 SELECT p.nomina, p.nombre, p.id_estacion FROM SPC_PERSONAL_ESTACION p
-                                    WHERE p.fecha_fin IS NULL AND p.turno = :turno2
-                                      AND EXISTS ( SELECT 1 FROM SPC_ESTACIONES e WHERE e.id_estacion = p.id_estacion AND e.codigo_linea = :codigoLinea1)
+                                    WHERE p.fecha_fin IS NULL AND p.turno = :turno
+                                      AND EXISTS ( SELECT 1 FROM SPC_ESTACIONES e WHERE e.id_estacion = p.id_estacion AND e.codigo_linea = :codigoLinea)
                                         UNION ALL
                                 SELECT nomina, nombre, NULL AS id_estacion FROM SPC_PERSONAL_NAD
-                                    WHERE eliminado = '0' AND codigo_linea = :codigoLinea3 and turno = :turno3
+                                    WHERE eliminado = '0' AND codigo_linea = :codigoLinea and turno = :turno
                               ) t LEFT JOIN SPC_ESTACIONES e ON e.id_estacion = t.id_estacion  
                         GROUP BY t.nomina ORDER BY t.nomina;";
 
@@ -1501,8 +1504,7 @@ else
                 $response= array();
 
                 // Ejecutar con los parámetros
-                if($stmt->execute([':codigoLinea1' => $codigoLinea, ':codigoLinea2' => $codigoLinea, ':codigoLinea3' => $codigoLinea,
-                                   ':turno1' => $turno, ':turno2' => $turno, ':turno3' => $turno,]))
+                if($stmt->execute([':codigoLinea' => $codigoLinea, ':turno' => $turno]))
                     while($personal= $stmt->fetch(PDO::FETCH_ASSOC))
                         $response[] = $personal;
                 else 
@@ -1796,7 +1798,7 @@ else
         echo json_encode($response);
     }
 
-// Consultar historial de layout
+//Obtener los registros del historial de layout guardado
 else 
     if($opcion == '22'){
         $codigoLinea = $_POST['codigoLinea'] ?? null;
@@ -1808,27 +1810,58 @@ else
             exit;
         }
 
-        // Buscar el último layout guardado para esa fecha y turno
-        // Suponiendo que la columna layout guarda el JSON de stationsData
-        $sql = "SELECT TOP 1 layout, fecha_guardado 
-                FROM SPC_HISTORIAL_LAYOUT 
-                WHERE codigo_linea = :codigoLinea 
-                AND turno = :turno 
-                AND CAST(fecha_guardado AS DATE) = :fecha
-                ORDER BY fecha_guardado DESC";
+        // Consulta para obtener los registros del historial
+        $sql = "SELECT idR, format(fechaR, 'yyyy-MM-dd HH:mm:ss') as fechaR FROM SPC_HISTORIAL_LAYOUT 
+                    WHERE codigo_linea = :codigoLinea AND turno = :turno AND CAST(fechaR AS DATE) = :fecha
+                ORDER BY fechaR DESC";
+        $stmt = $conn->prepare($sql);
+
+         $response= array();
+
+        if($stmt->execute([':codigoLinea' => $codigoLinea,':turno' => $turno,':fecha' => $fecha])){
+            while($rh = $stmt->fetch(PDO::FETCH_ASSOC))
+                    $response[] = $rh;
+        }
+
+        if($response){
+            echo json_encode([
+                'estatus' => 'ok',
+                'registros' => $response
+            ]);
+        } else {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'No hay layout guardado para la fecha y turno seleccionados.'
+            ]);
+        }
+
+    }
+
+// Consultar historial de layout
+else 
+    if($opcion == '23'){
+        $idR = $_POST['idR'] ?? null;
+
+        if(!$idR){
+            echo json_encode(['estatus' => 'error', 'mensaje' => 'Faltan datos obligatorios.']);
+            exit;
+        }
+
+        // Buscar layout guardado 
+        $sql = "SELECT layout, fechaR FROM SPC_HISTORIAL_LAYOUT WHERE idR = :idR ORDER BY fechaR DESC";
+
         $stmt = $conn->prepare($sql);
         $stmt->execute([
-            ':codigoLinea' => $codigoLinea,
-            ':turno' => $turno,
-            ':fecha' => $fecha
+            ':idR' => $idR,
         ]);
+
         $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if($resultado){
             echo json_encode([
                 'estatus' => 'ok',
                 'layout' => json_decode($resultado['layout']), // ya es array
-                'fecha' => $resultado['fecha_guardado']
+                'fecha' => $resultado['fechaR']
             ]);
         } else {
             echo json_encode([
