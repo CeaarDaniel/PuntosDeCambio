@@ -47,28 +47,25 @@
 */  
 
 /*
-Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
+
 Al asignar al operador mostrar un listado de las personas asignadas en la estacion similar al listado de estaciones de la persona
 Hacer restricciones y validaciones correspondientes
-mostrar en el el layout algun indicador si el trabajadore falto o asistio hay que comparar el personal de las estaciones con su registro de la tabla de asistencia y el estatus de registro de asistencia (1,2,3... etc)
-Para hacer el cambio de turno podria solo registrar otro turno en la asignacion actual, o finalizar el registro actual y crear uno nuevo con los mismos y con el turno cambiado
---Preguntar si el nomero de control de punto de cambio es por linea y turno o solo por linea: solo por linea sigue auentando independientemente del turno
-Investigar que sucede con el punto de cambio si hay un cambio de turno
-Agregar alguna alerta o etiqueta de warning para mostrar cuando el PC lleva ya 30 días o solo mostrar el tiempo de duracion del PC
-Actualizar el campo de observaciones de la tabla de asistencia
-
-Cambiar validacion de los comentarios para que acepte valores vacios 
-Registrar el acomodo del layout despues de hacer el registro de la asistencia
-Parece ser que hay un retraso al guardar 
-Actualizar el campo de comentarios o observaciones en la asistencia
-Actualizar los registros de historial de layout al abrir el modal de historial de layout
-
 Modificar el codigo de la linea por un numero consecutivo
 Hacer el contenido responsivo
 Pruebas
 Generar permisos de usuarios
 Generar usuarios
 4491073605
+
+Actualizar el campo de observaciones de la tabla de asistencia
+Cambiar validacion de los comentarios para que acepte valores vacios 
+Registrar el acomodo del layout despues de hacer el registro de la asistencia
+Parece ser que hay un retraso al guardar el layout
+Actualizar los registros de historial de layout al abrir el modal de historial de layou
+Revisar la consulta 17 falta una condicion en el turno 2 -- update creo que ya lo hice
+
+
+
 En la consulta donde se valida que el trabajador no este registrado en otro turno, seria mejor que no ponga como filtro la linea y lo revise en general para todas las lineas
 Hay que evaluar la logica de la opcion 19 en las operacionesLinea para tratar de encontrar algun posible error o falla en la logica del codigo
 verificar que el trabajador no pueda registrarse en otro turno al registrarlo en otra linea
@@ -76,8 +73,7 @@ Creo que los datos que se agregan a la variable de stationData al crear/agregar 
 Revisar que sucede cuando la fecha de asignacion no es en la fecha actual sino que es antes o despues de la fecha actual
 descomentar el codigo en el registro de punto de cambio para registro de PNAD
 
-Revisar que pasa con las personas cuando no estan trabajando en la estacion o faltan y tienen un punto de cambio 
-(Se cancela si falta dos dias seguidos)
+
 
 En el procesos de agregar o eliminar personal a la tabla pNAD al finalizar o registramr un PC puede que de problemas si la persona es prestada 
 de otra linea, al finalizar el registro preguntar si se quiere registrar al personal_nad de la linea actual y no de la linea de la que se presto
@@ -113,6 +109,7 @@ En caso de hacer esto cambiaria los datos de el stationdata, la nomina seria un 
 
 /*
     ESPICIFICACIONES/MODIFICACIONES OK
+    Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
     Generar mostrar el contenido dinamico de los formularios
     Falta registrar las fechas con la hora
     validar la asignacion de un trabajador en una estacion cuando se registra un punto de cambio
@@ -126,6 +123,13 @@ En caso de hacer esto cambiaria los datos de el stationdata, la nomina seria un 
     Mostrar datos por turno
     Revisar las consultas donde el json_decod manda un 'error'
     Revisar que la variable stationsData se actualice al hacer cualquier cambio en el layout
+    mostrar en el el layout algun indicador si el trabajadore falto o asistio hay que comparar el personal de las estaciones con su registro de la tabla de asistencia y el estatus de registro de asistencia (1,2,3... etc)
+    Para hacer el cambio de turno podria solo registrar otro turno en la asignacion actual, o finalizar el registro actual y crear uno nuevo con los mismos y con el turno cambiado
+    --Preguntar si el nomero de control de punto de cambio es por linea y turno o solo por linea: solo por linea sigue auentando independientemente del turno
+    Investigar que sucede con el punto de cambio si hay un cambio de turno
+    Agregar alguna alerta o etiqueta de warning para mostrar cuando el PC lleva ya 30 días o solo mostrar el tiempo de duracion del PC
+    Revisar que pasa con las personas cuando no estan trabajando en la estacion o faltan y tienen un punto de cambio 
+    (Se cancela si falta dos dias seguidos)
 
     TNA TERMINAL NO ACENTADA
     FALTA DE RECINA
@@ -155,7 +159,4 @@ En caso de hacer esto cambiaria los datos de el stationdata, la nomina seria un 
     pero parece ser que estas hojas no estan actualizadas, los tipos de defectos que existen los tienen el personal de capacitacion, tienen un muestrario
     con las piezas en fisico con los defectos que se pueden generar por porcesos, y en su presentaciones de las capacitaciones tienen esta 
     informacion 
-    
-    Mejora
-    Llenar o abastecer el material de las lineas cuando llegue a cierto porcentaje de cantedidad pero sin llegar a 0
 */

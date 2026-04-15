@@ -4,6 +4,10 @@
   let btnGuardarEdicionLinea = document.getElementById('btnGuardarEdicionLinea');
   let confirmChange = document.getElementById('confirmChange');
   let btnConfirmClose = document.getElementById('btnConfirmClose');
+  let btnEvaluacion = document.getElementById('btnEvaluacion');
+
+  let btncloseSidebar = document.getElementById('btncloseSidebar')
+  let btnfloatingMenu = document.getElementById('btnfloatingMenu')
 
   let checkPadre = document.getElementById("checkPadre");
   var seleccionadosGlobal = [];
@@ -33,7 +37,7 @@
       //Modal de registro de PC
         let btnInfoRPC = document.getElementById('btnInfoRPC');
         let btnRegistroPc = document.getElementById('btnRegistroPc');
-        let btnLiberarPC = document.getElementById('btnLiberarPC');
+        //let btnLiberarPC = document.getElementById('btnLiberarPC');
 
         //Modal de personal personal sin asignar
         let btnTablaPNA = document.getElementById('btnTablaPNA');
@@ -55,6 +59,16 @@
 
   // Datos para las estaciones
   var stationsData;
+
+  //Contenedor para la seccion donde se muestra el PC
+  let registroPC = document.getElementById('registroPC')
+
+  //Opciones para cuando esta activo el punto de cambio
+  let opcionActivPC = document.getElementById('opcionActivPC')
+  
+  //Inputs para el registro de evaluacion del PC
+  let numeroDia = document.getElementById('numeroDiaEvaluacion')
+  let numeroEvaluacion = document.getElementById('numeroEvaluacion')
 
   // Estado del workspace
   const workspaceState = {zoomLevel: 1, gridSize: 20, isGridSnapEnabled: false};
@@ -181,6 +195,9 @@
       updateDragPosition(clientX, clientY, isFinal = false) {
         if (!this.activeDrag || !this.dragData) return;
         
+        // Obtén el zoom actual (asegúrate de tener acceso a workspaceState.zoomLevel)
+        const zoom = workspaceState.zoomLevel; // o this.workspaceState?.zoomLevel
+
         if (isFinal || performance.now() - this.workspaceCache.timestamp > 100) {
           this.updateWorkspaceCache();
         }
@@ -188,8 +205,12 @@
         const deltaX = clientX - this.dragData.startX;
         const deltaY = clientY - this.dragData.startY;
         
-        let newX = this.dragData.startLeft + deltaX;
-        let newY = this.dragData.startTop + deltaY;
+        // Convierte deltas a coordenadas internas del workspace (dividiendo por zoom)
+        const deltaInternalX = deltaX / zoom;
+        const deltaInternalY = deltaY / zoom;
+
+        let newX = this.dragData.startLeft +  deltaInternalX //deltaX;
+        let newY = this.dragData.startTop + deltaInternalY //deltaY;
         
         // Aplicar límites
         newX = Math.max(0,newX); //newX = Math.max(0, Math.min(newX, this.workspaceCache.maxX));
@@ -201,7 +222,8 @@
             this.activeDrag.style.top = `${newY}px`;
             this.activeDrag.style.transform = 'none';
           } else {
-            this.activeDrag.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+              this.activeDrag.style.transform = `translate(${deltaInternalX}px, ${deltaInternalY}px)`;
+              //this.activeDrag.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
           }
           
           this.lastX = newX;
@@ -242,6 +264,7 @@
         //Setear valores del formulario de registro de PC
           getNoControl().then(resultado => { document.getElementById('no_controlCambio').value = resultado;});
           document.getElementById('fechaHora_inicio').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
+          document.getElementById('fechaEvaluacion').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
           document.getElementById('id_estacion').value = stationData.id;
           document.getElementById('nombre_estacion').value = stationData.name;
           document.getElementById('turnoPuntoCambio').value =  $('#turnoLayout').val();
@@ -249,6 +272,17 @@
         //Setear input de id del punto de cambio en el formulario de cierre de PC
           document.getElementById('idPC').value = stationData.idPC || '';
           document.getElementById('fechaCierre').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
+
+          if(stationData.idPC) {
+              registroPC.classList.add("d-none");
+              opcionActivPC.classList.remove("d-none");
+              getEvaluacion(stationData.idPC);
+          }
+
+          else {
+                  registroPC.classList.remove("d-none");
+                  opcionActivPC.classList.add("d-none");
+          }
 
           getOperator(stationData.nomina, stationData.id, stationData.idPC || null);
 
@@ -273,15 +307,18 @@
           layoutData.push({id: stationId, x: left, y: top});
         });
 
+
+        let formas = getAllSVGElements();
         var formDataPosicion = new FormData;
         formDataPosicion.append('opcion', 6);
         formDataPosicion.append('layoutPosition', JSON.stringify(layoutData));
         formDataPosicion.append('stationsData', JSON.stringify(stationsData));
         formDataPosicion.append('codigoLinea', codigoLinea.value)
         formDataPosicion.append('turno', $('#turnoLayout').val())
+        formDataPosicion.append('layoutF', JSON.stringify(formas)); //FORMAS ELEMENTOS SVG
 
-        console.log('Estaciones:'+ stations)
-        console.log('stations encontradas:', document.querySelectorAll('.station').length);
+        //console.log('Estaciones:'+ stations)
+        //console.log('stations encontradas:', document.querySelectorAll('.station').length);
 
           // console.log("datos", layoutData)
           fetch("../api/operacionesLinea.php", {
@@ -329,7 +366,7 @@
     }
 
     function zoomOut() {
-      if (workspaceState.zoomLevel > 0.5) {
+      if (workspaceState.zoomLevel > 0.20) {
         workspaceState.zoomLevel -= 0.1;
         applyZoom();
       }
@@ -387,15 +424,20 @@
       }
       
       station.innerHTML = `
-        <div class="station-header">
-          ${stationData.name}
+        <div class="station-header py-2"><!--
+          ${stationData.name} -->
         </div>
         <div class="station-content">
-          <div class="station-operator"> ${operatorIcon} </div>
-          <div class="station-name">${stationData.operator || 'No asignado'}</div>
+        <!--
+          <div class="station-operator"> ${operatorIcon} </div> 
+          -->
+          <div class="station-name"> ${stationData.name} 
+            <!-- ${stationData.operator || 'No asignado'} -->
+          </div>
         </div>
         <div class="station-status status-${stationData.status}"></div>`;
 
+        //Estilo del div de la estacion para cuando esta es certificada
         if (stationData.isCertificate == 1) {
             station.querySelector('.station-header').style.background = "#ffc107";
             station.querySelector('.station-header').style.color = "rgb(0, 0, 0, 1)";
@@ -958,7 +1000,9 @@
                   generarTablaAsistencia();
 
                   //Actualizar el layout
-                  document.getElementById('workspaceGrid').innerHTML = '';
+
+                  actualizarVistaLayout();
+                  //document.getElementById('workspaceGrid').innerHTML = '';
                   return getEstaciones();
               }
 
@@ -973,7 +1017,8 @@
                   return Promise.reject('Error desconocido');
                 }
             }).then(() =>{ 
-                saveLayout();
+              //Encadeamos una promesa para que se haga el guardado del layout despues de cumplir la primer promesa de registro de asistencia
+                saveLayout(true);
             })
             .catch(error => {
               console.log(error);
@@ -1034,6 +1079,45 @@
             return data.noControl;
           }
           return '';
+        })
+        .catch(error => {
+          console.error(error);
+          return '';
+        });
+    }
+
+    //Funcion para obtener el numero de dia y numero de evaluacion
+    function getEvaluacion(idPC){
+      let formDataNoEvaluaciones = new FormData();
+      formDataNoEvaluaciones.append('opcion', 25);
+      formDataNoEvaluaciones.append('idPC', idPC)
+
+      fetch("../api/operacionesLinea.php", {
+        method: "POST",
+        body: formDataNoEvaluaciones,
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.estatus === 'ok') {
+              document.getElementById('labelnumeroDia').textContent = data.numeroDia
+              document.getElementById('labelnumeroEvaluacion').textContent = (data.numeroEvaluacion == '1') ? 'Inicio de turno' : 'Intermedio'
+
+             numeroDia.value= data.numeroDia
+             numeroEvaluacion.value=data.numeroEvaluacion
+
+              if(document.getElementById('numeroDiaEvaluacion').value > 3){
+                   document.getElementById('divPCEvaluado').classList.remove("d-none");
+                   document.getElementById('evaluacionPuntoCambioForm').classList.add("d-none")
+              }
+
+              else {
+                document.getElementById('divPCEvaluado').classList.add("d-none")
+                document.getElementById('evaluacionPuntoCambioForm').classList.remove("d-none");
+              }
+
+          }
+
+          else console.log(data)
         })
         .catch(error => {
           console.error(error);
@@ -1129,6 +1213,9 @@
 
     //Funcion para obtener los datos del operador y mostrarlos en la estacion
     function getOperator(nomina, estacion, idPC){
+
+        document.getElementById('tiempoPC').innerHTML = ''; 
+
         if(nomina){
           let fromDataGetOperador = new FormData();
           fromDataGetOperador.append('opcion', 20);
@@ -1160,8 +1247,6 @@
 
                       document.getElementById('tiempoPC').innerHTML = `⚠Tiempo activo del punto de cambio: `+dias+' dias'
                     }
-
-                  else document.getElementById('tiempoPC').innerHTML = ''; 
               }
 
               else
@@ -1294,6 +1379,743 @@
         });
 
     }
+
+    function registrarEvaluacionPC() {  
+      
+      if (document.getElementById('evaluacionPuntoCambioForm').reportValidity()){
+          const formData = new FormData();
+          const fechaEvaluacion = document.getElementById('fechaEvaluacion').value;
+          const numeroDia = document.getElementById('numeroDiaEvaluacion').value;
+          const numeroEvaluacion = document.getElementById('numeroEvaluacion').value;
+          const comentarios = document.getElementById('comentariosEvaluacion').value;
+          const idPC = document.getElementById('idPC').value
+
+          //Radios
+          const metrica1 = document.querySelector('input[name="metrica1"]:checked')?.value;
+          const metrica2 = document.querySelector('input[name="metrica2"]:checked')?.value;
+          const metrica3 = document.querySelector('input[name="metrica3"]:checked')?.value;
+
+          formData.append('opcion', 26);
+          formData.append('fechaEvaluacion', fechaEvaluacion);
+          formData.append('numeroDia', numeroDia);
+          formData.append('numeroEvaluacion', numeroEvaluacion);
+          formData.append('metrica1', metrica1);
+          formData.append('metrica2', metrica2);
+          formData.append('metrica3', metrica3);
+          formData.append('comentarios', comentarios);
+          formData.append('idPC', idPC);
+        
+          fetch('../api/operacionesLinea.php', {
+            method: 'POST',
+            body: formData
+          })
+          .then(res => res.json())
+          .then(data => {
+              if(data.estatus == 'ok'){
+                alert(data.mensaje)
+                //Ocurtar modal
+                let modalActual = bootstrap.Modal.getInstance(document.getElementById('changeControlModal'));
+                (modalActual) ? modalActual.hide() : '';
+              }
+
+              else {
+                  alert("No fue posible hacer el registro de la evaluación")
+                  console.log(data);
+              }
+                
+          })
+          .catch(err => {
+            
+              console.error(err)
+              alert("Ocurrió un error al hacer el registro")
+          }); 
+      }
+    }
+
+    function actualizarVistaLayout(){
+         let turno = $("#turnoLayout").val()
+
+          if(turno){
+            document.getElementById('workspaceGrid').innerHTML =  `
+            <!-- Contenedor dinámico que se expandirá con el contenido -->
+              <div id="dynamicContainer">
+                <!-- SVG dinámico (se ajustará al contenido) -->
+                <svg id="workspace-svg">
+                  <defs>
+                    <pattern id="grid" patternUnits="userSpaceOnUse" width="20" height="20">
+                      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#cbd5e1" stroke-width="0.8"/>
+                    </pattern>
+                    <marker id="arrowMarker" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+                      <polygon points="0 0, 9 5, 0 10" fill="context-stroke" stroke="none" />
+                    </marker>
+                  </defs>
+                  <rect x="0" y="0" width="100%" height="100%" fill="none" />
+                  <g id="shapes-group"></g>
+                </svg>
+                <!-- Aquí se insertarán dinámicamente las estaciones (divs) -->
+              </div>`;
+            getEstaciones();
+
+            svg = document.getElementById('workspace-svg');
+            shapesGroup = $('#shapes-group');
+            selectedElement = null;
+            draggingShape = null;
+            elementCounter = 0;
+            refreshElementList();
+            setTimeout(() => {
+              loadShapesFromJSON();
+            }, 500);
+          }
+    }
+
+    // ========== NUEVO CÓDIGO DEL DIAGRAMADOR SVG ==========
+    let svg = document.getElementById('workspace-svg');
+    let shapesGroup = $('#shapes-group');
+    let selectedElement = null;
+    let draggingShape = null;
+    let elementCounter = 0;
+
+    function getSVGCoords(e) {
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      return pt.matrixTransform(svg.getScreenCTM().inverse());
+    }
+
+    function getElementCenter(elt) {
+      const tag = elt.tagName;
+      if (tag === 'rect') {
+        const x = parseFloat(elt.getAttribute('x')||0);
+        const y = parseFloat(elt.getAttribute('y')||0);
+        const w = parseFloat(elt.getAttribute('width')||0);
+        const h = parseFloat(elt.getAttribute('height')||0);
+        return { cx: x + w/2, cy: y + h/2 };
+      } else if (tag === 'circle') {
+        return { cx: parseFloat(elt.getAttribute('cx')||0), cy: parseFloat(elt.getAttribute('cy')||0) };
+      } else if (tag === 'line') {
+        const x1 = parseFloat(elt.getAttribute('x1')||0);
+        const y1 = parseFloat(elt.getAttribute('y1')||0);
+        const x2 = parseFloat(elt.getAttribute('x2')||0);
+        const y2 = parseFloat(elt.getAttribute('y2')||0);
+        return { cx: (x1+x2)/2, cy: (y1+y2)/2 };
+      } else if (tag === 'text') {
+        return { cx: parseFloat(elt.getAttribute('x')||0), cy: parseFloat(elt.getAttribute('y')||0) };
+      }
+      return { cx:0, cy:0 };
+    }
+
+    function getRotationAngle(elt) {
+      let angle = parseFloat(elt.getAttribute('data-rotation'));
+      return isNaN(angle) ? 0 : angle;
+    }
+
+    function applyRotation(elt, angle) {
+      if (!elt) return;
+      const { cx, cy } = getElementCenter(elt);
+      if (angle === 0 || isNaN(angle)) {
+        elt.removeAttribute('transform');
+        elt.setAttribute('data-rotation', 0);
+      } else {
+        elt.setAttribute('transform', `rotate(${angle}, ${cx}, ${cy})`);
+        elt.setAttribute('data-rotation', angle);
+      }
+      if (elt.classList.contains('arrow-line')) {
+        elt.setAttribute('marker-end', 'url(#arrowMarker)');
+      }
+    }
+
+    function getOriginalPosition(elt) {
+      const tag = elt.tagName;
+      if (tag === 'rect') return { x: parseFloat(elt.getAttribute('x')||0), y: parseFloat(elt.getAttribute('y')||0) };
+      if (tag === 'circle') return { cx: parseFloat(elt.getAttribute('cx')||0), cy: parseFloat(elt.getAttribute('cy')||0) };
+      if (tag === 'line') return {
+        x1: parseFloat(elt.getAttribute('x1')||0),
+        y1: parseFloat(elt.getAttribute('y1')||0),
+        x2: parseFloat(elt.getAttribute('x2')||0),
+        y2: parseFloat(elt.getAttribute('y2')||0)
+      };
+      if (tag === 'text') return { x: parseFloat(elt.getAttribute('x')||0), y: parseFloat(elt.getAttribute('y')||0) };
+      return {};
+    }
+
+    function setPosition(elt, original, dx, dy) {
+      const tag = elt.tagName;
+      if (tag === 'rect') {
+        elt.setAttribute('x', original.x + dx);
+        elt.setAttribute('y', original.y + dy);
+      } else if (tag === 'circle') {
+        elt.setAttribute('cx', original.cx + dx);
+        elt.setAttribute('cy', original.cy + dy);
+      } else if (tag === 'line') {
+        elt.setAttribute('x1', original.x1 + dx);
+        elt.setAttribute('y1', original.y1 + dy);
+        elt.setAttribute('x2', original.x2 + dx);
+        elt.setAttribute('y2', original.y2 + dy);
+      } else if (tag === 'text') {
+        elt.setAttribute('x', original.x + dx);
+        elt.setAttribute('y', original.y + dy);
+      }
+    }
+
+    function updateCommonFields(elt) {
+      if (!elt) return;
+      const tag = elt.tagName;
+      let x, y;
+      if (tag === 'rect') {
+        x = parseFloat(elt.getAttribute('x')||0) + parseFloat(elt.getAttribute('width')||0)/2;
+        y = parseFloat(elt.getAttribute('y')||0) + parseFloat(elt.getAttribute('height')||0)/2;
+      } else if (tag === 'circle') {
+        x = parseFloat(elt.getAttribute('cx')||0);
+        y = parseFloat(elt.getAttribute('cy')||0);
+      } else if (tag === 'line') {
+        let x1 = parseFloat(elt.getAttribute('x1')||0);
+        let y1 = parseFloat(elt.getAttribute('y1')||0);
+        let x2 = parseFloat(elt.getAttribute('x2')||0);
+        let y2 = parseFloat(elt.getAttribute('y2')||0);
+        x = (x1 + x2)/2;
+        y = (y1 + y2)/2;
+      } else if (tag === 'text') {
+        x = parseFloat(elt.getAttribute('x')||0);
+        y = parseFloat(elt.getAttribute('y')||0);
+      }
+      $('#common-x').val(Math.round(x));
+      $('#common-y').val(Math.round(y));
+      const angle = getRotationAngle(elt);
+      $('#common-rotate').val(angle);
+      $('#rotateValue').text(angle + '°');
+    }
+
+    function loadAttributesToPanel(elt) {
+      if (!elt) return;
+      const tag = elt.tagName;
+      updateCommonFields(elt);
+      if (tag === 'rect') {
+        $('#rect-width').val(elt.getAttribute('width')||100);
+        $('#rect-height').val(elt.getAttribute('height')||70);
+        $('#rect-rx').val(elt.getAttribute('rx')||10);
+        $('#rect-ry').val(elt.getAttribute('ry')||10);
+        $('#rect-fill').val(elt.getAttribute('fill')||'#ffaa00');
+        $('#rect-stroke').val(elt.getAttribute('stroke')||'#000000');
+        $('#rect-stroke-width').val(elt.getAttribute('stroke-width')||2);
+      } else if (tag === 'circle') {
+        $('#circle-r').val(elt.getAttribute('r')||35);
+        $('#circle-fill').val(elt.getAttribute('fill')||'#44cc88');
+        $('#circle-stroke').val(elt.getAttribute('stroke')||'#000000');
+        $('#circle-stroke-width').val(elt.getAttribute('stroke-width')||2);
+      } else if (tag === 'line') {
+        $('#line-x1').val(elt.getAttribute('x1')||0);
+        $('#line-y1').val(elt.getAttribute('y1')||0);
+        $('#line-x2').val(elt.getAttribute('x2')||100);
+        $('#line-y2').val(elt.getAttribute('y2')||50);
+        $('#line-stroke').val(elt.getAttribute('stroke')||'#333333');
+        $('#line-stroke-width').val(elt.getAttribute('stroke-width')||3);
+        if (elt.classList.contains('arrow-line')) $('#arrow-indicator').show(); else $('#arrow-indicator').hide();
+      } else if (tag === 'text') {
+        $('#text-content').val($(elt).text() || 'Texto');
+        $('#text-font-family').val(elt.getAttribute('font-family')||'Arial');
+        $('#text-font-size').val(elt.getAttribute('font-size')||20);
+        $('#text-fill').val(elt.getAttribute('fill')||'#000000');
+        $('#text-stroke').val(elt.getAttribute('stroke')||'#cccccc');
+        $('#text-stroke-width').val(elt.getAttribute('stroke-width')||0.5);
+      }
+    }
+
+    function selectShape(elt) {
+      $('.selected').removeClass('selected');
+      $(elt).addClass('selected');
+      selectedElement = elt;
+      $('.attr-section').removeClass('active-section').hide();
+      $('#noSelectionMsg').hide();
+      $('.common-attrs').show();
+      let panelId = '';
+      if (elt.tagName === 'rect') panelId = '#rect-attrs';
+      else if (elt.tagName === 'circle') panelId = '#circle-attrs';
+      else if (elt.tagName === 'line') panelId = '#line-attrs';
+      else if (elt.tagName === 'text') panelId = '#text-attrs';
+      if (panelId) $(panelId).addClass('active-section').show();
+      loadAttributesToPanel(elt);
+      refreshElementList();
+    }
+
+    function clearSelection() {
+      $('.selected').removeClass('selected');
+      selectedElement = null;
+      $('.attr-section').hide();
+      $('#noSelectionMsg').show();
+      $('.common-attrs').hide();
+      $('.element-list-item').removeClass('selected-in-list');
+    }
+
+    function randomPos(maxX = 1800, maxY = 1300) {
+      return { x: 100 + Math.random() * (maxX - 200), y: 100 + Math.random() * (maxY - 200) };
+    }
+
+    function createElement(tag, attrs, isArrow = false) {
+      const elt = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      for (let key in attrs) elt.setAttribute(key, attrs[key]);
+      elt.setAttribute('data-rotation', 0);
+      if (isArrow) {
+        elt.classList.add('arrow-line');
+        elt.setAttribute('marker-end', 'url(#arrowMarker)');
+      }
+      shapesGroup.append(elt);
+      refreshElementList();
+      updateContainerAndSVGBounds();
+      return elt;
+    }
+
+       //const p = randomPos();
+      const p = {x:200, y:200};
+
+    // Botones de dibujo
+    $('#addRectFill').click(() => {
+      createElement('rect', { x: p.x, y: p.y, width: 100, height: 70, rx: 10, ry: 10, fill: '#2661ec', stroke: '#000', 'stroke-width': 2 });
+    });
+    $('#addRectOutline').click(() => {
+   
+      createElement('rect', { 
+        x: p.x, 
+        y: p.y, 
+        width: 120, 
+        height: 80, 
+        rx: 10, 
+        ry: 10, 
+        fill: 'none',
+         stroke: '#2563eb', 
+         'stroke-width': 3 });
+    });
+    $('#addCircleFill').click(() => {
+      
+      createElement('circle', { cx: p.x, cy: p.y, r: 35, fill: '#44cc88', stroke: '#000', 'stroke-width': 2 });
+    });
+    $('#addCircleOutline').click(() => {
+     
+      createElement('circle', { cx: p.x, cy: p.y, r: 40, fill: 'none', stroke: '#dc2626', 'stroke-width': 3 });
+    });
+    $('#addLine').click(() => {
+    
+      createElement('line', { x1: p.x, y1: p.y, x2: p.x+120, y2: p.y+40, stroke: '#333', 'stroke-width': 3 });
+    });
+    $('#addArrow').click(() => {
+      
+      createElement('line', { x1: p.x, y1: p.y, x2: p.x+120, y2: p.y+40, stroke: '#000', 'stroke-width': 3 }, true);
+    });
+    $('#addText').click(() => {
+      
+      const elt = createElement('text', { x: p.x, y: p.y, 'font-family': 'Arial', 'font-size': 20, fill: '#000', stroke: '#ccc', 'stroke-width': 0.5 });
+      elt.textContent = 'Texto';
+    });
+    $('#deleteShape').click(() => {
+      if (selectedElement) { selectedElement.remove(); clearSelection(); refreshElementList(); }
+    });
+
+    // Drag de formas SVG
+    $('#workspaceGrid').on('mousedown', '#shapes-group rect, #shapes-group circle, #shapes-group line, #shapes-group text', function(e) {
+      e.preventDefault();
+      e.stopPropagation(); // Evita interferir con el drag de estaciones
+      const elt = this;
+      selectShape(elt);
+      const start = getSVGCoords(e);
+      draggingShape = { element: elt, start: start, original: getOriginalPosition(elt) };
+    });
+
+    /*Funcion para obtener los elementos del SV*/
+    function getAllSVGElements() {
+      // Obtener el elemento SVG
+
+      /*
+      const svgElement = typeof svgSelector === 'string'
+        ? document.querySelector(svgSelector)
+        : svgSelector;
+
+      if (!svgElement || svgElement.tagName !== 'svg') {
+        throw new Error('No se encontró un elemento SVG válido');
+      } 
+      */
+
+      // Seleccionar todos los elementos dentro del SVG (excluyendo el propio <svg>)
+      const allElements = document.querySelectorAll('#shapes-group *');
+      console.log("longitus svg"+allElements.length)
+      const result = [];
+
+      allElements.forEach(el => {
+        // Obtener todos los nombres de atributos
+        const attributes = {};
+        const attributeNames = el.getAttributeNames();
+
+        attributeNames.forEach(attrName => {
+          if (attrName === 'data-list-id') return;
+          attributes[attrName] = el.getAttribute(attrName);
+        });
+
+        if (el.tagName === 'text') {
+          attributes['data-text-content'] = el.textContent; // atributo personalizado
+        }
+
+
+        result.push({
+          tag: el.tagName.toLowerCase(), // nombre de la etiqueta (ej: 'rect', 'circle', 'g')
+          attributes: attributes
+        });
+      });
+
+      console.log(result)
+      return result;
+    }
+
+    //Funcion para cargar los datos desde el servidor
+    function loadShapesFromJSON() {
+      const shapesGroup = document.getElementById('shapes-group');
+      
+      // Limpiar el grupo actual (para reemplazar con los datos del servidor)
+      shapesGroup.innerHTML = '';
+      let maxCounter = -1;
+
+        if (!shapesGroup) {
+          console.error('No se encontró el grupo #shapes-group');
+          return;
+        }
+
+      var formDataGetF = new FormData;
+      formDataGetF.append('opcion', 24);
+      formDataGetF.append('codigoLinea', codigoLinea.value);
+      fetch("../api/operacionesLinea.php", {
+          method: "POST",
+          body: formDataGetF,
+      })
+      .then((response) => response.text())
+      .then((data) => {
+            shapesArray = JSON.parse(data);
+
+            shapesArray.formas.forEach(shape => {
+              const { tag, attributes } = shape;
+              const element = document.createElementNS('http://www.w3.org/2000/svg', tag);
+
+              // Asignar todos los atributos excepto el texto especial
+              for (const [key, value] of Object.entries(attributes)) {
+                if (key === 'data-text-content' || key === 'data-list-id') continue; // este lo tratamos aparte
+                element.setAttribute(key, value);
+              }
+
+              // Si es texto, restaurar el contenido
+              if (tag === 'text') {
+                element.textContent = attributes['data-text-content'] || '';
+              }
+
+              shapesGroup.appendChild(element);
+
+              // Actualizar el contador máximo basado en data-list-id
+
+              /*
+                const listId = attributes['data-list-id'];
+                if (listId && typeof listId === 'string') {
+                  const match = listId.match(/elem-(\d+)/);
+                  if (match) {
+                    const num = parseInt(match[1], 10);
+                    if (num > maxCounter) maxCounter = num;
+                  }
+                } 
+              */
+              
+            });
+
+            // Actualizar el contador global para que los nuevos elementos sigan la secuencia
+            if (maxCounter >= 0) {
+              window.elementCounter = maxCounter + 1;
+            } else {
+              window.elementCounter = shapesArray.formas.length; // fallback
+            }
+
+            // Refrescar la lista de elementos y actualizar bounds (funciones existentes)
+            if (typeof refreshElementList === 'function') refreshElementList();
+            if (typeof updateContainerAndSVGBounds === 'function') updateContainerAndSVGBounds();
+            if (typeof clearSelection === 'function') clearSelection();
+
+            console.log(`Cargadas ${shapesArray.formas.length} formas. Próximo elementCounter = ${window.elementCounter}`);
+      })
+      .catch((error) => { 
+        console.log(error); 
+      });
+    }
+
+    /*
+      $(window).on('mousemove', function(e) {
+        if (!draggingShape) return;
+        e.preventDefault();
+        const current = getSVGCoords(e);
+        const dx = current.x - draggingShape.start.x;
+        const dy = current.y - draggingShape.start.y;
+        setPosition(draggingShape.element, draggingShape.original, dx, dy);
+        const angle = getRotationAngle(draggingShape.element);
+        applyRotation(draggingShape.element, angle);
+        updateCommonFields(draggingShape.element);
+        updateContainerAndSVGBounds();
+      });
+    */
+
+
+    $(window).on('mousemove', function(e) {
+      if (!draggingShape) return;
+      e.preventDefault();
+
+      const current = getSVGCoords(e);
+      let dx = current.x - draggingShape.start.x;
+      let dy = current.y - draggingShape.start.y;
+
+      const elt = draggingShape.element;
+      const original = draggingShape.original;
+
+      // 👇 Obtener nueva posición según tipo
+      let newX = 0;
+      let newY = 0;
+
+      if (elt.tagName === 'rect') {
+        newX = original.x + dx;
+        newY = original.y + dy;
+
+        // 🚫 limitar a 0
+        dx = Math.max(-original.x, dx);
+        dy = Math.max(-original.y, dy);
+
+      } else if (elt.tagName === 'circle') {
+        newX = original.cx + dx;
+        newY = original.cy + dy;
+
+        dx = Math.max(-original.cx, dx);
+        dy = Math.max(-original.cy, dy);
+
+      } else if (elt.tagName === 'text') {
+        newX = original.x + dx;
+        newY = original.y + dy;
+
+        dx = Math.max(-original.x, dx);
+        dy = Math.max(-original.y, dy);
+
+      } else if (elt.tagName === 'line') {
+        dx = Math.max(-original.x1, dx);
+        dy = Math.max(-original.y1, dy);
+      }
+
+      // ✅ aplicar posición ya limitada
+      setPosition(elt, original, dx, dy);
+
+      const angle = getRotationAngle(elt);
+      applyRotation(elt, angle);
+
+      updateCommonFields(elt);
+      updateContainerAndSVGBounds();
+    });
+
+
+    $(window).on('mouseup', function() { draggingShape = null; });
+
+    $('#workspaceGrid').on('click', '#workspace-svg', function(e) {
+      if (e.target === this || e.target.tagName === 'rect' || e.target.tagName === 'circle' || e.target.tagName === 'line' || e.target.tagName === 'text') return;
+      clearSelection();
+    });
+
+    // Atributos
+    $(document).on('input change', '.shape-attr', function() {
+      if (!selectedElement) return;
+      const input = $(this);
+      const attr = input.data('attr');
+      let value = input.val();
+      const tag = selectedElement.tagName;
+      if (tag === 'text' && attr === 'content') {
+        $(selectedElement).text(value);
+      } else {
+        selectedElement.setAttribute(attr, value);
+      }
+      if (selectedElement.classList.contains('arrow-line')) {
+        selectedElement.setAttribute('marker-end', 'url(#arrowMarker)');
+      }
+      applyRotation(selectedElement, getRotationAngle(selectedElement));
+      refreshElementList();
+    });
+
+    $('#common-x, #common-y').on('input', function() {
+      if (!selectedElement) return;
+      const x = parseFloat($('#common-x').val());
+      const y = parseFloat($('#common-y').val());
+      const tag = selectedElement.tagName;
+      if (tag === 'rect') {
+        const w = parseFloat(selectedElement.getAttribute('width')||0);
+        const h = parseFloat(selectedElement.getAttribute('height')||0);
+        selectedElement.setAttribute('x', x - w/2);
+        selectedElement.setAttribute('y', y - h/2);
+      } else if (tag === 'circle') {
+        selectedElement.setAttribute('cx', x);
+        selectedElement.setAttribute('cy', y);
+      } else if (tag === 'line') {
+        const dx = x - (parseFloat(selectedElement.getAttribute('x1')) + parseFloat(selectedElement.getAttribute('x2')))/2;
+        const dy = y - (parseFloat(selectedElement.getAttribute('y1')) + parseFloat(selectedElement.getAttribute('y2')))/2;
+        selectedElement.setAttribute('x1', parseFloat(selectedElement.getAttribute('x1')) + dx);
+        selectedElement.setAttribute('y1', parseFloat(selectedElement.getAttribute('y1')) + dy);
+        selectedElement.setAttribute('x2', parseFloat(selectedElement.getAttribute('x2')) + dx);
+        selectedElement.setAttribute('y2', parseFloat(selectedElement.getAttribute('y2')) + dy);
+      } else if (tag === 'text') {
+        selectedElement.setAttribute('x', x);
+        selectedElement.setAttribute('y', y);
+      }
+      applyRotation(selectedElement, getRotationAngle(selectedElement));
+      updateCommonFields(selectedElement);
+    });
+
+    $('#common-rotate').on('input', function() {
+      if (!selectedElement) return;
+      const angle = parseInt($(this).val());
+      $('#rotateValue').text(angle + '°');
+      applyRotation(selectedElement, angle);
+    });
+
+    function refreshElementList() {
+      const list = $('#elementList');
+      list.empty();
+      shapesGroup.children().each(function() {
+        const elt = this;
+        const tag = elt.tagName;
+        let icon = '', typeName = '';
+        if (tag === 'rect') {
+          icon = elt.getAttribute('fill') !== 'none' ? '▭' : '▯';
+          typeName = icon === '▭' ? 'Rectángulo' : 'Contorno';
+        } else if (tag === 'circle') {
+          icon = elt.getAttribute('fill') !== 'none' ? '●' : '○';
+          typeName = icon === '●' ? 'Círculo' : 'Circ. contorno';
+        } else if (tag === 'line') {
+          icon = elt.classList.contains('arrow-line') ? '⇢' : '∕';
+          typeName = icon === '⇢' ? 'Flecha' : 'Línea';
+        } else if (tag === 'text') {
+          icon = 'T';
+          typeName = 'Texto';
+        }
+        if (!elt.getAttribute('data-list-id')) {
+          elt.setAttribute('data-list-id', 'elem-' + (elementCounter++));
+        }
+        const itemId = elt.getAttribute('data-list-id');
+        const listItem = $('<div class="element-list-item" data-element-id="' + itemId + '"></div>')
+          .append('<span class="element-icon">' + icon + '</span>')
+          .append('<span>' + typeName + '</span>');
+        if (selectedElement === elt) listItem.addClass('selected-in-list');
+        listItem.on('click', function() {
+          const targetId = $(this).data('element-id');
+          const targetElt = shapesGroup.find('[data-list-id="' + targetId + '"]').get(0);
+          if (targetElt) selectShape(targetElt);
+        });
+        list.append(listItem);
+      });
+    }
+
+    function updateContainerAndSVGBounds() {
+      const container = document.getElementById('dynamicContainer');
+      const svg = document.getElementById('workspace-svg');
+      const shapesGroup = document.getElementById('shapes-group');
+
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+      // 1. Procesar estaciones (divs)
+      document.querySelectorAll('.station').forEach(station => {
+        const left = parseFloat(station.style.left) || 0;
+        const top = parseFloat(station.style.top) || 0;
+        const width = station.offsetWidth;
+        const height = station.offsetHeight;
+        minX = Math.min(minX, left);
+        minY = Math.min(minY, top);
+        maxX = Math.max(maxX, left + width);
+        maxY = Math.max(maxY, top + height);
+      });
+
+      // 2. Procesar formas SVG (dentro de shapesGroup)
+      const shapes = shapesGroup.children;
+
+      /*
+        for (let shape of shapes) {
+          const tag = shape.tagName;
+          let left, top, width, height;
+          if (tag === 'rect') {
+            left = parseFloat(shape.getAttribute('x')) || 0;
+            top = parseFloat(shape.getAttribute('y')) || 0;
+            width = parseFloat(shape.getAttribute('width')) || 0;
+            height = parseFloat(shape.getAttribute('height')) || 0;
+          } else if (tag === 'circle') {
+            const cx = parseFloat(shape.getAttribute('cx')) || 0;
+            const cy = parseFloat(shape.getAttribute('cy')) || 0;
+            const r = parseFloat(shape.getAttribute('r')) || 0;
+            left = cx - r;
+            top = cy - r;
+            width = 2 * r;
+            height = 2 * r;
+          } else if (tag === 'line') {
+            const x1 = parseFloat(shape.getAttribute('x1')) || 0;
+            const y1 = parseFloat(shape.getAttribute('y1')) || 0;
+            const x2 = parseFloat(shape.getAttribute('x2')) || 0;
+            const y2 = parseFloat(shape.getAttribute('y2')) || 0;
+            left = Math.min(x1, x2);
+            top = Math.min(y1, y2);
+            width = Math.abs(x2 - x1);
+            height = Math.abs(y2 - y1);
+          } else if (tag === 'text') {
+            left = parseFloat(shape.getAttribute('x')) || 0;
+            top = parseFloat(shape.getAttribute('y')) || 0;
+            width = 0;  // el texto puede tener ancho variable, pero no es crítico
+            height = 0;
+          } else {
+            continue;
+          }
+          // Actualizar límites
+          if (width > 0 && height > 0) {
+            minX = Math.min(minX, left);
+            minY = Math.min(minY, top);
+            maxX = Math.max(maxX, left + width);
+            maxY = Math.max(maxY, top + height);
+          } else {
+            // Para líneas y texto, al menos considerar el punto
+            minX = Math.min(minX, left);
+            minY = Math.min(minY, top);
+            maxX = Math.max(maxX, left);
+            maxY = Math.max(maxY, top);
+          }
+        } 
+      */
+      for (let shape of shapes) {
+          let bbox;
+
+          try {
+            bbox = shape.getBBox();
+          } catch (e) {
+            continue; // por si algún elemento no es renderizable
+          }
+
+          const left = bbox.x;
+          const top = bbox.y;
+          const width = bbox.width;
+          const height = bbox.height;
+
+          minX = Math.min(minX, left);
+          minY = Math.min(minY, top);
+          maxX = Math.max(maxX, left + width);
+          maxY = Math.max(maxY, top + height);
+        }
+
+      // Añadir un margen alrededor
+      const padding = 30;
+      minX = Math.max(0, minX - padding);
+      minY = Math.max(0, minY - padding);
+      maxX = maxX + padding;
+      maxY = maxY + padding;
+
+      const newWidth = maxX - minX;
+      const newHeight = maxY - minY;
+
+      // Establecer el tamaño del contenedor dinámico (en píxeles)
+      container.style.width = `${maxX}px`;
+      container.style.height = `${maxY}px`;
+
+      // Actualizar el viewBox del SVG para que abarque toda el área
+      svg.setAttribute('viewBox', `${minX} ${minY} ${newWidth} ${newHeight}`);
+    }
+
+    // Inicializar lista de elementos
+    refreshElementList();
 
     // Inicializar el workspace
     document.addEventListener('DOMContentLoaded', function() {
@@ -1480,7 +2302,6 @@
                               (modalActual) ? modalActual.hide() : '';
                               getEstacion(estacionId)
 
-
                               if(data.asignacion==0){
                                  let registrar = confirm('¿Desea agregar a esta persona al personal disponible?');
                                     if(registrar) registrarDisponible(nominaTrabajador, nombreTrabajador, $('#turnoLayout').val())
@@ -1651,7 +2472,7 @@
         btnRegistrarAsistencia.addEventListener('click', registrarAsistencia);
         btnInfoRPC.addEventListener('click', function(){changeContent('ventanasModalPC','contInfoEstacion')});
         btnRegistroPc.addEventListener('click', function(){changeContent('ventanasModalPC','contregistroCambioForm')});
-        btnLiberarPC.addEventListener('click', function(){changeContent('ventanasModalPC', 'contLiberarPC')});
+        //btnLiberarPC.addEventListener('click', function(){changeContent('ventanasModalPC', 'contLiberarPC')});
         btnTablaPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contTablaDisponibles')});
         btnRegistroPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contRegistroPersonalDisponible')});
         btnMenuRegistroAs.addEventListener('click', generarTablaAsistencia);
@@ -1659,6 +2480,7 @@
         
         fechaHistorial.addEventListener('change', getHistorialLayout)
         turnoHistorial.addEventListener('change', getHistorialLayout)
+        btnEvaluacion.addEventListener('click', registrarEvaluacionPC);
 
         // SELECT → change
         $('#attendanceTable tbody').on('change', 'select', function () {
@@ -1674,6 +2496,7 @@
             }
         });
 
+        //Marcar/Desmarcar los check de la tabla de asistencia
         checkPadre.addEventListener('change', function(){
           if (checkPadre.checked) {
                   seleccionadosGlobal = [...datosAsistenciaCheck] //Esto genera un nuevo arreglo
@@ -1707,14 +2530,7 @@
         });
 
         //Funcion para actualizar el layout al cambiar el turno
-        document.getElementById('turnoLayout').addEventListener('change', function(){
-            let turno = $("#turnoLayout").val()
-
-            if(turno){
-              document.getElementById('workspaceGrid').innerHTML = '';
-              getEstaciones();
-            }
-        })
+        document.getElementById('turnoLayout').addEventListener('change', actualizarVistaLayout)
 
         //Funcion para mostrar el layout por la fecha seleccionada
         document.getElementById('idRH').addEventListener('change', function() {
@@ -1755,14 +2571,46 @@
                 alert('Error de conexión');
             });
         });
+
+          btncloseSidebar.addEventListener('click', function () {
+              $('#btncloseSidebar').addClass('d-none')
+              $('#btnfloatingMenu').removeClass('d-none')
+
+            $('#tools-sidebar').addClass('fade-out')
+            $('#tools-panel').addClass('fade-out')
+            //$('#layout-header').addClass('fade-out')
+
+              setTimeout(() => {
+                  $('#tools-sidebar').addClass('d-none')
+                  $('#tools-panel').addClass('d-none')
+                  //$('#layout-header').addClass('d-none')
+
+                  $('#tools-sidebar').removeClass('fade-out')
+                  $('#tools-panel').removeClass('fade-out')
+                 // $('#layout-header').removeClass('fade-out')
+              }, 300); 
+
+
+
+          })
+
+          btnfloatingMenu.addEventListener('click', function () {
+            $('#btncloseSidebar').removeClass('d-none')
+            $('#btnfloatingMenu').addClass('d-none')
+
+            $('#tools-sidebar').removeClass('d-none')
+            $('#tools-panel').removeClass('d-none')
+            //$('#layout-header').removeClass('d-none')
+          })
+
+      // Cargar las formas
+      setTimeout(() => {
+              loadShapesFromJSON();
+      }, 500);
+
     });
 
 
-
-    /*
-      necesito saber Como puedo generar algun mapa, de mi estado con las rutas o vialidades para lleguar a mi lugar de trabajo
-      existe alguna manera o herramienta que puediera ayudarme a hacer el mapa o alguna a la que so lo pueda pedir? 
-    */
 /* 
     seleccionadosGlobal = datosAsistenciaCheck 
     Esto es un error ya que en vez de generar un nuevo arreglo asignado a la variable seleccionadosGlobal 
@@ -1770,171 +2618,32 @@
     apuntan a la mimsa ubicacion de la memoria por lo que al modificar cualquiera de las dos, los cambios se 
     Se veran reflejados en ambas variables  
 
-TABLERO DE ENSAMBLES Y ENSAMBLES DE PARTES SON LO MISMO
-CRV
-CORTE CABLE 	                      CRV-CORTE
-RE-CORTE	                          CRV-RECORTE
-DESFORRE CIRCUITO	                  CRV-DESFORRE
-REDUCCION DE TUBO TERMO-CONTRACTIL	CRV-REDUCCION
-CRIMPADO 1	                        CRV-CRIMPADO1
-INSERCION DE TERMINAL 1	            CRV-INSERT1
-CRIMPADO 2	                        CRV-CRIMPADO2
-CRIMPADO 3	                        CRV-CRIMPADO3
-INSERCION DE TERMINAL 2	            CRV-INSERT2
-MARCADO LASER                 	    CRVR-MARCADOL    CRVL-MARCADOL
-DESF TWST CABEZAL 	                CRVR-DESFTWSTCAB CRVL-DESFTWSTCAB
-SOLDADURA AUTOMATICA	              CRVR-SOLDADURA   CRVL-SOLDADURA
-MOLDEO DE CABEZAL 	                CRVR-MOLDCABEZAL CRVL-MOLDCABEZAL
-MOLDEO URETANO Y	                  CRVR-MOLDUY      CRVL-MOLDUY
-ENCINTADO 	                        CRVR-ENCINTADO   CRVL-ENCINTADO
-MARCADO PUNTOS 	                    CRVR-MARCADOP    CRVL-MARCADOP
-MOLDEO URETANO  L	                  CRVR-MOLDUL      CRVL-MOLDUL
-MOLDEO URETANO  BRKT 1	            CRVR-BRKT1       CRVL-BRKT1
-MOLDEO URETANO  BRKT 2	            CRVR-BRKT2       CRVL-BRKT2 
-TABLERO DE CLIP	                    CRVR-CLIP        CRVL-CLIP 
-ENSAMBLE DE PARTES o ASSY POSCA	    CRVR-ENSAMBLE    CRVL-ENSAMBLE
-FUGA AIRE	                          CRVR-FUGA        CRVL-FUGA
-PRUEBA ELECTRICA	                  CRVR-PRUEBAELEC  CRVL-PRUEBAELEC
-INSPECCION FINAL 	                  CRVR-INSPFINAL   CRVL-INSPFINAL
-EMPAQUE	                            CRVR-EMPAQUE     CRVL-EMPAQUE
-MOLDEO DE INSERT BRAKET	            CRV-MOLDINBRKT
-MOLDEO DE IC	                      CRV-MOLDIC
+
+/*
+ las funciones selectShape y clearselection son las que ponen el borde degradado al seleccionar un objeto hay que revisar este para
+ ver que funcione al dar clic y quitar el clic de la figura svg
+*/
 
 
 
-MDX
-CORTE CABLE	                              MDX-CORTE
-RE-CORTE	                                MDX-RECORTE
-MARCADO LASER	                            MDX-MARCADOL
-DESFORRE ABS	                            MDX-DESFORREABS
-REDUCCION DE TUBO	                        MDX-REDUCCION
-MOLDEO URETANO Y	                        MDX-MOLDUY
-MOLDEO BRKT-1	                            MDX-BRKT1
-MOLDEO BRKT-2	                            MDX-BRKT2
-CRIMPADO 1	                              MDX-CRIMPADO1
-INSERCION DE CONECTOR DE DOS CABIDADES	  MDX-INSERCON2CAB
-CRIMPADO 2	                              MDX-CRIMPADO2
-CRIMPADO 3	                              MDX-CRIMPADO3
-INSERCION DE CONECTOR DE CUATRO CABIDADES	MDX-INSERCON4CAB
-TABLERO DE ENSAMBLE	                      MDX-ENSAMBLE
-TABLERO CLIP	                            MDX-CLIP
-DESF TWST CAB	                            MDX-DESFTWSTCAB
-SOLD CABEZAL	                            MDX-SOLDADURACAB
-MOLDEO CABEZAL	                          MDX-MOLDCABEZAL
-CERRADO BRKT	                            MDX-CERRADOBRKT
-FUGA AIRE 1	                              MDX-FUGA1
-FUGA AIRE 2                             	MDX-FUGA2
-PRUEBA ELECTRICA 1	                      MDX-PRUEBAELEC1
-PRUEBA ELECTRICA 2	                      MDX-PRUEBAELEC2
-INSPECCION FINAL	                        MDX-INSPFINAL
-EMPAQUE	                                  MDX-EMPAQUE
-MOLDE DE IC                             	MDX-MOLDIC
-MOLDEO DE INSERT BRAKET	                  MDX-MOLDINBRKT
+/*
 
+  A veces miramos el cielo buscando respuestas,
+  como si las estrellas guardaran secretos que nosotros olvidamos.
+  Brillan tranquilas, lejanas, eternas en su silencio,
+  mientras nosotros corremos, dudamos, sentimos.
 
-ODY
-CORTE CABLE	                              ODY-CORTE
-RE-CORTE	                                ODY-RECORTE
-INSER GROMMET	                            ODY-INSERGROMMET
-CRIMPADO 1	                              ODY-CRIMPADO1
-CRIMPADO 2	                              ODY-CRIMPADO2
-CRIMPADO 3	                              ODY-CRIMPADO3
-CRIMPADO 4	                              ODY-CRIMPADO4
-ENCINTADO	                                ODY-ENCINTADO
-TABLERO CLIP	                            ODY-CLIP
-CERRADO BRKT 1	                          ODY-CERRADOBRKT1
-CERRADO BRKT 2	                          ODY-CERRADOBRKT2
-ASSY EPB	                                ODY-ASSYEPB
-PRUEBA ELECTRICA	                        ODY-PRUEBAELEC1
-INSPECCION FINAL	                        ODY-INSPFINAL
-CORTE CABLE 1.1	                          ODY-CORTE1.1
-DESF TWST CONECT	                        ODY-DESFTWSTCON
-MOLD CONECT	                              ODY-MOLDCONECT
-DESF TWST CABEZAL	                        ODY-DESFTWSTCAB
-INSPECCION AL 200%	                      ODY-INSP200
-MOLDEO CABEZAL	                          ODY-MOLDCABEZAL
-FUGA DE AIRE	                            ODY-FUGA
-MOLD- SIB-COMPONENT	                      ODY-MOLDSIBCOMP
+  Y entonces, en medio de la noche, parece que susurran algo suave:
+  “Dicen las estrellas que los fugaces somos nosotros.”
 
+  Y tiene sentido.
+  Porque ellas permanecen,
+  pero nosotros somos instante, latido, chispa.
 
-FORD
-CORTE CABLE	                              FRD-CORTE
-MARCADO LASER	                            FRD-MARCADOL
-INSER GROMMET	                            FRD-INSERGROMMET
-DESF TWST CONECT	                        FRD-DESFTWSTCON
-SOLD CONECTOR	                            FRD-SOLDADURACON
-MOLDEO CONECT	                            FRD-MOLDCONECT
-ADHESION PARTES	                          FRD-ADHESION
-DESF TWST CABEZAL	                        FRD-DESFTWSTCAB
-SOLD CABEZAL	                            FRD-SOLDADURACAB
-MOLDEO CABEZAL	                          FRD-MOLDCABEZAL
-PRUEBA TENSION	                          FRD-TENSION
-COLOCACION CLIPS	                        FRD-COLCLIPS
-COLOCACION DE BRKT	                      FRD-COLBRKT
-FUGA AIRE	                                FRD-FUGA
-PRUEBA ELECTRICA	                        FRD-PRUEBAELEC
-INSP VISUAL	                              FRD-INSPVISUAL
-MOLDEO SIB COMPONENTE	                    FRD-MOLDSIBCOMP
+  Quizá por eso duele tanto lo que se va,
+  y por eso también vale tanto lo que se queda,
+  aunque sea solo por un momento.
 
-
-LINEA DE ASSY 1
-Comprobacion de Producto 		
-Insercion de terminal de fusible 		
-insercion de terminal TH		
-Insercion de terminal NS		
-Insercion de terminal M		
-Insercion de terminal L		
-Ensamble de relevador 		
-Aplicación de Flux 1		
-Aplicación de flux 2		
-Precalentamiento y soldadura 		
-Enfriamiento 		
-Inspeccion visual de PCB		
-Inspeccion de circuito 1		
-Inspeccion de circuito 2		
-Aplicación de desecante 		
-Ensamble de cubierte superior con tornillo 		
-Marcador Laser 		
-Inspeccion de ranura de terminal 		
-Ensamble de fusible 		
-Presion de fusible y camara de inspeccion 		
-Inpeccion de funcionamiento 		
-Inpeccion de alineacion 		
-Empaque 		
-
-
-AOI
-Aplicación de Flux
-Aplicación de desecante
-Comprobacion de Producto
-Cargador
-Conveyor
-Descargador
-Empaque
-Enfriamiento
-Ensamble de fusible
-Ensamble de relevador
-Ensamble de cubierte superior con tornillo
-Horno
-ICT
-Impresora Laser
-Impresora de soldadura
-Insercion de terminal
-Inspeccion de circuito
-Inspeccion de ranura de terminal
-Inpeccion de funcionamiento
-Inpeccion de alineacion
-Inspeccion visual de PCB
-Inspecion visual de soldadura
-Lector de Rom
-Limpiador de PCB
-Marcador Laser
-Montaje de componentes
-Presion de fusible y camara de inspeccion
-Precalentamiento y soldadura
-Separador de PCB
-SPI
-Transverser sorting
-Transverser collecting
-Volteador
+  Porque ser fugaz no es ser pequeño,
+  es ser irrepetible. ✨
 */

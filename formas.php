@@ -64,12 +64,15 @@
       margin-top: 24px;
       border: 1px solid rgba(255,255,255,0.6);
     }
+    
     .attr-section {
       display: none;
     }
+    
     .attr-section.active-section {
       display: block;
     }
+    
     .form-control, .form-select, .form-control-color {
       border-radius: 40px !important;
       border: 1px solid #d0d9e8;
@@ -77,11 +80,19 @@
     }
     .selected {
       filter: drop-shadow(0 0 12px #2563eb) drop-shadow(0 0 4px #1e40af);
-      transition: filter 0.15s;
+      transition: filter 0.3s;
     }
+
+    /* 
+      clase para SVG, define la parte que detecta los clics, la parte visivle (no transparente ni oculto), el borde el relleno, todo o ninguno, por defecto es visible
+      Dependiendo del valor de la propiedad el leento puede dejar pasar los clics o no, por ejemplo si hay un elemento sin relleno solo con borde y denao hay otro elemento
+      el click lo podria recibir el rellano o el objeto que esta por debajo del elemento que no tiene relleno o esta dentro del borde del elemnto que esta encima en el caso de la propuedad visible
+    */
+
     .grid-bg {
       pointer-events: visible;
     }
+    
     .badge-info {
       background: #dbeafe;
       color: #1e40af;
@@ -139,34 +150,34 @@
 <body class="p-4">
 
 <div class="container-fluid">
-  <div class="row g-4">
-    <!-- Columna herramientas + atributos -->
-    <div class="col-lg-1 col-md-4">
-      <div class="toolbox-card">
-        <h5 class="fw-bold mb-4" style="color: #0f172a;">🧰</h5>
-        <div class="d-grid">
-          <button class="btn btn-tool" id="addRectFill"><i>▭</i></button>
-          <button class="btn btn-tool" id="addRectOutline"><i>▯</i></button>
-          <button class="btn btn-tool" id="addCircleFill"><i>●</i></button>
-          <button class="btn btn-tool" id="addCircleOutline"><i>○</i></button>
-          <button class="btn btn-tool" id="addLine"><i>∕</i></button>
-          <button class="btn btn-tool" id="addArrow"><i>⇢</i></button>
-          <button class="btn btn-tool" id="addText"><i>T</i></button>
-          <hr class="my-2">
-          <button class="btn btn-outline-danger btn-tool" id="deleteShape"><i>✕</i></button>
+      <div class="row g-4">
+        <!-- Columna herramientas + atributos -->
+        <div class="col-lg-1 col-md-4">
+          <div class="toolbox-card">
+            <h5 class="fw-bold mb-4" style="color: #0f172a;">🧰</h5>
+            <div class="d-grid">
+              <button class="btn btn-tool" id="addRectFill"><i>▭</i></button>
+              <button class="btn btn-tool" id="addRectOutline"><i>▯</i></button>
+              <button class="btn btn-tool" id="addCircleFill"><i>●</i></button>
+              <button class="btn btn-tool" id="addCircleOutline"><i>○</i></button>
+              <button class="btn btn-tool" id="addLine"><i>∕</i></button>
+              <button class="btn btn-tool" id="addArrow"><i>⇢</i></button>
+              <button class="btn btn-tool" id="addText"><i>T</i></button>
+              <hr class="my-2">
+              <button class="btn btn-outline-danger btn-tool" id="deleteShape"><i>✕</i></button>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Área de trabajo (cuadrícula) -->
-    <div class="col-lg-9 col-md-8">
-      <div class="workspace-wrapper">
+        <!-- Área de trabajo (cuadrícula) -->
+        <div class="col-lg-9 col-md-8">
+          <div class="workspace-wrapper">
 
-      <div class="d-flex gap-2 mb-2">
-        <button class="btn btn-sm btn-outline-primary" id="zoomIn">➕ Zoom In</button>
-        <button class="btn btn-sm btn-outline-primary" id="zoomOut">➖ Zoom Out</button>
-        <button class="btn btn-sm btn-outline-secondary" id="zoomReset">⟲ Reset</button>
-    </div>
+          <div class="d-flex gap-2 mb-2">
+            <button class="btn btn-sm btn-outline-primary" id="zoomIn">➕ Zoom In</button>
+            <button class="btn btn-sm btn-outline-primary" id="zoomOut">➖ Zoom Out</button>
+            <button class="btn btn-sm btn-outline-secondary" id="zoomReset">⟲ Reset</button>
+        </div>
 
         <svg id="workspace" width="900" height="600" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -178,6 +189,7 @@
             </marker>
           </defs>
           <rect x="0" y="0" width="100%" height="100%" fill="url(#grid)" class="grid-bg" id="gridBackground" />
+          <!-- Contenedor donde se cargan las figuras-->
           <g id="shapes-group"></g>
         </svg>
       </div>
@@ -207,7 +219,9 @@
             <div class="tab-pane fade show active" id="tab-attrs">
                 <div class="attribute-panel">
                     <h6 class="fw-semibold">⚙️ Atributos</h6>
-                    <div id="noSelectionMsg" class="text-muted small text-center py-1">Ningún elemento seleccionado</div>
+                    <div id="noSelectionMsg" class="text-muted small text-center py-1">
+                      Ningún elemento seleccionado
+                    </div>
 
                     <!-- Sección común a todas las formas (posición + rotación) -->
                     <div class="common-attrs" style="display: none;">
@@ -223,7 +237,7 @@
                         </div>
                     </div>
 
-                    <!-- Rectángulo / círculo: dimensiones, relleno, borde, y ahora rx/ry -->
+                    <!-- Rectángulo: dimensiones, relleno, borde, y ahora rx/ry -->
                     <div class="attr-section" id="rect-attrs">
                         <label class="form-label">Ancho</label>
                         <input type="number" class="form-control mb-2 shape-attr" id="rect-width" data-attr="width" value="100" step="1" min="5">
@@ -242,6 +256,7 @@
                         <input type="number" class="form-control shape-attr" id="rect-stroke-width" data-attr="stroke-width" value="2" step="0.5" min="0">
                     </div>
 
+                    <!-- Círculo: dimensiones, relleno, borde, radius : rx/ry -->
                     <div class="attr-section" id="circle-attrs">
                         <label class="form-label">Radio</label>
                         <input type="number" class="form-control mb-2 shape-attr" id="circle-r" data-attr="r" value="35" step="1" min="5">
@@ -318,11 +333,9 @@
     // Contador para IDs únicos de elementos
     let elementCounter = 0;
 
-
-
     // Variables de zoom
     let currentZoom = 1; // factor de zoom, 1 = 100%
-    const zoomStep = 0.2;
+    const zoomStep = 0.2; //Proporcion de incremento o decremento del zoom 
     const svgElement = document.getElementById('workspace');
     const originalViewBox = svgElement.getAttribute('viewBox').split(' ').map(Number); // [x, y, width, height]
 
@@ -626,7 +639,7 @@
       return elt;
     }
 
-    //Eventos de zo
+    //Eventos de zoom
         $('#zoomIn').click(() => {
             currentZoom = Math.min(currentZoom + zoomStep, 3); // límite máximo 300%
             applyZoom();

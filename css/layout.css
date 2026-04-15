@@ -1,5 +1,5 @@
     :root {
-      --primary-color: #2c3e50;
+      --primary-color: #000000;
       --secondary-color: #3498db;
       --accent-color: #e74c3c;
       --success-color: #27ae60;
@@ -7,7 +7,7 @@
       --light-bg: #f8f9fa;
       --card-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-
+    
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f5f7fa;
@@ -19,7 +19,8 @@
     
     .layout-container {
       display: flex;
-      height: 100vh;
+      height: 100%;
+      overflow: hidden;
     }
     
     /* Sidebar de herramientas */
@@ -45,7 +46,6 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      margin-bottom: 15px;
       transition: all 0.3s;
       cursor: pointer;
     }
@@ -71,6 +71,7 @@
       display: flex;
       flex-direction: column;
       background-color: white;
+      overflow: hidden;
     }
     
     .layout-header {
@@ -103,11 +104,11 @@
     }
     
     .workspace-grid {
+      width: 100%;  /*min-height: 100%;*/
+      height: 100%; /*min-width: 100%;*/
       position: relative;
-      min-height: 100%;
-      background-image: 
-        linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+      /*background-image:  linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+      */
       background-size: 20px 20px;
       transform-origin: 0 0;
       transition: transform 0.3s ease;
@@ -131,8 +132,8 @@
     /* Estaciones */
     .station {
       position: absolute;
-      width: 180px;
-      height: 180px;
+      width: 210px;
+      height: 150px;
       border-radius: 12px;
       box-shadow: var(--card-shadow);
       display: flex;
@@ -146,7 +147,12 @@
       user-select: none;
       /* Forzar aceleración por hardware */
       transform: translateZ(0);
-      will-change: transform;
+      will-change: transform; 
+      z-index: 2;
+       pointer-events: auto;
+      /*
+        transform: rotate(270deg); 
+      */
     }
     
     .station:hover {
@@ -167,7 +173,7 @@
     
     .station-header {
       width: 100%;
-      max-height: 30px;
+      max-height: 20px;
       padding: 5px;
       text-align: center;
       background: rgba(0,0,0,0.1);
@@ -175,7 +181,6 @@
       color: white;
       text-shadow: 0 1px 2px rgba(0,0,0,0.3);
       overflow-y: auto;
-
        scrollbar-width:8px;
     }
 
@@ -207,8 +212,9 @@
     }
     
     .station-name {
+      font-size: 30px;
       font-weight: 600;
-      color: white;
+      color: rgb(0, 0, 0);
       text-shadow: 0 1px 2px rgba(0,0,0,0.3);
       text-align: center;
     }
@@ -240,13 +246,13 @@
     }
     
     /* Colores para estaciones */
-    .station-color-1 { background: linear-gradient(135deg, #3498db, #2980b9); }
-    .station-color-2 { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+    .station-color-1 { background: linear-gradient(135deg, rgb(52, 152, 219, 0.2), rgba(43, 122, 174, 0.2)); }
+    .station-color-7 { background: linear-gradient(135deg, rgb(46, 204, 113, 0.5), rgb(39, 174, 96, 0.5)); }
     .station-color-3 { background: linear-gradient(135deg, #e74c3c, #c0392b); }
     .station-color-4 { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
     .station-color-5 { background: linear-gradient(135deg, #f39c12, #d35400); }
-    .station-color-6 { background: linear-gradient(135deg, #1abc9c, #16a085); }
-    .station-color-7 { background: linear-gradient(135deg, #34495e, #2c3e50); }
+    .station-color-2 { background: linear-gradient(135deg, rgb(26, 188, 156, 0.6)); }
+    .station-color-7 { background: linear-gradient(135deg, rgb(52, 73, 94, 0), rgb(44, 62, 80, 0)); }
     .station-color-8 { background: linear-gradient(135deg, #e67e22, #a86b42ff); }
     
     /* Modal para detalles de estación */
@@ -980,6 +986,28 @@
 
 
 
+  /* Estilos complementarios para los tabs y consistencia con tus formularios */
+        .nav-tabs .nav-link {
+            font-weight: 500;
+            color: #2c3e50;
+            border: none;
+            border-bottom: 2px solid transparent;
+            margin-right: 1rem;
+            padding: 0.75rem 1rem;
+            transition: all 0.2s;
+        }
+        .nav-tabs .nav-link:hover {
+            border-color: #e9ecef;
+            background-color: #f8f9fa;
+        }
+        .nav-tabs .nav-link.active {
+            color: #0d6efd;
+            border-bottom: 2px solid #0d6efd;
+            background-color: transparent;
+        }
+
+  /*fin estilos tab*/
+
 
 
 /*ESTILOS DEL MODAL GESTION DE PUNTO DE CAMBIO Y ESTACION*/
@@ -1042,3 +1070,230 @@
     border-radius:8px;
     font-weight:bold;
 }
+
+    /*Estilos de boton flotante*/
+    .btn-float {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background-color: var(--accent-color);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      z-index: 1000;
+      font-size: 1.8rem;
+      transition: all 0.3s;
+    }
+    
+    .btn-float:hover {
+      transform: scale(1.1);
+      background-color: #c0392b;
+      color: white;
+    }
+
+    /*Estilos de boton flotante*/
+    .sym {
+      position: fixed;
+      bottom: 30px;
+      left: 50px;
+      width: 50px;
+      height: 50px;
+      border-radius: 5%;
+      background-color: white;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      z-index: 1000;
+      font-size: 1.8rem;
+      transition: all 0.3s;
+    }
+    
+    .sym:hover {
+      transform: scale(1.1);
+      background-color: rgb(241, 241, 241);
+      color: white;
+    }
+
+  /* Estilo del botón cerrar dentro del menú */
+        .close-sidebar-btn {
+            position: fixed;
+            bottom: 25px;
+            left: 100px;
+            width: 50px;
+            height: 50px;
+            border-radius: 60%;
+            background: rgb(243, 156, 18, 0.5);
+            color: white;
+            border: none;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 100;
+            backdrop-filter: blur(2px);
+        }
+
+        .close-sidebar-btn:hover {
+            background: var(--warning-color);
+            transform: scale(1.2);
+        }
+
+  /* ===== ICONO FLOTANTE (aparece cuando menú oculto) ===== */
+        .floating-menu-btn {
+            position: fixed;
+            bottom: 25px;
+            left: 100px;
+            width: 50px;
+            height: 50px;
+            border-radius: 60%;
+            background: rgb(243, 156, 18, 0.5);
+            color: white;
+            border: none;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 1100;
+            backdrop-filter: blur(2px);
+        }
+        .floating-menu-btn:hover {
+            background: var(--warning-color);
+            transform: scale(1.2);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.3);
+        }
+
+
+     .tools-panel {
+        width: 280px;
+        background: #f8fafd;
+        border-left: 1px solid #ced4da;
+        padding: 15px;
+        overflow-y: auto;
+        box-shadow: -2px 0 10px rgba(0,0,0,0.05);
+        transition: all ease 0.5s;
+      }
+
+
+     /*Animaciones para ocultar y mostrar los elementos*/
+     .fade-out {
+          opacity: 0;
+          transform: scale(0.1);
+          transition: all 0.3s ease;
+      }
+
+      .fade-in {
+          opacity: 1;
+          transform: scale(1);
+          transition: all 0.3s ease;
+      }
+
+
+         .attribute-panel, .element-list {
+        background: rgba(255,255,255,0.7);
+        backdrop-filter: blur(4px);
+        border-radius: 24px;
+        padding: 20px 15px;
+        border: 1px solid rgba(255,255,255,0.8);
+      }
+
+       .element-list {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .element-list-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        background: white;
+        border-radius: 40px;
+        margin-bottom: 4px;
+        cursor: pointer;
+        border: 1px solid transparent;
+      }
+      .element-list-item:hover {
+        background: #e9ecef;
+        border-color: #2563eb;
+      }
+      .element-list-item.selected-in-list {
+        background: #dbeafe;
+        border-color: #2563eb;
+      }
+      .element-icon {
+        width: 30px;
+        text-align: center;
+        font-size: 1.2rem;
+      }
+      .attr-section { display: none; }
+      .attr-section.active-section { display: block; }
+      .btn-tool {
+        border-radius: 60px !important;
+        margin-bottom: 5px;
+      }
+      .rotation-slider { width: 100%; }
+      .common-attrs { display: none; }
+      #noSelectionMsg { display: block; }
+
+      #dynamicContainer {
+        position: relative;
+        width: 100%; /*min-width: 100%;*/
+        height: 100%;/*min-height: 100%;*/
+      }
+
+      .shape {
+        position: absolute;
+        /* ... estilos para formas HTML ... */
+        z-index: 1;
+      }
+
+    #workspace-svg {
+      position: relative;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: visible;
+    }
+
+  .selected {
+    filter: drop-shadow(0 0 12px #2563eb) drop-shadow(0 0 4px #1e40af);
+    transition: filter 0.15s;
+  }
+
+   /* Botones de dibujo en la barra izquierda */
+      .drawing-btn {
+        background: #2d3b4a;
+        border: none;
+        border-radius: 30px;
+        color: white;
+        width: 70px;
+        padding: 8px 0;
+        margin: 2px 0;
+        font-size: 1.2rem;
+        font-weight: bold;
+        transition: 0.2s;
+      }
+      .drawing-btn:hover {
+        background: #3b4b5e;
+        transform: scale(1.05);
+      }
+      svg {
+        width: 100%;
+        height: 100%;
+        position: absolute; /* o relative según tu layout */
+        top: 0;
+        left: 0;
+      }

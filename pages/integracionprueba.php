@@ -41,117 +41,443 @@
 
   <!-- Estilos adicionales para el diagramador (integrados aquí para no depender de otro archivo) -->
   <style>
-    /* Ajustes para el nuevo panel derecho y el SVG */
-    .layout-container {
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
+      /* Ajustes para el nuevo panel derecho y el SVG */
+      .layout-container {
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+      }
+      .tools-sidebar {
+        width: 90px; /* Un poco más ancho para los nuevos botones */
+      }
+      .layout-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .tools-panel {
+        width: 280px;
+        background: #f8fafd;
+        border-left: 1px solid #ced4da;
+        padding: 15px;
+        overflow-y: auto;
+        box-shadow: -2px 0 10px rgba(0,0,0,0.05);
+      }
+      .attribute-panel, .element-list {
+        background: rgba(255,255,255,0.7);
+        backdrop-filter: blur(4px);
+        border-radius: 24px;
+        padding: 20px 15px;
+        border: 1px solid rgba(255,255,255,0.8);
+      }
+      .element-list {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .element-list-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        background: white;
+        border-radius: 40px;
+        margin-bottom: 4px;
+        cursor: pointer;
+        border: 1px solid transparent;
+      }
+      .element-list-item:hover {
+        background: #e9ecef;
+        border-color: #2563eb;
+      }
+      .element-list-item.selected-in-list {
+        background: #dbeafe;
+        border-color: #2563eb;
+      }
+      .element-icon {
+        width: 30px;
+        text-align: center;
+        font-size: 1.2rem;
+      }
+      .attr-section { display: none; }
+      .attr-section.active-section { display: block; }
+      .btn-tool {
+        border-radius: 60px !important;
+        margin-bottom: 5px;
+      }
+      .rotation-slider { width: 100%; }
+      .common-attrs { display: none; }
+      #noSelectionMsg { display: block; }
+
+      #dynamicContainer {
+        position: relative;
+        width: 100%; /*min-width: 100%;*/
+        height: 100%;/*min-height: 100%;*/
+      }
+      .station {
+        position: absolute;
+        /* ... tus estilos existentes ... */
+        z-index: 2;
+      }
+      .shape {
+        position: absolute;
+        /* ... estilos para formas HTML ... */
+        z-index: 1;
+      }
+ 
+      #workspace-svg {
+        position: relative;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        pointer-events: visible;
+      }
+
+      .station {
+        z-index: 2;
+        pointer-events: auto;
+      }
+      .selected {
+        filter: drop-shadow(0 0 12px #2563eb) drop-shadow(0 0 4px #1e40af);
+        transition: filter 0.15s;
+      }
+      /* Botones de dibujo en la barra izquierda */
+      .drawing-btn {
+        background: #2d3b4a;
+        border: none;
+        border-radius: 30px;
+        color: white;
+        width: 70px;
+        padding: 8px 0;
+        margin: 2px 0;
+        font-size: 1.2rem;
+        font-weight: bold;
+        transition: 0.2s;
+      }
+      .drawing-btn:hover {
+        background: #3b4b5e;
+        transform: scale(1.05);
+      }
+      svg {
+        width: 100%;
+        height: 100%;
+        position: absolute; /* o relative según tu layout */
+        top: 0;
+        left: 0;
+      }
+  </style>
+
+  <!-- MEJORAS VISUALES: paleta cálida -->
+  <style>
+    /* Importar fuente moderna */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap');
+
+    * {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
+
+    body {
+      background-color: #fef7e8;  /* crema cálido */
+      color: #3e2a27;            /* marrón suave */
+    }
+
+    /* === Barra izquierda (tools-sidebar) === */
     .tools-sidebar {
-      width: 90px; /* Un poco más ancho para los nuevos botones */
-    }
-    .layout-main {
-      flex: 1;
+      background: #fff8ed;
+      box-shadow: 2px 0 12px rgba(0, 0, 0, 0.03);
+      border-right: 1px solid #f0e2c5;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
-    }
-    .tools-panel {
-      width: 280px;
-      background: #f8fafd;
-      border-left: 1px solid #ced4da;
-      padding: 15px;
-      overflow-y: auto;
-      box-shadow: -2px 0 10px rgba(0,0,0,0.05);
-    }
-    .attribute-panel, .element-list {
-      background: rgba(255,255,255,0.7);
-      backdrop-filter: blur(4px);
-      border-radius: 24px;
-      padding: 20px 15px;
-      border: 1px solid rgba(255,255,255,0.8);
-    }
-    .element-list {
-      max-height: 400px;
-      overflow-y: auto;
-    }
-    .element-list-item {
-      display: flex;
       align-items: center;
-      padding: 8px 12px;
-      background: white;
-      border-radius: 40px;
-      margin-bottom: 4px;
-      cursor: pointer;
-      border: 1px solid transparent;
+      padding-top: 1rem;
+      gap: 0.5rem;
     }
-    .element-list-item:hover {
-      background: #e9ecef;
-      border-color: #2563eb;
-    }
-    .element-list-item.selected-in-list {
-      background: #dbeafe;
-      border-color: #2563eb;
-    }
-    .element-icon {
-      width: 30px;
-      text-align: center;
-      font-size: 1.2rem;
-    }
-    .attr-section { display: none; }
-    .attr-section.active-section { display: block; }
-    .btn-tool {
-      border-radius: 60px !important;
-      margin-bottom: 5px;
-    }
-    .rotation-slider { width: 100%; }
-    .common-attrs { display: none; }
-    #noSelectionMsg { display: block; }
 
-    /* SVG sobre el grid */
-    .workspace-grid {
-      position: relative;
-      width: 2000px;
-      height: 1500px;
-      transform-origin: 0 0;
-      background-image: 
-        linear-gradient(#cbd5e1 1px, transparent 1px),
-        linear-gradient(90deg, #cbd5e1 1px, transparent 1px);
-      background-size: 20px 20px;
-    }
-    #workspace-svg {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-      pointer-events: visible;
-    }
-    .station {
-      z-index: 2;
-      pointer-events: auto;
-    }
-    .selected {
-      filter: drop-shadow(0 0 12px #2563eb) drop-shadow(0 0 4px #1e40af);
-      transition: filter 0.15s;
-    }
-    /* Botones de dibujo en la barra izquierda */
-    .drawing-btn {
-      background: #2d3b4a;
+    .tool-btn {
+      background: transparent;
       border: none;
-      border-radius: 30px;
-      color: white;
-      width: 70px;
-      padding: 8px 0;
-      margin: 2px 0;
-      font-size: 1.2rem;
-      font-weight: bold;
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #8b5a2b;   /* terracota suave */
+      transition: all 0.2s ease;
+      cursor: pointer;
+      font-size: 0.7rem;
+      font-weight: 500;
+      gap: 4px;
+    }
+
+    .tool-btn i {
+      font-size: 1.6rem;
+      margin-bottom: 2px;
+    }
+
+    .tool-btn:hover {
+      background: #faeac9;
+      color: #c17b3a;
+      transform: translateY(-2px);
+    }
+
+    .tool-btn span {
+      font-size: 0.65rem;
+      font-weight: 500;
+    }
+
+    /* === Panel derecho === */
+    .tools-panel {
+      background: #fffaf2;
+      border-left: 1px solid #eddbbc;
+      box-shadow: -4px 0 12px rgba(0, 0, 0, 0.02);
+      padding: 1.25rem;
+    }
+
+    .nav-tabs {
+      border-bottom: 1px solid #eddbbc;
+      gap: 0.25rem;
+    }
+
+    .nav-tabs .nav-link {
+      color: #a26e3a;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border-radius: 40px;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .nav-tabs .nav-link:hover {
+      background: #f8e7d3;
+      color: #6b3e1c;
+    }
+
+    .nav-tabs .nav-link.active {
+      background: #ffedd5;
+      color: #b45f2b;
+      font-weight: 600;
+    }
+
+    /* Botones de dibujo mejorados (cálidos) */
+    .drawing-btn {
+      background: #fef3e2;
+      border: 1px solid #eddbbc;
+      color: #7a4a24;
+      width: auto;
+      padding: 6px 12px;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .drawing-btn:hover {
+      background: #ffe3b5;
+      border-color: #dba450;
+      color: #a1531e;
+      transform: scale(1.02);
+    }
+
+    /* Atributos y listas */
+    .attribute-panel, .element-list {
+      background: #ffffffdd;
+      backdrop-filter: blur(2px);
+      border-radius: 20px;
+      border: 1px solid #f0e0cb;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+      padding: 1.25rem;
+    }
+
+    .element-list-item {
+      border-radius: 16px;
+      background: #fffaf2;
+      border: 1px solid #f2e2cf;
+      transition: all 0.15s;
+    }
+
+    .element-list-item:hover {
+      background: #fff4e6;
+      border-color: #dbbd92;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    /* Formularios y controles */
+    .form-control, .form-select, .input-group-custom input {
+      border-radius: 14px;
+      border: 1px solid #e7d6be;
+      background: #fffef9;
+      padding: 0.5rem 0.75rem;
       transition: 0.2s;
     }
-    .drawing-btn:hover {
-      background: #3b4b5e;
-      transform: scale(1.05);
+
+    .form-control:focus, .form-select:focus {
+      border-color: #d99e4a;
+      box-shadow: 0 0 0 3px rgba(217, 158, 74, 0.2);
+    }
+
+    .btn {
+      border-radius: 40px;
+      padding: 0.4rem 1rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-primary-custom {
+      background: #c57f3a;
+      border: none;
+      color: white;
+    }
+
+    .btn-primary-custom:hover {
+      background: #a86224;
+      transform: translateY(-1px);
+    }
+
+    /* workspace y grid cálido */
+    .workspace {
+      background-color: #fff9ef;
+      border-radius: 24px;
+      margin: 8px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255,255,240,0.8);
+      overflow: auto;
+    }
+
+    .workspace-grid {
+     /* background-image: 
+        linear-gradient(to right, #f0e3d4 1px, transparent 1px),
+        linear-gradient(to bottom, #f0e3d4 1px, transparent 1px); */
+      background-size: 24px 24px;
+    }
+
+    /* Mejora de modales */
+    .modal-content {
+      border: none;
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.2);
+      background: #fffcf7;
+    }
+
+    .modal-header {
+      background: #fff3e4;
+      border-bottom: 1px solid #f0e0cb;
+      padding: 1.25rem 1.5rem;
+    }
+
+    .modal-header .modal-title {
+      font-weight: 700;
+      color: white;
+     /* color: #5a3a22; */
+    }
+
+    .modal-footer {
+      border-top: 1px solid #f0e0cb;
+      background: #fffaf2;
+    }
+
+    /* Tarjetas internas en modales */
+    .form-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #6b3e1c;
+      margin-bottom: 1rem;
+      border-left: 3px solid #d99e4a;
+      padding-left: 0.75rem;
+    }
+
+    /* Selector de turno en cabecera */
+    .layout-header {
+      padding: 0.75rem 1.5rem;
+      background: #fffaf2;
+      border-bottom: 1px solid #f0e0cb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .layout-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0;
+      color: #5a3a22;
+    }
+
+    .layout-controls .btn {
+      background: #fff5e9;
+      border: 1px solid #e7d2b8;
+      color: #7b4a25;
+    }
+
+    .layout-controls .btn:hover {
+      background: #ffe8d4;
+      border-color: #cfaa78;
+    }
+
+
+    /* Mejoras para tablas dentro de modales */
+    .table {
+      font-size: 0.85rem;
+    }
+
+    .table th {
+      font-weight: 600;
+      color: #6b3e1c;
+      border-bottom-width: 1px;
+    }
+
+    /* Badges y etiquetas */
+    .badge {
+      font-weight: 500;
+      padding: 0.35em 0.75em;
+      border-radius: 40px;
+    }
+
+    /* Scrollbar personalizada (opcional) */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f5ebdd;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #dbb78c;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #c19159;
+    }
+
+    /* Mejora de contraste en selección de estaciones (cálido) */
+    .station.selected {
+      filter: drop-shadow(0 0 0 2px #ffffff) drop-shadow(0 0 0 4px #d99e4a);
+    }
+
+    /* Ajuste para el indicador de zoom */
+    .zoom-indicator {
+      background: #f8eedf;
+      border-radius: 40px;
+      padding: 0.2rem 0.8rem;
+      font-weight: 500;
+      font-size: 0.8rem;
+      color: #a1531e;
     }
   </style>
 </head>  
@@ -191,18 +517,6 @@
           <i class="bi bi-clock-history"></i><span>Historial</span>
         </span>
       </button>
-
-      <hr>
-
-      <!-- NUEVOS BOTONES DE DIBUJO -->
-      <button class="drawing-btn" id="addRectFill" title="Rectángulo relleno">▭</button>
-      <button class="drawing-btn" id="addRectOutline" title="Rectángulo contorno">▯</button>
-      <button class="drawing-btn" id="addCircleFill" title="Círculo relleno">●</button>
-      <button class="drawing-btn" id="addCircleOutline" title="Círculo contorno">○</button>
-      <button class="drawing-btn" id="addLine" title="Línea">∕</button>
-      <button class="drawing-btn" id="addArrow" title="Flecha">⇢</button>
-      <button class="drawing-btn" id="addText" title="Texto">T</button>
-      <button class="drawing-btn" id="deleteShape" title="Eliminar">✕</button>
     </div>
     <!-- FIN MENU LAYOUT-->
 
@@ -210,11 +524,16 @@
     <div class="layout-main">
       <div class="layout-header">
         <div>
-          <h2 class="layout-title">Línea de Producción <?php echo $nombre?></h2>
+          <h2 class="layout-title">Línea de Producción <?php echo $nombre?> <br>
+             <?php setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); echo ucfirst(strftime('%d de %B, %Y')); ?>
+        </h2>
           <select class="form-select m-0 py-0 ps-1" name="turnoLayout" id="turnoLayout" style="max-width:100px;">
             <option value="1">Turno 1</option>
             <option value="2">Turno 2</option>
           </select>
+
+         
+
           <input type="hidden" id="codigoLinea" value="<?php echo $codigo?>">
           <input type="hidden" id="nombreLinea" value="<?php echo $nombre?>">
         </div>
@@ -226,38 +545,64 @@
           </div>
           <button class="btn btn-outline-secondary btn-sm" id="snapToGridBtn"><i class="bi bi-arrows-move"></i> Ajustar a cuadrícula</button>
           <button class="btn btn-success btn-sm" id="saveLayoutBtn"><i class="bi bi-floppy"></i> Guardar Layout</button>
+          <button class="btn btn-success btn-sm" id="btnsaveShapes" onclick="getAllSVGElements()">Guardar formas</button>
         </div>
       </div>
       
-      <div class="workspace">
+      <div class="workspace" id="workspace" class="p-0">
         <div class="workspace-grid" id="workspaceGrid">
-          <!-- SVG para dibujo (detrás de las estaciones) -->
-          <svg id="workspace-svg" width="100%" height="100%" viewBox="0 0 2000 1500" preserveAspectRatio="none">
-            <defs>
-              <pattern id="grid" patternUnits="userSpaceOnUse" width="20" height="20">
-                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#cbd5e1" stroke-width="0.8"/>
-              </pattern>
-              <marker id="arrowMarker" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
-                <polygon points="0 0, 9 5, 0 10" fill="context-stroke" stroke="none" />
-              </marker>
-            </defs>
-            <rect x="0" y="0" width="100%" height="100%" fill="url(#grid)" />
-            <g id="shapes-group"></g>
-          </svg>
-          <!-- Las estaciones se inyectarán aquí con JS -->
+          <!-- Contenedor dinámico que se expandirá con el contenido -->
+          <div id="dynamicContainer">
+            <!-- SVG dinámico (se ajustará al contenido) -->
+            <svg id="workspace-svg">
+              <defs>
+                <pattern id="grid" patternUnits="userSpaceOnUse" width="20" height="20">
+                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#cbd5e1" stroke-width="0.8"/>
+                </pattern>
+                <marker id="arrowMarker" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+                  <polygon points="0 0, 9 5, 0 10" fill="context-stroke" stroke="none" />
+                </marker>
+              </defs>
+              <rect x="0" y="0" width="100%" height="100%" fill="none" />
+              <g id="shapes-group"></g>
+            </svg>
+            <!-- Aquí se insertarán dinámicamente las estaciones (divs) -->
+          </div>
         </div>
       </div>
+
+      <!--
+      <span class="btn-float" data-bs-toggle="modal" data-bs-target="#modalAgregarLinea">
+        <i class="bi bi-diagram-3-fill"></i>
+      </span>
+      -->
+
+      <span class="sym" data-bs-toggle="modal" data-bs-target="#simbologiaLayout">
+        <img src="../img/simbologia2.png" alt="Simbología" style="width:99%; height:99%">
+      </span>
     </div>
 
     <!-- NUEVO PANEL DERECHO (atributos y lista de elementos) -->
     <div class="tools-panel">
       <ul class="nav nav-tabs mb-2" id="panelTabs">
-        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-attrs">⚙️ Atributos</button></li>
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-objects">Elementos</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-attrs">⚙️ Atributos</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-elements">📋 Lista</button></li>
       </ul>
       <div class="tab-content">
+        <!--Lista de objetos --> <!-- NUEVOS BOTONES DE DIBUJO -->
+        <div class="tab-pane fade show active" id="tab-objects">
+            <button class="drawing-btn" id="addRectFill" title="Rectángulo relleno">▭</button> Rectangulo relleno <br>
+            <button class="drawing-btn" id="addRectOutline" title="Rectángulo contorno">▯</button> Rectangulo sin relleno <br>
+            <button class="drawing-btn" id="addCircleFill" title="Círculo relleno">●</button> Circulo relleno <br>
+            <button class="drawing-btn" id="addCircleOutline" title="Círculo contorno">○</button> Circulo sin relleno <br>
+            <button class="drawing-btn" id="addLine" title="Línea">∕</button> Linea <br>
+            <button class="drawing-btn" id="addArrow" title="Flecha">⇢</button> Flecha <br>
+            <button class="drawing-btn" id="addText" title="Texto">T</button> Texto <br>
+            <button class="drawing-btn" id="deleteShape" title="Eliminar">✕</button> Eliminar
+        </div>
         <!-- Panel de atributos (copiado del primer código) -->
-        <div class="tab-pane fade show active" id="tab-attrs">
+        <div class="tab-pane fade" id="tab-attrs">
           <div class="attribute-panel">
             <div id="noSelectionMsg" class="text-muted small text-center py-3">Ningún elemento seleccionado</div>
             <!-- Sección común (posición/rotación) -->
@@ -352,12 +697,12 @@
     </div>
   </div>
 
-  <!-- ========== MODALES ORIGINALES (sin cambios) ========== -->
+  <!-- ========== MODALES ORIGINALES (sin cambios estructurales, solo se mantienen) ========== -->
   <!-- Modal alerta/error -->
   <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content shadow-lg border-0" style="border-radius: 15px;">
-        <div class="modal-header text-white" style="background: linear-gradient(135deg, #dc3545, #dc3545); border-top-left-radius: 15px; border-top-right-radius: 15px;">
+        <div class="modal-header text-white" style="background: linear-gradient(135deg, var(--primary-color), #1a2530); color: white;">
           <h5 class="modal-title d-flex align-items-center gap-2" id="errorModalLabel" style="font-size: clamp(18px, 2vw, 22px);">
             <i class="bi bi-exclamation-octagon-fill fs-3"></i>Error en la asignación
           </h5>
@@ -377,7 +722,7 @@
   <div class="modal fade" id="modalAgregarEstacion" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
-        <div class="modal-header">
+        <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color), #1a2530); color: white;">
           <h5 class="modal-title">Agregar nueva estación</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
@@ -439,7 +784,7 @@
   <div class="modal fade" id="modalAsignarOperador" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
-        <div class="modal-header">
+        <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color), #1a2530); color: white;">
           <h5 class="modal-title">Asignar operador a una estación</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
@@ -563,7 +908,7 @@
               <div class="table-responsive">
                 <table class="table table-striped table-hover mb-0">
                   <thead class="table-dark">
-                    <tr><th>ID</th><th>Estación</th><th>Operador Anterior</th><th>Operador Nuevo</th><th>Fecha</th><th>Tipo</th><th>Estado</th><th>Acciones</th></tr>
+                    <tr><th>ID</th><th>Estación</th><th>Operador Anterior</th><th>Operador Nuevo</th><th>Fecha</th><th>Tipo</th><th>Estado</th><th>Acciones</th>  </tr>
                   </thead>
                   <tbody>
                     <tr><td><strong>PC-001</strong></td><td>Estación 02</td><td><div class="d-flex align-items-center"><div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">JP</div><span>Juan Pérez</span></div></td><td><div class="d-flex align-items-center"><div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">MG</div><span>María González</span></div></td><td>15/11/2025</td><td><span class="badge bg-info">Programado</span></td><td><span class="badge bg-warning">En progreso</span></td><td><div class="btn-group"><button class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Seguimiento"><i class="bi bi-clipboard-check"></i></button><button class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" title="Detalles"><i class="bi bi-eye"></i></button><button class="btn btn-sm btn-outline-warning" data-bs-toggle="tooltip" title="Editar"><i class="bi bi-pencil"></i></button></div></td></tr>
@@ -918,6 +1263,118 @@
     </div>
   </div>
 
+  <!-- SIMBOLOGIA -->
+  <div class="modal fade" id="simbologiaLayout" tabindex="-1" aria-labelledby="simbologiaLayoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color), #1a2530); color: white;">
+          <h5 class="modal-title" id="simbologiaLayoutModalLabel"><i class="bi bi-clock-history me-2"></i>SIMBOLOGIA</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+              EN ESTA SECCION VA LA SIMBOLOGIA DEL LAYOUT
+
+       <!-- Formulario de registro de evaluacion del punto de cambio -->
+          <div class="form-container">
+              <div class="form-header">
+                  <div class="form-title"><i class="bi bi-pencil-square"></i> Registro de evaluación diaria</div>
+                  <small>Complete los campos obligatorios (*)</small>
+              </div>
+              <form class="form-body" id="evaluacionPuntoCambioForm">
+                  <!-- Sección: Identificación del punto de cambio (idPC) -->
+                  <div class="form-section">
+                      <h3 class="section-title justify-content-center"><i class="bi bi-tag"></i> Punto de cambio</h3>
+                      <div class="mb-3">
+                          <label for="idPC" class="form-label required-field">ID Punto de cambio</label>
+                          <select class="form-control-custom" id="idPC" required>
+                              <option value="" disabled selected>-- Seleccione un punto de cambio --</option>
+                              <option value="101">PC-101 (Línea A - Ensamble)</option>
+                              <option value="102">PC-102 (Línea A - Soldadura)</option>
+                              <option value="103">PC-103 (Línea B - Pintura)</option>
+                          </select>
+                          <div class="form-help">Identificador único del punto de cambio en el sistema</div>
+                      </div>
+                  </div>
+
+                  <!-- Sección: Fecha, día y número de evaluación -->
+                  <div class="form-section">
+                      <h3 class="section-title"><i class="bi bi-calendar-week"></i> Momento de la evaluación</h3>
+                      <div class="row">
+                          <div class="col-md-6 mb-3">
+                              <label for="fechaEvaluacion" class="form-label required-field"><i class="bi bi-calendar-date"></i> Fecha de evaluación</label>
+                              <input type="date" class="form-control-custom" id="fechaEvaluacion" required>
+                          </div>
+                          <div class="col-md-6 mb-3">
+                              <label for="numeroDia" class="form-label required-field"><i class="bi bi-1-circle"></i> Día post‑cambio</label>
+                              <select class="form-control-custom" id="numeroDia" required>
+                                  <option value="" disabled selected>-- Seleccione --</option>
+                                  <option value="1">Día 1 (primer día)</option>
+                                  <option value="2">Día 2</option>
+                                  <option value="3">Día 3</option>
+                              </select>
+                          </div>
+                      </div>
+                      <div class="row">
+                          <div class="col-md-12 mb-3">
+                              <label for="numeroEvaluacion" class="form-label required-field"><i class="bi bi-clock"></i> Momento del turno</label>
+                              <select class="form-control-custom" id="numeroEvaluacion" required>
+                                  <option value="" disabled selected>-- Seleccione --</option>
+                                  <option value="1">1 - Inicio del turno</option>
+                                  <option value="2">2 - Pasadas horas (intermedio)</option>
+                              </select>
+                          </div>
+                      </div>
+                  </div>
+
+                  <!-- Sección: Métricas (OK/NG) -->
+                  <div class="form-section">
+                      <h3 class="section-title"><i class="bi bi-check2-square"></i> Evaluación de métricas</h3>
+                      <!-- Métrica 1 -->
+                      <div class="mb-4">
+                          <label class="form-label required-field">1. Cumple la operación</label>
+                          <div class="radio-group">
+                              <label><input type="radio" name="metrica1" value="1" required> OK (1)</label>
+                              <label><input type="radio" name="metrica1" value="0"> NG (0)</label>
+                          </div>
+                      </div>
+                      <!-- Métrica 2 -->
+                      <div class="mb-4">
+                          <label class="form-label required-field">2. Acabado del producto</label>
+                          <div class="radio-group">
+                              <label><input type="radio" name="metrica2" value="1" required> OK (1)</label>
+                              <label><input type="radio" name="metrica2" value="0"> NG (0)</label>
+                          </div>
+                      </div>
+                      <!-- Métrica 3 -->
+                      <div class="mb-4">
+                          <label class="form-label required-field">3. Dificultad de la operación</label>
+                          <div class="radio-group">
+                              <label><input type="radio" name="metrica3" value="1" required> OK (1) - Sin dificultad</label>
+                              <label><input type="radio" name="metrica3" value="0"> NG (0) - Con dificultad</label>
+                          </div>
+                          <div class="form-help">OK = cumple estándar / sin dificultad; NG = no cumple / dificultad alta.</div>
+                      </div>
+                  </div>
+
+                  <!-- Sección: Comentarios -->
+                  <div class="form-section">
+                      <h3 class="section-title"><i class="bi bi-chat-dots"></i> Comentarios adicionales</h3>
+                      <textarea class="form-control-custom form-textarea" id="comentarios" placeholder="Observaciones, detalles de la evaluación... (opcional)"></textarea>
+                  </div>
+
+                  <!-- Botones -->
+                  <div class="form-actions">
+                      <button type="button" class="btn-custom btn-outline-custom" id="cancelarBtn">Cancelar</button>
+                      <button type="submit" class="btn-custom btn-primary-custom"><i class="bi bi-save"></i> Guardar evaluación</button>
+                  </div>
+              </form>
+          </div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Bootstrap JS y DataTables -->
   <script src="../scripts/bootstrap.bundle.min.js"></script>
   <script src="../DataTables/datatables.min.js"></script>
@@ -1048,25 +1505,71 @@
       }
       updateDragPosition(clientX, clientY, isFinal = false) {
         if (!this.activeDrag || !this.dragData) return;
-        if (isFinal || performance.now() - this.workspaceCache.timestamp > 100) this.updateWorkspaceCache();
+
+        // Obtén el zoom actual (asegúrate de tener acceso a workspaceState.zoomLevel)
+        const zoom = workspaceState.zoomLevel; // o this.workspaceState?.zoomLevel
+
+        // Actualiza caché si es necesario
+        if (isFinal || performance.now() - this.workspaceCache.timestamp > 100) {
+          this.updateWorkspaceCache();
+        }
+
+        // Deltas en coordenadas de pantalla (viewport)
         const deltaX = clientX - this.dragData.startX;
         const deltaY = clientY - this.dragData.startY;
-        let newX = this.dragData.startLeft + deltaX;
-        let newY = this.dragData.startTop + deltaY;
+
+        // Convierte deltas a coordenadas internas del workspace (dividiendo por zoom)
+        const deltaInternalX = deltaX / zoom;
+        const deltaInternalY = deltaY / zoom;
+
+        // Nueva posición en coordenadas internas
+        let newX = this.dragData.startLeft + deltaInternalX;
+        let newY = this.dragData.startTop + deltaInternalY;
+
+        // Aplica límites (ajusta según tus necesidades)
         newX = Math.max(0, newX);
         newY = Math.max(0, newY);
+
+        // Si hubo cambio o es final, actualiza
         if (newX !== this.lastX || newY !== this.lastY || isFinal) {
           if (isFinal) {
+            // Al soltar, establece la posición final real y limpia transform
             this.activeDrag.style.left = `${newX}px`;
             this.activeDrag.style.top = `${newY}px`;
             this.activeDrag.style.transform = 'none';
           } else {
-            this.activeDrag.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+            // Durante el arrastre, aplica transform con los deltas internos
+            // El contenedor con zoom escalará visualmente estos valores
+            this.activeDrag.style.transform = `translate(${deltaInternalX}px, ${deltaInternalY}px)`;
           }
+
           this.lastX = newX;
           this.lastY = newY;
         }
       }
+      /*
+        updateDragPosition(clientX, clientY, isFinal = false) {
+          if (!this.activeDrag || !this.dragData) return;
+          if (isFinal || performance.now() - this.workspaceCache.timestamp > 100) this.updateWorkspaceCache();
+          const deltaX = clientX - this.dragData.startX;
+          const deltaY = clientY - this.dragData.startY;
+          let newX = this.dragData.startLeft + deltaX;
+          let newY = this.dragData.startTop + deltaY;
+          newX = Math.max(0, newX);
+          newY = Math.max(0, newY);
+          if (newX !== this.lastX || newY !== this.lastY || isFinal) {
+            if (isFinal) {
+              this.activeDrag.style.left = `${newX}px`;
+              this.activeDrag.style.top = `${newY}px`;
+              this.activeDrag.style.transform = 'none';
+            } else {
+              this.activeDrag.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+            }
+            this.lastX = newX;
+            this.lastY = newY;
+          }
+        } 
+      */
       updateWorkspaceCache() {
         const workspace = document.querySelector('.workspace');
         this.workspaceCache.rect = workspace.getBoundingClientRect();
@@ -1099,8 +1602,12 @@
         document.getElementById('idPC').value = stationData.idPC || '';
         document.getElementById('fechaCierre').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
         getOperator(stationData.nomina, stationData.id, stationData.idPC || null);
+
+
         const stationModal = new bootstrap.Modal(document.getElementById('changeControlModal'));
         stationModal.show();
+
+        //Peticion para ver el estatus del PC
       }
     }
 
@@ -1115,12 +1622,16 @@
         const top = parseInt(station.style.top);
         layoutData.push({id: stationId, x: left, y: top});
       });
+
+      let formas = getAllSVGElements();
       var formDataPosicion = new FormData;
       formDataPosicion.append('opcion', 6);
       formDataPosicion.append('layoutPosition', JSON.stringify(layoutData));
       formDataPosicion.append('stationsData', JSON.stringify(stationsData));
       formDataPosicion.append('codigoLinea', codigoLinea.value);
       formDataPosicion.append('turno', $('#turnoLayout').val());
+      formDataPosicion.append('layoutF', JSON.stringify(formas)); 
+
       fetch("../api/operacionesLinea.php", {
         method: "POST",
         body: formDataPosicion,
@@ -1146,8 +1657,8 @@
       });
     }
 
-    function zoomIn() { if (workspaceState.zoomLevel < 2) { workspaceState.zoomLevel += 0.1; applyZoom(); } }
-    function zoomOut() { if (workspaceState.zoomLevel > 0.5) { workspaceState.zoomLevel -= 0.1; applyZoom(); } }
+    function zoomIn() { if (workspaceState.zoomLevel < 3) { workspaceState.zoomLevel += 0.1; applyZoom(); } }
+    function zoomOut() { if (workspaceState.zoomLevel > 0.20) { workspaceState.zoomLevel -= 0.1; applyZoom(); } }
     function applyZoom() {
       const workspaceGrid = document.getElementById('workspaceGrid');
       workspaceGrid.style.transform = `scale(${workspaceState.zoomLevel})`;
@@ -1178,22 +1689,44 @@
     }
 
     function createStation(stationData, parent) {
+
+      //Crear el contenedor de la estacion
       const station = document.createElement('div');
       station.className = `station ${stationData.colorClass}`;
       station.style.left = `${stationData.x}px`;
       station.style.top = `${stationData.y}px`;
       station.setAttribute('data-station-id', stationData.id);
-      let operatorIcon = 'bi-person';
-      if (stationData.status === 'occupied' || stationData.status === 'absent') {
-        operatorIcon = `<img src="../img/personal/${stationData.nomina}.jpg" alt="Foto del operador" style="width: 100px; height: 100px; border-radius: 10px; object-fit: cover; border: 3px solid #e9ecef; margin-bottom: 10px;">`;
-      } else if (stationData.status === 'pending') {
-        operatorIcon = '<i class="bi-person-x"></i>';
-      }
-      station.innerHTML = `<div class="station-header">${stationData.name}</div><div class="station-content"><div class="station-operator">${operatorIcon}</div><div class="station-name">${stationData.operator || 'No asignado'}</div></div><div class="station-status status-${stationData.status}"></div>`;
+
+      //Cargar/Setear la imagen de la estacion
+        let operatorIcon = 'bi-person';
+        if (stationData.status === 'occupied' || stationData.status === 'absent') {
+          operatorIcon = `<img src="../img/personal/${stationData.nomina}.jpg" alt="Foto del operador" style="width: 100px; height: 100px; border-radius: 10px; object-fit: cover; border: 3px solid #e9ecef; margin-bottom: 10px;">`;
+        } 
+        
+        //Mostrar un icono si no hay alguien asignado a la estacion
+        else if (stationData.status === 'pending') {
+          operatorIcon = '<i class="bi-person-x"></i>';
+        }
+      
+
+
+      //Crear el cuerpo de la estacion header y body dentro del contenedor padre de la estacion
+      station.innerHTML = `<div class="station-header"> <!-- ${stationData.name} --></div>
+                                <div class="station-content text-break">
+                                  <!-- <div class="station-operator">${operatorIcon}</div> -->
+                                  <div class="station-name"> ${stationData.name}
+                                      <!-- ${stationData.operator || 'No asignado'} -->
+                                  </div>
+                                </div>
+                          <div class="station-status status-${stationData.status}"></div>`;
+
+      //Mostrar si la estacion es certificada
       if (stationData.isCertificate == 1) {
         station.querySelector('.station-header').style.background = "#ffc107";
         station.querySelector('.station-header').style.color = "rgb(0, 0, 0, 1)";
       }
+      
+
       parent.appendChild(station);
     }
 
@@ -1320,7 +1853,12 @@
     function actualizarEstacion(stationId, newData){
       const station = document.querySelector(`[data-station-id="${stationId}"]`);
       if (station) {
-        (newData.operator) ? station.querySelector('.station-name').textContent = newData.operator : station.querySelector('.station-name').textContent = 'No asignado';
+
+        //Modifical el nombre de la persona asignada a la estacion 
+        /*
+          (newData.operator) ? station.querySelector('.station-name').textContent = newData.operator : station.querySelector('.station-name').textContent = 'No asignado'; 
+        */
+
         if(newData.colorClass){
           const colorActual = Array.from(station.classList).filter(clase => clase.startsWith('station-color-'));
           colorActual.forEach(clase => station.classList.remove(clase));
@@ -1332,8 +1870,10 @@
           clasesParaEliminar.forEach(clase => status.classList.remove(clase));
           status.classList.add(`status-${newData.status}`);
         }
+
         const operator = station.querySelector('.station-operator');
         (newData.nomina) ? operator.innerHTML = `<img src="../img/personal/${newData.nomina}.jpg" alt="Foto del operador" style="width: 100px; height: 100px; border-radius: 10px; object-fit: cover; border: 3px solid #e9ecef; margin-bottom: 10px;">` : operator.innerHTML = '<i class="bi-person-x"></i>';
+
         if (newData.isCertificate == 1) {
           station.querySelector('.station-header').style.background = "#ffc107";
           station.querySelector('.station-header').style.color = "rgb(0, 0, 0, 1)";
@@ -1341,7 +1881,11 @@
           station.querySelector('.station-header').style.background = "";
           station.querySelector('.station-header').style.color = "";
         }
-      } else console.warn(`No se encontró la estación ${stationId}`);
+      } 
+      
+      else console.warn(`No se encontró la estación ${stationId}`);
+
+      //Actualizar el data de la estacion modificada
       let estation = stationsData.find(obj => obj.id === stationId);
       if (estation) {
         (newData.operator) ? estation.operator = newData.operator : '';
@@ -1643,6 +2187,10 @@
       }
     }
 
+    function getEstatusPC(){
+
+    }
+
     function confirmarEliminar(idRegistro){
       let fromDataEliminar = new FormData();
       fromDataEliminar.append('opcion', 21);
@@ -1705,11 +2253,236 @@
     }
 
     // ========== NUEVO CÓDIGO DEL DIAGRAMADOR SVG ==========
-    const svg = document.getElementById('workspace-svg');
-    const shapesGroup = $('#shapes-group');
+    let svg = document.getElementById('workspace-svg');
+    let shapesGroup = $('#shapes-group');
     let selectedElement = null;
     let draggingShape = null;
     let elementCounter = 0;
+
+    // Simulación de respuesta del servidor
+    /*
+    const jsonEjemplo = [
+                          {
+                              "tag": "rect",
+                              "attributes": {
+                                  "x": "4023.523239135742",
+                                  "y": "2010.360450744629",
+                                  "width": "145",
+                                  "height": "126",
+                                  "rx": "44",
+                                  "ry": "-5", //revisar este valor negativo
+                                  "fill": "#2661ec",
+                                  "stroke": "#000",
+                                  "stroke-width": "2",
+                                  "data-rotation": "53",
+                                  "data-list-id": "elem-0",
+                                  "class": "selected",
+                                  "transform": "rotate(53, 4096.023239135742, 2073.360450744629)"
+                              }
+                          },
+                          {
+                              "tag": "rect",
+                              "attributes": {
+                                  "x": "1749.0133514404297",
+                                  "y": "597.5045318603516",
+                                  "width": "120",
+                                  "height": "80",
+                                  "rx": "10",
+                                  "ry": "10",
+                                  "fill": "none",
+                                  "stroke": "#2563eb",
+                                  "stroke-width": "3",
+                                  "data-rotation": "0",
+                                  "data-list-id": "elem-1",
+                                  "class": ""
+                              }
+                          },
+                          {
+                              "tag": "circle",
+                              "attributes": {
+                                  "cx": "1840.0057830810547",
+                                  "cy": "172.49990844726562",
+                                  "r": "35",
+                                  "fill": "#44cc88",
+                                  "stroke": "#000",
+                                  "stroke-width": "2",
+                                  "data-rotation": "0",
+                                  "data-list-id": "elem-2",
+                                  "class": ""
+                              }
+                          },
+                          {
+                              "tag": "circle",
+                              "attributes": {
+                                  "cx": "2282.505569458008",
+                                  "cy": "1235.004150390625",
+                                  "r": "40",
+                                  "fill": "none",
+                                  "stroke": "#dc2626",
+                                  "stroke-width": "3",
+                                  "data-rotation": "0",
+                                  "data-list-id": "elem-3",
+                                  "class": ""
+                              }
+                          },
+                          {
+                              "tag": "line",
+                              "attributes": {
+                                  "x1": "1622.5049133300781",
+                                  "y1": "132.49977111816406",
+                                  "x2": "1742.5049133300781",
+                                  "y2": "172.49977111816406",
+                                  "stroke": "#333",
+                                  "stroke-width": "3",
+                                  "data-rotation": "0",
+                                  "data-list-id": "elem-4",
+                                  "class": ""
+                              }
+                          },
+                          {
+                              "tag": "line",
+                              "attributes": {
+                                  "x1": "1522.504638671875",
+                                  "y1": "1150.0033111572266",
+                                  "x2": "1642.504638671875",
+                                  "y2": "1190.0033111572266",
+                                  "stroke": "#fd0d0d",
+                                  "stroke-width": "3",
+                                  "data-rotation": "0",
+                                  "class": "arrow-line",
+                                  "marker-end": "url(#arrowMarker)",
+                                  "data-list-id": "elem-5"
+                              }
+                          },
+                          {
+                              "tag": "text",
+                              "attributes": {
+                                  "x": "1925.0076446533203",
+                                  "y": "169.99996948242188",
+                                  "font-family": "Arial",
+                                  "font-size": "20",
+                                  "fill": "#000",
+                                  "stroke": "#ccc",
+                                  "stroke-width": "0.5",
+                                  "data-rotation": "0",
+                                  "data-list-id": "elem-6",
+                                  "class": "",
+                                  "data-text-content": "Texto de preueba 2 xdxdxdxd"
+                              }
+                          },
+                          {
+                              "tag": "rect",
+                              "attributes": {
+                                  "x": "1482.5058288574219",
+                                  "y": "104.99957275390625",
+                                  "width": "100",
+                                  "height": "70",
+                                  "rx": "10",
+                                  "ry": "10",
+                                  "fill": "#2661ec",
+                                  "stroke": "#000",
+                                  "stroke-width": "2",
+                                  "data-rotation": "0",
+                                  "data-list-id": "elem-7",
+                                  "class": ""
+                              }
+                          },
+                          {
+                              "tag": "rect",
+                              "attributes": {
+                                  "x": "2167.5110931396484",
+                                  "y": "107.4969482421875",
+                                  "width": "120",
+                                  "height": "80",
+                                  "rx": "10",
+                                  "ry": "10",
+                                  "fill": "none",
+                                  "stroke": "#2563eb",
+                                  "stroke-width": "3",
+                                  "data-rotation": "0",
+                                  "data-list-id": "elem-8",
+                                  "class": ""
+                              }
+                          },
+                          {
+                              "tag": "circle",
+                              "attributes": {
+                                  "cx": "1312.5043182373047",
+                                  "cy": "1180.00439453125",
+                                  "r": "35",
+                                  "fill": "#ffffff",
+                                  "stroke": "#000",
+                                  "stroke-width": "7",
+                                  "data-rotation": "0",
+                                  "data-list-id": "elem-9",
+                                  "class": ""
+                              }
+                          },
+                          {
+                              "tag": "circle",
+                              "attributes": {
+                                  "cx": "512.5014038085938",
+                                  "cy": "1277.5048522949219",
+                                  "r": "40",
+                                  "fill": "none",
+                                  "stroke": "#1cf019",
+                                  "stroke-width": "3",
+                                  "data-rotation": "0",
+                                  "data-list-id": "elem-10",
+                                  "class": ""
+                              }
+                          },
+                          {
+                              "tag": "line",
+                              "attributes": {
+                                  "x1": "1487.5044555664062",
+                                  "y1": "740.0018920898438",
+                                  "x2": "1607.5044555664062",
+                                  "y2": "780.0018920898438",
+                                  "stroke": "#b10aff",
+                                  "stroke-width": "3",
+                                  "data-rotation": "160",
+                                  "data-list-id": "elem-11",
+                                  "class": "",
+                                  "transform": "rotate(160, 1547.5044555664062, 760.0018920898438)"
+                              }
+                          },
+                          {
+                              "tag": "line",
+                              "attributes": {
+                                  "x1": "2017.5064697265625",
+                                  "y1": "162.4998779296875",
+                                  "x2": "2137.5064697265625",
+                                  "y2": "202.4998779296875",
+                                  "stroke": "#000",
+                                  "stroke-width": "3",
+                                  "data-rotation": "0",
+                                  "class": "arrow-line",
+                                  "marker-end": "url(#arrowMarker)",
+                                  "data-list-id": "elem-12"
+                              }
+                          },
+                          {
+                              "tag": "text",
+                              "attributes": {
+                                  "x": "115.00263977050781",
+                                  "y": "2470.007843017578",
+                                  "font-family": "Arial",
+                                  "font-size": "20",
+                                  "fill": "#000",
+                                  "stroke": "#ccc",
+                                  "stroke-width": "0.5",
+                                  "data-rotation": "323",
+                                  "data-list-id": "elem-13",
+                                  "class": "",
+                                   "data-text-content": "Texto",
+                                  "transform": "rotate(323, 115.00263977050781, 2470.007843017578)"
+                              }
+                          }
+                      ]
+
+    */
+
 
     function getSVGCoords(e) {
       const pt = svg.createSVGPoint();
@@ -1896,16 +2669,19 @@
       }
       shapesGroup.append(elt);
       refreshElementList();
+      updateContainerAndSVGBounds();
       return elt;
     }
 
+       //const p = randomPos();
+      const p = {x:200, y:200};
+
     // Botones de dibujo
     $('#addRectFill').click(() => {
-      const p = randomPos();
-      createElement('rect', { x: p.x, y: p.y, width: 100, height: 70, rx: 10, ry: 10, fill: '#ffaa00', stroke: '#000', 'stroke-width': 2 });
+      createElement('rect', { x: p.x, y: p.y, width: 100, height: 70, rx: 10, ry: 10, fill: '#2661ec', stroke: '#000', 'stroke-width': 2 });
     });
     $('#addRectOutline').click(() => {
-      const p = randomPos();
+   
       createElement('rect', { 
         x: p.x, 
         y: p.y, 
@@ -1918,23 +2694,23 @@
          'stroke-width': 3 });
     });
     $('#addCircleFill').click(() => {
-      const p = randomPos();
+      
       createElement('circle', { cx: p.x, cy: p.y, r: 35, fill: '#44cc88', stroke: '#000', 'stroke-width': 2 });
     });
     $('#addCircleOutline').click(() => {
-      const p = randomPos();
+     
       createElement('circle', { cx: p.x, cy: p.y, r: 40, fill: 'none', stroke: '#dc2626', 'stroke-width': 3 });
     });
     $('#addLine').click(() => {
-      const p = randomPos();
+    
       createElement('line', { x1: p.x, y1: p.y, x2: p.x+120, y2: p.y+40, stroke: '#333', 'stroke-width': 3 });
     });
     $('#addArrow').click(() => {
-      const p = randomPos();
+      
       createElement('line', { x1: p.x, y1: p.y, x2: p.x+120, y2: p.y+40, stroke: '#000', 'stroke-width': 3 }, true);
     });
     $('#addText').click(() => {
-      const p = randomPos();
+      
       const elt = createElement('text', { x: p.x, y: p.y, 'font-family': 'Arial', 'font-size': 20, fill: '#000', stroke: '#ccc', 'stroke-width': 0.5 });
       elt.textContent = 'Texto';
     });
@@ -1943,7 +2719,7 @@
     });
 
     // Drag de formas SVG
-    $('#shapes-group').on('mousedown', 'rect, circle, line, text', function(e) {
+    $('#workspaceGrid').on('mousedown', '#shapes-group rect, #shapes-group circle, #shapes-group line, #shapes-group text', function(e) {
       e.preventDefault();
       e.stopPropagation(); // Evita interferir con el drag de estaciones
       const elt = this;
@@ -1952,21 +2728,196 @@
       draggingShape = { element: elt, start: start, original: getOriginalPosition(elt) };
     });
 
+    /*Funcion para obtener los elementos del SV*/
+    function getAllSVGElements() {
+      // Obtener el elemento SVG
+
+      /*
+      const svgElement = typeof svgSelector === 'string'
+        ? document.querySelector(svgSelector)
+        : svgSelector;
+
+      if (!svgElement || svgElement.tagName !== 'svg') {
+        throw new Error('No se encontró un elemento SVG válido');
+      } 
+      */
+
+      // Seleccionar todos los elementos dentro del SVG (excluyendo el propio <svg>)
+      const allElements = document.querySelectorAll('#shapes-group *');;
+      const result = [];
+
+      allElements.forEach(el => {
+        // Obtener todos los nombres de atributos
+        const attributes = {};
+        const attributeNames = el.getAttributeNames();
+
+        attributeNames.forEach(attrName => {
+          if (attrName === 'data-list-id') return;
+          attributes[attrName] = el.getAttribute(attrName);
+        });
+
+        if (el.tagName === 'text') {
+          attributes['data-text-content'] = el.textContent; // atributo personalizado
+        }
+
+
+        result.push({
+          tag: el.tagName.toLowerCase(), // nombre de la etiqueta (ej: 'rect', 'circle', 'g')
+          attributes: attributes
+        });
+      });
+
+      console.log(result)
+      return result;
+    }
+
+    //Funcion para cargar los datos desde el servidor
+    function loadShapesFromJSON() {
+      const shapesGroup = document.getElementById('shapes-group');
+      
+      // Limpiar el grupo actual (para reemplazar con los datos del servidor)
+      shapesGroup.innerHTML = '';
+      let maxCounter = -1;
+
+        if (!shapesGroup) {
+          console.error('No se encontró el grupo #shapes-group');
+          return;
+        }
+
+      var formDataGetF = new FormData;
+      formDataGetF.append('opcion', 24);
+      formDataGetF.append('codigoLinea', codigoLinea.value);
+      fetch("../api/operacionesLinea.php", {
+          method: "POST",
+          body: formDataGetF,
+      })
+      .then((response) => response.text())
+      .then((data) => {
+            shapesArray = JSON.parse(data);
+
+            shapesArray.formas.forEach(shape => {
+              const { tag, attributes } = shape;
+              const element = document.createElementNS('http://www.w3.org/2000/svg', tag);
+
+              // Asignar todos los atributos excepto el texto especial
+              for (const [key, value] of Object.entries(attributes)) {
+                if (key === 'data-text-content' || key === 'data-list-id') continue; // este lo tratamos aparte
+                element.setAttribute(key, value);
+              }
+
+              // Si es texto, restaurar el contenido
+              if (tag === 'text') {
+                element.textContent = attributes['data-text-content'] || '';
+              }
+
+              shapesGroup.appendChild(element);
+
+              // Actualizar el contador máximo basado en data-list-id
+
+              /*
+                const listId = attributes['data-list-id'];
+                if (listId && typeof listId === 'string') {
+                  const match = listId.match(/elem-(\d+)/);
+                  if (match) {
+                    const num = parseInt(match[1], 10);
+                    if (num > maxCounter) maxCounter = num;
+                  }
+                } 
+              */
+              
+            });
+
+            // Actualizar el contador global para que los nuevos elementos sigan la secuencia
+            if (maxCounter >= 0) {
+              window.elementCounter = maxCounter + 1;
+            } else {
+              window.elementCounter = shapesArray.formas.length; // fallback
+            }
+
+            // Refrescar la lista de elementos y actualizar bounds (funciones existentes)
+            if (typeof refreshElementList === 'function') refreshElementList();
+            if (typeof updateContainerAndSVGBounds === 'function') updateContainerAndSVGBounds();
+            if (typeof clearSelection === 'function') clearSelection();
+
+            console.log(`Cargadas ${shapesArray.formas.length} formas. Próximo elementCounter = ${window.elementCounter}`);
+      })
+      .catch((error) => { 
+        console.log(error); 
+      });
+    }
+
+    /*
+      $(window).on('mousemove', function(e) {
+        if (!draggingShape) return;
+        e.preventDefault();
+        const current = getSVGCoords(e);
+        const dx = current.x - draggingShape.start.x;
+        const dy = current.y - draggingShape.start.y;
+        setPosition(draggingShape.element, draggingShape.original, dx, dy);
+        const angle = getRotationAngle(draggingShape.element);
+        applyRotation(draggingShape.element, angle);
+        updateCommonFields(draggingShape.element);
+        updateContainerAndSVGBounds();
+      });
+    */
+
+
     $(window).on('mousemove', function(e) {
       if (!draggingShape) return;
       e.preventDefault();
+
       const current = getSVGCoords(e);
-      const dx = current.x - draggingShape.start.x;
-      const dy = current.y - draggingShape.start.y;
-      setPosition(draggingShape.element, draggingShape.original, dx, dy);
-      const angle = getRotationAngle(draggingShape.element);
-      applyRotation(draggingShape.element, angle);
-      updateCommonFields(draggingShape.element);
+      let dx = current.x - draggingShape.start.x;
+      let dy = current.y - draggingShape.start.y;
+
+      const elt = draggingShape.element;
+      const original = draggingShape.original;
+
+      // 👇 Obtener nueva posición según tipo
+      let newX = 0;
+      let newY = 0;
+
+      if (elt.tagName === 'rect') {
+        newX = original.x + dx;
+        newY = original.y + dy;
+
+        // 🚫 limitar a 0
+        dx = Math.max(-original.x, dx);
+        dy = Math.max(-original.y, dy);
+
+      } else if (elt.tagName === 'circle') {
+        newX = original.cx + dx;
+        newY = original.cy + dy;
+
+        dx = Math.max(-original.cx, dx);
+        dy = Math.max(-original.cy, dy);
+
+      } else if (elt.tagName === 'text') {
+        newX = original.x + dx;
+        newY = original.y + dy;
+
+        dx = Math.max(-original.x, dx);
+        dy = Math.max(-original.y, dy);
+
+      } else if (elt.tagName === 'line') {
+        dx = Math.max(-original.x1, dx);
+        dy = Math.max(-original.y1, dy);
+      }
+
+      // ✅ aplicar posición ya limitada
+      setPosition(elt, original, dx, dy);
+
+      const angle = getRotationAngle(elt);
+      applyRotation(elt, angle);
+
+      updateCommonFields(elt);
+      updateContainerAndSVGBounds();
     });
+
 
     $(window).on('mouseup', function() { draggingShape = null; });
 
-    $('#workspace-svg').on('click', function(e) {
+    $('#workspaceGrid').on('click', '#workspace-svg', function(e) {
       if (e.target === this || e.target.tagName === 'rect' || e.target.tagName === 'circle' || e.target.tagName === 'line' || e.target.tagName === 'text') return;
       clearSelection();
     });
@@ -2060,6 +3011,115 @@
         });
         list.append(listItem);
       });
+    }
+
+    function updateContainerAndSVGBounds() {
+      const container = document.getElementById('dynamicContainer');
+      const svg = document.getElementById('workspace-svg');
+      const shapesGroup = document.getElementById('shapes-group');
+
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+      // 1. Procesar estaciones (divs)
+      document.querySelectorAll('.station').forEach(station => {
+        const left = parseFloat(station.style.left) || 0;
+        const top = parseFloat(station.style.top) || 0;
+        const width = station.offsetWidth;
+        const height = station.offsetHeight;
+        minX = Math.min(minX, left);
+        minY = Math.min(minY, top);
+        maxX = Math.max(maxX, left + width);
+        maxY = Math.max(maxY, top + height);
+      });
+
+      // 2. Procesar formas SVG (dentro de shapesGroup)
+      const shapes = shapesGroup.children;
+
+      /*
+        for (let shape of shapes) {
+          const tag = shape.tagName;
+          let left, top, width, height;
+          if (tag === 'rect') {
+            left = parseFloat(shape.getAttribute('x')) || 0;
+            top = parseFloat(shape.getAttribute('y')) || 0;
+            width = parseFloat(shape.getAttribute('width')) || 0;
+            height = parseFloat(shape.getAttribute('height')) || 0;
+          } else if (tag === 'circle') {
+            const cx = parseFloat(shape.getAttribute('cx')) || 0;
+            const cy = parseFloat(shape.getAttribute('cy')) || 0;
+            const r = parseFloat(shape.getAttribute('r')) || 0;
+            left = cx - r;
+            top = cy - r;
+            width = 2 * r;
+            height = 2 * r;
+          } else if (tag === 'line') {
+            const x1 = parseFloat(shape.getAttribute('x1')) || 0;
+            const y1 = parseFloat(shape.getAttribute('y1')) || 0;
+            const x2 = parseFloat(shape.getAttribute('x2')) || 0;
+            const y2 = parseFloat(shape.getAttribute('y2')) || 0;
+            left = Math.min(x1, x2);
+            top = Math.min(y1, y2);
+            width = Math.abs(x2 - x1);
+            height = Math.abs(y2 - y1);
+          } else if (tag === 'text') {
+            left = parseFloat(shape.getAttribute('x')) || 0;
+            top = parseFloat(shape.getAttribute('y')) || 0;
+            width = 0;  // el texto puede tener ancho variable, pero no es crítico
+            height = 0;
+          } else {
+            continue;
+          }
+          // Actualizar límites
+          if (width > 0 && height > 0) {
+            minX = Math.min(minX, left);
+            minY = Math.min(minY, top);
+            maxX = Math.max(maxX, left + width);
+            maxY = Math.max(maxY, top + height);
+          } else {
+            // Para líneas y texto, al menos considerar el punto
+            minX = Math.min(minX, left);
+            minY = Math.min(minY, top);
+            maxX = Math.max(maxX, left);
+            maxY = Math.max(maxY, top);
+          }
+        } 
+      */
+      for (let shape of shapes) {
+          let bbox;
+
+          try {
+            bbox = shape.getBBox();
+          } catch (e) {
+            continue; // por si algún elemento no es renderizable
+          }
+
+          const left = bbox.x;
+          const top = bbox.y;
+          const width = bbox.width;
+          const height = bbox.height;
+
+          minX = Math.min(minX, left);
+          minY = Math.min(minY, top);
+          maxX = Math.max(maxX, left + width);
+          maxY = Math.max(maxY, top + height);
+        }
+
+      // Añadir un margen alrededor
+      const padding = 30;
+      minX = Math.max(0, minX - padding);
+      minY = Math.max(0, minY - padding);
+      maxX = maxX + padding;
+      maxY = maxY + padding;
+
+      const newWidth = maxX - minX;
+      const newHeight = maxY - minY;
+
+      // Establecer el tamaño del contenedor dinámico (en píxeles)
+      container.style.width = `${maxX}px`;
+      container.style.height = `${maxY}px`;
+
+      // Actualizar el viewBox del SVG para que abarque toda el área
+      svg.setAttribute('viewBox', `${minX} ${minY} ${newWidth} ${newHeight}`);
     }
 
     // Inicializar lista de elementos
@@ -2339,8 +3399,35 @@
       document.getElementById('turnoLayout').addEventListener('change', function(){
         let turno = $("#turnoLayout").val();
         if(turno){
-          document.getElementById('workspaceGrid').innerHTML = '';
+          document.getElementById('workspaceGrid').innerHTML = `
+          <!-- Contenedor dinámico que se expandirá con el contenido -->
+            <div id="dynamicContainer">
+              <!-- SVG dinámico (se ajustará al contenido) -->
+              <svg id="workspace-svg">
+                <defs>
+                  <pattern id="grid" patternUnits="userSpaceOnUse" width="20" height="20">
+                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#cbd5e1" stroke-width="0.8"/>
+                  </pattern>
+                  <marker id="arrowMarker" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+                    <polygon points="0 0, 9 5, 0 10" fill="context-stroke" stroke="none" />
+                  </marker>
+                </defs>
+                <rect x="0" y="0" width="100%" height="100%" fill="none" />
+                <g id="shapes-group"></g>
+              </svg>
+              <!-- Aquí se insertarán dinámicamente las estaciones (divs) -->
+            </div>`;
           getEstaciones();
+
+              svg = document.getElementById('workspace-svg');
+              shapesGroup = $('#shapes-group');
+              selectedElement = null;
+              draggingShape = null;
+              elementCounter = 0;
+              refreshElementList();
+              setTimeout(() => {
+                loadShapesFromJSON();
+              }, 500);
         }
       });
 
@@ -2366,6 +3453,12 @@
         })
         .catch(error => { console.error(error); alert('Error de conexión'); });
       });
+
+      // Cargar las formas
+
+      setTimeout(() => {
+              loadShapesFromJSON();
+      }, 500);
     });
   </script>
 </body>

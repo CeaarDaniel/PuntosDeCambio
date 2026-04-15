@@ -505,6 +505,7 @@ else
             $layoutPosition =  json_decode($_POST['layoutPosition'], true);
             $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
             $stationsData= !empty($_POST['stationsData']) ? $_POST['stationsData'] : null;
+            $layoutF= !empty($_POST['layoutF']) ? $_POST['layoutF'] : null;
             $turno= !empty($_POST['turno']) ? $_POST['turno'] : null;
 
             if (!$layoutPosition || !is_array($layoutPosition) || !$stationsData || !$codigoLinea) {
@@ -518,8 +519,17 @@ else
 
             $sqlI = "INSERT INTO SPC_HISTORIAL_LAYOUT (codigo_linea, turno, layout) 
                         VALUES(:codigoLinea, :turno, :stationsData)";
-                        
             $stmtI = $conn->prepare($sqlI);
+
+            $sqlIL = "MERGE SPC_LAYOUTFORMAS AS target
+                        USING (SELECT :codigoLinea AS codigo_linea, :layoutF AS layoutF) AS source
+                        ON target.codigo_linea = source.codigo_linea
+                        WHEN MATCHED THEN
+                            UPDATE SET layoutF = source.layoutF
+                        WHEN NOT MATCHED THEN
+                            INSERT (codigo_linea, layoutF)
+                            VALUES (source.codigo_linea, source.layoutF);";
+            $stmtIL = $conn->prepare($sqlIL);
 
             $results = [];
 
@@ -547,6 +557,9 @@ else
                  $stmtI->execute([':codigoLinea' => $codigoLinea, 
                                   ':stationsData' => $stationsData,
                                   ':turno' => $turno]);
+
+            if(!empty(json_decode($layoutF, true)))
+                $stmtIL->execute([':codigoLinea' => $codigoLinea, ':layoutF' => $layoutF]);
 
                 // Confirmar transacción
                 $conn->commit();
@@ -1469,8 +1482,9 @@ else
             }
 
         //Consultar el registro de asistencia de la linea en la tabla de asistencia
-            $sqlV = "SELECT id_registro, nomina, nombre, codigo_linea, estatus, id_estacion, turno, nombres_estaciones AS nombre_estacion FROM SPC_REGISTRO_ASISTENCIA 
-                            WHERE turno = :turno AND fecha_operacion >= :fechaInicio AND fecha_operacion <= :fechaFin AND codigo_linea = :codigoLinea";
+            $sqlV = "SELECT id_registro, nomina, nombre, codigo_linea, estatus, id_estacion, turno, nombres_estaciones AS nombre_estacion 
+                                FROM SPC_REGISTRO_ASISTENCIA 
+                    WHERE turno = :turno AND fecha_operacion >= :fechaInicio AND fecha_operacion <= :fechaFin AND codigo_linea = :codigoLinea";
             $stmtV = $conn->prepare($sqlV);
             $stmtV->execute([':turno' => $turno,
                              ':fechaInicio' => $inicio->format('Y-m-d H:i'),
@@ -1870,4 +1884,147 @@ else
             ]);
         }
     }
+
+//Funcion para consultar el listado de formas elementos SVG
+else 
+    if($opcion == '24'){
+        $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
+
+        if(!$codigoLinea) {
+                echo json_encode(['estatus' => 'error', 
+                                  'mensaje'=> 'Faltan datos obligatorios']);
+                exit;
+        }
+
+        try {
+                $sql = "SELECT layoutF from SPC_LAYOUTFORMAS where codigo_linea = :codigoLinea";
+                $stmt = $conn->prepare($sql);
+                $stmt->execute([':codigoLinea' => $codigoLinea]);
+                $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+          
+                if ($resultado) {
+                    /*
+                        Verificar que la decodificacion sea correcta y el json no esta corrupto
+                        $formas = json_decode($resultado['layoutF'], true);
+                        if (json_last_error() !== JSON_ERROR_NONE) throw new Exception('Error al decodificar JSON');
+                    */
+
+                    echo json_encode([
+                        'estatus' => 'ok',
+                        'formas' => json_decode($resultado['layoutF']),
+                    ]);
+                } 
+                
+                else {
+                    echo json_encode([
+                        'estatus' => 'error',
+                        'mensaje' => "No se encontro algun registro"
+                    ]);
+                }
+
+        } catch (PDOException $e) {
+            // Error de conexión o consulta
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => $e->getMessage()
+            ]);
+        }
+}
+
+//Obtener el dia y numero de evaluacion realizadas del punto de cambio
+else 
+    if($opcion == '25'){
+        $idPC = !empty($_POST['idPC']) ? $_POST['idPC'] : null;
+
+        if(!$idPC) {
+                echo json_encode(['estatus' => 'error', 
+                                  'mensaje' => 'Faltan datos obligatorios']);
+                exit;
+        }
+
+        try {
+                $sql = "SELECT ((COUNT(*) ) / 2) + 1 AS numeroDia, 
+                               ((COUNT(*) ) % 2) + 1 AS numeroEvaluacion 
+                        FROM SPC_EVALUACIONPC where idPC = :idPC";
+
+                $stmt = $conn->prepare($sql);
+                $stmt->execute([':idPC' => $idPC]);
+                $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+          
+                if ($resultado) {
+                    echo json_encode([
+                        'estatus' => 'ok',
+                        'numeroDia' => json_decode($resultado['numeroDia']),
+                        'numeroEvaluacion' => json_decode($resultado['numeroEvaluacion']),
+                    ]);
+                } 
+                
+                else {
+                    echo json_encode([
+                        'estatus' => 'error',
+                        'mensaje' => "No se encontro algun registro"
+                    ]);
+                }
+
+        } catch (PDOException $e) {
+            // Error de conexión o consulta
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => $e->getMessage()
+            ]);
+        }
+
+
+    }
+
+//Registrar evaluacion del PC
+else 
+ if($opcion == '26'){
+    $idPC = !empty($_POST['idPC']) ? $_POST['idPC'] : null;
+    $numeroDia = !empty($_POST['numeroDia']) ? $_POST['numeroDia'] : null;
+    $numeroEvaluacion = !empty($_POST['numeroEvaluacion']) ? $_POST['numeroEvaluacion'] : null;
+
+    $fechaEvaluacion = !empty($_POST['fechaEvaluacion']) ? $_POST['fechaEvaluacion'] : null;
+    $metrica1 = isset($_POST['metrica1']) ? $_POST['metrica1'] : null;
+    $metrica2 = isset($_POST['metrica2']) ? $_POST['metrica2'] : null;
+    $metrica3 = isset($_POST['metrica3']) ? $_POST['metrica3'] : null;
+    $comentarios = !empty($_POST['comentarios']) ? $_POST['comentarios'] : null; //comentarios o contramedidas
+
+    $fechaEvaluacion = str_replace('T', ' ', $fechaEvaluacion);
+
+        if(!$idPC || !$numeroDia || !$numeroEvaluacion) {
+                echo json_encode(['estatus' => 'error', 
+                                  'mensaje' => 'Faltan datos obligatorios']);
+                exit;
+        }
+
+        try {
+                $sql = "INSERT INTO SPC_EVALUACIONPC(idPC, fechaEvaluacion, numeroDia, numeroEvaluacion, metrica1, metrica2, metrica3, comentarios)
+                            VALUES (:idPC, :fechaEvaluacion, :numeroDia, :numeroEvaluacion, :metrica1, :metrica2, :metrica3, :comentarios)";
+
+                $stmt = $conn->prepare($sql);
+                $stmt->execute([
+                    ':idPC' => $idPC,
+                    ':fechaEvaluacion' => $fechaEvaluacion, 
+                    ':numeroDia' => $numeroDia,
+                    ':numeroEvaluacion' => $numeroEvaluacion,
+                    ':metrica1' => $metrica1,
+                    ':metrica2' => $metrica2,
+                    ':metrica3' => $metrica3,
+                    ':comentarios' => $comentarios
+                ]);
+                
+                echo json_encode([
+                        'estatus' => 'ok',
+                        'mensaje' => "Se ha hecho el registro de la evaluacion"
+                    ]);
+
+        } catch (PDOException $e) {
+            // Error de conexión o consulta
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => $e->getMessage()
+            ]);
+        }
+}
 ?>

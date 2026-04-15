@@ -1,5 +1,5 @@
     <!-- Sidebar MENU de herramientas -->
-    <div class="tools-sidebar">
+    <div class="tools-sidebar" id="tools-sidebar">
 
       <!--CREAR ESTACION -->
       <button class="tool-btn" 
@@ -65,3 +65,12 @@
       </button>
       -->
     </div>
+
+<button class="close-sidebar-btn" id="btncloseSidebar">
+     <i class="bi bi-arrows-fullscreen" id="iconFullscreen"></i>
+</button>
+
+<!-- ICONO FLOTANTE (aparece cuando menú oculto) -->
+<button class="floating-menu-btn d-none" id="btnfloatingMenu">
+    <i class="bi-fullscreen-exit"></i>
+</button>

@@ -3,7 +3,6 @@
   
   $codigo = !empty($_GET['codigo']) ? urldecode($_GET['codigo']) : '';
   $nombre = !empty($_GET['nombre']) ? urldecode($_GET['nombre']) : '';
-
   $sql= "SELECT descripcion, encargado_supervisor from SPC_LINEAS WHERE CODIGO_LINEA = :codigo_linea";
 
   $stmt = $conn->prepare($sql);
@@ -53,12 +52,13 @@
     <!-- FIN MENU LAYOUT-->
 
     <!-- Área principal -->
-    <div class="layout-main">
-      <div class="layout-header">
+    <div id="layout-main" class="layout-main">
+      <div class="layout-header" id="layout-header">
 
-        <div>
-          <h2 class="layout-title">Línea de Producción <?php echo $nombre?></h2>
-
+        <div class="">
+          <h2 class="layout-title">Línea de Producción <?php echo $nombre?>  <br>
+           <!-- <?php setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); echo ucfirst(strftime('%d de %B, %Y')); ?> -->
+          </h2>
           <select class="form-select m-0 py-0 ps-1" name="turnoLayout" id="turnoLayout" style="max-width:100px;">
               <option value="1">Turno 1</option>
               <option value="2">Turno 2</option>
@@ -91,9 +91,147 @@
       <div class="workspace">
         <div class="workspace-grid" id="workspaceGrid">
           <!-- Estaciones se generarán dinámicamente -->
+
+          <!-- Contenedor dinámico que se expandirá con el contenido -->
+          <div id="dynamicContainer">
+            <!-- SVG dinámico (se ajustará al contenido) -->
+            <svg id="workspace-svg">
+              <defs>
+                <pattern id="grid" patternUnits="userSpaceOnUse" width="20" height="20">
+                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#cbd5e1" stroke-width="0.8"/>
+                </pattern>
+                <marker id="arrowMarker" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+                  <polygon points="0 0, 9 5, 0 10" fill="context-stroke" stroke="none" />
+                </marker>
+              </defs>
+              <rect x="0" y="0" width="100%" height="100%" fill="none" />
+              <g id="shapes-group"></g>
+            </svg>
+            <!-- Aquí se insertarán dinámicamente las estaciones (divs) -->
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- NUEVO PANEL DERECHO (atributos y lista de elementos) -->
+    <div class="tools-panel" id="tools-panel">
+      <ul class="nav nav-tabs mb-2" id="panelTabs">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-objects">Figuars</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-attrs">Atributos</button></li>
+        <!--
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-elements">Elementos</button></li> 
+        -->
+      </ul>
+      <div class="tab-content">
+        <!--Lista de objetos --> <!-- NUEVOS BOTONES DE DIBUJO -->
+        <div class="tab-pane fade show active" id="tab-objects">
+            <button class="drawing-btn" id="addRectFill" title="Rectángulo relleno"><i class="bi bi-square-fill"></i></button> Rectangulo relleno <br>
+            <button class="drawing-btn" id="addRectOutline" title="Rectángulo contorno"><i class="bi bi-square"></i></button> Rectangulo sin relleno <br>
+            <button class="drawing-btn" id="addCircleFill" title="Círculo relleno"> <i class="bi bi-circle-fill"></i></button> Circulo relleno <br>
+            <button class="drawing-btn" id="addCircleOutline" title="Círculo contorno"><i class="bi bi-circle"></i></button> Circulo sin relleno <br>
+            <button class="drawing-btn" id="addLine" title="Línea"><i class="bi bi-slash-lg"></i></button> Linea <br>
+            <button class="drawing-btn" id="addArrow" title="Flecha"><i class="bi bi-arrow-right"></i></button> Flecha <br>
+            <button class="drawing-btn" id="addText" title="Texto"><i class="bi bi-fonts"></i></button> Texto <br>
+            <button class="drawing-btn" id="deleteShape" title="Eliminar"><i class="bi bi-trash3"></i></button> Eliminar 
+        </div>
+
+        <!-- Panel de atributos (copiado del primer código) -->
+        <div class="tab-pane fade" id="tab-attrs">
+          <div class="attribute-panel">
+            <div id="noSelectionMsg" class="text-muted small text-center py-3">Ningún elemento seleccionado</div>
+            <!-- Sección común (posición/rotación) -->
+            <div class="common-attrs">
+              <label class="form-label fw-semibold">Posición X/Y</label>
+              <div class="row g-2 mb-2">
+                <div class="col-6"><input type="number" min="0" class="form-control" id="common-x" placeholder="X" step="1"></div>
+                <div class="col-6"><input type="number" min="0" class="form-control" id="common-y" placeholder="Y" step="1"></div>
+              </div>
+              <label class="form-label fw-semibold">Rotación (grados)</label>
+              <input type="range" class="rotation-slider" id="common-rotate" min="0" max="360" value="0" step="1">
+              <div class="d-flex justify-content-between small-note">
+                <span>0°</span><span id="rotateValue">0°</span><span>360°</span>
+              </div>
+            </div>
+
+            <!-- Rectángulo -->
+            <div class="attr-section" id="rect-attrs">
+              <label class="form-label">Ancho</label>
+              <input type="number" min="0" class="form-control mb-2 shape-attr" id="rect-width" data-attr="width" value="100">
+              <label class="form-label">Alto</label>
+              <input type="number" min="0" class="form-control mb-2 shape-attr" id="rect-height" data-attr="height" value="70">
+              <label class="form-label">Radio borde (rx, ry)</label>
+              <div class="row g-2 mb-2">
+                <div class="col-6"><input type="number" min="0" class="form-control shape-attr" id="rect-rx" data-attr="rx" value="10"></div>
+                <div class="col-6"><input type="number" min="0" class="form-control shape-attr" id="rect-ry" data-attr="ry" value="10"></div>
+              </div>
+              <label class="form-label">Relleno</label>
+              <input type="color" class="form-control-color mb-2 shape-attr" id="rect-fill" data-attr="fill" value="#ffaa00">
+              <label class="form-label">Borde</label>
+              <input type="color" class="form-control-color mb-2 shape-attr" id="rect-stroke" data-attr="stroke" value="#000000">
+              <label class="form-label">Grosor borde</label>
+              <input type="number" min="0" class="form-control shape-attr" id="rect-stroke-width" data-attr="stroke-width" value="2" step="0.5">
+            </div>
+
+            <!-- Círculo -->
+            <div class="attr-section" id="circle-attrs">
+              <label class="form-label">Radio</label>
+              <input type="number" min="0" class="form-control mb-2 shape-attr" id="circle-r" data-attr="r" value="35">
+              <label class="form-label">Relleno</label>
+              <input type="color" class="form-control-color mb-2 shape-attr" id="circle-fill" data-attr="fill" value="#44cc88">
+              <label class="form-label">Borde</label>
+              <input type="color" class="form-control-color mb-2 shape-attr" id="circle-stroke" data-attr="stroke" value="#000000">
+              <label class="form-label">Grosor borde</label>
+              <input type="number" min="0" class="form-control shape-attr" id="circle-stroke-width" data-attr="stroke-width" value="2" step="0.5">
+            </div>
+
+            <!-- Línea / Flecha -->
+            <div class="attr-section" id="line-attrs">
+              <label class="form-label">X1</label>
+              <input type="number" min="0" class="form-control mb-2 shape-attr" id="line-x1" data-attr="x1">
+              <label class="form-label">Y1</label>
+              <input type="number" min="0" class="form-control mb-2 shape-attr" id="line-y1" data-attr="y1">
+              <label class="form-label">X2</label>
+              <input type="number" min="0" class="form-control mb-2 shape-attr" id="line-x2" data-attr="x2">
+              <label class="form-label">Y2</label>
+              <input type="number" min="0" class="form-control mb-2 shape-attr" id="line-y2" data-attr="y2">
+              <label class="form-label">Color</label>
+              <input type="color" class="form-control-color mb-2 shape-attr" id="line-stroke" data-attr="stroke" value="#333333">
+              <label class="form-label">Grosor</label>
+              <input type="number" min="0" class="form-control shape-attr" id="line-stroke-width" data-attr="stroke-width" value="3" step="0.5">
+              <div class="badge-info mt-2 text-center" id="arrow-indicator" style="display: none;">🞂 Flecha activa</div>
+            </div>
+
+            <!-- Texto -->
+            <div class="attr-section" id="text-attrs">
+              <label class="form-label">Contenido</label>
+              <input type="text" class="form-control mb-2 shape-attr" id="text-content" data-attr="content" value="Texto">
+              <label class="form-label">Fuente</label>
+              <select class="form-select mb-2 shape-attr" id="text-font-family" data-attr="font-family">
+                <option value="Arial">Arial</option>
+                <option value="Verdana">Verdana</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Georgia">Georgia</option>
+              </select>
+              <label class="form-label">Tamaño</label>
+              <input type="number" min="0" class="form-control mb-2 shape-attr" id="text-font-size" data-attr="font-size" value="20">
+              <label class="form-label">Color</label>
+              <input type="color" class="form-control-color mb-2 shape-attr" id="text-fill" data-attr="fill" value="#000000">
+              <label class="form-label">Borde</label>
+              <input type="color" class="form-control-color mb-2 shape-attr" id="text-stroke" data-attr="stroke" value="#cccccc">
+              <label class="form-label">Grosor borde</label>
+              <input type="number" min="0" class="form-control shape-attr" id="text-stroke-width" data-attr="stroke-width" value="0.5" step="0.5">
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista de elementos SVG -->
+        <div class="tab-pane fade" id="tab-elements">
+          <div class="element-list" id="elementList"></div>
+        </div>
+      </div>
+    </div>
+    <!-- FIN PANEL DERECHO-->
+
   </div>
 
   <!-- Modal alerta/error-->
@@ -194,6 +332,7 @@
                       </select>
                 </div>
                 
+                <!-- Modal certificacion requerida
                 <div class="mb-3">
                   <label for="certificacion" class="form-label">
                     <i class="bi bi-shield-check"></i>
@@ -211,6 +350,7 @@
                   </select>
                   <div class="form-help">Selecciona la certificación mínima requerida para operar esta estación</div>
                 </div>
+                -->
               </div>
             </form>
           <!-- Fin formulario -->
@@ -1068,13 +1208,14 @@
                     </button>
                   </div>
 
+                <!--
                   <div class="col-7 col-sm-6 col-md-4 col-lg-2">
                     <button class="menu-btn danger" id="btnLiberarPC" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Liberar punto de cambio">
                       <i class="bi bi-unlock"></i>
                       <span>LIBERAR</span>
                     </button>
                   </div>
-
+                -->
                 <!--
                     <div class="col-7 col-sm-6 col-md-4 col-lg-2">
                       <button class="menu-btn warning" id="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Mover trabajador de estacion">
@@ -1107,432 +1248,683 @@
                 -->
               </div>
             </div>
+            <!--FIN BOTONES MENU -->
 
             <hr>
 
-            <!-- NOMBRE DE LA ESTACION-->
+              <!-- NOMBRE DE LA ESTACION-->
                 <p class="text-center fw-bold fs-5"> 
                     ESTACIÓN DE <span id="nombreEstacionModalPC"></span> 
                 </p>
 
-            <div id="ventanasModalPC">
-                <!-- Formulario de registro de punto de cambio -->
+            <!--VENTANAS-->
+              <div id="ventanasModalPC">
+         
+                <!--REGISTRO EVALUACION Y CIERRE DE PC-->
                   <div id="contregistroCambioForm" class="fade-page show" style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border-left: 4px solid #000000; margin-bottom: 30px;">
-                      <form class="form-body" id="registroCambioForm">
-                        <!-- Header de la sección -->
-                        <div class="form-section">
-                          <h3 class="section-title justify-content-center">
-                            <i class="bi bi-arrow-repeat"></i>Registro de un punto de cambio
-                          </h3>
-                          <p class="text-muted mb-2">Complete la información requerida</p>
-                        </div>
+                      <!-- FORMULARIO REGISTRO DE PC -->
+                        <div id="registroPC">
+                            <form class="form-body" id="registroCambioForm">
+                              <!-- Header de la sección -->
+                              <div class="form-section">
+                                <h3 class="section-title justify-content-center">
+                                  <i class="bi bi-arrow-repeat"></i>Registro de un punto de cambio
+                                </h3>
+                                <p class="text-muted mb-2">Complete la información requerida</p>
+                              </div>
 
-                        <!-- Información del Cambio -->
-                        <div class="form-section">
-                          <div class="row">
-                              <div class="col-md-6 mb-3">
-                                <label for="nominaPC" class="form-label required-field">
-                                  <i class="bi bi-clock"></i>No. Reloj / ID Empleado
-                                </label>
-                                <div class="input-group-custom">
-                                  <input type="number" min="0" step="1" class="form-control form-control-custom" id="nominaPC" placeholder="Ej: 256" required>
-                                  <button type="button" class="input-icon" id="searchEmployee">
-                                    <i class="bi bi-search"></i>
-                                  </button>
+                              <!-- Información del Cambio -->
+                              <div class="form-section">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                      <label for="nominaPC" class="form-label required-field">
+                                        <i class="bi bi-clock"></i>No. Reloj / ID Empleado
+                                      </label>
+                                      <div class="input-group-custom">
+                                        <input type="number" min="0" step="1" class="form-control form-control-custom" id="nominaPC" placeholder="Ej: 256" required>
+                                        <button type="button" class="input-icon" id="searchEmployee">
+                                          <i class="bi bi-search"></i>
+                                        </button>
+                                      </div>
+                                      <div class="form-help">Ingresa el número de reloj o ID único del empleado</div>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                      <label for="nombrePC" class="form-label">
+                                        <i class="bi bi-person"></i> Nombre del trabajador
+                                      </label>
+                                      <div class="input-group-custom">
+                                        <input type="text" class="form-control form-control-custom" id="nombrePC" placeholder="Selecciona o busca un operador" readonly>
+                                        <button type="button" class="input-icon">
+                                          <i class="bi bi-people"></i>
+                                        </button>
+                                      </div>
+                                    </div>
                                 </div>
-                                <div class="form-help">Ingresa el número de reloj o ID único del empleado</div>
-                              </div>
-                              
-                              <div class="col-md-6 mb-3">
-                                <label for="nombrePC" class="form-label">
-                                  <i class="bi bi-person"></i> Nombre del trabajador
-                                </label>
-                                <div class="input-group-custom">
-                                  <input type="text" class="form-control form-control-custom" id="nombrePC" placeholder="Selecciona o busca un operador" readonly>
-                                  <button type="button" class="input-icon">
-                                    <i class="bi bi-people"></i>
-                                  </button>
-                                </div>
-                              </div>
-                          </div>
 
-                          <div class="row">
-                            <div class="col-md-6 mb-3">
-                              <label for="no_controlCambio" class="form-label required-field">
-                                <i class="bi bi-hash"></i> No. Control de Cambio
-                              </label>
-                              <div class="input-group-custom">
-                                <input type="text" class="form-control form-control-custom" 
-                                      id="no_controlCambio" placeholder="Ej: CAM-001" maxlength="50" readonly>
-                                <button type="button" class="input-icon"><i class="bi bi-search"></i></button>
-                              </div>
-                            </div>
+                                <div class="row">
+                                  <div class="col-md-6 mb-3">
+                                    <label for="no_controlCambio" class="form-label required-field">
+                                      <i class="bi bi-hash"></i> No. Control de Cambio
+                                    </label>
+                                    <div class="input-group-custom">
+                                      <input type="text" class="form-control form-control-custom" 
+                                            id="no_controlCambio" placeholder="Ej: CAM-001" maxlength="50" readonly>
+                                      <button type="button" class="input-icon"><i class="bi bi-search"></i></button>
+                                    </div>
+                                  </div>
 
-                            <div class="col-md-6 mb-3">
-                              <label for="tipo_cambio" class="form-label required-field">
-                                <i class="bi bi-shuffle"></i> Tipo de Cambio
-                              </label>
+                                  <div class="col-md-6 mb-3">
+                                    <label for="tipo_cambio" class="form-label required-field">
+                                      <i class="bi bi-shuffle"></i> Tipo de Cambio
+                                    </label>
 
-                              <select type="text" class="form-select" id="tipo_cambio" required>
-                                <option value="1">Inesperado</option>
-                                <option value="2">Programado</option>
-                                <option value="3">Otro</option>
-                              </select>
-                            </div>
-                          </div>
-
-                          <div class="row">
-                            <div class="col-md-6 mb-3">
-                              <label for="fechaHora_inicio" class="form-label required-field">
-                                <i class="bi bi-calendar-event"></i> Fecha y Hora Inicio
-                              </label>
-                              <input type="datetime-local" class="form-control form-control-custom" id="fechaHora_inicio" required>
-                            </div>
-
-                            <!--TURNO PUNTO DE CAMBIO -->
-                            <div class="col-md-6 mb-3">
-                                <label for="turnoPuntoCambio" class="form-label required-field">
-                                    <i class="bi bi-clock-history"></i>Turno</label>
-                                    <select id="turnoPuntoCambio" class="form-select" required>
-                                      <option value="" selected>--- Selecciona un turno ---</option>
-                                      <option value="1">Turno 1</option>
-                                      <option value="2">Turno 2</option>
+                                    <select type="text" class="form-select" id="tipo_cambio" required>
+                                      <option value="1">Inesperado</option>
+                                      <option value="2">Programado</option>
+                                      <option value="3">Otro</option>
                                     </select>
-                            </div>
-                          </div>
+                                  </div>
+                                </div>
 
-                          <div class="mb-3">
-                            <label for="motivo" class="form-label">
-                              <i class="bi bi-chat-left-text"></i> Descripcion
-                            </label>
-                            <textarea class="form-control form-control-custom" id="motivo" rows="3" placeholder="Descripcion del punto de cambio" ></textarea>
-                          </div>
+                                <div class="row">
+                                  <div class="col-md-6 mb-3">
+                                    <label for="fechaHora_inicio" class="form-label required-field">
+                                      <i class="bi bi-calendar-event"></i> Fecha y Hora Inicio
+                                    </label>
+                                    <input type="datetime-local" class="form-control form-control-custom" id="fechaHora_inicio" required>
+                                  </div>
 
-                          <div class="row">
-                            <div class="col-md-6 mb-3">
-                              <label for="codigolineaPC" class="form-label">
-                                <i class="bi bi-diagram-3"></i> Línea
-                              </label>
-                              <input type="text" class="form-control form-control-custom" id="codigolineaPC" value= <?php echo $nombre?>  readonly>
-                            </div>
+                                  <!--TURNO PUNTO DE CAMBIO -->
+                                  <div class="col-md-6 mb-3">
+                                      <label for="turnoPuntoCambio" class="form-label required-field">
+                                          <i class="bi bi-clock-history"></i>Turno</label>
+                                          <select id="turnoPuntoCambio" class="form-select" required>
+                                            <option value="" selected>--- Selecciona un turno ---</option>
+                                            <option value="1">Turno 1</option>
+                                            <option value="2">Turno 2</option>
+                                          </select>
+                                  </div>
+                                </div>
 
-                            <div class="col-md-6 mb-3">
-                              <label for="nombre_estacion" class="form-label"><i class="bi bi-geo-alt"></i> Estación</label>
-                              <input type="text" class="form-control form-control-custom" id="nombre_estacion" readonly>
-                              <input type="hidden" id="id_estacion">
+                                <div class="mb-3">
+                                  <label for="motivo" class="form-label">
+                                    <i class="bi bi-chat-left-text"></i> Descripcion
+                                  </label>
+                                  <textarea class="form-control form-control-custom" id="motivo" rows="3" placeholder="Descripcion del punto de cambio" ></textarea>
+                                </div>
+
+                                <div class="row">
+                                  <div class="col-md-6 mb-3">
+                                    <label for="codigolineaPC" class="form-label">
+                                      <i class="bi bi-diagram-3"></i> Línea
+                                    </label>
+                                    <input type="text" class="form-control form-control-custom" id="codigolineaPC" value= <?php echo $nombre?>  readonly>
+                                  </div>
+
+                                  <div class="col-md-6 mb-3">
+                                    <label for="nombre_estacion" class="form-label"><i class="bi bi-geo-alt"></i> Estación</label>
+                                    <input type="text" class="form-control form-control-custom" id="nombre_estacion" readonly>
+                                    <input type="hidden" id="id_estacion">
+                                  </div>
+                                </div>
+                              </div>
+                            </form>
+
+                            <!-- Footer del Modal con Navegación -->
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-success" id="confirmChange">
+                                <i class="bi bi-check-lg"></i> Confirmar Registro
+                              </button>
+                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                             </div>
-                          </div>
                         </div>
-                      </form>
+                      <!--FIN FORMULARIO REGISTRO DE PC -->
 
-                      <!-- Footer del Modal con Navegación -->
-                      <div class="modal-footer">
-                        <button type="button" class="btn btn-success" id="confirmChange">
-                          <i class="bi bi-check-lg"></i> Confirmar Registro
-                        </button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                      </div>
+                      <!-- TAB DE EVALUACION Y CIERRE DE PC-->
+                        <div id="opcionActivPC" class="container mt-4 d-none">
+                            <!-- MENU DE PESTAÑAS (tabs) -->
+                            <ul class="nav nav-tabs" id="puntoCambioTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="evaluacion-tab" data-bs-toggle="tab" data-bs-target="#evaluacion" type="button" role="tab" aria-controls="evaluacion" aria-selected="true">
+                                        <i class="bi bi-bar-chart-steps"></i> Evaluación
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="cierre-tab" data-bs-toggle="tab" data-bs-target="#cierre" type="button" role="tab" aria-controls="cierre" aria-selected="false">
+                                        <i class="bi bi-check2-all"></i> Cierre / Liberación
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <!--CONTENIDO PRINCIPAL DE LOS TAB -->
+                            <div class="tab-content" id="puntoCambioTabsContent">
+
+                            
+                                <!-- EVALUACIÓN DEL PUNTO DE CAMBIO -->
+                                  <div class="tab-pane fade show active" id="evaluacion" role="tabpanel" aria-labelledby="evaluacion-tab">
+
+                                          <form class="form-body" id="evaluacionPuntoCambioForm">
+                                              <!-- Header principal (similar al registro de cambio) -->
+                                              <div class="form-section">
+                                                  <h3 class="section-title justify-content-center">
+                                                      <i class="bi bi-check2-square"></i> Evaluación del punto de cambio
+                                                  </h3>
+                                                  <p class="text-muted mb-2">Registre los indicadores posteriores al cambio</p>
+                                                
+                                                <div class="row">
+                                                  <!--Dia -->
+                                                  <div class="col-md-6 mb-0">
+                                                      <label for="numeroDia" class="form-label">
+                                                          Día
+                                                          <span id="labelnumeroDia"></span>
+                                                      </label>
+                                                      <input type="hidden" id="numeroDiaEvaluacion">
+                                                  </div>
+
+                                                  <div class="col-md-12 mb-3">
+                                                      <label for="numeroEvaluacion" class="form-label text-uppercase">
+                                                          <i class="bi bi-clock"></i> Verificación:
+                                                          <span id="labelnumeroEvaluacion" class="text-success"></span>
+                                                      </label>
+                                                      <input type="hidden" id="numeroEvaluacion">
+                                                  </div>
+                                                </div>
+                                              </div>
+
+                                              <!-- Sección: Fecha de la evaluación -->
+                                              <div class="form-section">
+                                                  <div class="row">
+                                                      <div class="col-md-6 mb-3">
+                                                          <label for="fechaEvaluacion" class="form-label required-field">
+                                                              <i class="bi bi-calendar-date"></i> Fecha de evaluación
+                                                          </label>
+                                                          <input type="datetime-local" class="form-control form-control-custom" id="fechaEvaluacion" required>
+                                                      </div>
+                                                  </div>
+                                              </div>
+
+                                              <!-- Sección: Métricas (OK/NG) -->
+                                              <div class="form-section">
+                                                  <div class="mb-4">
+                                                      <label class="form-label required-field">
+                                                          <i class="bi bi-check2-circle"></i> 1. Cumple la operación
+                                                      </label>
+                                                      <div class="radio-group">
+                                                          <label><input type="radio" name="metrica1" value="1" required> OK</label>
+                                                          <label><input type="radio" name="metrica1" value="0"> NG </label>
+                                                      </div>
+                                                  </div>
+                                                  <div class="mb-4">
+                                                      <label class="form-label required-field">
+                                                          <i class="bi bi-brush"></i> 2. Acabado del producto
+                                                      </label>
+                                                      <div class="radio-group">
+                                                          <label><input type="radio" name="metrica2" value="1" required> OK</label>
+                                                          <label><input type="radio" name="metrica2" value="0"> NG</label>
+                                                      </div>
+                                                  </div>
+                                                  <div class="mb-4">
+                                                      <label class="form-label required-field">
+                                                          <i class="bi bi-sliders2"></i> 3. Dificultad de la operación
+                                                      </label>
+                                                      <div class="radio-group">
+                                                          <label><input type="radio" name="metrica3" value="1" required> OK</label>
+                                                          <label><input type="radio" name="metrica3" value="0"> NG</label>
+                                                      </div>
+                                                      <div class="form-help">OK = cumple estándar / sin dificultad; NG = no cumple / dificultad alta.</div>
+                                                  </div>
+                                              </div>
+
+                                              <!-- Sección: Comentarios adicionales -->
+                                              <div class="form-section">
+                                                  <label for="comentarios" class="form-label">
+                                                      <i class="bi bi-chat-dots"></i> Comentarios adicionales
+                                                  </label>
+                                                  <textarea class="form-control form-control-custom" id="comentariosEvaluacion" rows="3" placeholder="Observaciones, detalles de la evaluación... (opcional)"></textarea>
+                                              </div>
+
+                                              <!-- Botones de acción -->
+                                              <div class="form-actions">
+                                                  <button type="button" class="btn btn-success" id="btnEvaluacion">
+                                                    <i class="bi bi-check-lg"></i> Confirmar Registro
+                                                  </button>
+                                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                      Cancelar
+                                                  </button>
+                                              </div>
+                                          </form>
+
+                                         <!-- ALERTA DE PC REGISTRADO-->
+                                          <div id ="divPCEvaluado" class="d-flex flex-column justify-content-center align-items-center text-center p-4 d-none" style="width:100%; height:100%;">
+                                              
+                                              <div class="mb-3 text-warning">
+                                                  <i class="bi bi-exclamation-triangle-fill" style="font-size: 2.5rem;"></i>
+                                              </div>
+
+                                              <h5 class="fw-semibold mb-2">
+                                                  Este punto de cambio ya fue evaluado
+                                              </h5>
+
+                                              <p class="text-muted mb-3">
+                                                  No es posible registrar una nueva evaluación para este elemento.
+                                              </p>
+
+                                              <img src="../img/okEva.png" 
+                                                  alt="Evaluación completada" 
+                                                  class="img-fluid" 
+                                                  style="max-width: 180px; opacity: 0.85;">
+                                          </div>
+                                  </div>
+                                <!--FIN EVALUACION DEL PUNTO DE CAMBIO-->
+
+                                <!-- CIERRE / LIBERACIÓN DEL PUNTO DE CAMBIO -->
+                                  <div class="tab-pane fade" id="cierre" role="tabpanel" aria-labelledby="cierre-tab">
+                    
+                                        <!-- Formulario de cierre de punto de cambio-->
+                                          <form class="form-body" id="cierreControlCambioForm">
+                                            <h3 class="section-title justify-content-center">
+                                                <i class="bi bi-unlock"></i>  CIERRE DEL PUNTO DE CAMBIO
+                                            </h3>
+
+                                            <!--ID del punto de cambio-->
+                                            <input type="hidden" name="idPC" id="idPC">
+
+                                              <!--Fecha de cierre del punto de cambio-->
+                                              <div class="row">
+                                                <div class="col-md-6">
+                                                  <label for="fechaCierre" class="form-label fw-bold">Fecha de Cierre</label>
+                                                  <input type="datetime-local" class="form-control form-control-custom" id="fechaCierre" required>
+                                                </div>
+                                              </div>
+
+                                              <!-- Notas Adicionales -->
+                                              <div class="mt-4">
+                                                <label for="notasAdicionales" class="form-label fw-bold">
+                                                  <i class="bi bi-chat-text me-2"></i>Notas Adicionales
+                                                </label>
+                                                <textarea class="form-control form-control-custom" id="notasAdicionales" rows="3" placeholder="Agregue cualquier observación o comentario adicional sobre el cierre del control de cambio..."></textarea>
+                                              </div>
+
+                                              <!--FIRMAS PARA EL CIERRE DEL PC 
+                                                  <div class="row mt-4">
+                                                    <div class="col-md-6 mb-3">
+                                                      <div class="signature-box">
+                                                        <div class="signature-label">Firma de Utility/Líder</div>
+                                                        <div class="signature-hint">Haga clic para firmar</div>
+                                                        <i class="bi bi-pen text-muted mt-2"></i>
+                                                      </div>
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                      <div class="signature-box">
+                                                        <div class="signature-label">Firma de Supervisor</div>
+                                                        <div class="signature-hint">Haga clic para firmar</div>
+                                                        <i class="bi bi-pen text-muted mt-2"></i>
+                                                      </div>
+                                                    </div>
+                                                  </div>  
+                                              -->
+                                                
+                                          </form>
+                         
+
+                                        <!-- Sección de Decisión 
+                                          <div class="decision-section">
+                                            <h4 class="decision-title">
+                                              <i class="bi bi-clipboard-check me-2"></i>
+                                              Juicio para Cerrar el Control de Cambio
+                                            </h4>
+                                
+                                            <div class="decision-option option-close" id="optionClose">
+                                              <div class="option-header">
+                                                <div class="option-icon">
+                                                  <i class="bi bi-check-circle-fill"></i>
+                                                </div>
+                                                <div>
+                                                  <h5 class="option-title">Cerrar Control de Cambio</h5>
+                                                  <p class="option-description">El operador ha completado satisfactoriamente el período de prueba y está listo para operar de forma independiente.</p>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            
+                                            Opción Continuar 
+                                            <div class="decision-option option-continue" id="optionContinue">
+                                              <div class="option-header">
+                                                <div class="option-icon">
+                                                  <i class="bi bi-arrow-clockwise"></i>
+                                                </div>
+                                                <div>
+                                                  <h5 class="option-title">Continuar Control de Cambio</h5>
+                                                  <p class="option-description">Se requiere más tiempo de supervisión antes de que el operador pueda trabajar de forma independiente.</p>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          -->
+
+
+                                        
+
+                                        <!-- Footer del Modal -->
+                                        <div class="modal-footer">
+                                          <button type="button" class="btn btn-close-custom" data-bs-dismiss="modal">
+                                            <i class="bi bi-x-circle me-2"></i>Cancelar
+                                          </button>
+                                          <button type="button" class="btn btn-confirm-custom" id="btnConfirmClose">
+                                            <i class="bi bi-check-lg me-2"></i>Cerrar punto de cambio
+                                          </button>
+                                          <button type="button" class="btn btn-continue-custom d-none" id="btnConfirmContinue">
+                                            <i class="bi bi-arrow-clockwise me-2"></i>Continuar Control
+                                          </button>
+                                        </div>
+                                  
+                                  </div>
+                                <!-- CIERRE / LIBERACIÓN DEL PUNTO DE CAMBIO -->
+                            </div>
+                        </div>
+                      <!-- FIN TAB DE EVALUACION Y CIERRE DE PC-->
                   </div>
-                <!--Fin formulario de registro de punto de cambio -->
+                <!--FIN REGISTRO EVALUACION Y CIERRE DE PC-->
 
 
-                <!--Informacion del personal asignado-->
-                  <div id="contInfoEstacion" class="fade-page d-none" style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border-left: 4px solid #000000; margin-bottom: 30px;">
-                      <h4><i class="bi bi-person-badge" style="margin-right: 10px; font-size: 1.4rem;"></i>
-                          Información del Operador de Estación
-                      </h4>
+                  <!--Informacion del personal asignado-->
+                    <div id="contInfoEstacion" class="fade-page d-none" style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border-left: 4px solid #000000; margin-bottom: 30px;">
+                        <h4><i class="bi bi-person-badge" style="margin-right: 10px; font-size: 1.4rem;"></i>
+                            Información del Operador de Estación
+                        </h4>
 
-                      <input type="hidden" id="idTrabajadorAsignado" value="">
-                      
-                      <div class="row">
-                          <div class="col-md-12">
-                              <!-- Foto del operador -->
-                              <div style="margin-bottom: 20px; text-align: center;">
-                                  <img id ="imgInfochangeControlModal" src="../img/personal/na.jpg" 
-                                      alt="Foto del operador" 
-                                      style="width: 120px; height: 120px; border-radius: 10px; object-fit: cover; border: 3px solid #e9ecef; margin-bottom: 10px;">
-                                  <div style="font-weight: 600; color: #495057;">Foto del operador</div>
-                              </div>
-                              
-                              <!-- Nómina -->
-                              <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
-                                  <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Nómina:</span>
-                                  <span id="changeControlInfoNomina" style="color: #212529; flex: 1;"></span>
-                              </div>
-                              
-                              <!-- Nombre -->
-                              <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
-                                  <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Nombre:</span>
-                                  <span id="changeControlInfoNombre" style="color: #212529; flex: 1;"></span>
-                              </div>
-                              
-                              <!-- Fecha de registro-->
-                              <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
-                                  <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Fecha de asignacion:</span>
-                                  <span id="changeControlInfFecha" style="color: #212529; flex: 1;"></span>
-                              </div>
-
-                              <!-- Turno -->
-                              <div style="margin-bottom: 15px; display: flex; align-items: center;">
-                                  <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Turno:</span>
-                                  <span style="color: #212529; flex: 1;">
-                                      <span id="changeControlInfoTurno" class="badge bg-primary" style="font-size: 0.85rem; padding: 5px 12px; border-radius: 20px;"></span>
-                                  </span>
-                              </div>
-                          </div>
-                      
-                          <!-- Informacion de certificacion
+                        <input type="hidden" id="idTrabajadorAsignado" value="">
+                        
+                        <div class="row">
                             <div class="col-md-12">
-                                <!-- Nivel ILU 
-                                <div style="margin-bottom: 15px; display: flex; align-items: center;">
-                                    <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Nivel de certificacion:</span>
-                                    <span style="color: #212529; flex: 1;">
-                                        <span class="badge bg-info text-dark" style="font-size: 0.85rem; padding: 5px 12px; border-radius: 20px;"> ILU</span>
-                                    </span>
+                                <!-- Foto del operador -->
+                                <div style="margin-bottom: 20px; text-align: center;">
+                                    <img id ="imgInfochangeControlModal" src="../img/personal/na.jpg" 
+                                        alt="Foto del operador" 
+                                        style="width: 120px; height: 120px; border-radius: 10px; object-fit: cover; border: 3px solid #e9ecef; margin-bottom: 10px;">
+                                    <div style="font-weight: 600; color: #495057;">Foto del operador</div>
                                 </div>
                                 
-                                <!-- Fecha de vencimiento de certificación
+                                <!-- Nómina -->
                                 <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
-                                    <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Fecha de vencimiento <br> de certificación:</span>
+                                    <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Nómina:</span>
+                                    <span id="changeControlInfoNomina" style="color: #212529; flex: 1;"></span>
+                                </div>
+                                
+                                <!-- Nombre -->
+                                <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
+                                    <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Nombre:</span>
+                                    <span id="changeControlInfoNombre" style="color: #212529; flex: 1;"></span>
+                                </div>
+                                
+                                <!-- Fecha de registro-->
+                                <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
+                                    <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Fecha de asignacion:</span>
+                                    <span id="changeControlInfFecha" style="color: #212529; flex: 1;"></span>
+                                </div>
+
+                                <!-- Turno -->
+                                <div style="margin-bottom: 15px; display: flex; align-items: center;">
+                                    <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Turno:</span>
                                     <span style="color: #212529; flex: 1;">
-                                        <span style="color: #dc3545; font-weight: 600;">15/12/2024</span>
-                                        <small style="color: #6c757d; display: block; margin-top: 5px;">(Faltan 45 días)</small>
+                                        <span id="changeControlInfoTurno" class="badge bg-primary" style="font-size: 0.85rem; padding: 5px 12px; border-radius: 20px;"></span>
                                     </span>
                                 </div>
                             </div>
-                           -->
-
-                          <!-- Comentario -->
-                          <div class="col-md-12">  
-                              <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
-                                  <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Comentario:</span>
-                                  <div style="color: #212529; flex: 1;">
-                                      <div style="background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 15px; border-radius: 5px;">
-                                        <p id="changeControlInfoComentarios"></p>
-                                      </div>
+                        
+                            <!-- Informacion de certificacion
+                              <div class="col-md-12">
+                                  <!-- Nivel ILU 
+                                  <div style="margin-bottom: 15px; display: flex; align-items: center;">
+                                      <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Nivel de certificacion:</span>
+                                      <span style="color: #212529; flex: 1;">
+                                          <span class="badge bg-info text-dark" style="font-size: 0.85rem; padding: 5px 12px; border-radius: 20px;"> ILU</span>
+                                      </span>
+                                  </div>
+                                  
+                                  <!-- Fecha de vencimiento de certificación
+                                  <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
+                                      <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Fecha de vencimiento <br> de certificación:</span>
+                                      <span style="color: #212529; flex: 1;">
+                                          <span style="color: #dc3545; font-weight: 600;">15/12/2024</span>
+                                          <small style="color: #6c757d; display: block; margin-top: 5px;">(Faltan 45 días)</small>
+                                      </span>
                                   </div>
                               </div>
-                          </div>
+                            -->
 
-                        <!--Boton remover trabajador de estacion -->
-                          <div class="d-flex justify-content-end mt-1">
-                            <button class="btn btn-danger mx-1" id="btnRemoverTrabajadorPC">
-                              <b>REMOVER TRABAJADOR</b>
-                            </button>
-                            <button class="btn btn-warning mx-1">
-                              <b>RETIRAR CERTIFICACION</b>
-                            </button>
-                          </div>
-                      </div>
-                  </div>
-                <!--Fin  Informacion del personal asignado-->
+                            <!-- Comentario -->
+                            <div class="col-md-12">  
+                                <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
+                                    <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Comentario:</span>
+                                    <div style="color: #212529; flex: 1;">
+                                        <div style="background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 15px; border-radius: 5px;">
+                                          <p id="changeControlInfoComentarios"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                <!-- Contenedor de liberacion de punto de cambio -->
-                  <div id="contLiberarPC" class="fade-page d-none" style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border-left: 4px solid #000000; margin-bottom: 30px;">
+                          <!--Boton remover trabajador de estacion -->
+                            <div class="d-flex justify-content-end mt-1">
+                              <button class="btn btn-danger mx-1" id="btnRemoverTrabajadorPC">
+                                <b>REMOVER TRABAJADOR</b>
+                              </button>
+                              <button class="btn btn-warning mx-1">
+                                <b>RETIRAR CERTIFICACION</b>
+                              </button>
+                            </div>
+                        </div>
+                    </div>
+                  <!--Fin  Informacion del personal asignado-->
 
-                      <div class="form-section">
-                        <h4 class="section-title justify-content-center">
-                            <i class="bi bi-unlock"></i>  CIERRE DEL PUNTO DE CAMBIO
-                        </h4>
-                      </div>
+                  <!-- Contenedor de liberacion de punto de cambio 
+                    <div id="contLiberarPC" class="fade-page d-none" style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border-left: 4px solid #000000; margin-bottom: 30px;">
 
-                      <!-- Información del Cambio -->
-                      <div class="info-card">
-                        <h6 class="info-title">
-                          <i class="bi bi-info-circle"></i>
-                          Información del Control de Cambio
-                        </h6>
-                        <div class="row">
-                          <div class="col-md-6">
-                            <div class="info-item">
-                              <span class="info-label">Control No:</span>
-                              <span class="info-value">CC-2025-001</span>
+                        <div class="form-section">
+                          <h4 class="section-title justify-content-center">
+                              <i class="bi bi-unlock"></i>  CIERRE DEL PUNTO DE CAMBIO
+                          </h4>
+                        </div>
+
+                        <!-- Información del Cambio 
+                        <div class="info-card">
+                          <h6 class="info-title">
+                            <i class="bi bi-info-circle"></i>
+                            Información del Control de Cambio
+                          </h6>
+                          <div class="row">
+                            <div class="col-md-6">
+                              <div class="info-item">
+                                <span class="info-label">Control No:</span>
+                                <span class="info-value">CC-2025-001</span>
+                              </div>
+                              <div class="info-item">
+                                <span class="info-label">Operador:</span>
+                                <span class="info-value">Juan Pérez</span>
+                              </div>
+                              <div class="info-item">
+                                <span class="info-label">Estación:</span>
+                                <span class="info-value">Estación 02</span>
+                              </div>
                             </div>
-                            <div class="info-item">
-                              <span class="info-label">Operador:</span>
-                              <span class="info-value">Juan Pérez</span>
-                            </div>
-                            <div class="info-item">
-                              <span class="info-label">Estación:</span>
-                              <span class="info-value">Estación 02</span>
-                            </div>
-                          </div>
-                          <div class="col-md-6">
-                            <div class="info-item">
-                              <span class="info-label">Inicio:</span>
-                              <span class="info-value">15/11/2025 08:30</span>
-                            </div>
-                            <div class="info-item">
-                              <span class="info-label">Duración:</span>
-                              <span class="info-value">3 días</span>
-                            </div>
-                            <div class="info-item">
-                              <span class="info-label">Estado:</span>
-                              <span class="info-value"><span class="badge bg-warning">En Proceso</span></span>
+                            <div class="col-md-6">
+                              <div class="info-item">
+                                <span class="info-label">Inicio:</span>
+                                <span class="info-value">15/11/2025 08:30</span>
+                              </div>
+                              <div class="info-item">
+                                <span class="info-label">Duración:</span>
+                                <span class="info-value">3 días</span>
+                              </div>
+                              <div class="info-item">
+                                <span class="info-label">Estado:</span>
+                                <span class="info-value"><span class="badge bg-warning">En Proceso</span></span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
 
-                      <!-- Formulario de cierre de punto de cambio-->
-                      <div class= "decision-option option-close">
-                        <form class="form" id="cierreControlCambioForm">
+                        <!-- Formulario de cierre de punto de cambio
+                        <div class= "decision-option option-close">
+                          <form class="form" id="cierreControlCambioForm">
 
-                            <!--ID del punto de cambio-->
-                            <input type="hidden" name="idPC" id="idPC">
+                              <!--ID del punto de cambio-
+                              <input type="hidden" name="idPC" id="idPC">
 
-                            <!--Fecha de cierre del punto de cambio-->
-                            <div class="row">
-                              <div class="col-md-6">
-                                <label for="fechaCierre" class="form-label fw-bold">Fecha de Cierre</label>
-                                <input type="datetime-local" class="form-control form-control-custom" id="fechaCierre" required>
-                              </div>
-                            </div>
-
-                            <!-- Notas Adicionales -->
-                            <div class="mt-4">
-                              <label for="notasAdicionales" class="form-label fw-bold">
-                                <i class="bi bi-chat-text me-2"></i>Notas Adicionales
-                              </label>
-                              <textarea class="form-control form-control-custom" id="notasAdicionales" rows="3" placeholder="Agregue cualquier observación o comentario adicional sobre el cierre del control de cambio..."></textarea>
-                            </div>
-
-                            <!--FIRMAS PARA EL CIERRE DEL PC 
-                                <div class="row mt-4">
-                                  <div class="col-md-6 mb-3">
-                                    <div class="signature-box">
-                                      <div class="signature-label">Firma de Utility/Líder</div>
-                                      <div class="signature-hint">Haga clic para firmar</div>
-                                      <i class="bi bi-pen text-muted mt-2"></i>
-                                    </div>
-                                  </div>
-                                  <div class="col-md-6 mb-3">
-                                    <div class="signature-box">
-                                      <div class="signature-label">Firma de Supervisor</div>
-                                      <div class="signature-hint">Haga clic para firmar</div>
-                                      <i class="bi bi-pen text-muted mt-2"></i>
-                                    </div>
-                                  </div>
-                                </div> 
-                              -->
-                        </form>
-                      </div>
-
-                      <!-- Sección de Decisión 
-                        <div class="decision-section">
-                          <h4 class="decision-title">
-                            <i class="bi bi-clipboard-check me-2"></i>
-                            Juicio para Cerrar el Control de Cambio
-                          </h4>
-                          
-                          <Opción Cerrar
-                          <div class="decision-option option-close" id="optionClose">
-                            <div class="option-header">
-                              <div class="option-icon">
-                                <i class="bi bi-check-circle-fill"></i>
-                              </div>
-                              <div>
-                                <h5 class="option-title">Cerrar Control de Cambio</h5>
-                                <p class="option-description">El operador ha completado satisfactoriamente el período de prueba y está listo para operar de forma independiente.</p>
-                              </div>
-                            </div>
-                            
-                            <div class="option-content">
-                              <div class="mb-3">
-                                <label for="contramedidasCerrar" class="form-label fw-bold">Contramedidas Aplicadas</label>
-                                <textarea class="form-control form-control-custom" id="contramedidasCerrar" rows="3" placeholder="Describa las contramedidas implementadas durante el período de prueba..."></textarea>
-                              </div>
-                              
+                              <!--Fecha de cierre del punto de cambio
                               <div class="row">
                                 <div class="col-md-6">
                                   <label for="fechaCierre" class="form-label fw-bold">Fecha de Cierre</label>
-                                  <input type="date" class="form-control form-control-custom" id="fechaCierre">
+                                  <input type="datetime-local" class="form-control form-control-custom" id="fechaCierre" required>
                                 </div>
                               </div>
-                            </div>
-                          </div>
-                          
-                          Opción Continuar 
-                          <div class="decision-option option-continue" id="optionContinue">
-                            <div class="option-header">
-                              <div class="option-icon">
-                                <i class="bi bi-arrow-clockwise"></i>
+
+                              <!-- Notas Adicionales 
+                              <div class="mt-4">
+                                <label for="notasAdicionales" class="form-label fw-bold">
+                                  <i class="bi bi-chat-text me-2"></i>Notas Adicionales
+                                </label>
+                                <textarea class="form-control form-control-custom" id="notasAdicionales" rows="3" placeholder="Agregue cualquier observación o comentario adicional sobre el cierre del control de cambio..."></textarea>
                               </div>
-                              <div>
-                                <h5 class="option-title">Continuar Control de Cambio</h5>
-                                <p class="option-description">Se requiere más tiempo de supervisión antes de que el operador pueda trabajar de forma independiente.</p>
+
+                              <!--FIRMAS PARA EL CIERRE DEL PC 
+                                  <div class="row mt-4">
+                                    <div class="col-md-6 mb-3">
+                                      <div class="signature-box">
+                                        <div class="signature-label">Firma de Utility/Líder</div>
+                                        <div class="signature-hint">Haga clic para firmar</div>
+                                        <i class="bi bi-pen text-muted mt-2"></i>
+                                      </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                      <div class="signature-box">
+                                        <div class="signature-label">Firma de Supervisor</div>
+                                        <div class="signature-hint">Haga clic para firmar</div>
+                                        <i class="bi bi-pen text-muted mt-2"></i>
+                                      </div>
+                                    </div>
+                                  </div> 
+                                
+                          </form>
+                        </div>
+
+                        <!-- Sección de Decisión 
+                          <div class="decision-section">
+                            <h4 class="decision-title">
+                              <i class="bi bi-clipboard-check me-2"></i>
+                              Juicio para Cerrar el Control de Cambio
+                            </h4>
+                            
+                            <Opción Cerrar
+                            <div class="decision-option option-close" id="optionClose">
+                              <div class="option-header">
+                                <div class="option-icon">
+                                  <i class="bi bi-check-circle-fill"></i>
+                                </div>
+                                <div>
+                                  <h5 class="option-title">Cerrar Control de Cambio</h5>
+                                  <p class="option-description">El operador ha completado satisfactoriamente el período de prueba y está listo para operar de forma independiente.</p>
+                                </div>
+                              </div>
+                              
+                              <div class="option-content">
+                                <div class="mb-3">
+                                  <label for="contramedidasCerrar" class="form-label fw-bold">Contramedidas Aplicadas</label>
+                                  <textarea class="form-control form-control-custom" id="contramedidasCerrar" rows="3" placeholder="Describa las contramedidas implementadas durante el período de prueba..."></textarea>
+                                </div>
+                                
+                                <div class="row">
+                                  <div class="col-md-6">
+                                    <label for="fechaCierre" class="form-label fw-bold">Fecha de Cierre</label>
+                                    <input type="date" class="form-control form-control-custom" id="fechaCierre">
+                                  </div>
+                                </div>
                               </div>
                             </div>
                             
-                            <div class="option-content">
-                              <div class="mb-3">
-                                <label for="contramedidasContinuar" class="form-label fw-bold">Contramedidas Adicionales</label>
-                                <textarea class="form-control form-control-custom" id="contramedidasContinuar" rows="3" placeholder="Describa las contramedidas adicionales que se implementarán..."></textarea>
+                            Opción Continuar 
+                            <div class="decision-option option-continue" id="optionContinue">
+                              <div class="option-header">
+                                <div class="option-icon">
+                                  <i class="bi bi-arrow-clockwise"></i>
+                                </div>
+                                <div>
+                                  <h5 class="option-title">Continuar Control de Cambio</h5>
+                                  <p class="option-description">Se requiere más tiempo de supervisión antes de que el operador pueda trabajar de forma independiente.</p>
+                                </div>
                               </div>
                               
-                              <div class="row">
-                                <div class="col-md-6">
-                                  <label for="fechaContinuar" class="form-label fw-bold">Fecha de Revisión</label>
-                                  <input type="date" class="form-control form-control-custom" id="fechaContinuar">
+                              <div class="option-content">
+                                <div class="mb-3">
+                                  <label for="contramedidasContinuar" class="form-label fw-bold">Contramedidas Adicionales</label>
+                                  <textarea class="form-control form-control-custom" id="contramedidasContinuar" rows="3" placeholder="Describa las contramedidas adicionales que se implementarán..."></textarea>
                                 </div>
-                                <div class="col-md-6">
-                                  <label for="diasContinuar" class="form-label fw-bold">Días Adicionales</label>
-                                  <input type="number" class="form-control form-control-custom" id="diasContinuar" min="1" max="30" placeholder="Número de días">
+                                
+                                <div class="row">
+                                  <div class="col-md-6">
+                                    <label for="fechaContinuar" class="form-label fw-bold">Fecha de Revisión</label>
+                                    <input type="date" class="form-control form-control-custom" id="fechaContinuar">
+                                  </div>
+                                  <div class="col-md-6">
+                                    <label for="diasContinuar" class="form-label fw-bold">Días Adicionales</label>
+                                    <input type="number" class="form-control form-control-custom" id="diasContinuar" min="1" max="30" placeholder="Número de días">
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
 
-                        Sección de Firmas 
-                        <div class="signature-section">
-                          <h5 class="signature-title">
-                            <i class="bi bi-pen-fill me-2"></i>
-                            Autorizaciones Requeridas
-                          </h5>
-                          
-                          <div class="row">
-                            <div class="col-md-6 mb-3">
-                              <div class="signature-box">
-                                <div class="signature-label">Firma de Utility/Líder</div>
-                                <div class="signature-hint">Haga clic para firmar</div>
-                                <i class="bi bi-pen text-muted mt-2"></i>
+                          Sección de Firmas 
+                          <div class="signature-section">
+                            <h5 class="signature-title">
+                              <i class="bi bi-pen-fill me-2"></i>
+                              Autorizaciones Requeridas
+                            </h5>
+                            
+                            <div class="row">
+                              <div class="col-md-6 mb-3">
+                                <div class="signature-box">
+                                  <div class="signature-label">Firma de Utility/Líder</div>
+                                  <div class="signature-hint">Haga clic para firmar</div>
+                                  <i class="bi bi-pen text-muted mt-2"></i>
+                                </div>
                               </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                              <div class="signature-box">
-                                <div class="signature-label">Firma de Supervisor</div>
-                                <div class="signature-hint">Haga clic para firmar</div>
-                                <i class="bi bi-pen text-muted mt-2"></i>
+                              <div class="col-md-6 mb-3">
+                                <div class="signature-box">
+                                  <div class="signature-label">Firma de Supervisor</div>
+                                  <div class="signature-hint">Haga clic para firmar</div>
+                                  <i class="bi bi-pen text-muted mt-2"></i>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
 
-                        Notas Adicionales
-                        <div class="mt-4">
-                          <label for="notasAdicionales" class="form-label fw-bold">
-                            <i class="bi bi-chat-text me-2"></i>Notas Adicionales
-                          </label>
-                          <textarea class="form-control form-control-custom" id="notasAdicionales" rows="3" placeholder="Agregue cualquier observación o comentario adicional sobre el cierre del control de cambio..."></textarea>
-                        </div>
-                      -->
+                          Notas Adicionales
+                          <div class="mt-4">
+                            <label for="notasAdicionales" class="form-label fw-bold">
+                              <i class="bi bi-chat-text me-2"></i>Notas Adicionales
+                            </label>
+                            <textarea class="form-control form-control-custom" id="notasAdicionales" rows="3" placeholder="Agregue cualquier observación o comentario adicional sobre el cierre del control de cambio..."></textarea>
+                          </div>
+                        
 
-                      <!-- Footer del Modal -->
-                      <div class="modal-footer">
-                        <button type="button" class="btn btn-close-custom" data-bs-dismiss="modal">
-                          <i class="bi bi-x-circle me-2"></i>Cancelar
-                        </button>
-                        <button type="button" class="btn btn-confirm-custom" id="btnConfirmClose">
-                          <i class="bi bi-check-lg me-2"></i>Cerrar punto de cambio
-                        </button>
-                        <button type="button" class="btn btn-continue-custom d-none" id="btnConfirmContinue">
-                          <i class="bi bi-arrow-clockwise me-2"></i>Continuar Control
-                        </button>
-                      </div>
-                  </div>
-                <!-- Fin Formulario de liberacion -->
-            </div>
+                        <!-- Footer del Modal 
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-close-custom" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Cancelar
+                          </button>
+                          <button type="button" class="btn btn-confirm-custom" id="btnConfirmClose">
+                            <i class="bi bi-check-lg me-2"></i>Cerrar punto de cambio
+                          </button>
+                          <button type="button" class="btn btn-continue-custom d-none" id="btnConfirmContinue">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Continuar Control
+                          </button>
+                        </div>
+                    </div>
+                  <!-- Fin Formulario de liberacion -->
+              </div>
+            <!-- FIN VENTANAS -->
         </div>
       </div>
     </div>
@@ -1977,8 +2369,6 @@
   <script src="../DataTables/datatables.min.js"></script>
   
   <!--Custmo js -->
-    <script src="../scripts/layout.js"></script> 
-
-
+  <script src="../scripts/layout.js"></script> 
 </body>
 </html>
