@@ -28,12 +28,12 @@
       </button>
 
       <!--CONSULTAR PUNTO DE CAMBIO 
-      <button class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Punto de cambio">
-        <span data-bs-toggle="modal" data-bs-target="#changePointsModal">
-        <i class="bi bi-arrow-repeat"></i>
-        <span>Cambio</span>
-        </span>
-      </button>
+        <button class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Punto de cambio">
+          <span data-bs-toggle="modal" data-bs-target="#changePointsModal">
+          <i class="bi bi-arrow-repeat"></i>
+          <span>Cambio</span>
+          </span>
+        </button>
       -->
 
       <!--REGISTRO DE ASISTENCIA -->
@@ -52,7 +52,8 @@
         </span>
       </button>
 
-      <button id="historialLayoutBtn" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Consultar el acomodo del layout en alguna fecha">
+      <!--BOTON PARA MOSTRAR HISTORIAL DE REGISTROS DEL LAYOUT -->
+      <button id="btnHistorialLayout" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Consultar el acomodo del layout en alguna fecha">
          <span data-bs-toggle="modal" data-bs-target="#historialLayoutModal">
             <i class="bi bi-clock-history"></i>
             <span>Historial</span>

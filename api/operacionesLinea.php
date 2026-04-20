@@ -1166,7 +1166,6 @@ else
                 $sqlPNAD = 'SELECT id_registro from SPC_personal_NAD where nomina = :nomina and fechaE IS NULL';
                 $stmtGETPNAD = $conn->prepare($sqlPNAD);
                 $stmtGETPNAD->execute([':nomina' => $nominaPC]);
-
                 $resultado = $stmtGETPNAD->fetch(PDO::FETCH_ASSOC);
 
                     //Actualizar el registro en la tabla de personal_nad si se encontro algun registro activo
@@ -1482,9 +1481,9 @@ else
             }
 
         //Consultar el registro de asistencia de la linea en la tabla de asistencia
-            $sqlV = "SELECT id_registro, nomina, nombre, codigo_linea, estatus, id_estacion, turno, nombres_estaciones AS nombre_estacion 
+            $sqlV = "SELECT id_registro, nomina, nombre, codigo_linea, estatus, id_estacion, turno, nombres_estaciones AS nombre_estacion, comentarioAsistencia
                                 FROM SPC_REGISTRO_ASISTENCIA 
-                    WHERE turno = :turno AND fecha_operacion >= :fechaInicio AND fecha_operacion <= :fechaFin AND codigo_linea = :codigoLinea";
+                                    WHERE turno = :turno AND fecha_operacion >= :fechaInicio AND fecha_operacion <= :fechaFin AND codigo_linea = :codigoLinea";
             $stmtV = $conn->prepare($sqlV);
             $stmtV->execute([':turno' => $turno,
                              ':fechaInicio' => $inicio->format('Y-m-d H:i'),
@@ -1495,7 +1494,46 @@ else
         //Generar lista de asistencia 
             //Si existe un registro de asistencia mostrar el registro
             $personal = $stmtV->fetchAll(PDO::FETCH_ASSOC);
-            if (!empty($personal)) $response = $personal;
+            if (!empty($personal)) {
+                    //Consulta para obtener el resumen de la asistencia
+                    $sqlR = "SELECT
+                                -- Contar las asistencias
+                                SUM(CASE WHEN estatus IN ('1', '8') THEN 1 ELSE 0 END) AS asistencias,
+
+                                -- Contar las faltas
+                                SUM(CASE WHEN estatus IN ('2', '5', '6', '7') THEN 1 ELSE 0 END) AS faltas,
+
+                                -- Contar los permisos
+                                SUM(CASE WHEN estatus = '3' THEN 1 ELSE 0 END) AS permisos,
+
+                                -- Contar las vacaciones
+                                SUM(CASE WHEN estatus = '4' THEN 1 ELSE 0 END) AS vacaciones,
+
+                                -- Contar las incapacidades
+                                SUM(CASE WHEN estatus = '9' THEN 1 ELSE 0 END) AS incapacidad,
+
+                                -- Calcular el porcentaje de asistencia
+                                ROUND (
+                                        CAST(SUM(CASE WHEN estatus IN ('1', '8') THEN 1 ELSE 0 END) AS FLOAT) /
+                                        NULLIF(COUNT(estatus), 0) * 100, 2
+                                       ) AS porcentajeA
+                            FROM SPC_REGISTRO_ASISTENCIA
+                                WHERE fecha_operacion > :fechaInicio AND fecha_operacion < :fechaFin 
+                                    AND codigo_linea = :codigoLinea";
+
+                $stmtR = $conn->prepare($sqlR);
+                $stmtR->execute([':fechaInicio' => $inicio->format('Y-m-d H:i'),
+                                ':fechaFin'    => $fin->format('Y-m-d H:i'),
+                                ':codigoLinea' => $codigoLinea
+                            ]);
+
+                //resumen de la asistencia
+                $resumen = $stmtR->fetch(PDO::FETCH_ASSOC);
+
+                 $response = ['personal' => $personal, 
+                              'resumen' => $resumen
+                             ];
+            }
            
             //Si no existe un registro de asistencia generar uno
             else {
@@ -1518,11 +1556,18 @@ else
                 $response= array();
 
                 // Ejecutar con los parámetros
-                if($stmt->execute([':codigoLinea' => $codigoLinea, ':turno' => $turno]))
-                    while($personal= $stmt->fetch(PDO::FETCH_ASSOC))
-                        $response[] = $personal;
-                else 
-                    $response = $stmt->errorInfo()[2];
+                if($stmt->execute([':codigoLinea' => $codigoLinea, ':turno' => $turno])){
+                    while($personal= $stmt->fetch(PDO::FETCH_ASSOC)){
+                        $response['personal'][] = $personal;
+                    }
+                }
+
+                else {
+                    $response['personal'] = $stmt->errorInfo()[2];
+                }
+
+
+                $response['resumen'] =  null;
             }
 
         echo json_encode($response);
@@ -1561,9 +1606,15 @@ else
                 } 
 
                 else 
-                    if ($turno == '2') {
-                    $inicio_turno = new DateTime('today 20:00');
-                    $fin_turno = new DateTime('tomorrow 07:59');
+                    if ($turno == '2') {               
+                        if ($hora_actual>= new DateTime('today 20:00')) { // Después de las 8 pm
+                            $inicio_turno = new DateTime('today 20:00');
+                            $fin_turno    = new DateTime('tomorrow 07:59');
+                        } else { // Antes de las 8 pm
+                            $inicio_turno = new DateTime('yesterday 20:00');
+                            $fin_turno    = new DateTime('today 07:59');
+                        } 
+
                     if ($hora_actual < $inicio_turno || $hora_actual > $fin_turno) {
                         echo json_encode([
                             'estatus' => 'error',
@@ -1629,9 +1680,9 @@ else
     if($opcion == '18'){
         $idRegistro = $_POST['id_registro'];
         $estatus = !empty($_POST['estatus']) ? $_POST['estatus'] : null;
-        $observacionesAsistencia = !empty($_POST['observacionesAsistencia']) ? $_POST['observacionesAsistencia'] : null;
+        $observacionesAsistencia = isset($_POST['observacionesAsistencia']) ? $_POST['observacionesAsistencia'] : null;
 
-        if(!$estatus && !$observacionesAsistencia){
+        if(!$estatus && !isset($observacionesAsistencia)){
               echo json_encode(array('estatus' => 'ok',
                                      'mensaje' => 'No se ha modificado ningun valor'
                                      )
@@ -1647,7 +1698,7 @@ else
             $params[':estatus'] = $estatus;
         }
 
-        if (!empty($observacionesAsistencia)) {
+        if (isset($observacionesAsistencia)) {
             $set[] = 'comentarioAsistencia = :comentarios';
             $params[':comentarios'] = $observacionesAsistencia;
         }
@@ -2027,4 +2078,106 @@ else
             ]);
         }
 }
+
+//Registro individual de asistencia
+else 
+ if($opcion == '27'){
+        $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
+        $turno = !empty($_POST['turno']) ? $_POST['turno'] : null;
+        $nomina = !empty($_POST['nomina']) ? $_POST['nomina'] : null;
+        $nombre = !empty($_POST['nombre']) ? $_POST['nombre'] : null;
+        $estatusAsistencia = !empty($_POST['estatusAsistencia']) ? $_POST['estatusAsistencia'] : null;
+        $estacion = !empty($_POST['estacion']) ? $_POST['estacion'] : null;
+        $nombreEstacion = !empty($_POST['nombreEstacion']) ? $_POST['nombreEstacion'] : null;
+        $comentarios = !empty($_POST['comentarios']) ? $_POST['comentarios'] : null;
+
+            if (!$codigoLinea || !$nomina || !$turno || !$estatusAsistencia) {
+                echo json_encode(['estatus' => 'error', 
+                                  'mensaje'=>'Datos inválidos'
+                                ]);
+                exit;
+            }
+
+            // Validar horario según turno
+            $hora_actual = new DateTime();
+
+                if ($turno == '1') {
+                    $inicio_turno = new DateTime('today 08:00');
+                    $fin_turno = new DateTime('today 19:59');
+                    if ($hora_actual < $inicio_turno || $hora_actual > $fin_turno) {
+                        echo json_encode([
+                            'estatus' => 'error',
+                            'mensaje' => 'El registro de asistencia para el Turno 1 solo puede realizarse entre las 8:00 AM y las 7:59 PM.'
+                        ]);
+                        exit;
+                    }
+                } 
+
+                else 
+                    if ($turno == '2') {               
+                        if ($hora_actual>= new DateTime('today 20:00')) { // Después de las 8 pm
+                            $inicio_turno = new DateTime('today 20:00');
+                            $fin_turno    = new DateTime('tomorrow 07:59');
+                        } else { // Antes de las 8 pm
+                            $inicio_turno = new DateTime('yesterday 20:00');
+                            $fin_turno    = new DateTime('today 07:59');
+                        } 
+
+                    if ($hora_actual < $inicio_turno || $hora_actual > $fin_turno) {
+                        echo json_encode([
+                            'estatus' => 'error',
+                            'mensaje' => 'El registro de asistencia para el Turno 2 solo puede realizarse entre las 8:00 PM y las 7:59 AM del día siguiente.'
+                        ]);
+                        exit;
+                    }
+                } 
+                
+                else {
+                    echo json_encode([
+                        'estatus' => 'error',
+                        'mensaje' => 'Turno no válido.'
+                    ]);
+                    exit;
+                }
+
+        try {
+            $conn->beginTransaction();
+            $sql = "INSERT INTO SPC_REGISTRO_ASISTENCIA (nomina, nombre, estatus, codigo_linea, turno, id_estacion, nombres_estaciones, comentarioAsistencia) 
+                        VALUES (:nomina, :nombre, :estatus, :codigo_linea, :turno, :id_estacion, :nombres_estaciones, :comentarioAsistencia)";
+            $stmt = $conn->prepare($sql);
+
+            $stmt->execute([
+                ':nomina' => $nomina,
+                ':nombre' => $nombre,
+                ':estatus' => $estatusAsistencia,
+                ':id_estacion' => $estacion,
+                ':nombres_estaciones' => $nombreEstacion,
+                ':comentarioAsistencia' => $comentarios,
+                ':codigo_linea' => $codigoLinea,
+                ':turno' => $turno
+            ]);
+            
+            $conn->commit();
+            $results = array('estatus' => 'ok',
+                              'mensaje' => 'Se ha hecho el registro de asistencia');
+
+        } catch (Exception $e) {
+            $conn->rollBack();
+              $results = array('estatus' => 'error',
+                               'mensaje' => 'Ocurrió un error al realizar el registro',
+                               'error' => $e->getMessage());
+        }
+
+        echo json_encode($results);
+}
+
+
+/*
+Resumen de asistencia
+Asistencias
+Permisos
+Faltas
+Vacaciones
+% Asistencia
+*/
 ?>

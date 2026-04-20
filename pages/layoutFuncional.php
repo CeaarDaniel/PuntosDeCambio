@@ -442,20 +442,6 @@
                           </div>
                       </div>
                   </div>
-
-                  <!-- Vista previa del operador seleccionado -->
-                  <div id="operatorPreview" class="operator-preview d-none">
-                    <div class="d-flex align-items-center p-3 bg-light rounded">
-                      <div class="operator-avatar bg-primary text-white">JD</div>
-                      <div class="ms-3 flex-grow-1">
-                        <h6 class="mb-1" id="previewName">Juan Domínguez</h6>
-                        <p class="mb-0 text-muted small" id="previewDetails">ID: EMP-0256 | 3 Certificaciones</p>
-                      </div>
-                      <button type="button" class="btn btn-sm btn-outline-danger" id="clearOperator">
-                        <i class="bi bi-x"></i> Cambiar
-                      </button>
-                    </div>
-                  </div>
                 </div>
 
                 <!-- Información de la Asignación -->
@@ -764,7 +750,7 @@
         </div>
         
         <!-- Body del Modal -->
-        <div class="modal-body p-4">
+        <div class="modal-body py-4 px-1">
           <!-- Barra de herramientas superior -->
           <div class="row mb-4">
               <div class="col-md-8">
@@ -786,17 +772,88 @@
                   </div>
               </div>
 
-              <div class="col-4">
-                  <div class="d-flex justify-content-end align-items-center">
-                    <button class="btn btn-outline-primary me-2">
-                      <i class="bi bi-printer"></i> Imprimir
-                    </button>
-                    <button class="btn btn-outline-secondary me-2">
-                      <i class="bi bi-download"></i> Exportar
+              <!-- BOTON DE IMPRIMIR Y EXPORTAR
+                <div class="col-4">
+                    <div class="d-flex justify-content-end align-items-center">
+                      <button class="btn btn-outline-primary me-2">
+                        <i class="bi bi-printer"></i> Imprimir
+                      </button>
+                      <button class="btn btn-outline-secondary me-2">
+                        <i class="bi bi-download"></i> Exportar
+                      </button>
+                    </div>
+                </div>
+              -->
+          </div>
+            
+          <!--Formulario para registrar una sola ASISTENCIA -->
+            <form class="m-0 p-0" id="formAsistencia">
+              <div class="row p-0 mx-0 my-2" >
+
+                  <!--NOMINA-->
+                  <div class="col-sm-6 col-md-4 col-lg-2 m-0 px-1">
+                    <label for="nominaAsistencia" class="form-label">
+                      <i class="bi bi-clock"></i>Nómina
+                    </label>
+                    <input type="number" min=0 step=1 
+                          class="form-control form-control-custom" 
+                          id="nominaAsistencia" 
+                          placeholder="Ej: EMP-0256" 
+                          required>
+                  </div>
+                 
+                  <!-- NOMBRE-->
+                  <div class="col-sm-6 col-md-4 col-lg-2 m-0 px-1">
+                    <label for="nombreAsistencia" class="form-label">
+                      <i class="bi bi-person"></i>Nombre
+                    </label>
+                    <div class="input-group-custom">
+                      <input type="text" class="form-control form-control-custom" 
+                             id="nombreAsistencia" 
+                             placeholder="Selecciona o busca un operador" readonly>
+                    </div>
+                  </div>
+
+                  <!-- ESTACION ASIGNADA-->
+                  <div class="col-sm-6 col-md-4 col-lg-2 m-0 px-1">
+                    <label for="estacionAsistencia" class="form-label">
+                      <i class="bi bi-cpu"></i>Estación
+                    </label>
+                    <select class="form-control form-control-custom" id="estacionAsistencia">
+                    </select>
+                  </div>
+
+                  <!--ESTATUS (ASISTENCIA, FALTA, PERMISO, ETC) -->
+                  <div class="col-sm-6 col-md-4 col-lg-2 m-0 px-1">
+                    <label for="estatusAsistencia" class="form-label">Asistencia</label>
+                    <select id="estatusAsistencia" class="form-control form-control-custom" required>
+                        <option value="1">✅ ASISTENCIA</option>
+                        <option value="2">❌ FALTA INJUSTIFICADA</option>
+                        <option value="3">🟢 PERMISO SIN GOCE DE SUELDO</option>
+                        <option value="4">🏖️ VACACIONES</option>
+                        <option value="5">🟡 PARO TÉCNICO</option>
+                        <option value="6">⚪ DESCANSO</option>
+                        <option value="7">🚫 SANCIÓN</option>
+                        <option value="8">⏱️ TIEMPO EXTRA</option>
+                        <option value="9">🏥 INCAPACIDAD</option>
+                    </select>
+                  </div>
+
+                  <!-- OBSERVACIONES/COMENTARIOS-->
+                  <div class="col-sm-6 col-md-4 col-lg-2 m-0 px-1">
+                    <label for="comentarioAsistencia" class="form-label">Comentarios</label>
+                    <input id="comentarioAsistencia" type="text" class="form-control form-control-custom" placeholder="Observaciones..." value="">
+                  </div>
+
+                  <!-- BOTON DE REGISTRO DE ASISTENCIA-->
+                  <div class="col-12 col-lg-2 m-0 px-1 d-flex align-items-center justify-content-center">
+                    <button class="btn btn-success py-0 px-2 my-1" id="btnAsistencia">
+                      <i class="bi bi-plus" style="font-size: 1.5rem;"></i> Agregar
                     </button>
                   </div>
-              </div>
-          </div>
+              </div>  
+            </form>
+          <!--FIN FORMULARIO ASISTENCIA -->
 
           <!-- Tarjetas de resumen 
             <div class="row mb-4">
@@ -1101,35 +1158,39 @@
           </div>
 
           <!-- Resumen rápido -->
-            <div class="row mt-4">
+            <div class="row mt-4" id="resumenAsistencia">
               <div class="col-md-12">
                 <div class="card">
                   <div class="card-header">
                     <h6 class="mb-0">
-                      <i class="bi bi-info-circle me-2"></i> Resumen del Día
+                      <i class="bi bi-info-circle me-2"></i> Resumen de la asistencia del día
                     </h6>
                   </div>
                   <div class="card-body">
                     <div class="row text-center">
                       <div class="col">
-                        <div class="h4 text-success">12</div>
-                        <small class="text-muted">Presentes</small>
+                        <div class="h4 text-success" id="countAsistencia"></div>
+                        <small class="text-muted">Asistencias</small>
                       </div>
                       <div class="col">
-                        <div class="h4 text-warning">2</div>
+                        <div class="h4 text-warning" id="countPermisos"></div>
                         <small class="text-muted">Permisos</small>
                       </div>
                       <div class="col">
-                        <div class="h4 text-danger">1</div>
+                        <div class="h4 text-danger" id="countFaltas"></div>
                         <small class="text-muted">Faltas</small>
                       </div>
                       <div class="col">
-                        <div class="h4 text-info">0</div>
+                        <div class="h4 text-info" id="countVacaciones"></div>
                         <small class="text-muted">Vacaciones</small>
                       </div>
                       <div class="col">
-                        <div class="h4 text-primary">87%</div>
-                        <small class="text-muted">Asistencia</small>
+                        <div class="h4 text-primary" id="countIncapacidades"></div>
+                        <small class="text-muted">Incapacidades</small>
+                      </div>
+                      <div class="col">
+                        <div class="h4" id="countPAsistencia"></div>
+                        <b><small class="text-muted">Procentaje de asistencia</small></b>
                       </div>
                     </div>
                   </div>
@@ -1171,6 +1232,15 @@
             <!--Contenedor de los botones del menu -->
             <div class="container-fluid py-3">
               <div class="row g-3 d-flex justify-content-center text-center" id="menuModalPC">
+
+                  <div class="col-7 col-sm-6 col-md-4 col-lg-2">
+                    <button class="menu-btn info" id="btnMenuAsignarControlModal" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Asignar un trabajador a esta estacion">
+                      <i class="bi bi-person-plus"></i>
+                      <span>Asignar</span>
+                    </button>
+                  </div>
+
+
                   <div class="col-7 col-sm-6 col-md-4 col-lg-2">
                     <button class="menu-btn" id="btnRegistroPc" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de mano de obra">
                       <i class="bi bi-person-gear"></i>
@@ -1225,13 +1295,6 @@
                     </div>
 
                     <div class="col-7 col-sm-6 col-md-4 col-lg-2">
-                      <button class="menu-btn info" id="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Asignar un trabajador a esta estacion">
-                        <i class="bi bi-person-plus"></i>
-                        <span>Asignar</span>
-                      </button>
-                    </div>
-
-                    <div class="col-7 col-sm-6 col-md-4 col-lg-2">
                       <button class="menu-btn" id="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Editar informacion de la estacion">
                         <i class="bi bi-pencil-square"></i>
                         <span>Editar</span>
@@ -1259,15 +1322,137 @@
 
             <!--VENTANAS-->
               <div id="ventanasModalPC">
+
+                  <!--VENTANA PARA LA ASIGNACION DE UN TRABAJADOR A UNA ESTACION-->
+                  <div id="contAsignacion" class="fade-page show" style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border-left: 4px solid #000000; margin-bottom: 30px;">
+                       <!-- Fin formulario -->
+                        <form class="form-body" id="assignmentFormPC">
+                          <!-- Header de la sección -->
+                          <div class="form-section">
+                            <h3 class="section-title">
+                              <i class="bi bi-person-plus" style="font-size: 1.4rem;"></i>
+                                  Asignar trabajador a una estación
+                            </h3>
+                            <p class="text-muted mb-4">Complete la información para asignar un operador a una estación específica</p>
+                          </div>
+
+                          <!-- Información del Operador -->
+                          <div class="form-section">
+                            <h4 class="section-subtitle">
+                              <i class="bi bi-person-badge"></i>
+                              Datos del Operador
+                            </h4>
+                            
+                            <div class="row">
+                              <!--NOMINA -->
+                              <div class="col-md-6 mb-3">
+                                <label for="nominaModalPC" class="form-label required-field">
+                                  <i class="bi bi-clock"></i>
+                                  No. Reloj / ID Empleado
+                                </label>
+                                <div class="input-group-custom">
+                                  <input type="number" min=0 step=1 
+                                         class="form-control form-control-custom" 
+                                         id="nominaModalPC"
+                                         placeholder="Ej: EMP-12256" 
+                                         required>
+                                  <button type="button" class="input-icon">
+                                    <i class="bi bi-search"></i>
+                                  </button>
+                                </div>
+                                <div class="form-help">Ingresa el número de reloj o ID único del empleado</div>
+                              </div>
+                              
+                              <!--NOMBRE-->
+                              <div class="col-md-6 mb-3">
+                                <label for="nombreModalPC" class="form-label required-field">
+                                  <i class="bi bi-person"></i>Nombre del Operador
+                                </label>
+                                <div class="input-group-custom">
+                                    <input 
+                                      type="text" 
+                                      class="form-control form-control-custom" 
+                                      id="nombreModalPC" 
+                                      placeholder="Selecciona o busca un operador"
+                                      readonly>
+                                    <button type="button" class="input-icon">
+                                      <i class="bi bi-people"></i>
+                                    </button>
+                                </div>
+                              </div>
+
+                              <!--Listado de estaciones asignadas -->
+                                <div class="col-12">
+                                  <label class="form-label">
+                                    <i class="bi bi-list"></i>
+                                      Listado de estaciones asignadas
+                                  </label>
+                                    <div class="form-control" id="listaOperacionesOperadorPC" style="min-height: 100px; resize: vertical; overflow-y: auto;">
+                                        <span class="form-help">Lista de operaciones asignadas del trabajador en la linea</span>
+                                    </div>
+                                </div>
+                            </div>
+                          </div>
+
+                          <!-- Información de la Asignación -->
+                          <div class="form-section">
+                            <h4 class="section-subtitle">
+                              <i class="bi bi-geo-alt"></i>Detalles de la Asignación
+                            </h4>
+                            
+                            <div class="row">   
+                              <!-- FECHA DE REGISTRO-->                           
+                              <div class="col-md-6 mb-3">
+                                <label for="assignmentDatePC" class="form-label required-field">
+                                    <i class="bi bi-calendar"></i>Fecha de Asignación
+                                </label>
+                                <input type="datetime-local" class="form-control form-control-custom" 
+                                  id="assignmentDatePC" required>
+                                <div class="form-help">Fecha en la que inicia la asignación</div>
+                              </div>
+                  
+                              <!-- TURNO ASIGNAR -->
+                              <div class="col-md-6 mb-3">
+                                <label for="turnoAsignarPC" class="form-label">
+                                  <i class="bi bi-clock-history"></i>Turno
+                                </label>
+                                <select id="turnoasignarPC" class="form-control form-control-custom form-select">
+                                  <option value="1">Turno 1</option>
+                                  <option value="2">Turno 2</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div class="mb-3">
+                              <label for="comentariospc" class="form-label">
+                                <i class="bi bi-sticky"></i> Observaciones
+                              </label>
+                              <textarea class="form-control form-control-custom" 
+                                id="comentariospc" 
+                                rows="3"
+                                placeholder="Notas adicionales sobre esta asignación..."
+                              ></textarea>
+                            </div>
+                          </div>
+                        </form>
+                      <!-- Fin formulario -->
+                      <div class="d-flex justify-content-end mt-2 ">
+                        <button type="button" class="btn btn-primary mx-2" id="btnAsignarOperadorPC">
+                          <i class="bi bi-check-circle"></i> Guardar
+                        </button>
+                      </div>
+                  </div>
+                <!--FIN ASIGNACION DEL OPERADOR A UNA ESTACION-->
+                
          
                 <!--REGISTRO EVALUACION Y CIERRE DE PC-->
-                  <div id="contregistroCambioForm" class="fade-page show" style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border-left: 4px solid #000000; margin-bottom: 30px;">
+                  <div id="contregistroCambioForm" class="fade-page d-none" style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border-left: 4px solid #000000; margin-bottom: 30px;">
                       <!-- FORMULARIO REGISTRO DE PC -->
                         <div id="registroPC">
                             <form class="form-body" id="registroCambioForm">
                               <!-- Header de la sección -->
                               <div class="form-section">
-                                <h3 class="section-title justify-content-center">
+                                <h3 class="section-title">
                                   <i class="bi bi-arrow-repeat"></i>Registro de un punto de cambio
                                 </h3>
                                 <p class="text-muted mb-2">Complete la información requerida</p>
@@ -1627,96 +1812,101 @@
                 <!--FIN REGISTRO EVALUACION Y CIERRE DE PC-->
 
 
-                  <!--Informacion del personal asignado-->
-                    <div id="contInfoEstacion" class="fade-page d-none" style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border-left: 4px solid #000000; margin-bottom: 30px;">
-                        <h4><i class="bi bi-person-badge" style="margin-right: 10px; font-size: 1.4rem;"></i>
-                            Información del Operador de Estación
-                        </h4>
+                <!--Informacion del personal asignado-->
+                  <div id="contInfoEstacion" class="fade-page d-none" style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border-left: 4px solid #000000; margin-bottom: 30px;">
+                       <!-- Header de la sección -->
+                          <div class="form-section">
+                            <h3 class="section-title">
+                              <i class="bi bi-person-badge" style="font-size: 1.4rem;"></i>
+                                  Información del trabajador asignado
+                            </h3>
+                          </div>
+                      <input type="hidden" id="idTrabajadorAsignado" value="">
+                      
+                      <div class="row">
+                          <div class="col-md-12">
+                              <!-- Foto del operador -->
+                              <div style="margin-bottom: 20px; text-align: center;">
+                                  <img id ="imgInfochangeControlModal" src="../img/personal/na.jpg" 
+                                      alt="Foto del operador" 
+                                      style="width: 120px; height: 120px; border-radius: 10px; object-fit: cover; border: 3px solid #e9ecef; margin-bottom: 10px;">
+                                  <div style="font-weight: 600; color: #495057;">Foto del operador</div>
+                              </div>
+                              
+                              <!-- Nómina -->
+                              <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
+                                  <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Nómina:</span>
+                                  <span id="changeControlInfoNomina" style="color: #212529; flex: 1;"></span>
+                              </div>
+                              
+                              <!-- Nombre -->
+                              <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
+                                  <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Nombre:</span>
+                                  <span id="changeControlInfoNombre" style="color: #212529; flex: 1;"></span>
+                              </div>
+                              
+                              <!-- Fecha de registro-->
+                              <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
+                                  <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Fecha de asignacion:</span>
+                                  <span id="changeControlInfFecha" style="color: #212529; flex: 1;"></span>
+                              </div>
 
-                        <input type="hidden" id="idTrabajadorAsignado" value="">
-                        
-                        <div class="row">
+                              <!-- Turno -->
+                              <div style="margin-bottom: 15px; display: flex; align-items: center;">
+                                  <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Turno:</span>
+                                  <span style="color: #212529; flex: 1;">
+                                      <span id="changeControlInfoTurno" class="badge bg-primary" style="font-size: 0.85rem; padding: 5px 12px; border-radius: 20px;"></span>
+                                  </span>
+                              </div>
+                          </div>
+                      
+                          <!-- Informacion de certificacion
                             <div class="col-md-12">
-                                <!-- Foto del operador -->
-                                <div style="margin-bottom: 20px; text-align: center;">
-                                    <img id ="imgInfochangeControlModal" src="../img/personal/na.jpg" 
-                                        alt="Foto del operador" 
-                                        style="width: 120px; height: 120px; border-radius: 10px; object-fit: cover; border: 3px solid #e9ecef; margin-bottom: 10px;">
-                                    <div style="font-weight: 600; color: #495057;">Foto del operador</div>
-                                </div>
-                                
-                                <!-- Nómina -->
-                                <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
-                                    <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Nómina:</span>
-                                    <span id="changeControlInfoNomina" style="color: #212529; flex: 1;"></span>
-                                </div>
-                                
-                                <!-- Nombre -->
-                                <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
-                                    <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Nombre:</span>
-                                    <span id="changeControlInfoNombre" style="color: #212529; flex: 1;"></span>
-                                </div>
-                                
-                                <!-- Fecha de registro-->
-                                <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
-                                    <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Fecha de asignacion:</span>
-                                    <span id="changeControlInfFecha" style="color: #212529; flex: 1;"></span>
-                                </div>
-
-                                <!-- Turno -->
+                                <!-- Nivel ILU 
                                 <div style="margin-bottom: 15px; display: flex; align-items: center;">
-                                    <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Turno:</span>
+                                    <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Nivel de certificacion:</span>
                                     <span style="color: #212529; flex: 1;">
-                                        <span id="changeControlInfoTurno" class="badge bg-primary" style="font-size: 0.85rem; padding: 5px 12px; border-radius: 20px;"></span>
+                                        <span class="badge bg-info text-dark" style="font-size: 0.85rem; padding: 5px 12px; border-radius: 20px;"> ILU</span>
+                                    </span>
+                                </div>
+                                
+                                <!-- Fecha de vencimiento de certificación
+                                <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
+                                    <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Fecha de vencimiento <br> de certificación:</span>
+                                    <span style="color: #212529; flex: 1;">
+                                        <span style="color: #dc3545; font-weight: 600;">15/12/2024</span>
+                                        <small style="color: #6c757d; display: block; margin-top: 5px;">(Faltan 45 días)</small>
                                     </span>
                                 </div>
                             </div>
-                        
-                            <!-- Informacion de certificacion
-                              <div class="col-md-12">
-                                  <!-- Nivel ILU 
-                                  <div style="margin-bottom: 15px; display: flex; align-items: center;">
-                                      <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Nivel de certificacion:</span>
-                                      <span style="color: #212529; flex: 1;">
-                                          <span class="badge bg-info text-dark" style="font-size: 0.85rem; padding: 5px 12px; border-radius: 20px;"> ILU</span>
-                                      </span>
-                                  </div>
-                                  
-                                  <!-- Fecha de vencimiento de certificación
-                                  <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
-                                      <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Fecha de vencimiento <br> de certificación:</span>
-                                      <span style="color: #212529; flex: 1;">
-                                          <span style="color: #dc3545; font-weight: 600;">15/12/2024</span>
-                                          <small style="color: #6c757d; display: block; margin-top: 5px;">(Faltan 45 días)</small>
-                                      </span>
+                          -->
+
+                          <!-- Comentario -->
+                          <div class="col-md-12">  
+                              <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
+                                  <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Comentario:</span>
+                                  <div style="color: #212529; flex: 1;">
+                                      <div style="background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 15px; border-radius: 5px;">
+                                        <p id="changeControlInfoComentarios"></p>
+                                      </div>
                                   </div>
                               </div>
-                            -->
+                          </div>
 
-                            <!-- Comentario -->
-                            <div class="col-md-12">  
-                                <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
-                                    <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Comentario:</span>
-                                    <div style="color: #212529; flex: 1;">
-                                        <div style="background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 15px; border-radius: 5px;">
-                                          <p id="changeControlInfoComentarios"></p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                          <!--Boton remover trabajador de estacion -->
-                            <div class="d-flex justify-content-end mt-1">
-                              <button class="btn btn-danger mx-1" id="btnRemoverTrabajadorPC">
-                                <b>REMOVER TRABAJADOR</b>
-                              </button>
+                        <!--Boton remover trabajador de estacion -->
+                          <div class="d-flex justify-content-end mt-1">
+                            <button class="btn btn-danger mx-1" id="btnRemoverTrabajadorPC">
+                              <b>REMOVER TRABAJADOR</b>
+                            </button>
+                            <!--
                               <button class="btn btn-warning mx-1">
                                 <b>RETIRAR CERTIFICACION</b>
                               </button>
-                            </div>
-                        </div>
-                    </div>
-                  <!--Fin  Informacion del personal asignado-->
+                            -->
+                          </div>
+                      </div>
+                  </div>
+                <!--Fin  Informacion del personal asignado-->
 
                   <!-- Contenedor de liberacion de punto de cambio 
                     <div id="contLiberarPC" class="fade-page d-none" style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border-left: 4px solid #000000; margin-bottom: 30px;">
@@ -2142,7 +2332,7 @@
 
                               <div class="row">
                                   <div class="col-md-6 mb-3">
-                                      <label for="stationSelect" class="form-label required-field">
+                                      <label class="form-label required-field">
                                           <i class="bi bi-diagram-3 text-muted"></i>Linea
                                       </label>
                                       <input type="text" 

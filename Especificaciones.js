@@ -47,7 +47,7 @@
 */  
 
 /*
-
+Revisar si es necesario hacer el registro del layout dos veces al hacer el registro de la asistencia o dejar solo un registro
 Al asignar al operador mostrar un listado de las personas asignadas en la estacion similar al listado de estaciones de la persona
 Hacer restricciones y validaciones correspondientes
 Modificar el codigo de la linea por un numero consecutivo
@@ -56,58 +56,51 @@ Pruebas
 Generar permisos de usuarios
 Generar usuarios
 4491073605
+agregar una imagen al registro de la linea
 
-Actualizar el campo de observaciones de la tabla de asistencia
-Cambiar validacion de los comentarios para que acepte valores vacios 
-Registrar el acomodo del layout despues de hacer el registro de la asistencia
-Parece ser que hay un retraso al guardar el layout
-Actualizar los registros de historial de layout al abrir el modal de historial de layou
-Revisar la consulta 17 falta una condicion en el turno 2 -- update creo que ya lo hice
+Al parecer hay algo que llaman los desplazados, todos los dias descansan 5 personas por lo que esto hace que deban de poder estar mas de una persona asignadas
+a la estacion. Hay que cambiar el cdigo para que se puedan registrar por lo menos dos trabajadores por estacion y modificar todas las validaciones, los registros, los formularios, cambiar
+parte de la logica del codigo para gestionar las estaciones
+
+Dividir la pantalla de layout en otras 3 pantallas 
+  --Una para todo el registro de los puntos de cambio y las operaciones de los operadores
+  --Otro para la consulta del historial del layout y a lo mejor generacion de reportes
+  --otra pantalla para la creacion del layout agrgar estaciones, editar informacion de la linea, agregar las formas del layoput
+
+
+
+mostrar la estadistica real en el resumen de la asistencia
+
+Dar opcion de registrar a un operador sin punto de cambio o no si no existe la ultima fecha de operacion en la linea
+    -tal vez sea conveniente solo mostrar una alerta o un mensaje en rojo que indique la feha de ultina operacion en la estacion o si tiene registro de operacion en la estacion
+Y dejar otra opcion para que se puede finalizar y/o asignar al operador como titular de la estacion esto para al inicio cunado se empieza a registrar a todo el personaol 
+(mostrar su ultima fecha de operacion en la estacion del operador)
 
 
 
 En la consulta donde se valida que el trabajador no este registrado en otro turno, seria mejor que no ponga como filtro la linea y lo revise en general para todas las lineas
 Hay que evaluar la logica de la opcion 19 en las operacionesLinea para tratar de encontrar algun posible error o falla en la logica del codigo
 verificar que el trabajador no pueda registrarse en otro turno al registrarlo en otra linea
-Creo que los datos que se agregan a la variable de stationData al crear/agregar la estacion no coinciden con los datos que existen al acutalizar los datos de las estaciones,
-Revisar que sucede cuando la fecha de asignacion no es en la fecha actual sino que es antes o despues de la fecha actual
-descomentar el codigo en el registro de punto de cambio para registro de PNAD
-
-
+Creo que los datos que se agregan a la variable de stationData al crear/agregar la estacion no coinciden con los datos que existen al acutalizar los datos de las estaciones, --update: creo que esyo ya lo corregi
+Revisar que sucede cuando la fecha de asignacion no es en la fecha actual sino que es antes o despues de la fecha actual-- o dejar solo como campo de readonly para guardarlo con la fecha actual
 
 En el procesos de agregar o eliminar personal a la tabla pNAD al finalizar o registramr un PC puede que de problemas si la persona es prestada 
 de otra linea, al finalizar el registro preguntar si se quiere registrar al personal_nad de la linea actual y no de la linea de la que se presto
 podria poner una condicion para que solo se elimine de la tabla personal_nad si el registro o asignacion o PC se dentro de la misma linea
 
-Al parecer hay algo que llaman los desplazados, todos los dias descansan 5 personas por lo que esto hace que deban de poder estar mas de una persona asignadas
-a la estacion.
-Hay que cambiar el cdigo para que se puedan registrar por lo menos dos trabajadores por estacion y modificar todas las validaciones, los registros, los formularios, cambiar
-parte de la logica del codigo para gestionar las estaciones
 
-Tal vez sea mejor quitar la opcion de inseperado en el registro del punto de cambio, o la de otro y cambiar el concepto del punto de cambio inseperado
-ya que por lo que vi en la linea la mayoria de los puntos de cabio serian inesperados, que sean solo de uno dia, ya que estos se registraran cuando el operador falte por cualquier motivo
-o se preste a alguna otra linea o le presten a la linea un operador que viene de otra, que como tal no es un punto de cambio, pero en el sistema anterior a eso es a lo que llamaban punto
-de cambio,
-
-agregar un boton para incertar un registro individual en la tabla de asistencia despues de haver registrado la asistenia en caso de que halla faltado algun valor 
-ya que puede haber problema si les falto removoer algun registro del día anterior, como por ejemplo que no hayan cargado el personal disponible, o no hallan cerrado algun punto de cambio
-y por lo tanto no se haya cargado el trabajador como disponible, dejar esta opcion deshabilitada y solo habilitarla despues de que se halla registrado la asistencia
-
-Al asignar a una persona que esta en la tabla de personal NAD a otra tabla como de PC, eliminarla de esta tabla o cambiar su estatus
-Se ha elimiado a esta persona del registro de todas las estaciones, ¿desea agregalo al listado de personal disponible o personal no asignado?)
-
-Dar opcion de registrar a un operador sin punto de cambio o no si no existe la ultima fecha de operacion en la linea
-    -tal vez sea conveniente solo mostrar una alerta o un mensaje en rojo que indique la feha de ultina operacion en la estacion o si tiene registro de operacion en la estacion
-Y dejar otra opcion para que se puede finalizar y/o asignar al operador como titular de la estacion esto para al inicio cunado se empieza a registrar a todo el personaol 
 
 Quitar las restricciones en la asignacion de los trabajadores a una estacion para que se puedan registrar varios trabajadores en una estacion
-¿como mostraer los trabajadores en el layout, actualmente solo se puede mostrar uno? 
+¿como mostrar los trabajadores en el layout, actualmente solo se puede mostrar uno? 
 ¿Tambien en el modal de gestion de la estion, esta echa para mostrar la informacion de un solo trabajador
 lo que pienso que se podria hacer mostrar a ambos trabajdores y mostrar al que esta en la estacion hasta despues de pasar la lista
 En caso de hacer esto cambiaria los datos de el stationdata, la nomina seria un arreglo [] con las nominas de la persona registrada en la estacion
-*/
 
-/*
+creo que esto ya esta 
+Al asignar a una persona que esta en la tabla de personal NAD a otra tabla como de PC, eliminarla de esta tabla o cambiar su estatus
+Se ha elimiado a esta persona del registro de todas las estaciones, ¿desea agregalo al listado de personal disponible o personal no asignado?)
+
+
     ESPICIFICACIONES/MODIFICACIONES OK
     Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
     Generar mostrar el contenido dinamico de los formularios
@@ -130,6 +123,18 @@ En caso de hacer esto cambiaria los datos de el stationdata, la nomina seria un 
     Agregar alguna alerta o etiqueta de warning para mostrar cuando el PC lleva ya 30 días o solo mostrar el tiempo de duracion del PC
     Revisar que pasa con las personas cuando no estan trabajando en la estacion o faltan y tienen un punto de cambio 
     (Se cancela si falta dos dias seguidos)
+    Actualizar el campo de observaciones de la tabla de asistencia
+    Cambiar validacion de los comentarios para que acepte valores vacios 
+    Registrar el acomodo del layout despues de hacer el registro de la asistencia
+    Parece ser que hay un retraso al guardar el layout
+    Actualizar los registros de historial de layout al abrir el modal de historial de layou
+    Revisar la consulta 17 falta una condicion en el turno 2 -- update creo que ya lo hice
+    descomentar el codigo en el registro de punto de cambio para registro de PNAD
+    agregar opcion para registrar un operador desde la estacion
+    agregar un boton para incertar un registro individual en la tabla de asistencia despues de haber registrado la asistenia en caso de que halla faltado algun valor 
+    ya que puede haber problema si les falto removoer algun registro del día anterior, como por ejemplo que no hayan cargado el personal disponible, o no hallan cerrado algun punto de cambio
+    y por lo tanto no se haya cargado el trabajador como disponible, dejar esta opcion deshabilitada y solo habilitarla despues de que se halla registrado la asistencia
+
 
     TNA TERMINAL NO ACENTADA
     FALTA DE RECINA
@@ -159,4 +164,5 @@ En caso de hacer esto cambiaria los datos de el stationdata, la nomina seria un 
     pero parece ser que estas hojas no estan actualizadas, los tipos de defectos que existen los tienen el personal de capacitacion, tienen un muestrario
     con las piezas en fisico con los defectos que se pueden generar por porcesos, y en su presentaciones de las capacitaciones tienen esta 
     informacion 
+
 */
