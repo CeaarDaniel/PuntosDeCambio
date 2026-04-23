@@ -48,35 +48,26 @@
 
 /*
 Revisar si es necesario hacer el registro del layout dos veces al hacer el registro de la asistencia o dejar solo un registro
-Al asignar al operador mostrar un listado de las personas asignadas en la estacion similar al listado de estaciones de la persona
+Al asignar al operador mostrar un listado de las personas certificadas o liberadas en el proceso o en la estacion
 Hacer restricciones y validaciones correspondientes
 Modificar el codigo de la linea por un numero consecutivo
 Hacer el contenido responsivo
 Pruebas
 Generar permisos de usuarios
 Generar usuarios
-4491073605
-agregar una imagen al registro de la linea
+Cuando el codigo de la linea que se envia en la url ocurre un error que no esta atrabado en algun catch o condicion
+Mostrar una lista del personal liberado o certificado al asignar la persona a la proceso desde el modal de la estacion
 
-Al parecer hay algo que llaman los desplazados, todos los dias descansan 5 personas por lo que esto hace que deban de poder estar mas de una persona asignadas
-a la estacion. Hay que cambiar el cdigo para que se puedan registrar por lo menos dos trabajadores por estacion y modificar todas las validaciones, los registros, los formularios, cambiar
-parte de la logica del codigo para gestionar las estaciones
+Al parecer hay algo que llaman los desplazados, todos los dias descansan 5 personas por lo que esto hace que deban 
+de poder estar mas de una persona asignadas a la estacion. Hay que cambiar el cdigo para que se puedan registrar 
+por lo menos dos trabajadores por estacion y modificar todas las validaciones, los registros, los formularios, 
+cambiar parte de la logica del codigo para gestionar las estaciones
 
 Dividir la pantalla de layout en otras 3 pantallas 
   --Una para todo el registro de los puntos de cambio y las operaciones de los operadores
   --Otro para la consulta del historial del layout y a lo mejor generacion de reportes
-  --otra pantalla para la creacion del layout agrgar estaciones, editar informacion de la linea, agregar las formas del layoput
-
-
-
-mostrar la estadistica real en el resumen de la asistencia
-
-Dar opcion de registrar a un operador sin punto de cambio o no si no existe la ultima fecha de operacion en la linea
-    -tal vez sea conveniente solo mostrar una alerta o un mensaje en rojo que indique la feha de ultina operacion en la estacion o si tiene registro de operacion en la estacion
-Y dejar otra opcion para que se puede finalizar y/o asignar al operador como titular de la estacion esto para al inicio cunado se empieza a registrar a todo el personaol 
-(mostrar su ultima fecha de operacion en la estacion del operador)
-
-
+  --otra pantalla para la creacion del layout agrgar estaciones, editar informacion de la linea, agregar 
+    las formas del layoput
 
 En la consulta donde se valida que el trabajador no este registrado en otro turno, seria mejor que no ponga como filtro la linea y lo revise en general para todas las lineas
 Hay que evaluar la logica de la opcion 19 en las operacionesLinea para tratar de encontrar algun posible error o falla en la logica del codigo
@@ -88,8 +79,6 @@ En el procesos de agregar o eliminar personal a la tabla pNAD al finalizar o reg
 de otra linea, al finalizar el registro preguntar si se quiere registrar al personal_nad de la linea actual y no de la linea de la que se presto
 podria poner una condicion para que solo se elimine de la tabla personal_nad si el registro o asignacion o PC se dentro de la misma linea
 
-
-
 Quitar las restricciones en la asignacion de los trabajadores a una estacion para que se puedan registrar varios trabajadores en una estacion
 ¿como mostrar los trabajadores en el layout, actualmente solo se puede mostrar uno? 
 ¿Tambien en el modal de gestion de la estion, esta echa para mostrar la informacion de un solo trabajador
@@ -100,6 +89,8 @@ creo que esto ya esta
 Al asignar a una persona que esta en la tabla de personal NAD a otra tabla como de PC, eliminarla de esta tabla o cambiar su estatus
 Se ha elimiado a esta persona del registro de todas las estaciones, ¿desea agregalo al listado de personal disponible o personal no asignado?)
 
+Mostrar reportes e informacion de la asistencia y los PC registrados con sus evaluaciones
+Crear seccion de certificaciones
 
     ESPICIFICACIONES/MODIFICACIONES OK
     Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
@@ -134,7 +125,10 @@ Se ha elimiado a esta persona del registro de todas las estaciones, ¿desea agre
     agregar un boton para incertar un registro individual en la tabla de asistencia despues de haber registrado la asistenia en caso de que halla faltado algun valor 
     ya que puede haber problema si les falto removoer algun registro del día anterior, como por ejemplo que no hayan cargado el personal disponible, o no hallan cerrado algun punto de cambio
     y por lo tanto no se haya cargado el trabajador como disponible, dejar esta opcion deshabilitada y solo habilitarla despues de que se halla registrado la asistencia
-
+    mostrar la estadistica real en el resumen de la asistencia
+    Mostrar una alerta o un mensaje en rojo que indique la feha de la ultima operacion en la estacion 
+    o si tiene registro de operacion en la estacion (mostrar su ultima fecha de operacion en la estacion del operador)
+    Dejar otra opcion para que se puede finalizar y/o asignar al operador como titular de la estacion
 
     TNA TERMINAL NO ACENTADA
     FALTA DE RECINA
@@ -164,5 +158,4 @@ Se ha elimiado a esta persona del registro de todas las estaciones, ¿desea agre
     pero parece ser que estas hojas no estan actualizadas, los tipos de defectos que existen los tienen el personal de capacitacion, tienen un muestrario
     con las piezas en fisico con los defectos que se pueden generar por porcesos, y en su presentaciones de las capacitaciones tienen esta 
     informacion 
-
 */

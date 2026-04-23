@@ -231,7 +231,6 @@
       </div>
     </div>
     <!-- FIN PANEL DERECHO-->
-
   </div>
 
   <!-- Modal alerta/error-->
@@ -1381,6 +1380,9 @@
                                 </div>
                               </div>
 
+                                <!--Etiqueta para mostrar la alerta si se requiere un PC del trabajador asignado -->
+                              <div class="text-danger fw-bold col-12 mb-4 " id="alertPC"></div>
+
                               <!--Listado de estaciones asignadas -->
                                 <div class="col-12">
                                   <label class="form-label">
@@ -1814,13 +1816,13 @@
 
                 <!--Informacion del personal asignado-->
                   <div id="contInfoEstacion" class="fade-page d-none" style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border-left: 4px solid #000000; margin-bottom: 30px;">
-                       <!-- Header de la sección -->
-                          <div class="form-section">
-                            <h3 class="section-title">
-                              <i class="bi bi-person-badge" style="font-size: 1.4rem;"></i>
-                                  Información del trabajador asignado
-                            </h3>
-                          </div>
+                      <!-- Header de la sección -->
+                      <div class="form-section">
+                        <h3 class="section-title">
+                          <i class="bi bi-person-badge" style="font-size: 1.4rem;"></i>
+                              Información del trabajador asignado
+                        </h3>
+                      </div>
                       <input type="hidden" id="idTrabajadorAsignado" value="">
                       
                       <div class="row">

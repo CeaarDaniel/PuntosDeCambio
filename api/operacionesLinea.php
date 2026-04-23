@@ -353,7 +353,7 @@ else
 //LISTADO DE LINEAS REGISTRADAS
 else 
     if($opcion=="4"){
-        $sql= "SELECT codigo_linea, nombre_linea from SPC_LINEAS";
+        $sql= "SELECT codigo_linea, nombre_linea, imagen from SPC_LINEAS";
 
         $registro = $conn->prepare($sql);
         $response= array();
@@ -589,39 +589,75 @@ else
         include('./conexionEmpleado.php');
         $nomina = $_POST['nomina'] ?? null;
         $codigolinea = (!empty($_POST['codigoLinea'])) ? $_POST['codigoLinea'] : null;
+        $UE= null;
+
+        if(empty($nomina)) {
+                echo json_encode(['estatus' => 'error',
+                                  'error' => "Error al buscar al trabajador"
+                                ]);
+            exit;
+        }
 
         try {
                 $sql = "SELECT nombre FROM empleado_mst WHERE No_Nomina = :nomina";
                 $stmt = $connE->prepare($sql);
-                $stmt->bindParam(':nomina', $nomina, PDO::PARAM_INT);
-                $stmt->execute();
+                //$stmt->bindParam(':nomina', $nomina);
+                $stmt->execute([':nomina' => $nomina]);
                 $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
                 $estaciones = null;
-
+                
                 if(!empty($codigolinea)){
+                    //Consulta para obtener el listado de estaciones actuales del trabajador                    
                     $sqlEstaciones = "SELECT STRING_AGG(E.nombre_estacion, ', ') AS ESTACIONES FROM SPC_ESTACIONES E
                                         INNER JOIN (
                                             SELECT id_estacion FROM SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL AND nomina = :nomina
                                                 UNION ALL
-                                            SELECT id_estacion FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina2
+                                            SELECT id_estacion FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina
                                         ) T ON E.id_estacion = T.id_estacion
                                     WHERE E.codigo_linea = :codigoLinea;";
 
                     $stmtE = $conn->prepare($sqlEstaciones);
-                    $stmtE->bindParam(':nomina', $nomina, PDO::PARAM_INT);
-                    $stmtE->bindParam(':nomina2', $nomina, PDO::PARAM_INT);
-                    $stmtE->bindParam(':codigoLinea', $codigolinea);
+                    //$stmtE->bindParam(':nomina', $nomina, PDO::PARAM_INT);
+                    //$stmtE->bindParam(':nomina2', $nomina, PDO::PARAM_INT);
+                    //$stmtE->bindParam(':codigoLinea', $codigolinea);
        
-                    $stmtE->execute();
+                    $stmtE->execute([':nomina' => $nomina, ':codigoLinea' => $codigolinea]);
                     $dataEstaciones = $stmtE->fetch(PDO::FETCH_ASSOC);
-                    $estaciones = $dataEstaciones['ESTACIONES'] ?? null;
+                    $estaciones = $dataEstaciones ? $dataEstaciones['ESTACIONES'] : null;
+                    //$estaciones = $dataEstaciones['ESTACIONES'] ?? null;
+
+                    //Obtener el listado de estaciones donde a sido asignado el operador con su ultima fecha de asigacion
+                    $sqlUltimaE = "WITH HistorialCompleto AS (
+                                        SELECT id_estacion, fecha_asignacion AS fecha_inicio, fecha_fin
+                                            FROM SPC_PERSONAL_ESTACION WHERE nomina = :nomina1
+                                        UNION ALL
+                                        SELECT id_estacion, fechaHora_inicio AS fecha_inicio, fechaHora_fin   AS fecha_fin
+                                            FROM SPC_PUNTOS_CAMBIO WHERE nomina = :nomina2),
+                                    HistorialOrdenado AS (
+                                        SELECT id_estacion, fecha_inicio, fecha_fin,
+                                            ROW_NUMBER() OVER (PARTITION BY id_estacion ORDER BY fecha_inicio DESC) AS rn
+                                        FROM HistorialCompleto
+                                    )
+                                    SELECT H.id_estacion, E.nombre_estacion, H.fecha_inicio, H.fecha_fin   
+                                            FROM HistorialOrdenado as H
+                                        LEFT JOIN SPC_ESTACIONES E ON H.id_estacion = E.id_estacion
+                                    WHERE rn = 1 AND E.codigo_linea = :codigoLinea ORDER BY H.fecha_inicio DESC; ";
+
+                    $stmtUE = $conn->prepare($sqlUltimaE);
+                    $stmtUE->execute([':nomina1' => $nomina, 
+                                      ':nomina2' => $nomina,
+                                      ':codigoLinea' => $codigolinea
+                                    ]);
+                    $dataUE = $stmtUE->fetchALL(PDO::FETCH_ASSOC);
+                    $UE = $dataUE ?? null;
                 }
                 
                 if ($resultado) {
                     echo json_encode([
                         'estatus' => 'ok',
                         'nombre' => $resultado['nombre'],
-                        'estaciones' => $estaciones
+                        'estaciones' => $estaciones, //Procesos/Estaciones actuales
+                        'allEst' => $UE //Todo el registro de las distintas estaciones 
                     ]);
                 } else {
                     echo json_encode([
@@ -1525,7 +1561,7 @@ else
                 $stmtR->execute([':fechaInicio' => $inicio->format('Y-m-d H:i'),
                                 ':fechaFin'    => $fin->format('Y-m-d H:i'),
                                 ':codigoLinea' => $codigoLinea
-                            ]);
+                                ]);
 
                 //resumen de la asistencia
                 $resumen = $stmtR->fetch(PDO::FETCH_ASSOC);

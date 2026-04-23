@@ -4,7 +4,7 @@
         <h4>Sistema PC</h4>
       </div>
       <ul class="sidebar-menu">
-          <a href="#" class="active">
+          <a href="#" class="">
             <i class="bi bi-speedometer2"></i>
             <span>Dashboard</span>
           </a>

@@ -53,7 +53,7 @@
       </button>
 
       <!--BOTON PARA MOSTRAR HISTORIAL DE REGISTROS DEL LAYOUT -->
-      <button id="btnHistorialLayout" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Consultar el acomodo del layout en alguna fecha">
+      <button id="btnHistorialLayout" class="tool-btn d-none" data-bs-toggle="tooltip" data-bs-placement="right" title="Consultar el acomodo del layout en alguna fecha">
          <span data-bs-toggle="modal" data-bs-target="#historialLayoutModal">
             <i class="bi bi-clock-history"></i>
             <span>Historial</span>

@@ -84,13 +84,20 @@ function showLines(){
 
                         data.forEach(item => {
                         contenedor.innerHTML += `
-                            <div class="col-md-4 mb-4">
+                            <div class="col-12 col-md-4 mb-4">
                                 <div class="card-option contColLinea" data-codigo="${item.codigo_linea}" data-nombre="${item.nombre_linea}" >
-                                    <i class="fa fa-industry card-icon"></i>
-                                    <div class="card-label">${item.nombre_linea}</div>
+                                            ${(item.imagen) ? `<img src="img/lineas/${item.imagen}" class="card-img-top" alt="${item.nombre_linea}" style="max-width:250px; max-height:250px">` 
+                                                            : '<img src="img/lineas/def1.jpg" class="card-img-top" alt="No fue posible cargar la imagen" style="max-width:250px; max-height:250px">'}
+                                    
+                                            <br>                                    
+                                    <div class="card-label">
+                                        <h5 class="card-title text-center">${item.nombre_linea}</h5>
+                                    </div>
                                 </div>
                             </div>`;
                         });
+
+ 
             })
             .catch((error) => {
                console.log(error);

@@ -1933,7 +1933,7 @@
         updateCommonFields(draggingShape.element);
         updateContainerAndSVGBounds();
       });
-  */
+    */
 
 
     $(window).on('mousemove', function(e) {
@@ -2234,7 +2234,6 @@
                     formDataConsultarNombre.append('nomina',nominaModalAsignar.value)
                     formDataConsultarNombre.append('opcion', 7)
                     formDataConsultarNombre.append('codigoLinea', codigoLinea.value)
-                    
             
                     nominaModalAsignar.disabled = true
                     nombreModalAsignar.value= ''; 
@@ -2273,10 +2272,10 @@
                 let nombreModalAsignar = document.getElementById('nombreModalPC');
                 if(nominaModalPC && nominaModalPC !='') {
                     let formDataConsultarNombre = new FormData;
+                    let idEstacion = document.getElementById('id_estacion').value;
                     formDataConsultarNombre.append('nomina',nominaModalPC.value)
                     formDataConsultarNombre.append('opcion', 7)
                     formDataConsultarNombre.append('codigoLinea', codigoLinea.value)
-                    
             
                     nominaModalPC.disabled = true
                     nombreModalAsignar.value= ''; 
@@ -2289,20 +2288,49 @@
                             .then((response) => response.text())
                             .then((data) => {
                                 data= JSON.parse(data)
+            
+                                // 1. Buscar la estación
+                                const estacion = data.allEst.find(e => e.id_estacion === idEstacion);
+                                  if (!estacion) {
+                                        document.getElementById('alertPC').textContent = "ESTE TRABAJADOR NO CUENTA CON UN REGISTRO ANTERIOR EN ESTE PROCESO";
+                                    }
+
+                                  else //2. Evaluar si el registro no esta activo
+                                    if(estacion.fecha_fin){
+                                      // 3. Convertir a objeto Date
+                                      const fechaBase = new Date(estacion.fecha_fin);
+                                      const fechaActual = new Date();
+
+                                      // 4. Calcular diferencia en días
+                                      const diffMs = fechaActual - fechaBase;
+                                      const diffDias = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+                                      if (diffDias > 30) {
+                                        document.getElementById('alertPC').textContent = "EL ULTIMO REGISTRO DE OPERACION ES MAYOR A 30 DIAS";
+                                      }
+
+                                      else 
+                                        document.getElementById('alertPC').textContent = "";
+                                    }
+
+                                  else {
+                                    //El trabajador sigue activo en la estacion
+                                    document.getElementById('alertPC').textContent = ""
+                                  }
+
                                 if(data.estatus=='ok'){
                                     nombreModalAsignar.value= data.nombre;                              
                                     $('#listaOperacionesOperadorPC').html(`${(data.estaciones) ? data.estaciones : 'SIN OPERACIONES ASIGNADAS EN LA LINEA'}`)
-                                  }
+                                }
                               
-                              else{
-                                  nombreModalAsignar.placeholder= "Nombre del empleado...";  
-                                  $('#listaOperacionesOperadorPC').html(`<span class="form-help">Lista de operaciones asignadas del trabajador en la linea</span>`)
-                                console.log(data.error); 
-                              }
+                                else{
+                                    nombreModalAsignar.placeholder= "Nombre del empleado...";  
+                                    $('#listaOperacionesOperadorPC').html(`<span class="form-help">Lista de operaciones asignadas del trabajador en la linea</span>`)
+                                    console.log(data.error); 
+                                }
 
                               nominaModalPC.disabled = false;
-                            })
-                            .catch((error) => {
+                            }).catch((error) => {
                               nombreModalAsignar.placeholder= "Nombre del empleado..."; 
                               nominaModalPC.disabled = false;
                               console.log(error);
@@ -2580,7 +2608,7 @@
           if(!registroCambioForm.reportValidity()) return;
 
           if(document.getElementById('nombrePC').value == '' || document.getElementById('nombrePC').value == null){
-                alert('No se encontro registro del empleado ingresado o se perdió la conexión con el servidor.') 
+                alert('No se encontro registro del empleado ingresado o se perdió la conexión con el servidor.');
                 return;
           }
 
@@ -2847,8 +2875,8 @@
         });
 
           btncloseSidebar.addEventListener('click', function () {
-              $('#btncloseSidebar').addClass('d-none')
-              $('#btnfloatingMenu').removeClass('d-none')
+            $('#btncloseSidebar').addClass('d-none')
+            $('#btnfloatingMenu').removeClass('d-none')
 
             $('#tools-sidebar').addClass('fade-out')
             $('#tools-panel').addClass('fade-out')
@@ -2874,7 +2902,6 @@
             //$('#layout-header').removeClass('d-none')
           })
 
-
       // Cargar las formas
       setTimeout(() => {
               loadShapesFromJSON();
@@ -2890,31 +2917,26 @@
     apuntan a la mimsa ubicacion de la memoria por lo que al modificar cualquiera de las dos, los cambios se 
     Se veran reflejados en ambas variables  
 
+    las funciones selectShape y clearselection son las que ponen el borde degradado 
+    al seleccionar un objeto hay que revisar este para
+    ver que funcione al dar clic y quitar el clic de la figura svg
 
-/*
- las funciones selectShape y clearselection son las que ponen el borde degradado al seleccionar un objeto hay que revisar este para
- ver que funcione al dar clic y quitar el clic de la figura svg
-*/
+    A veces miramos el cielo buscando respuestas,
+    como si las estrellas guardaran secretos que nosotros olvidamos.
+    Brillan tranquilas, lejanas, eternas en su silencio,
+    mientras nosotros corremos, dudamos, sentimos.
 
+    Y entonces, en medio de la noche, parece que susurran algo suave:
+    “Dicen las estrellas que los fugaces somos nosotros.”
 
+    Y tiene sentido.
+    Porque ellas permanecen,
+    pero nosotros somos instante, latido, chispa.
 
-/*
-  A veces miramos el cielo buscando respuestas,
-  como si las estrellas guardaran secretos que nosotros olvidamos.
-  Brillan tranquilas, lejanas, eternas en su silencio,
-  mientras nosotros corremos, dudamos, sentimos.
+    Quizá por eso duele tanto lo que se va,
+    y por eso también vale tanto lo que se queda,
+    aunque sea solo por un momento.
 
-  Y entonces, en medio de la noche, parece que susurran algo suave:
-  “Dicen las estrellas que los fugaces somos nosotros.”
-
-  Y tiene sentido.
-  Porque ellas permanecen,
-  pero nosotros somos instante, latido, chispa.
-
-  Quizá por eso duele tanto lo que se va,
-  y por eso también vale tanto lo que se queda,
-  aunque sea solo por un momento.
-
-  Porque ser fugaz no es ser pequeño,
-  es ser irrepetible. ✨
+    Porque ser fugaz no es ser pequeño,
+    es ser irrepetible. ✨
 */
