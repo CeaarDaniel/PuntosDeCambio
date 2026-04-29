@@ -89,6 +89,8 @@ creo que esto ya esta
 Al asignar a una persona que esta en la tabla de personal NAD a otra tabla como de PC, eliminarla de esta tabla o cambiar su estatus
 Se ha elimiado a esta persona del registro de todas las estaciones, ¿desea agregalo al listado de personal disponible o personal no asignado?)
 
+Validar en la evaluacion si el numero de evaluacion corresponde con el numero de evaluacion realizada
+
 Mostrar reportes e informacion de la asistencia y los PC registrados con sus evaluaciones
 Crear seccion de certificaciones
 
