@@ -1346,6 +1346,20 @@
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
         });
+
+        /*
+            Lorem ipsum dolor, sit amet consectetur adipisicing elit. Ut ratione quos officiis cumque suscipit ab necessitatibus, corporis eum voluptatem dolorem placeat eligendi et, veritatis, ex sint illum similique blanditiis labore.
+            Perspiciatis minus maiores dicta soluta, numquam tempora mollitia nisi repellendus consequatur dolores illo culpa ipsum, aut praesentium temporibus, explicabo error totam quisquam?
+            Blanditiis nesciunt qui hic quia veniam reprehenderit totam commodi nulla perferendis assumenda doloremque, quasi ab, molestias cumque. Vitae, tempore? Quasi, eveniet quas.
+            Sapiente, ad omnis, praesentium fugiat aliquid facere exercitationem natus dolorem minima impedit similique architecto beatae soluta nemo. Molestiae reiciendis ad vitae sint.
+            Quam, porro fugiat? Quibusdam illum, ad officia sequi sit adipisci nihil reprehenderit necessitatibus quod saepe voluptatum, quidem qui maxime eaque voluptate quae?
+            Voluptate cum perferendis fugit reiciendis facilis, in eveniet quibusdam non maxime saepe veniam quos qui ducimus numquam cumque molestiae vel quas facere!
+            Dolore, a ducimus voluptatum quia corporis quasi praesentium quod, quaerat enim hic in dolorum, eum nam est minus laudantium. Unde, hic animi.
+            Magni corrupti nulla earum assumenda iste exercitationem quasi sapiente architecto quae vero explicabo, dolore, maiores necessitatibus quo a fugit aspernatur cumque expedita?
+            Odit, doloremque aspernatur. Quas quasi ea, aspernatur amet dolor, reprehenderit autem accusamus enim dolorem voluptatum vero voluptate voluptatibus reiciendis obcaecati? Minus, pariatur?
+            Consequuntur, blanditiis! Unde itaque, accusamus eum laboriosam obcaecati magni nulla ratione fugit consequuntur, enim esse. Eligendi atque temporibus rem rerum ad iure.
+            Ducimus ipsam laudantium possimus ad illo molestiae deleniti eveniet hic placeat, optio sequi ab necessitatibus maiores dolores explicabo animi esse dolorum voluptatibus.
+        */
     </script>
 </body>
 </html>

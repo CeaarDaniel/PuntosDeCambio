@@ -1,9 +1,34 @@
     <!-- Sidebar MENU de herramientas -->
     <div class="tools-sidebar" id="tools-sidebar">
+
+      <!-- REGISTO DE PERSONAL -->
+      <button id="btnMenuRegistrar" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Registrar personal">
+        <span data-bs-toggle="modal" data-bs-target="#modalRegistrarOperador">
+          <i class="bi bi-person-plus"></i>
+          <span>Registrar</span>
+        </span>
+      </button>
+
+      <!-- LISTADO DE PERSONAL -->
+      <button id="btnMenuPersonal" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Listado de personal registrado">
+        <span data-bs-toggle="modal" data-bs-target="#modalListadoPersonal">
+          <i class="bi bi-people"></i>
+          <span>Personal</span>
+        </span>
+      </button>
+
+      <!-- TABLA DE ASIGNACIONES -->
+      <button id="btnMenuAsignar" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Asignar operador">
+        <span data-bs-toggle="modal" data-bs-target="#modalListaOperaciones">
+          <i class="bi-diagram-3"></i>
+          <span>Asignaciones</span>
+        </span>
+      </button>
+
       <!-- ASIGNAR OPERADOR -->
       <button id="btnMenuAsignar" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Asignar operador">
         <span data-bs-toggle="modal" data-bs-target="#modalAsignarOperador">
-          <i class="bi bi-person-plus"></i>
+          <i class="bi-clipboard"></i> <!-- bi-clipboard-check -->
           <span>Asignar</span>
         </span>
       </button>
@@ -27,7 +52,7 @@
       <!--BOTON PARA REGISTRA/VER PERSONAL DISPOPNIBLE O NO ASIGNADO A UNA ESTACION -->
       <button id ='btnMenuRegiswtroNAD' class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Ver personal disponible">
         <span data-bs-toggle="modal" data-bs-target="#modalPersonalDisponible">
-          <i class="bi bi-people"></i>
+          <i class="bi-person-check"></i>
           <span>Disponibles</span>
         </span>
       </button>

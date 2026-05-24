@@ -94,6 +94,15 @@ Validar en la evaluacion si el numero de evaluacion corresponde con el numero de
 Mostrar reportes e informacion de la asistencia y los PC registrados con sus evaluaciones
 Crear seccion de certificaciones
 
+dejar que las asignaciones se hagan con el ILU, tener el listado de las operaciones en una tabla y desde ahi
+hacer la asignacion y que este registro se quede fijo hasta hacer algun cambio, listare todos los procesos y
+en la tabla dentro del processo listare internamente en la fila a las personas asignadas al proceso, hay que
+dar opcion para que dentro de este mismo listado se pueda agregar y eliminar a una persona activa en el 
+proceso del listado de personas certificadas
+
+Considerar el registrar el turno de asignacion de la persona dentro de la tabla de personal en vez de guardarlo
+en la tabla de personal_estacion, ver si es factible y util guardar la informacion de esta manera o no
+
     ESPICIFICACIONES/MODIFICACIONES OK
     Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
     Generar mostrar el contenido dinamico de los formularios
@@ -160,4 +169,61 @@ Crear seccion de certificaciones
     pero parece ser que estas hojas no estan actualizadas, los tipos de defectos que existen los tienen el personal de capacitacion, tienen un muestrario
     con las piezas en fisico con los defectos que se pueden generar por porcesos, y en su presentaciones de las capacitaciones tienen esta 
     informacion 
+*/
+
+
+
+
+
+/*
+No hay un solo “dulce más caro del mundo” definitivo, porque depende del tipo (chocolate, pastel, helado, etc.). Pero sí hay ejemplos extremos que se consideran los más caros jamás creados 😳:
+
+🥇 El más caro (en general)
+Un bombón de lujo con diamante creado por el chocolatero portugués Daniel Gomes.
+Precio: más de 27 millones de pesos mexicanos aprox.
+¿Por qué tan caro?
+Lleva oro comestible de 23 quilates
+Tiene forma de diamante y está hecho como pieza de exhibición
+
+👉 Básicamente, el precio no es por el sabor… sino por el lujo extremo.
+
+🥈 Otro caso famoso
+Un bombón con diamante incrustado (literalmente una joya comestible)
+Precio: unos 240,000 dólares
+🥉 El dulce “comestible” más caro (sin joyas)
+El helado japonés Byakuya
+Precio: más de 6,600 dólares por 130 ml
+Ingredientes:
+Trufa blanca italiana (ultra exclusiva)
+Queso premium
+Oro comestible
+🧁 Otros ejemplos caros
+Panettone de lujo con oro y diamantes: hasta 700,000 euros
+Chocolate artesanal de alta gama (como To’ak): cientos o miles de dólares por barra
+
+✅ Conclusión:
+
+Si cuentan cosas “decoradas con joyas”, el más caro es un bombón con oro/diamantes.
+Si hablamos de algo realmente para comer, el récord lo tiene un helado de lujo japonés.
+
+Si quieres, dime y te digo cuál es el dulce más caro que podrías comprar en México (algo realista, no de millonarios 😅).
+
+    A veces miramos el cielo buscando respuestas,
+    como si las estrellas guardaran secretos que nosotros olvidamos.
+    Brillan tranquilas, lejanas, eternas en su silencio,
+    mientras nosotros corremos, dudamos, sentimos.
+
+    Y entonces, en medio de la noche, parece que susurran algo suave:
+    “Dicen las estrellas que los fugaces somos nosotros.”
+
+    Y tiene sentido.
+    Porque ellas permanecen,
+    pero nosotros somos instante, latido, chispa.
+
+    Quizá por eso duele tanto lo que se va,
+    y por eso también vale tanto lo que se queda,
+    aunque sea solo por un momento.
+
+    Porque ser fugaz no es ser pequeño,
+    es ser irrepetible. ✨
 */

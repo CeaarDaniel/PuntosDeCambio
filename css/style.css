@@ -620,4 +620,36 @@
       text-align: center;
       color: var(--color-text);
     }
+
+
+
+
+
+:root {
+  /* ===== Brand Colors ===== *
+  --color-primary-dark: #3F2458;
+  --color-primary: #6C63FF;
+  --color-primary-vibrant: #8B5CF6;
+  --color-primary-light: #A78BFA;
+
+  /* ===== Backgrounds ===== *
+  --color-bg-main: #E9DCE7;
+  --color-bg-alt: #F4EDF3;
+  --color-white: #FFFFFF;
+
+  /* ===== Text ===== *
+  --color-text-heading: #0F0F0F;
+  --color-text-primary: #4A4A4A;
+  --color-text-secondary: #6B6B6B;
+  --color-text-muted: #9CA3AF;
+
+  /* ===== UI Elements ===== *
+  --color-border: #E5E7EB;
+  --color-hover: #7C3AED;
+  --color-accent-glow: #C4B5FD;
+
+  /* ===== Gradients ===== *
+  --gradient-primary: linear-gradient(135deg, #6C63FF 0%, #9F7AEA 100%);
+  --gradient-soft: linear-gradient(135deg, #A78BFA 0%, #C4B5FD 100%);
+}
 */

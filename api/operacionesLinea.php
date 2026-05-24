@@ -392,7 +392,7 @@ else
                 LEFT JOIN (SELECT id_estacion, nomina, nombre from SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL AND turno = :turno1) AS EP ON E.id_estacion = EP.id_estacion
                 LEFT JOIN (select idPC, id_estacion, nomina, nombre, estatusPC from SPC_PUNTOS_CAMBIO where fechaHora_fin IS NULL AND turno = :turno2) AS PC on E.id_estacion = PC.id_estacion
             WHERE E.codigo_linea= :codigoLinea";
-    */
+        */
 
         //Verificar si ya existe un registro de asistencia
             //Turno 1
@@ -444,8 +444,6 @@ else
         // Ejecutar con los parámetros
         if($stmt->execute([':codigoLinea' => $codigoLinea, ':turno' => $turno, ':fecha_inicio' => $fechaInicio, ':fecha_fin' => $fechaFin])){
             while($estacion= $stmt->fetch(PDO::FETCH_ASSOC)){
-
-
                 if($estacion['estatusPC'] == '1') 
                     $coloClass = 'station-color-2'; 
 
@@ -2024,9 +2022,8 @@ else
         $idPC = !empty($_POST['idPC']) ? $_POST['idPC'] : null;
 
         if(!$idPC) {
-                echo json_encode(['estatus' => 'error', 
-                                  'mensaje' => 'Faltan datos obligatorios']);
-                exit;
+                echo json_encode(['estatus' => 'error', 'mensaje' => 'Faltan datos obligatorios']);
+            exit;
         }
 
         try {
@@ -2060,8 +2057,6 @@ else
                 'mensaje' => $e->getMessage()
             ]);
         }
-
-
     }
 
 //Registrar evaluacion del PC
@@ -2128,7 +2123,7 @@ else
         $comentarios = !empty($_POST['comentarios']) ? $_POST['comentarios'] : null;
 
             if (!$codigoLinea || !$nomina || !$turno || !$estatusAsistencia) {
-                echo json_encode(['estatus' => 'error', 
+                echo json_encode(['estatus' => 'error',
                                   'mensaje'=>'Datos inválidos'
                                 ]);
                 exit;
@@ -2147,27 +2142,27 @@ else
                         ]);
                         exit;
                     }
-                } 
+                }
 
-                else 
-                    if ($turno == '2') {               
-                        if ($hora_actual>= new DateTime('today 20:00')) { // Después de las 8 pm
-                            $inicio_turno = new DateTime('today 20:00');
-                            $fin_turno    = new DateTime('tomorrow 07:59');
-                        } else { // Antes de las 8 pm
-                            $inicio_turno = new DateTime('yesterday 20:00');
-                            $fin_turno    = new DateTime('today 07:59');
-                        } 
+                else
+                    if ($turno == '2') {
+                            if ($hora_actual>= new DateTime('today 20:00')) { // Después de las 8 pm
+                                $inicio_turno = new DateTime('today 20:00');
+                                $fin_turno    = new DateTime('tomorrow 07:59');
+                            } else { // Antes de las 8 pm
+                                $inicio_turno = new DateTime('yesterday 20:00');
+                                $fin_turno    = new DateTime('today 07:59');
+                            }
 
-                    if ($hora_actual < $inicio_turno || $hora_actual > $fin_turno) {
-                        echo json_encode([
-                            'estatus' => 'error',
-                            'mensaje' => 'El registro de asistencia para el Turno 2 solo puede realizarse entre las 8:00 PM y las 7:59 AM del día siguiente.'
-                        ]);
-                        exit;
+                            if ($hora_actual < $inicio_turno || $hora_actual > $fin_turno) {
+                                echo json_encode([
+                                    'estatus' => 'error',
+                                    'mensaje' => 'El registro de asistencia para el Turno 2 solo puede realizarse entre las 8:00 PM y las 7:59 AM del día siguiente.'
+                                ]);
+                                exit;
+                            }
                     }
-                } 
-                
+
                 else {
                     echo json_encode([
                         'estatus' => 'error',
@@ -2178,10 +2173,9 @@ else
 
         try {
             $conn->beginTransaction();
-            $sql = "INSERT INTO SPC_REGISTRO_ASISTENCIA (nomina, nombre, estatus, codigo_linea, turno, id_estacion, nombres_estaciones, comentarioAsistencia) 
+            $sql = "INSERT INTO SPC_REGISTRO_ASISTENCIA (nomina, nombre, estatus, codigo_linea, turno, id_estacion, nombres_estaciones, comentarioAsistencia)
                         VALUES (:nomina, :nombre, :estatus, :codigo_linea, :turno, :id_estacion, :nombres_estaciones, :comentarioAsistencia)";
             $stmt = $conn->prepare($sql);
-
             $stmt->execute([
                 ':nomina' => $nomina,
                 ':nombre' => $nombre,
@@ -2192,7 +2186,7 @@ else
                 ':codigo_linea' => $codigoLinea,
                 ':turno' => $turno
             ]);
-            
+
             $conn->commit();
             $results = array('estatus' => 'ok',
                               'mensaje' => 'Se ha hecho el registro de asistencia');
@@ -2209,11 +2203,11 @@ else
 
 
 /*
-Resumen de asistencia
-Asistencias
-Permisos
-Faltas
-Vacaciones
-% Asistencia
+    Resumen de asistencia
+    Asistencias
+    Permisos
+    Faltas
+    Vacaciones
+    % Asistencia
 */
 ?>

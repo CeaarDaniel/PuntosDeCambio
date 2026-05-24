@@ -196,14 +196,14 @@
 
     function zoomIn() {
       if (workspaceState.zoomLevel < 2) {
-        workspaceState.zoomLevel += 0.1;
+        workspaceState.zoomLevel += 0.01;
         applyZoom();
       }
     }
 
     function zoomOut() {
       if (workspaceState.zoomLevel > 0.20) {
-        workspaceState.zoomLevel -= 0.1;
+        workspaceState.zoomLevel -= 0.01;
         applyZoom();
       }
     }
@@ -929,8 +929,7 @@
 
                       else  // actualizar el data interno de DataTables
                         if (campo) {
-                            data[campo] = nuevoValor;
-                            //table.row($row).data(data).invalidate();
+                            data[campo] = nuevoValor; //table.row($row).data(data).invalidate();
                         }
 
                     }).catch((error) => {
@@ -984,24 +983,19 @@
 
     //Funcion para obtener los datos del operador y mostrarlos en la estacion
     function getOperator(nomina, estacion, idPC){
-
-        document.getElementById('tiempoPC').innerHTML = ''; 
-
+        document.getElementById('tiempoPC').innerHTML = '';
         if(nomina){
           let fromDataGetOperador = new FormData();
           fromDataGetOperador.append('opcion', 20);
           fromDataGetOperador.append('nomina', nomina);
           fromDataGetOperador.append('idEstacion', estacion)
-
           fetch("../api/operacionesLinea.php", {
                 method: "POST",
                 body: fromDataGetOperador,
             })
             .then((response) => response.text())
             .then((data) => {
-          
               data= JSON.parse(data)
-
               if(data.estatus == 'ok'){
                   $("#changeControlInfoNomina").text(data.nomina);
                   $("#changeControlInfoNombre").text(data.nombre);
@@ -1012,17 +1006,14 @@
                   if(data.fecha_inicio && idPC){ 
                       let fecha_inicio = new Date(data.fecha_inicio);
                       let ahora = new Date();
-
                       let diferencia_ms = ahora - fecha_inicio; // diferencia en milisegundos
                       let dias = Math.floor(diferencia_ms / (1000 * 60 * 60 * 24));
-
                       document.getElementById('tiempoPC').innerHTML = `⚠Tiempo activo del punto de cambio: `+dias+' dias'
                     }
               }
 
               else
                 console.log(data.error);
-
               }).catch((error) => {
                 console.log(error);
           });
@@ -1847,7 +1838,12 @@
                         alert(data.mensaje);
                         let modalActual = bootstrap.Modal.getInstance(document.getElementById('changeControlModal'));
                         (modalActual) ? modalActual.hide() : '';
-                        getEstacion(idEstacion)
+
+                        //getEstacion(idEstacion)
+
+                         // Si no es arreglo, lo convertimos en uno
+                          let estacionesA = Array.isArray(idEstacion) ? idEstacion : [idEstacion];
+                          estacionesA.forEach(id => {getEstacion(id);});
                     } 
                     else  alert(data.mensaje);
                 })
@@ -1892,7 +1888,12 @@
                           (modalActual) ? modalActual.hide() : '';
 
                           //Actualizar informacion de la estacion
-                          getEstacion(idEstacion);
+                          //getEstacion(idEstacion);
+
+                          // Si no es arreglo, lo convertimos en uno
+                          let estacionesA = Array.isArray(idEstacion) ? idEstacion : [idEstacion];
+                          estacionesA.forEach(id => {getEstacion(id);});
+
                             if(data.asignacion==0){
                               let registrar = confirm('¿Desea agregar a esta persona al personal disponible?');
                               if(registrar) registrarDisponible(nominaAPC.value, nombreTrabajador, $('#turnoLayout').val());
@@ -2075,33 +2076,32 @@
             });
         });
 
-          btncloseSidebar.addEventListener('click', function () {
-            $('#btncloseSidebar').addClass('d-none')
-            $('#btnfloatingMenu').removeClass('d-none')
+        btncloseSidebar.addEventListener('click', function () {
+          $('#btncloseSidebar').addClass('d-none')
+          $('#btnfloatingMenu').removeClass('d-none')
 
-            $('#tools-sidebar').addClass('fade-out')
-            $('#tools-panel').addClass('fade-out')
-            //$('#layout-header').addClass('fade-out')
+          $('#tools-sidebar').addClass('fade-out')
+          $('#tools-panel').addClass('fade-out')
+          //$('#layout-header').addClass('fade-out')
 
-              setTimeout(() => {
-                  $('#tools-sidebar').addClass('d-none')
-                  $('#tools-panel').addClass('d-none')
-                  //$('#layout-header').addClass('d-none')
+            setTimeout(() => {
+                $('#tools-sidebar').addClass('d-none')
+                $('#tools-panel').addClass('d-none')
+                //$('#layout-header').addClass('d-none')
 
-                  $('#tools-sidebar').removeClass('fade-out')
-                  $('#tools-panel').removeClass('fade-out')
-                 // $('#layout-header').removeClass('fade-out')
-              }, 300); 
-          })
+                $('#tools-sidebar').removeClass('fade-out')
+                $('#tools-panel').removeClass('fade-out')
+                // $('#layout-header').removeClass('fade-out')
+            }, 300); 
+        })
 
-          btnfloatingMenu.addEventListener('click', function () {
-            $('#btncloseSidebar').removeClass('d-none')
-            $('#btnfloatingMenu').addClass('d-none')
-
-            $('#tools-sidebar').removeClass('d-none')
-            $('#tools-panel').removeClass('d-none')
-            //$('#layout-header').removeClass('d-none')
-          })
+        btnfloatingMenu.addEventListener('click', function () {
+          $('#btncloseSidebar').removeClass('d-none')
+          $('#btnfloatingMenu').addClass('d-none')
+          $('#tools-sidebar').removeClass('d-none')
+          $('#tools-panel').removeClass('d-none')
+          //$('#layout-header').removeClass('d-none')
+        })
 
       // Cargar las formas
       setTimeout(() => {

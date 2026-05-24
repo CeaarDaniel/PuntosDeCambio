@@ -2920,23 +2920,4 @@
     las funciones selectShape y clearselection son las que ponen el borde degradado 
     al seleccionar un objeto hay que revisar este para
     ver que funcione al dar clic y quitar el clic de la figura svg
-
-    A veces miramos el cielo buscando respuestas,
-    como si las estrellas guardaran secretos que nosotros olvidamos.
-    Brillan tranquilas, lejanas, eternas en su silencio,
-    mientras nosotros corremos, dudamos, sentimos.
-
-    Y entonces, en medio de la noche, parece que susurran algo suave:
-    “Dicen las estrellas que los fugaces somos nosotros.”
-
-    Y tiene sentido.
-    Porque ellas permanecen,
-    pero nosotros somos instante, latido, chispa.
-
-    Quizá por eso duele tanto lo que se va,
-    y por eso también vale tanto lo que se queda,
-    aunque sea solo por un momento.
-
-    Porque ser fugaz no es ser pequeño,
-    es ser irrepetible. ✨
 */

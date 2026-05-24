@@ -37,44 +37,44 @@
   <!--Data table -->
   <link href="../DataTables/datatables.min.css" rel="stylesheet">
   
-    <style>
-    .btn-group .btn {
-      border-radius: 8px;
-      margin: 0 2px;
-      padding: 0.4rem 0.7rem;
-      transition: all 0.2s;
-    }
+  <style>
+        .btn-group .btn {
+          border-radius: 8px;
+          margin: 0 2px;
+          padding: 0.4rem 0.7rem;
+          transition: all 0.2s;
+        }
 
-    .btn {
-      border-radius: 8px;
-      font-weight: 500;
-    }
+        .btn {
+          border-radius: 8px;
+          font-weight: 500;
+        }
 
-    .btn-info {
-      background: #e0f2fe;
-      border-color: #bae6fd;
-      color: #0369a1;
-    }
+        .btn-info {
+          background: #e0f2fe;
+          border-color: #bae6fd;
+          color: #0369a1;
+        }
 
-    .btn-info:hover {
-      background: #bae6fd;
-      color: #0c4a6e;
-      transform: translateY(-1px);
-    }
+        .btn-info:hover {
+          background: #bae6fd;
+          color: #0c4a6e;
+          transform: translateY(-1px);
+        }
 
-    .btn-success {
-      background: #dcfce7;
-      border-color: #bbf7d0;
-      color: #15803d;
-      transition: all 0.2s;
-    }
-    
-    .btn-success:hover {
-      background: #bbf7d0;
-      border-color: #86efac;
-      color: #14532d;
-      transform: translateY(-1px);
-    }
+        .btn-success {
+          background: #dcfce7;
+          border-color: #bbf7d0;
+          color: #15803d;
+          transition: all 0.2s;
+        }
+        
+        .btn-success:hover {
+          background: #bbf7d0;
+          border-color: #86efac;
+          color: #14532d;
+          transform: translateY(-1px);
+        }
   </style>
 
 </head>  
@@ -185,106 +185,419 @@
     </div>
   </div>
 
-  <!--Agregar una estacion -->
-  <div class="modal fade" id="modalAgregarEstacion" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Agregar nueva estación</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <!-- Fin formulario -->
-            <form class="form-body" id="stationForm">
-              <!-- Sección: Información de la Estación -->
-              <div class="form-section">
-                <h3 class="section-title">
-                  <i class="bi bi-cpu"></i>Información de la Estación
-                </h3>
-                
+  <!-- Cargar/Registrar personal -->
+  <div class="modal fade" id="modalRegistrarOperador" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">REGISTRO DE PERSONAL</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row g-3">
+              <!-- Columna izquierda: Datos del empleado -->
+              <div class="col-md-6">
                 <div class="mb-3">
-                  <label for="nombreEstacion" class="form-label required-field">
-                    <i class="bi bi-tag"></i>Nombre de la Estación/Proceso
+                  <label for="nominaModalAsignar" class="form-label required-field">
+                    <i class="bi bi-clock"></i> No. Reloj / ID Empleado
                   </label>
-                  <input  type="text" 
-                    class="form-control form-control-custom"  id="nombreEstacion" placeholder="Ej: Moldeo De Uretano Y"
-                    required>
-                  <div class="form-help">Nombre descriptivo para identificar la estación o proceso</div>
+                  <div class="input-group-custom">
+                    <input type="number" min="0" step="1" class="form-control form-control-custom" 
+                          id="nominaModalAsignar" placeholder="Ej: EMP-0256" required>
+                    <button type="button" class="input-icon" id="searchEmployee">
+                      <i class="bi bi-search"></i>
+                    </button>
+                  </div>
+                </div>
+            
+                <!-- NOMBRE DEL EMPLEADO -->
+                <div class="mb-3">
+                  <div class="input-group-custom">
+                    <input type="text" class="py-2 ps-1" id="nombreModalAsignar" 
+                            style="all: unset; width:100%;
+                                background-color: #e0f2fe;
+                              color: #495057; border-radius: 12px;"
+                          placeholder="Nombre del empleado" readonly>
+                  </div>
                 </div>
               </div>
 
-              <!-- Sección: Descripción -->
-              <div class="form-section">
-                <h3 class="section-title">
-                  <i class="bi bi-chat-left-text"></i>
-                  Descripción y Comentarios
-                </h3>
-                
-                <div class="mb-3">
-                  <label for="stationdescripcion" class="form-label">
-                    <i class="bi bi-pencil"></i>
-                    Comentarios/Descripción
-                  </label>
-                  <textarea 
-                    class="form-control form-control-custom form-textarea" 
-                    id="stationdescripcion" 
-                    placeholder="Describe las actividades, procedimientos específicos, consideraciones especiales o comentarios relevantes para esta estación..."
-                    rows="4"
-                  ></textarea>
-                  <div class="form-help">Opcional: Detalla el proceso, herramientas utilizadas o instrucciones especiales</div>
-                </div>
-              </div>
-
-              <!-- Sección: Certificaciones -->
-              <div class="form-section">
-                <h3 class="section-title">
-                  <i class="bi bi-award"></i> Requerimientos de Certificación
-                </h3>
-
-                <div class="mb-4">
-                    <label for="requiereCertificacion" class="form-label required-field">
-                      ¿ Requiere certificación?
-                    </label>
-                      <select class="form-control form-control-custom select" id="requiereCertificacion" required>
-                        <option value="">--- SELECCIONE UNA OPCION ---</option>
-                        <option value="0">NO</option>
-                        <option value="1">SI</option>
-                      </select>
-                </div>
-                
-                <!-- Modal certificacion requerida
-                <div class="mb-3">
-                  <label for="certificacion" class="form-label">
-                    <i class="bi bi-shield-check"></i>
-                    Certificación/Capacitación Requerida
-                  </label>
-                  <select class="form-control form-control-custom" id="certificacion">
-                    <option value="">Selecciona una certificación...</option>
-                    <option value="cert-proceso-a">Proceso A</option>
-                    <option value="cert-proceso-b">Proceso B</option>
-                    <option value="cert-proceso-c">Proceso C</option>
-                    <option value="cert-calidad">Control de Calidad</option>
-                    <option value="cert-seguridad">Seguridad Industrial</option>
-                    <option value="cert-maquinaria">Operación de Maquinaria Especializada</option>
-                    <option value="none">No requiere certificación</option>
+              <!-- Columna derecha: Operaciones disponibles + botón agregar -->
+              <div class="col-md-6">
+                <label for="stationSelect" class="form-label required-field">
+                  <i class="bi bi-cpu"></i> Operaciones liberadas
+                </label>
+                <div class="gap-2 align-items-start">
+                  <select class="form-control form-control-custom flex-grow-1" id="stationSelect" required>
+                    <option value="">Selecciona una estación...</option>
+                    <option value="1">Corte de materiales</option>
+                    <option value="2">Ensamble de PCB</option>
+                    <option value="3">Soldadura SMD</option>
+                    <option value="4">Pruebas funcionales</option>
+                    <option value="5">Embalaje final</option>
                   </select>
-                  <div class="form-help">Selecciona la certificación mínima requerida para operar esta estación</div>
+        
+                  <button class="btn btn-info mt-2" type="button" style="white-space: nowrap;">
+                    <i class="bi bi-plus-lg"></i> Agregar
+                  </button>
                 </div>
-                -->
               </div>
-            </form>
-          <!-- Fin formulario -->
-          <div class="d-flex justify-content-end mt-2 ">
-            <button type="button" class="btn btn-secondary mx-2" data-bs-dismiss="modal">
+
+              <!-- Lista de operaciones asignadas (chips) -->
+              <div class="col-12">
+                <div id="operationsListContainer" class="d-flex flex-wrap gap-2">
+                  <!-- Ejemplos visuales de chips (cada uno con su ícono de eliminar) -->
+                  <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-info bg-opacity-10 text-dark">
+                    <span>Corte de materiales</span>
+                    <i class="bi bi-x-circle-fill" style="cursor: pointer; color: #dc3545;" title="Eliminar"></i>
+                  </div>
+                  <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-info bg-opacity-10 text-dark">
+                    <span>Ensamble de PCB</span>
+                    <i class="bi bi-x-circle-fill" style="cursor: pointer; color: #dc3545;" title="Eliminar"></i>
+                  </div>
+                  <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-info bg-opacity-10 text-dark">
+                    <span>Pruebas funcionales</span>
+                    <i class="bi bi-x-circle-fill" style="cursor: pointer; color: #dc3545;" title="Eliminar"></i>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fecha de asignación -->
+              <div class="col-6">
+                <label for="assignmentDate" class="form-label required-field">
+                  <i class="bi bi-calendar"></i> Fecha de registro
+                </label>
+                <input type="datetime-local" class="form-control form-control-custom" id="assignmentDate" readonly>
+              </div>
+
+              <!-- OBSERVACIONES INPUT
+              <div class="mb-3">
+                <label for="comentarios" class="form-label">
+                  <i class="bi bi-sticky"></i> Observaciones
+                </label>
+                <textarea 
+                  class="form-control form-control-custom" 
+                  id="comentarios" 
+                  rows="3"
+                  placeholder="Notas adicionales sobre esta asignación..."
+                ></textarea>
+              </div> -->
+            </div>
+            <div class="d-flex justify-content-end mt-2 ">
+              <button type="button" class="btn btn-secondary mx-2" data-bs-dismiss="modal">
                 <i class="bi bi-x-circle"></i> Cancelar
               </button>
-            <button id="btnGuardarEstacion" type="button" class="btn btn-primary-custom mx-2">
-              <i class="bi bi-check-circle"></i>Guardar
-            </button>
+              <button type="button" class="btn btn-primary mx-2" id="btnAsignarOperador">
+                <i class="bi bi-check-circle"></i> Guardar
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+  </div>
+
+  <!-- Listado de personal -->
+  <div class="modal fade" id="modalListadoPersonal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">LISTADO DE PERSONAL</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+              <div class="card-header bg-white border-bottom-0 py-3 px-4">
+                <h5 class="mb-0 fw-semibold">
+                  <i class="bi bi-people-fill me-2" style="color: #0d6efd;"></i>
+                  Listado de personal
+                </h5>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0" style="min-width: 800px;">
+                    <thead class="bg-light">
+                      <tr>
+                        <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Nómina</th>
+                        <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Datos personales</th>
+                        <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Línea</th>
+                        <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Estatus</th>
+                        <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- Fila 1: Trabajador disponible -->
+                      <tr>
+                        <td class="px-4 py-3 fw-medium">10256</td>
+                        <td class="px-4 py-3">
+                          <div class="d-flex flex-column">
+                            <span class="fw-semibold">Juan Carlos Pérez</span>
+                            <small class="text-secondary">Puesto: Operador especializado</small>
+                          </div>
+                        </td>
+                        <td class="px-4 py-3"><span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">CRV</span></td>
+                        <td class="px-4 py-3"><span class="badge btn-success bg-opacity-15 text-dark px-3 py-1 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Disponible</span></td>
+                        <td class="px-4 py-3 text-end">
+                          <div class="d-flex gap-1 justify-content-end">
+                            <button class="btn btn-sm btn-outline-danger rounded-circle" style="width: 32px; height: 32px;" title="Eliminar"><i class="bi bi-trash3"></i></button>
+                            <button class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 32px; height: 32px;" title="Mover de línea"><i class="bi bi-arrow-left-right"></i></button>
+                            <button class="btn btn-sm btn-outline-info rounded-circle" style="width: 32px; height: 32px;" title="Gestionar operaciones"><i class="bi bi-diagram-3"></i></button>
+                          </div>
+                        </td>
+                      </tr>
+                      <!-- Fila 2: Trabajador asignado -->
+                      <tr>
+                        <td class="px-4 py-3 fw-medium">10983</td>
+                        <td class="px-4 py-3">
+                          <div class="d-flex flex-column">
+                            <span class="fw-semibold">María Fernanda López</span>
+                            <small class="text-secondary">Puesto: Técnico de calidad</small>
+                          </div>
+                        </td>
+                        <td class="px-4 py-3"><span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">Ford</span></td>
+                        <td class="px-4 py-3"><span class="badge btn-info bg-opacity-15 text-dark px-3 py-1 rounded-pill"><i class="bi bi-person-check-fill me-1"></i> Asignado</span></td>
+                        <td class="px-4 py-3 text-end">
+                          <div class="d-flex gap-1 justify-content-end">
+                            <button class="btn btn-sm btn-outline-danger rounded-circle" title="Eliminar"><i class="bi bi-trash3"></i></button>
+                            <button class="btn btn-sm btn-outline-secondary rounded-circle" title="Mover de línea"><i class="bi bi-arrow-left-right"></i></button>
+                            <button class="btn btn-sm btn-outline-info rounded-circle" title="Gestionar operaciones"><i class="bi bi-diagram-3"></i></button>
+                          </div>
+                        </td>
+                      </tr>
+                      <!-- Fila 3: Trabajador eliminado -->
+                      <tr>
+                        <td class="px-4 py-3 fw-medium">10567</td>
+                        <td class="px-4 py-3">
+                          <div class="d-flex flex-column">
+                            <span class="fw-semibold">Roberto Jiménez</span>
+                            <small class="text-secondary">Puesto: Ensamblador</small>
+                          </div>
+                        </td>
+                        <td class="px-4 py-3"><span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">Odyssey</span></td>
+                        <td class="px-4 py-3"><span class="badge bg-danger bg-opacity-10 text-dark px-3 py-1 rounded-pill"><i class="bi bi-person-x-fill me-1"></i> Eliminado</span></td>
+                        <td class="px-4 py-3 text-end">
+                          <div class="d-flex gap-1 justify-content-end">
+                            <button class="btn btn-sm btn-outline-danger rounded-circle" ><i class="bi bi-trash3"></i></button>
+                            <button class="btn btn-sm btn-outline-secondary rounded-circle" ><i class="bi bi-arrow-left-right"></i></button>
+                            <button class="btn btn-sm btn-outline-info rounded-circle" ><i class="bi bi-diagram-3"></i></button>
+                          </div>
+                        </td>
+                      </tr>
+                      <!-- Fila 4: Otro disponible -->
+                      <tr>
+                        <td class="px-4 py-3 fw-medium">11021</td>
+                        <td class="px-4 py-3">
+                          <div class="d-flex flex-column">
+                            <span class="fw-semibold">Gabriela Ríos</span>
+                            <small class="text-secondary">Puesto: Supervisora de línea</small>
+                          </div>
+                        </td>
+                        <td class="px-4 py-3"><span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">Pilot</span></td>
+                        <td class="px-4 py-3"><span class="badge btn-success bg-opacity-15 text-dark px-3 py-1 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Disponible</span></td>
+                        <td class="px-4 py-3 text-end">
+                          <div class="d-flex gap-1 justify-content-end">
+                            <button class="btn btn-sm btn-outline-danger rounded-circle" title="Eliminar"><i class="bi bi-trash3"></i></button>
+                            <button class="btn btn-sm btn-outline-secondary rounded-circle" title="Mover de línea"><i class="bi bi-arrow-left-right"></i></button>
+                            <button class="btn btn-sm btn-outline-info rounded-circle" title="Gestionar operaciones"><i class="bi bi-diagram-3"></i></button>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="card-footer bg-white border-top-0 py-3 px-4 text-muted small">
+                Mostrando 4 de 12 registros
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  </div>
+
+  <!--LISTADO DE OPERACIONES-->
+  <div class="modal fade" id="modalListaOperaciones" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">LISTADO DE OPERACIONES</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+              <div class="card-header bg-white border-bottom-0 py-4 px-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                  <div>
+                    <h5 class="mb-1 fw-bold">
+                      <i class="bi bi-gear-fill me-2 text-primary"></i>
+                      Operaciones de la línea
+                    </h5>
+                    <p class="text-muted small mb-0">Gestión de personal certificado por proceso</p>
+                  </div>
+                  <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
+                    <i class="bi bi-diagram-3 me-1"></i>10 personas asignadas
+                  </span>
+                </div>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0" style="min-width: 950px;">
+                    <thead class="bg-light">
+                      <tr>
+                        <th class="px-4 py-3 fw-bold small">OPERACIÓN</th>
+                        <th class="px-4 py-3 fw-bold small">PERSONAL ASIGNADO</th>
+                        <th class="px-4 py-3 fw-bold small">AGREGAR TRABAJADOR</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- CORTE -->
+                      <tr>
+                        <td class="px-4 py-3 fw-semibold text-dark">CORTE</td>
+                        <td class="px-4 py-3">
+                          <div class="d-flex flex-wrap gap-2">
+                            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm">
+                              <span class="small">Juan Pérez</span>
+                              <i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i>
+                            </div>
+                            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm">
+                              <span class="small">María López</span>
+                              <i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="px-4 py-3">
+                          <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3">
+                              <option>Seleccionar operario...</option>
+                              <option>Carlos Ruiz (Cert)</option>
+                              <option>Ana Torres (Cert)</option>
+                              <option>Luis Mendoza (Cert)</option>
+                            </select>
+                            <button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button>
+                          </div>
+                        </td>
+                      </tr>
+                      <!-- RE CORTE -->
+                      <tr>
+                        <td class="px-4 py-3 fw-semibold text-dark">RE CORTE</td>
+                        <td class="px-4 py-3">
+                          <div class="d-flex flex-wrap gap-2">
+                            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm">
+                              <span class="small">Roberto Díaz</span>
+                              <i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="px-4 py-3">
+                          <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3">
+                              <option>Seleccionar operario...</option>
+                              <option>Sandra Gómez (Cert)</option>
+                              <option>Pedro Vega (Cert)</option>
+                            </select>
+                            <button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button>
+                          </div>
+                        </td>
+                      </tr>
+                      <!-- DESFORRE -->
+                      <tr>
+                        <td class="px-4 py-3 fw-semibold text-dark">DESFORRE</td>
+                        <td class="px-4 py-3">
+                          <div class="d-flex flex-wrap gap-2">
+                            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm"><span class="small">Laura Jiménez</span><i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i></div>
+                            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm"><span class="small">Andrés Castro</span><i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i></div>
+                            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm"><span class="small">Mónica Ruiz</span><i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i></div>
+                          </div>
+                        </td>
+                        <td class="px-4 py-3">
+                          <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Fernando Ríos (Cert)</option><option>Claudia Paz (Cert)</option></select>
+                            <button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button>
+                          </div>
+                        </td>
+                      </tr>
+                      <!-- REDUCCION -->
+                      <tr>
+                        <td class="px-4 py-3 fw-semibold text-dark">REDUCCION</td>
+                        <td class="px-4 py-3"><span class="text-muted fst-italic small"> Sin asignar </span></td>
+                        <td class="px-4 py-3">
+                          <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Patricia Soto (Cert)</option><option>Ricardo Mora (Cert)</option></select>
+                            <button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button>
+                          </div>
+                        </td>
+                      </tr>
+                      <!-- CRIMPADO 1 -->
+                      <tr>
+                        <td class="px-4 py-3 fw-semibold text-dark">CRIMPADO 1</td>
+                        <td class="px-4 py-3">
+                          <div class="d-flex flex-wrap gap-2"><div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm"><span class="small">Héctor Suárez</span><i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i></div></div>
+                        </td>
+                        <td class="px-4 py-3">
+                          <div class="d-flex gap-2"><select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Verónica Núñez (Cert)</option></select><button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button></div>
+                        </td>
+                      </tr>
+                      <!-- INCERSION 1 -->
+                      <tr>
+                        <td class="px-4 py-3 fw-semibold text-dark">INCERSION 1</td>
+                        <td class="px-4 py-3"><span class="text-muted fst-italic small">Sin asignar</span></td>
+                        <td class="px-4 py-3">
+                          <div class="d-flex gap-2"><select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Raúl Espinoza (Cert)</option><option>Daniela Flores (Cert)</option></select><button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button></div>
+                        </td>
+                      </tr>
+                      <!-- CRIMPADO 2 -->
+                      <tr>
+                        <td class="px-4 py-3 fw-semibold text-dark">CRIMPADO 2</td>
+                        <td class="px-4 py-3"><div class="d-flex flex-wrap gap-2"><div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm"><span class="small">Sergio Méndez</span><i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i></div></div></td>
+                        <td class="px-4 py-3"><div class="d-flex gap-2"><select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Gabriel Flores (Cert)</option></select><button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button></div></td>
+                      </tr>
+                      <!-- CRIMPADO 3 -->
+                      <tr>
+                        <td class="px-4 py-3 fw-semibold text-dark">CRIMPADO 3</td>
+                        <td class="px-4 py-3"><span class="text-muted fst-italic small">Sin asignaCIONES</span></td>
+                        <td class="px-4 py-3"><div class="d-flex gap-2"><select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Leticia Ortega (Cert)</option></select><button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button></div></td>
+                      </tr>
+                      <!-- INCERSION 2 -->
+                      <tr>
+                        <td class="px-4 py-3 fw-semibold text-dark">INCERSION 2</td>
+                        <td class="px-4 py-3"><span class="text-muted fst-italic small">Sin asignaCIONES</span></td>
+                        <td class="px-4 py-3"><div class="d-flex gap-2"><select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Mario Fuentes (Cert)</option></select><button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button></div></td>
+                      </tr>
+                      <!-- MARCADO LASER L -->
+                      <tr>
+                        <td class="px-4 py-3 fw-semibold text-dark">MARCADO LASER L</td>
+                        <td class="px-4 py-3"><div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm"><span class="small">Norma Castillo</span><i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i></div></div></td>
+                        <td class="px-4 py-3"><div class="d-flex gap-2"><select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Ricardo López (Cert)</option></select><button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button></div></td>
+                      </tr>
+                      <!-- MARCADO LASER R -->
+                      <tr>
+                        <td class="px-4 py-3 fw-semibold text-dark">MARCADO LASER R</td>
+                        <td class="px-4 py-3"><span class="text-muted fst-italic small">Sin asignaCIONES</span></td>
+                        <td class="px-4 py-3"><div class="d-flex gap-2"><select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Cecilia Rojas (Cert)</option></select><button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button></div></td>                        
+                      </tr>
+                      <!-- DESFORRE TWST CAB R -->
+                      <tr>
+                        <td class="px-4 py-3 fw-semibold text-dark">TWST CAB R</td>
+                        <td class="px-4 py-3"><div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm"><span class="small">Tomás Gutiérrez</span><i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i></div></div></td>
+                        <td class="px-4 py-3">
+                          <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3">
+                              <option>Seleccionar operario...</option>
+                              <option>Elena Salas (Cert)</option>
+                            </select>
+                            <button class="btn btn-sm btn-info rounded-3">
+                              <i class="bi bi-plus-lg"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
   </div>
 
   <!--Asignar operador a una estacion -->
@@ -877,198 +1190,6 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <!-- 
-                          <tr>
-                            <td>
-                              <div class="station-badge bg-primary text-white rounded text-center py-1">
-                                <strong>01</strong>
-                              </div>
-                            </td>
-                            <td>
-                              <div class="d-flex align-items-center">
-                                <div>
-                                  <div class="fw-bold">Juan Pérez</div>
-                                  <small class="text-muted">ID: EMP-001</small>
-                                </div>
-                              </div>
-                            </td>
-                            <td>
-                              <select class="form-control form-control-custom attendance-status" data-employee="EMP-001">
-                                <option value="present" selected>✅ Asistió - Puntual</option>
-                                <option value="present-late">🟡 Asistió - Tardanza</option>
-                                <option value="permission">🟢 Permiso Autorizado</option>
-                                <option value="permission-medical">🏥 Permiso Médico</option>
-                                <option value="absence">❌ Falta Injustificada</option>
-                                <option value="vacation">🏖️ Vacaciones</option>
-                                <option value="other">⚪ Otro</option>
-                              </select>
-                            </td>
-                            <td>
-                              <input type="text" class="form-control form-control-custom" placeholder="Observaciones..." value="">
-                            </td>
-                            <td class="text-center">
-                          
-                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Ver historial">
-                                      <i class="bi bi-clock-history"></i>
-                                    </button>
-                          
-                                <div class="form-check d-flex align-items-center justify-content-center gap-2">
-                                    <input class="form-check-input" type="checkbox" id="cambioTurno">
-                                    <label class="form-check-label d-flex align-items-center gap-1" for="cambioTurno" data-bs-toggle="tooltip" data-bs-placement="top" title="Cambio de turno"> 
-                                        <i class="bi bi-clock-history"></i>
-                                    </label>
-                                </div>
-                            </td> 
-                          </tr>
-                          <tr>
-                            <td>
-                              <div class="station-badge bg-success text-white rounded text-center py-1">
-                                <strong>02</strong>
-                              </div>
-                            </td>
-                            <td>
-                              <div class="d-flex align-items-center">
-                                <div>
-                                  <div class="fw-bold">María González</div>
-                                  <small class="text-muted">ID: EMP-002</small>
-                                </div>
-                              </div>
-                            </td>
-                            <td>
-                              <select class="form-control form-control-custom attendance-status" data-employee="EMP-002">
-                                <option value="present">✅ Asistió - Puntual</option>
-                                <option value="present-late">🟡 Asistió - Tardanza</option>
-                                <option value="permission" selected>🟢 Permiso Autorizado</option>
-                                <option value="permission-medical">🏥 Permiso Médico</option>
-                                <option value="absence">❌ Falta Injustificada</option>
-                                <option value="vacation">🏖️ Vacaciones</option>
-                                <option value="other">⚪ Otro</option>
-                              </select>
-                            </td>
-                            <td>
-                              <input type="text" class="form-control form-control-custom" placeholder="Observaciones..." value="Consulta médica programada">
-                            </td>
-                            <td class="text-center">
-                                <div class="form-check d-flex align-items-center justify-content-center gap-2">
-                                    <input class="form-check-input" type="checkbox" id="cambioTurno">
-                                    <label class="form-check-label d-flex align-items-center gap-1" for="cambioTurno" data-bs-toggle="tooltip" data-bs-placement="top" title="Cambio de turno"> 
-                                        <i class="bi bi-clock-history"></i>
-                                    </label>
-                                </div>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>
-                              <div class="station-badge bg-warning text-dark rounded text-center py-1">
-                                <strong>03</strong>
-                              </div>
-                            </td>
-                            <td>
-                              <div class="d-flex align-items-center">
-                                <div>
-                                  <div class="fw-bold">Carlos Ruiz</div>
-                                  <small class="text-muted">ID: EMP-003</small>
-                                </div>
-                              </div>
-                            </td>
-                            <td>
-                              <select class="form-control form-control-custom attendance-status" data-employee="EMP-003">
-                                <option value="present">✅ Asistió - Puntual</option>
-                                <option value="present-late">🟡 Asistió - Tardanza</option>
-                                <option value="permission">🟢 Permiso Autorizado</option>
-                                <option value="permission-medical">🏥 Permiso Médico</option>
-                                <option value="absence" selected>❌ Falta Injustificada</option>
-                                <option value="vacation">🏖️ Vacaciones</option>
-                                <option value="other">⚪ Otro</option>
-                              </select>
-                            </td>
-                            <td>
-                              <input type="text" class="form-control form-control-custom" placeholder="Observaciones..." value="">
-                            </td>
-                            <td class="text-center">
-                                <div class="form-check d-flex align-items-center justify-content-center gap-2">
-                                    <input class="form-check-input" type="checkbox" id="cambioTurno">
-                                    <label class="form-check-label d-flex align-items-center gap-1" for="cambioTurno" data-bs-toggle="tooltip" data-bs-placement="top" title="Cambio de turno"> 
-                                        <i class="bi bi-clock-history"></i>
-                                    </label>
-                                </div>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>
-                              <div class="station-badge bg-info text-white rounded text-center py-1">
-                                <strong>04</strong>
-                              </div>
-                            </td>
-                            <td>
-                              <div class="d-flex align-items-center">
-                                <div>
-                                  <div class="fw-bold">Ana López</div>
-                                  <small class="text-muted">ID: EMP-004</small>
-                                </div>
-                              </div>
-                            </td>
-                            <td>
-                              <select class="form-control form-control-custom attendance-status" data-employee="EMP-004">
-                                <option value="present" selected>✅ Asistió - Puntual</option>
-                                <option value="present-late">🟡 Asistió - Tardanza</option>
-                                <option value="permission">🟢 Permiso Autorizado</option>
-                                <option value="permission-medical">🏥 Permiso Médico</option>
-                                <option value="absence">❌ Falta Injustificada</option>
-                                <option value="vacation">🏖️ Vacaciones</option>
-                                <option value="other">⚪ Otro</option>
-                              </select>
-                            </td>
-                            <td>
-                              <input type="text" class="form-control form-control-custom" placeholder="Observaciones..." value="">
-                            </td>
-                            <td class="text-center">
-                                <div class="form-check d-flex align-items-center justify-content-center gap-2">
-                                    <input class="form-check-input" type="checkbox" id="cambioTurno">
-                                    <label class="form-check-label d-flex align-items-center gap-1" for="cambioTurno" data-bs-toggle="tooltip" data-bs-placement="top" title="Cambio de turno"> 
-                                        <i class="bi bi-clock-history"></i>
-                                    </label>
-                                </div>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>
-                              <div class="station-badge bg-secondary text-white rounded text-center py-1">
-                                <strong>05</strong>
-                              </div>
-                            </td>
-                            <td>
-                              <div class="d-flex align-items-center">
-                                <div>
-                                  <div class="fw-bold">Luis Fernández</div>
-                                  <small class="text-muted">ID: EMP-005</small>
-                                </div>
-                              </div>
-                            </td>
-                            <td>
-                              <select class="form-control form-control-custom attendance-status" data-employee="EMP-005">
-                                <option value="present" selected>✅ Asistió - Puntual</option>
-                                <option value="present-late">🟡 Asistió - Tardanza</option>
-                                <option value="permission">🟢 Permiso Autorizado</option>
-                                <option value="permission-medical">🏥 Permiso Médico</option>
-                                <option value="absence">❌ Falta Injustificada</option>
-                                <option value="vacation">🏖️ Vacaciones</option>
-                                <option value="other">⚪ Otro</option>
-                              </select>
-                            </td>
-                            <td>
-                              <input type="text" class="form-control form-control-custom" placeholder="Observaciones..." value="">
-                            </td>
-                            <td class="text-center">
-                                <div class="form-check d-flex align-items-center justify-content-center gap-2">
-                                    <input class="form-check-input" type="checkbox">
-                                    <label class="form-check-label d-flex align-items-center gap-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Cambio de turno"> 
-                                        <i class="bi bi-clock-history"></i>
-                                    </label>
-                                </div>
-                            </td>
-                          </tr>
-                      -->
                     </tbody>
                   </table>
                 </div>
@@ -2035,7 +2156,8 @@
                           </button>
                         </div>
                     </div>
-                  <!-- Fin Formulario de liberacion -->
+                   <!-- Fin Formulario de liberacion 
+                  -->
               </div>
             <!-- FIN VENTANAS -->
         </div>
@@ -2325,98 +2447,6 @@
       </div>
     </div>
   </div> 
-  
-  <!-- Editar datos de la linea-->
-  <div class="modal fade modal-close-control" id="editarLineaModal" tabindex="-1" aria-labelledby="editarLineaModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <!-- Header del Modal -->
-        <div class="modal-header">
-          <div class="d-flex align-items-center">
-            <h5 class="modal-title" id="closeControlModalLabel">Modificar datos de la linea</h5>
-          </div>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        
-        <!-- Body del Modal -->
-        <div class="modal-body">
-          <!-- Formulario de registro para agregar la linea-->
-            <form class="form-body" id="lineForm">
-              <!--  Información Básica -->
-              <div class="form-section">
-                <h5 class="modal-title mb-2 text-center">
-                  <i class="bi bi-info-circle"></i>Información Básica
-                </h5>
-
-                <div class="row">
-                  <div class="col-md-6 mb-2">
-                    <label for="lineCode" class="form-label required-field">Código de Línea</label>
-                    <div class="input-group-custom">
-                      <input type="text" class="form-control form-control-custom" id="lineCode" placeholder="Ej: LN-001" readonly style="background-color:snow;" value="<?php echo $codigo?>">
-                      <button type="button" class="input-icon" data-bs-toggle="tooltip" title="Código único para identificar la línea">
-                        <i class="bi bi-question-circle"></i>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div class="col-md-6 mb-2">
-                    <label for="lineName" class="form-label required-field">Nombre de la Línea</label>
-                    <input type="text" class="form-control form-control-custom" id="lineName" placeholder="Ej: Línea de CRV" value="<?php echo $nombre?>" required>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Sección: Encargado -->
-              <div class="form-section">
-                <h5 class="modal-title mb-2">
-                  <i class="bi bi-person-gear"></i>
-                  Personal a Cargo
-                </h5>
-
-                <div class="mb-2">
-                  <label for="supervisorSearch" class="form-label required-field">Encargado/Supervisor</label>
-                  <div class="input-group-custom">
-                    <input type="text" class="form-control form-control-custom" id="supervisorSearch"
-                      placeholder="Buscar empleado..." value="<?php echo $encargado_supervisor?>">
-                    <button type="button" class="input-icon">
-                      <i class="bi bi-search"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Sección: Descripción -->
-              <div class="form-section">
-                <h5 class="modal-title mb-1">
-                  <i class="bi bi-text-paragraph"></i> Descripción
-                </h5>
-
-                <div class="mb-1">
-                  <label for="lineDescription" class="form-label">Descripción de la Línea</label>
-                  <textarea class="form-control form-control-custom form-textarea" id="lineDescription"
-                    placeholder="Describe el propósito, procesos principales y características de esta línea de producción..."
-                    rows="4"><?php echo $descripcion?></textarea>
-                  <div class="form-help">Opcional: Proporciona detalles sobre esta línea</div>
-                </div>
-              </div>
-            </form>
-          <!-- Fin formulario -->
-        </div>
-        
-        <!-- Footer del Modal -->
-        <div class="modal-footer">
-          <div class="d-flex justify-content-end mt-2">
-            <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
-              <i class="bi bi-x-circle"></i> Cancelar
-            </button>
-            <button type="button" class="btn btn-primary-custom ms-1" id="btnGuardarEdicionLinea" style="color:white"  >
-              <i class="bi bi-check-circle"></i> Guardar
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div> 
 
   <!--Modal para consultar el historial de acomodo del layout -->
   <div class="modal fade" id="historialLayoutModal" tabindex="-1" aria-labelledby="historialLayoutModalLabel" aria-hidden="true">
@@ -2479,8 +2509,7 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script> 
   -->
-  <script src="../DataTables/datatables.min.js"></script>
-  
+  <script src="../DataTables/datatables.min.js"></script>  
   <!--Custmo js -->
   <script src="../scripts/gestionLinea.js"></script> 
 </body>
