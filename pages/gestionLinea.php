@@ -87,47 +87,49 @@
 
     <!-- Área principal -->
     <div id="layout-main" class="layout-main">
-      <div class="layout-header" id="layout-header">
+      <!--HEADER-->
+        <div class="layout-header" id="layout-header">
 
-        <div class="">
-          <h2 class="layout-title">Línea de Producción <?php echo $nombre?>  <br>
-           <!-- <?php setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); echo ucfirst(strftime('%d de %B, %Y')); ?> -->
-          </h2>
-          <select class="form-select m-0 py-0 ps-1" name="turnoLayout" id="turnoLayout" style="max-width:100px;">
-              <option value="1">Turno 1</option>
-              <option value="2">Turno 2</option>
-          </select>
+          <div class="">
+            <h2 class="layout-title">Línea de Producción <?php echo $nombre?>  <br>
+            <!-- <?php setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); echo ucfirst(strftime('%d de %B, %Y')); ?> -->
+            </h2>
+            <select class="form-select m-0 py-0 ps-1" name="turnoLayout" id="turnoLayout" style="max-width:100px;">
+                <option value="1">Turno 1</option>
+                <option value="2">Turno 2</option>
+            </select>
 
-          <!-- IDENTIFICADOR DE LA LINEA PARA EXTRAER LOS DATOS VISIBLES -->
-            <input type="hidden" id="codigoLinea" value="<?php echo $codigo?>">
-            <input type="hidden" id="nombreLinea" value="<?php echo $nombre?>">
-        </div>
-       
-        <div class="layout-controls">
-          <!-- BOTONES ALEJAR ACERCAR ZOOM-->
-          <div class="btn-group">
-            <div class="zoom-indicator me-3" id="zoomIndicator">100%</div>
-            <!--ALEJAR-->
-            <button class="btn btn-info btn-sm" id="zoomOutBtn">
-              <i class="bi bi-zoom-out"></i>
+            <!-- IDENTIFICADOR DE LA LINEA PARA EXTRAER LOS DATOS VISIBLES -->
+              <input type="hidden" id="codigoLinea" value="<?php echo $codigo?>">
+              <input type="hidden" id="nombreLinea" value="<?php echo $nombre?>">
+          </div>
+        
+          <div class="layout-controls">
+            <!-- BOTONES ALEJAR ACERCAR ZOOM-->
+            <div class="btn-group">
+              <div class="zoom-indicator me-3" id="zoomIndicator">100%</div>
+              <!--ALEJAR-->
+              <button class="btn btn-info btn-sm" id="zoomOutBtn">
+                <i class="bi bi-zoom-out"></i>
+              </button>
+              <!--ACERCAR-->
+              <button class="btn btn-info btn-sm" id="zoomInBtn">
+                <i class="bi bi-zoom-in"></i>
+              </button>
+            </div>
+
+            <!--
+            <button class="btn btn-outline-secondary btn-sm" id="snapToGridBtn">
+              <i class="bi bi-arrows-move"></i> Ajustar a cuadrícula
             </button>
-            <!--ACERCAR-->
-            <button class="btn btn-info btn-sm" id="zoomInBtn">
-              <i class="bi bi-zoom-in"></i>
+            -->
+            <button class="btn btn-success btn-sm rounded-3" id="saveLayoutBtn">
+              <i class="bi bi-floppy"></i> Guardar
             </button>
           </div>
-
-          <!--
-          <button class="btn btn-outline-secondary btn-sm" id="snapToGridBtn">
-            <i class="bi bi-arrows-move"></i> Ajustar a cuadrícula
-          </button>
-          -->
-          <button class="btn btn-success btn-sm rounded-3" id="saveLayoutBtn">
-            <i class="bi bi-floppy"></i> Guardar
-          </button>
         </div>
-      </div>
-      
+      <!--FIN HEADER -->
+
       <div class="workspace" id="workspace">
         <div class="workspace-grid" id="workspaceGrid">
           <!-- Estaciones se generarán dinámicamente -->
@@ -198,12 +200,12 @@
               <!-- Columna izquierda: Datos del empleado -->
               <div class="col-md-6">
                 <div class="mb-3">
-                  <label for="nominaModalAsignar" class="form-label required-field">
+                  <label for="nominaModalRegistrar" class="form-label required-field">
                     <i class="bi bi-clock"></i> No. Reloj / ID Empleado
                   </label>
                   <div class="input-group-custom">
                     <input type="number" min="0" step="1" class="form-control form-control-custom" 
-                          id="nominaModalAsignar" placeholder="Ej: EMP-0256" required>
+                          id="nominaModalRegistrar" placeholder="Ej: EMP-0256" required>
                     <button type="button" class="input-icon" id="searchEmployee">
                       <i class="bi bi-search"></i>
                     </button>
@@ -213,7 +215,7 @@
                 <!-- NOMBRE DEL EMPLEADO -->
                 <div class="mb-3">
                   <div class="input-group-custom">
-                    <input type="text" class="py-2 ps-1" id="nombreModalAsignar" 
+                    <input type="text" class="py-2 ps-1" id="nombreModalRegistrar" 
                             style="all: unset; width:100%;
                                 background-color: #e0f2fe;
                               color: #495057; border-radius: 12px;"
@@ -224,20 +226,14 @@
 
               <!-- Columna derecha: Operaciones disponibles + botón agregar -->
               <div class="col-md-6">
-                <label for="stationSelect" class="form-label required-field">
+                <label for="selectRegistrar" class="form-label required-field">
                   <i class="bi bi-cpu"></i> Operaciones liberadas
                 </label>
                 <div class="gap-2 align-items-start">
-                  <select class="form-control form-control-custom flex-grow-1" id="stationSelect" required>
-                    <option value="">Selecciona una estación...</option>
-                    <option value="1">Corte de materiales</option>
-                    <option value="2">Ensamble de PCB</option>
-                    <option value="3">Soldadura SMD</option>
-                    <option value="4">Pruebas funcionales</option>
-                    <option value="5">Embalaje final</option>
+                  <select class="form-control form-control-custom flex-grow-1" id="selectRegistrar" required>
                   </select>
         
-                  <button class="btn btn-info mt-2" type="button" style="white-space: nowrap;">
+                  <button id="btnChipModalRegistrar" class="btn btn-info mt-2" type="button" style="white-space: nowrap;">
                     <i class="bi bi-plus-lg"></i> Agregar
                   </button>
                 </div>
@@ -246,48 +242,23 @@
               <!-- Lista de operaciones asignadas (chips) -->
               <div class="col-12">
                 <div id="operationsListContainer" class="d-flex flex-wrap gap-2">
-                  <!-- Ejemplos visuales de chips (cada uno con su ícono de eliminar) -->
-                  <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-info bg-opacity-10 text-dark">
-                    <span>Corte de materiales</span>
-                    <i class="bi bi-x-circle-fill" style="cursor: pointer; color: #dc3545;" title="Eliminar"></i>
-                  </div>
-                  <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-info bg-opacity-10 text-dark">
-                    <span>Ensamble de PCB</span>
-                    <i class="bi bi-x-circle-fill" style="cursor: pointer; color: #dc3545;" title="Eliminar"></i>
-                  </div>
-                  <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-info bg-opacity-10 text-dark">
-                    <span>Pruebas funcionales</span>
-                    <i class="bi bi-x-circle-fill" style="cursor: pointer; color: #dc3545;" title="Eliminar"></i>
-                  </div>
                 </div>
               </div>
 
               <!-- Fecha de asignación -->
               <div class="col-6">
-                <label for="assignmentDate" class="form-label required-field">
+                <label for="fecharegistrar" class="form-label required-field">
                   <i class="bi bi-calendar"></i> Fecha de registro
                 </label>
-                <input type="datetime-local" class="form-control form-control-custom" id="assignmentDate" readonly>
+                <input type="datetime-local" class="form-control form-control-custom" id="fecharegistrar" readonly>
               </div>
 
-              <!-- OBSERVACIONES INPUT
-              <div class="mb-3">
-                <label for="comentarios" class="form-label">
-                  <i class="bi bi-sticky"></i> Observaciones
-                </label>
-                <textarea 
-                  class="form-control form-control-custom" 
-                  id="comentarios" 
-                  rows="3"
-                  placeholder="Notas adicionales sobre esta asignación..."
-                ></textarea>
-              </div> -->
             </div>
             <div class="d-flex justify-content-end mt-2 ">
               <button type="button" class="btn btn-secondary mx-2" data-bs-dismiss="modal">
                 <i class="bi bi-x-circle"></i> Cancelar
               </button>
-              <button type="button" class="btn btn-primary mx-2" id="btnAsignarOperador">
+              <button type="button" class="btn btn-primary mx-2" id="btnRegistrarOperador">
                 <i class="bi bi-check-circle"></i> Guardar
               </button>
             </div>

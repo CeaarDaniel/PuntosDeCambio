@@ -2202,6 +2202,55 @@ else
 }
 
 
+//Registro individual de asistencia
+else 
+ if($opcion == '28'){
+        $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
+        $nomina = !empty($_POST['nomina']) ? $_POST['nomina'] : null;
+        $nombre = !empty($_POST['nombre']) ? $_POST['nombre'] : null;
+        $operaciones = !empty($_POST['operaciones']) ? $_POST['operaciones'] : null;
+        $fecha = !empty($_POST['fecha']) ? $_POST['fecha'] : null;
+
+        $fecha = str_replace('T', ' ', $fecha);
+       
+            if (!$codigoLinea || !$nomina) {
+                echo json_encode(['estatus' => 'error',
+                                  'mensaje'=>'Datos inválidos'
+                                ]);
+                exit;
+            }
+
+        try {
+            $conn->beginTransaction();
+            $sql = "INSERT INTO SPC_REGISTRO_ASISTENCIA (nomina, nombre, estatus, codigo_linea, turno, id_estacion, nombres_estaciones, comentarioAsistencia)
+                        VALUES (:nomina, :nombre, :estatus, :codigo_linea, :turno, :id_estacion, :nombres_estaciones, :comentarioAsistencia)";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([
+                ':nomina' => $nomina,
+                ':nombre' => $nombre,
+                ':estatus' => $estatusAsistencia,
+                ':id_estacion' => $estacion,
+                ':nombres_estaciones' => $nombreEstacion,
+                ':comentarioAsistencia' => $comentarios,
+                ':codigo_linea' => $codigoLinea,
+                ':turno' => $turno
+            ]);
+
+            $conn->commit();
+            $results = array('estatus' => 'ok',
+                              'mensaje' => 'Se ha hecho el registro de asistencia');
+
+        } catch (Exception $e) {
+            $conn->rollBack();
+              $results = array('estatus' => 'error',
+                               'mensaje' => 'Ocurrió un error al realizar el registro',
+                               'error' => $e->getMessage());
+        }
+
+        echo json_encode($results);
+}
+
+
 /*
     Resumen de asistencia
     Asistencias

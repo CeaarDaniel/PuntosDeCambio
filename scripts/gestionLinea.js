@@ -6,6 +6,7 @@
   let btnConfirmClose = document.getElementById('btnConfirmClose');
   let btnEvaluacion = document.getElementById('btnEvaluacion');
   let btnAsistencia = document.getElementById('btnAsistencia') //Boton para registrar una asistencia individual
+  btnRegistrarOperador = document.getElementById('btnRegistrarOperador') //Boton para registrar personal
 
   //BOTONES FLOTANTES
     let btncloseSidebar = document.getElementById('btncloseSidebar')
@@ -20,12 +21,19 @@
   let btnRegistrarAsistencia = document.getElementById('btnRegistrarAsistencia');
   let btnHistorialLayout = document.getElementById('btnHistorialLayout');
 
+  //Boton para los chips
+  let chipsEstaciones = [];
+
   //AREA DE DIBUJO DE LAS ESTACIONES
   let workspaceGrid;
 
   //Inputs del modal asignar operador
   let nominaModalAsignar = document.getElementById('nominaModalAsignar');
-  let nominaPC = document.getElementById('nominaPC');
+  let nominaPC = document.getElementById('nominaPC'); 
+ 
+ //INPUTS DE MODAL REGISTRAR OPERADOR
+  let nominaModalRegistrar = document.getElementById('nominaModalRegistrar');
+  let selectRegistrar = document.getElementById('selectRegistrar');
 
   //Inputs del modal consultar historial
   let fechaHistorial = document.getElementById('fechaHistorial');
@@ -419,16 +427,24 @@
     //Mostrar listado de estaciones registradas para colocar en los select
     function listarEstaciones(){
       const select = document.getElementById('stationSelect');
+      const selectRegistrar = document.getElementById('selectRegistrar'); //Selecet para el registro de operaciones en el modal de registrar personal
       const estacionAsistencia = document.getElementById('estacionAsistencia');
 
       select.innerHTML='';
+      selectRegistrar.innerHTML='';
       estacionAsistencia.innerHTML='';
+
 
         //Agregar opcion vacia por defecto
           let none = document.createElement('option');
           none.value = '';
           none.textContent =  'Selecciona una estación...';
           select.appendChild(none)
+
+          let noneR = document.createElement('option');
+          noneR.value = '';
+          noneR.textContent =  'Selecciona una estación...';
+          selectRegistrar.appendChild(noneR)
 
           let noneA = document.createElement('option');
           noneA.value = '';
@@ -445,6 +461,11 @@
           optionA.value = station.id;   
           optionA.textContent = station.name; 
           estacionAsistencia.appendChild(optionA)
+
+          const optionR = document.createElement('option');
+          optionR.value = station.id;   
+          optionR.textContent = station.name; 
+          selectRegistrar.appendChild(optionR)
         });
     }
 
@@ -1231,6 +1252,52 @@
           }
     }
 
+
+    //Funcion para los chips de agregar personal
+        //Función para agregar una talla
+            function agregarChipTalla() {
+              //Se modifican las cadenas a mayusculas para que sea indistinto valores como Xsd y xSD en la busqueda del valor en el arreglo tallasAlta
+              if (!chipsEstaciones.some(item => ((item.value).toUpperCase()).trim() === ((selectRegistrar.value).toUpperCase()).trim()) ) { //Se usa tallasAlta some ya que el arreglo es un objeto de pares clave valor 
+                    if (selectRegistrar.value.trim() !== '') { //Evalua si no esta vacio el input de la talla
+                      chipsEstaciones.push({ label: $("#selectRegistrar option:selected").text(), 
+                                             value: selectRegistrar.value 
+                                          }); //Agregamos el valor del input sin los espacios que se hayan ingresado al final o al inicio (tallaLabel.value).trim()
+                      selectRegistrar.value = ''; //Se limpia el input donde se agrega la talla
+                      actualizarTallasAltaChips();
+                  }
+              }
+                else alert('Ya existe este registro');
+            }
+
+            // Función para remover una talla
+            function removerChipTalla(label) {
+                chipsEstaciones.splice(label, 1);
+                actualizarTallasAltaChips();
+            }
+
+            // Función para actualizar los chips de tallas
+            function actualizarTallasAltaChips() { //Esta funcion actualiza la vista de las tallas despues de agregar o eliminar una talla
+                const container = document.getElementById('operationsListContainer');
+                container.innerHTML = chipsEstaciones.map((t, index) => `
+                  <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-info bg-opacity-10 text-dark">
+                    <span> ${t.label}</span>
+                    <i class="bi bi-x-circle-fill remove-icon" data-index = ${index} style="cursor: pointer; color: #dc3545;" title="Eliminar"></i>
+                  </div>
+                `).join(''); //Se agrega el indice (index) para poder eliminar mas facil lo elemetnos del arreglo
+
+                const removeIcons = container.querySelectorAll('.remove-icon');
+
+                removeIcons.forEach(icon => {
+                    icon.addEventListener("click", function(event) {
+                        event.preventDefault();
+                        // Remover el chip correspondiente
+                        const label = icon.getAttribute("data-index");
+                        removerChipTalla(label);
+                    });
+                });
+            }
+
+
     // ========== DIAGRAMADOR SVG ==========
     let svg = document.getElementById('workspace-svg');
     let shapesGroup = $('#shapes-group');
@@ -1458,6 +1525,48 @@
 
       //DECLARACION DE EVENTOS
         //OBTENER NUMERO DE NOMINA
+            nominaModalRegistrar.addEventListener('change', function (){
+                let nombreModalRegistrar = document.getElementById('nombreModalRegistrar');
+                if(nominaModalRegistrar && nominaModalRegistrar !='') {
+                    let formDataConsultarNombre = new FormData;
+                    formDataConsultarNombre.append('nomina',nominaModalRegistrar.value)
+                    formDataConsultarNombre.append('opcion', 7)
+                    formDataConsultarNombre.append('codigoLinea', codigoLinea.value)
+            
+                    nominaModalRegistrar.disabled = true
+                    nombreModalRegistrar.value= ''; 
+                    nombreModalRegistrar.placeholder= "Consultando datos del empleado...";  
+
+                    console.log(nombreModalRegistrar.value)
+                    console.log(codigoLinea.value)
+
+                        fetch("../api/operacionesLinea.php", {
+                                method: "POST",
+                                body: formDataConsultarNombre,
+                            })
+                            .then((response) => response.text())
+                            .then((data) => {
+                              console.log(data)
+                                data= JSON.parse(data)
+                                if(data.estatus=='ok'){
+                                    nombreModalRegistrar.value= data.nombre;
+                                  }
+                              
+                              else{
+                                  nombreModalRegistrar.placeholder= "Nombre del empleado...";  
+                                  console.log(data.error); 
+                              }
+
+                              nominaModalRegistrar.disabled = false;
+                            })
+                            .catch((error) => {
+                              nombreModalRegistrar.placeholder= "Nombre del empleado..."; 
+                              nominaModalRegistrar.disabled = false;
+                              console.log(error);
+                        });
+                }
+            })
+
             nominaModalAsignar.addEventListener('change', function (){
                 let nombreModalAsignar = document.getElementById('nombreModalAsignar');
                 if(nominaModalAsignar && nominaModalAsignar !='') {
@@ -1476,6 +1585,7 @@
                             })
                             .then((response) => response.text())
                             .then((data) => {
+                              console.log(data)
                                 data= JSON.parse(data)
                                 if(data.estatus=='ok'){
                                     nombreModalAsignar.value= data.nombre;                              
@@ -1744,6 +1854,53 @@
                 }
             })
 
+
+        //REGISTRAR TRABAJADOR AL LISTADO DE PERSONAL EN EL MODAL REGISTRARS 
+        btnRegistrarOperador.addEventListener('click', function(){
+              var formDataAsig = new FormData
+              let nomina = document.getElementById('nominaModalRegistrar').value;
+              let nombre = document.getElementById('nombreModalRegistrar').value;
+              let fecha  = document.getElementById('fecharegistrar').value;
+              
+              formDataAsig.append("opcion", "90");
+              formDataAsig.append("nomina", nomina);
+              formDataAsig.append("nombre", nombre);
+              formDataAsig.append("fecha", fecha);
+              formDataAsig.append('codigoLinea', codigoLinea.value)
+              formDataAsig.append('operaciones', chipsEstaciones)
+
+                if(!nombre) { 
+                  alert("No se encontro registro del empleado ingresado o se perdió la conexión con el servidor.")
+                  return;
+                }
+
+                fetch("../api/operacionesLinea.php", {
+                        method: "POST",
+                        body: formDataAsig,
+                    })
+                    .then((response) => response.text())
+                    .then((data) => {
+                        data= JSON.parse(data)
+                        if(data.estatus=='ok'){
+                            alert(data.mensaje);
+                            //assignmentFormPC.reset();
+
+                            $('#nominaModalRegistrar').val('');
+                            $('#nombreModalRegistrar').val('');
+                            chipsEstaciones = [];
+                            $('#operationsListContainer').html('');
+                        }
+
+                      else {
+                        alert(data.mensaje)
+                        console.log(data.error)
+                      }
+                    })
+                    .catch((error) => {
+                      console.log(error);
+                });                
+        })
+
         //Remover trabajador de la estacion
         btnRemoverTrabajadorPC.addEventListener('click', function(){
           let formDataReniver = new FormData;
@@ -1967,12 +2124,19 @@
            document.getElementById('turnoasignar').value =  $('#turnoLayout').val();
         })
 
+        //Detectar cuando se abra el modal de registrar operador
+        document.getElementById('btnMenuRegistrar').addEventListener('click', function (){
+          document.getElementById('fecharegistrar').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
+        })
+
         //Generar fecha de registro de personal NAD en el formulario
         document.getElementById('btnMenuRegiswtroNAD').addEventListener('click', function(){
           document.getElementById('assignmentDatePNA').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
             document.getElementById('turnoAsignarPersonalDisponible').value =  $('#turnoLayout').val();
             mostrarTablaPNA();
         })
+
+        $('#btnChipModalRegistrar').click(agregarChipTalla)
         
         btnAsignarOperador.addEventListener('click', asignarEstaciones);
         btnGuardarDisponible.addEventListener('click', registrarPNA); 
