@@ -269,7 +269,7 @@
 
   <!-- Listado de personal -->
   <div class="modal fade" id="modalListadoPersonal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-fullscreen-sm-down modal-lg">
+      <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down modal-xl">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">LISTADO DE PERSONAL</h5>
@@ -388,6 +388,7 @@
 
               <!-- FORMULARIO ACTUALIZAR OPERACIONES TRABAJADOR -->
                 <div id="ventanaActualizarOperaciones" class="fade-page d-none">
+            
                       <!-- Título del Formulario -->
                       <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
                           <i class="bi bi-person-plus-fill text-primary fs-4 me-2"></i>
@@ -395,92 +396,84 @@
                       </div>
 
                       <!-- INICIO DEL FORMULARIO -->
-                      <div class="row g-4">
-                          <!-- Columna Izquierda: Datos del empleado -->
-                          <div class="col-md-6">
-                              <!-- No. Reloj -->
-                              <div class="mb-3">
-                                  <label for="nominaModalRegistrarUpdate" class="form-label fw-bold text-secondary">
-                                      <i class="bi bi-clock me-1"></i> No. Reloj / ID Empleado <span class="text-danger">*</span>
+                      <div class="mx-5 px-5">
+                          <div class="row g-4">
+                              <!-- Columna Izquierda: Datos del empleado -->
+                              <div class="col-md-6">
+                                  <!-- No. Reloj -->
+                                  <div class="mb-3">
+                                      <label for="nominaModalRegistrarUpdate" class="form-label fw-bold text-secondary">
+                                          <i class="bi bi-clock me-1"></i> No. Reloj / ID Empleado <span class="text-danger">*</span>
+                                      </label>
+                                      <div id="nominaModalRegistrarUpdate" class="form-control-plaintext py-2 fw-bold text-dark bg-light rounded-3 px-3 border">
+                                          11607
+                                      </div>
+                                  </div>
+                              </div>
+                              <div class="col-md-6">
+                                  <!-- Nombre del Empleado -->
+                                  <div class="mb-3">
+                                      <label for="nombreModalRegistrarUpdate" class="form-label fw-bold text-secondary">Nombre Completo</label>
+                                      <input type="text" class="form-control bg-secondary-subtle text-uppercase fw-semibold rounded-3" 
+                                            id="nombreModalRegistrarUpdate" 
+                                            placeholder="NOMBRE DEL EMPLEADO" 
+                                            readonly>
+                                  </div>
+                              </div>
+
+                              <!-- Columna Derecha: Operaciones -->
+                              <div class="col-md-10">
+                                  <label for="selectRegistrarUpdate" class="form-label fw-bold text-secondary">
+                                      <i class="bi bi-cpu me-1"></i> Operaciones liberadas <span class="text-danger">*</span>
                                   </label>
-                                  <div class="form-control-plaintext py-2 fw-bold text-dark bg-light rounded-3 px-3 border">
-                                      11607
+                                  <div class="d-flex align-items-start">
+                                      <select class="form-select form-select-lg rounded-3 flex-grow-1 me-3" id="selectRegistrarUpdate">
+                                          <option selected>Selecciona una operación...</option>
+                                          <option value="1">RE CORTE</option>
+                                          <option value="2">CRIMPADO 2</option>
+                                      </select>
+                                      
+                                      <button id="btnChipModalRegistrar" class="btn btn-info rounded-3 px-4" type="button" style="white-space: nowrap;">
+                                          <i class="bi bi-plus-lg"></i> Agregar
+                                      </button>
+                                  </div>
+                              </div>
+
+                              <!-- Lista de operaciones asignadas (Chips) -->
+                              <div class="col-12 mt-3">
+                                  <label class="form-label fw-bold text-secondary"><i class="bi bi-tags me-1"></i> Operaciones Asignadas</label>
+                                  <div id="operationsListContainerUpdate" class="d-flex flex-wrap gap-2 p-3 bg-light rounded-3 border">
+                                      <!-- Chip 1 -->
+                                      <span class="badge rounded-pill bg-white text-dark border border-info py-1 px-3 d-inline-flex align-items-center gap-2 shadow-sm">
+                                          <span class="fw-normal fs-6">RE CORTE</span>
+                                          <i class="bi bi-x-circle-fill text-danger remove-icon" data-index="0" role="button" title="Eliminar"></i>
+                                      </span>
+                                      
+                                      <!-- Chip 2 -->
+                                      <span class="badge rounded-pill bg-white text-dark border border-info py-1 px-3 d-inline-flex align-items-center gap-2 shadow-sm">
+                                          <span class="fw-normal fs-6">CRIMPADO 2</span>
+                                          <i class="bi bi-x-circle-fill text-danger remove-icon" data-index="1" role="button" title="Eliminar"></i>
+                                      </span>
+                                      
+                                      <!-- Chip 3 -->
+                                      <span class="badge rounded-pill bg-white text-dark border border-info py-1 px-3 d-inline-flex align-items-center gap-2 shadow-sm">
+                                          <span class="fw-normal fs-6">DESFORRE TWST CAB R</span>
+                                          <i class="bi bi-x-circle-fill text-danger remove-icon" data-index="2" role="button" title="Eliminar"></i>
+                                      </span>
                                   </div>
                               </div>
                           </div>
-                          <div class="col-md-6">
-                              <!-- Nombre del Empleado -->
-                              <div class="mb-3">
-                                  <label for="nombreModalRegistrarUpdate" class="form-label fw-bold text-secondary">Nombre Completo</label>
-                                  <input type="text" class="form-control bg-secondary-subtle text-uppercase fw-semibold rounded-3" 
-                                        id="nombreModalRegistrarUpdate" 
-                                        placeholder="JUAN PEPE PEREZ" 
-                                        readonly>
-                              </div>
+                          <!-- FIN DEL FORMULARIO -->
+
+                          <!-- Footer: Botones de acción -->
+                          <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                              <button id="btnBackModalPersonal" class="btn btn-success rounded-pill px-4 me-2">
+                                  <i class="bi bi-arrow-left me-1"></i> Volver
+                              </button>
+                              <button type="button" class="btn btn-success rounded-pill px-4" id="btnRegistrarOperador">
+                                  <i class="bi bi-check-circle me-1"></i> Guardar
+                              </button>
                           </div>
-
-                          <!-- Columna Derecha: Operaciones -->
-                          <div class="col-md-10">
-                              <label for="selectRegistrar" class="form-label fw-bold text-secondary">
-                                  <i class="bi bi-cpu me-1"></i> Operaciones liberadas <span class="text-danger">*</span>
-                              </label>
-                              <div class="d-flex align-items-start">
-                                  <select class="form-select form-select-lg rounded-3 flex-grow-1 me-3" id="selectRegistrarUpdate">
-                                      <option selected>Selecciona una operación...</option>
-                                      <option value="1">RE CORTE</option>
-                                      <option value="2">CRIMPADO 2</option>
-                                  </select>
-                                  
-                                  <button id="btnChipModalRegistrar" class="btn btn-info rounded-3 px-4" type="button" style="white-space: nowrap;">
-                                      <i class="bi bi-plus-lg"></i> Agregar
-                                  </button>
-                              </div>
-                          </div>
-
-
-                          <!-- Lista de operaciones asignadas (Chips) -->
-                          <div class="col-12 mt-3">
-                              <label class="form-label fw-bold text-secondary"><i class="bi bi-tags me-1"></i> Operaciones Asignadas</label>
-                              <div id="operationsListContainer" class="d-flex flex-wrap gap-2 p-3 bg-light rounded-3 border">
-                                  <!-- Chip 1 -->
-                                  <span class="badge rounded-pill bg-white text-dark border border-info py-1 px-3 d-inline-flex align-items-center gap-2 shadow-sm">
-                                      <span class="fw-normal fs-6">RE CORTE</span>
-                                      <i class="bi bi-x-circle-fill text-danger remove-icon" data-index="0" role="button" title="Eliminar"></i>
-                                  </span>
-                                  
-                                  <!-- Chip 2 -->
-                                  <span class="badge rounded-pill bg-white text-dark border border-info py-1 px-3 d-inline-flex align-items-center gap-2 shadow-sm">
-                                      <span class="fw-normal fs-6">CRIMPADO 2</span>
-                                      <i class="bi bi-x-circle-fill text-danger remove-icon" data-index="1" role="button" title="Eliminar"></i>
-                                  </span>
-                                  
-                                  <!-- Chip 3 -->
-                                  <span class="badge rounded-pill bg-white text-dark border border-info py-1 px-3 d-inline-flex align-items-center gap-2 shadow-sm">
-                                      <span class="fw-normal fs-6">DESFORRE TWST CAB R</span>
-                                      <i class="bi bi-x-circle-fill text-danger remove-icon" data-index="2" role="button" title="Eliminar"></i>
-                                  </span>
-                              </div>
-                          </div>
-
-                          <!-- Fecha de asignación -->
-                          <div class="col-md-6">
-                              <label for="fecharegistrar" class="form-label fw-bold text-secondary">
-                                  <i class="bi bi-calendar me-1"></i> Fecha de registro <span class="text-danger">*</span>
-                              </label>
-                              <input type="datetime-local" class="form-control rounded-3 bg-white" id="fecharegistrarUpdate" readonly>
-                          </div>
-
-                      </div>
-                      <!-- FIN DEL FORMULARIO -->
-
-                      <!-- Footer: Botones de acción -->
-                      <div class="d-flex justify-content-end mt-4 pt-3 border-top">
-                          <button id="btnBackModalPersonal" class="btn btn-success rounded-pill px-4 me-2">
-                              <i class="bi bi-arrow-left me-1"></i> Volver
-                          </button>
-                          <button type="button" class="btn btn-success rounded-pill px-4" id="btnRegistrarOperador">
-                              <i class="bi bi-check-circle me-1"></i> Guardar
-                          </button>
                       </div>
                 </div>
               <!-- FIN FORMULARIO ACTUALIZAR OPERACIONES TRABAJADOR -->

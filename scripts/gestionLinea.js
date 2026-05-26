@@ -1299,6 +1299,75 @@
                 });
             }
 
+    //Funcion para cargar el listado de personal
+    function mostrarTablaPersonal(){
+          let formDataPersonal = new FormData 
+          formDataPersonal.append('codigoLinea', codigoLinea.value)
+          formDataPersonal.append('opcion', 29)
+          
+            fetch("../api/operacionesLinea.php", {
+                    method: "POST",
+                    body: formDataPersonal,
+                })
+                .then((response) => response.text())
+                .then((data) => {
+                  console.log(data);
+                    data = JSON.parse(data)
+                    const table = $('#tableListadoPersonal').DataTable({
+                          data: data,
+                          columns: [
+                              { 
+                                  data: 'nomina',
+                                  className: 'px-4 py-3 fw-medium',
+                                  render: data.nomina
+                              },
+                              { 
+                                  data: 'nombre',
+                                  render: function(data) {
+                                      return `<span class="fw-semibold">${data}</span>`;
+                                  }
+                              },
+                              { 
+                                  data: null,
+                                  render: function(data) {
+                                      return `<span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">CRV</span>`;
+                                  }
+                              },
+                              { 
+                                  data: 'estatus',
+                                  render: function(data){ 
+                                      let estatus = '';
+                                        if(data == '0')  estatus = '<span class="badge btn-success bg-opacity-15 text-dark px-3 py-1 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Disponible</span>';
+                                        else if(data == '1') estatus = '<span class="badge btn-info bg-opacity-15 text-dark px-3 py-1 rounded-pill"><i class="bi bi-person-check-fill me-1"></i> Asignado</span>';
+                                        else if(data == '2') estatus = '<span class="badge bg-danger bg-opacity-10 text-dark px-3 py-1 rounded-pill"><i class="bi bi-person-x-fill me-1"></i> Eliminado</span>';
+                                     return estatus;
+                                  }
+                              },
+                              { 
+                                  data: null,
+                                  render: function(data) {
+                                      // Los botones tienen data-id con la nómina
+                                      return `<button class="btn btn-sm btn-outline-danger rounded-circle data-nomina="${data.nomina}"><i class="bi bi-trash3"></i></button>
+                                              <button class="btn btn-sm btn-outline-secondary rounded-circle" data-nomina="${data.nomina}"><i class="bi bi-arrow-left-right"></i></button>
+                                              <button class="btn btn-sm btn-outline-info rounded-circle tableBtnUpdateOperaciones" data-nomina="${data.nomina}" data-nombre="${data.nombre}" ><i class="bi bi-diagram-3"></i></button>`;
+                                  },
+                                  className: 'text-end',
+                                  orderable: false
+                              }
+                          ],
+                          // Configuración visual idéntica a la imagen
+                        
+                          pageLength: 10,
+                          lengthMenu: [5, 10, 25, 50],
+                          responsive: false,
+                          scrollX: true
+                    });
+                })
+                .catch((error) => {
+                  console.log(error);
+            });
+    }
+
 
     // ========== DIAGRAMADOR SVG ==========
     let svg = document.getElementById('workspace-svg');
@@ -1524,6 +1593,8 @@
       generarTablaAsistencia();
 
       getHistorialLayout();
+
+      mostrarTablaPersonal();
 
       //DECLARACION DE EVENTOS
         //OBTENER NUMERO DE NOMINA
@@ -2274,14 +2345,68 @@
         //Evento para cambiar de pagina con el boton actualizar operaciones de la tabla de personal
         $('#tableListadoPersonal').on('click', '.tableBtnUpdateOperaciones', function () {
             changeContent('ventanasModalPersonal','ventanaActualizarOperaciones')
-            // Obtener atributos data
-            //const id = $(this).data('id');
-            //const nombre = $(this).data('nombre');
-            //const tipo = $(this).data('tipo');
+            
+            //Obtener atributos data
+              let nomina = $(this).data('nomina');
+              let nombre = $(this).data('nombre');
+              let selectRegistrarUpdate = document.getElementById('selectRegistrarUpdate');
+              let formDataOperaciones = new FormData;
+              formDataOperaciones.append('opcion', 30);
+              formDataOperaciones.append('nomina', nomina);
+              formDataOperaciones.append('codigoLinea', codigoLinea.value)
 
-            //console.log(id);
-            //console.log(nombre);
-            //console.log(tipo);
+              document.getElementById('nominaModalRegistrarUpdate').textContent= nomina;
+              document.getElementById('nombreModalRegistrarUpdate').value= nombre;
+              
+
+              //CARGAR LISTADO DE OPERACIONES EN EL SELECT
+              selectRegistrarUpdate.innerHTML='';
+
+              let noneA = document.createElement('option');
+              noneA.value = '';
+              noneA.textContent = 'Selecciona una estación...';
+              selectRegistrarUpdate.appendChild(noneA);
+
+              stationsData.forEach(station => {
+                const option = document.createElement('option');
+                option.value = station.id;   
+                option.textContent = station.name; 
+                selectRegistrarUpdate.appendChild(option);
+              });
+              //FIN LISTADO DE OPERACIONES
+
+              //OBTENER LISTA DE OPERACIONES CARGADAS 
+                fetch("../api/operacionesLinea.php", {
+                        method: "POST",
+                        body: formDataOperaciones,
+                    })
+                    .then((response) => response.text())
+                    .then((data) => {
+                        data= JSON.parse(data)
+                        if(data.estatus=='ok'){
+                            const container = document.getElementById('operationsListContainerUpdate');
+                            container.innerHTML = data.data.map((t, index) => `<div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-info bg-opacity-10 text-dark">
+                                                                                <span> ${t.nombre_estacion}</span>
+                                                                                <i class="bi bi-x-circle-fill remove-iconUpdate" data-index = ${index} style="cursor: pointer; color: #dc3545;" title="Eliminar"></i>
+                                                                              </div>`).join(''); //Se agrega el indice (index) para poder eliminar mas facil lo elemetnos del arreglo
+                        }
+
+                        else 
+                          console.log(data.mensaje);
+
+                    }).catch((error) => {
+                        console.log(error);
+                });
+              //FIN PETICION
+        })
+
+        
+        //Evento para eliminar el chip clicqueado en el formlario de operationsListContainerUpdate
+        $('#operationsListContainerUpdate').on('click', '.remove-iconUpdate', function () {
+            event.preventDefault();
+            // Remover el chip correspondiente
+            const label = icon.getAttribute("data-index");
+            removerChipTalla(label);
         });
 
         //Boton para volver a la tabla del modal de registro de personal

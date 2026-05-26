@@ -2282,6 +2282,84 @@ else
         echo json_encode($results);
 }
 
+//Listado de personal
+else 
+    if($opcion=="29"){
+         $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
+
+        // Validar que se recibieron todos los datos
+        if (!$codigoLinea) {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'Faltan datos obligatorios.'
+                ]);
+            exit; 
+        }
+
+        try {
+            $sql= "SELECT nomina, nombre, estatus FROM SPC_PERSONAL where codigo_linea = :codigo_linea";
+            $registro = $conn->prepare($sql);
+            $response= array();
+
+            if($registro -> execute([':codigo_linea' => $codigoLinea])){
+                while($dsc= $registro->fetch(PDO::FETCH_ASSOC))
+                    $response[] = $dsc;
+            }
+
+            else 
+                $response = $registro->errorInfo()[2];
+
+            echo json_encode($response);
+
+         } catch (Exception $e) {
+            $results = array('estatus' => 'error',
+                               'mensaje' => 'Ocurrió un error al realizar el registro',
+                               'error' => $e->getMessage());
+        }
+    }
+
+    else 
+        if($opcion=='30'){
+            $nomina = !empty($_POST['nomina']) ? $_POST['nomina'] : null;
+            $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
+
+            // Validar que se recibieron todos los datos
+            if (!$codigoLinea || !$nomina) {
+                    echo json_encode([
+                        'estatus' => 'error',
+                        'mensaje' => 'Error al enviar los datos.'
+                    ]);
+                exit; 
+            }
+
+            try {
+                $sql= "SELECT P.nomina, ILU.idE, E.nombre_estacion FROM SPC_PERSONAL P INNER JOIN SPC_ILU ILU ON P.nomina = ILU.nomina
+                                                                    INNER JOIN SPC_ESTACIONES as E on e.id_estacion = ILU.idE
+                        WHERE p.codigo_linea = :codigo_linea and p.nomina=:nomina ";
+                $registro = $conn->prepare($sql);
+                $response;
+
+                if($registro -> execute([':codigo_linea' => $codigoLinea, ':nomina'=> $nomina])){
+                    while($dsc= $registro->fetch(PDO::FETCH_ASSOC))
+                        $response[] = $dsc;
+                }
+
+                else {
+                    $response = $registro->errorInfo()[2];
+                    echo json_encode(array ('estatus'=> 'error', 'error' => $response));
+                    exit;
+                }
+
+                echo json_encode(array ('estatus'=> 'ok', 'data' => $response ));
+
+            } catch (Exception $e) {
+                $results = array('estatus' => 'error',
+                                'mensaje' => 'Ocurrió un error al realizar el registro',
+                                'error' => $e->getMessage());
+            }
+    }
+
+
 
 /*
     Resumen de asistencia
