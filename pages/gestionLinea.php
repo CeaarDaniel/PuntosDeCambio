@@ -269,116 +269,221 @@
 
   <!-- Listado de personal -->
   <div class="modal fade" id="modalListadoPersonal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
+      <div class="modal-dialog modal-fullscreen-sm-down modal-lg">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">LISTADO DE PERSONAL</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-              <div class="card-header bg-white border-bottom-0 py-3 px-4">
-                <h5 class="mb-0 fw-semibold">
-                  <i class="bi bi-people-fill me-2" style="color: #0d6efd;"></i>
-                  Listado de personal
-                </h5>
-              </div>
-              <div class="card-body p-0">
-                <div class="table-responsive">
-                  <table class="table table-hover align-middle mb-0" style="min-width: 800px;">
-                    <thead class="bg-light">
-                      <tr>
-                        <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Nómina</th>
-                        <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Datos personales</th>
-                        <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Línea</th>
-                        <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Estatus</th>
-                        <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <!-- Fila 1: Trabajador disponible -->
-                      <tr>
-                        <td class="px-4 py-3 fw-medium">10256</td>
-                        <td class="px-4 py-3">
-                          <div class="d-flex flex-column">
-                            <span class="fw-semibold">Juan Carlos Pérez</span>
-                            <small class="text-secondary">Puesto: Operador especializado</small>
-                          </div>
-                        </td>
-                        <td class="px-4 py-3"><span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">CRV</span></td>
-                        <td class="px-4 py-3"><span class="badge btn-success bg-opacity-15 text-dark px-3 py-1 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Disponible</span></td>
-                        <td class="px-4 py-3 text-end">
-                          <div class="d-flex gap-1 justify-content-end">
-                            <button class="btn btn-sm btn-outline-danger rounded-circle" style="width: 32px; height: 32px;" title="Eliminar"><i class="bi bi-trash3"></i></button>
-                            <button class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 32px; height: 32px;" title="Mover de línea"><i class="bi bi-arrow-left-right"></i></button>
-                            <button class="btn btn-sm btn-outline-info rounded-circle" style="width: 32px; height: 32px;" title="Gestionar operaciones"><i class="bi bi-diagram-3"></i></button>
-                          </div>
-                        </td>
-                      </tr>
-                      <!-- Fila 2: Trabajador asignado -->
-                      <tr>
-                        <td class="px-4 py-3 fw-medium">10983</td>
-                        <td class="px-4 py-3">
-                          <div class="d-flex flex-column">
-                            <span class="fw-semibold">María Fernanda López</span>
-                            <small class="text-secondary">Puesto: Técnico de calidad</small>
-                          </div>
-                        </td>
-                        <td class="px-4 py-3"><span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">Ford</span></td>
-                        <td class="px-4 py-3"><span class="badge btn-info bg-opacity-15 text-dark px-3 py-1 rounded-pill"><i class="bi bi-person-check-fill me-1"></i> Asignado</span></td>
-                        <td class="px-4 py-3 text-end">
-                          <div class="d-flex gap-1 justify-content-end">
-                            <button class="btn btn-sm btn-outline-danger rounded-circle" title="Eliminar"><i class="bi bi-trash3"></i></button>
-                            <button class="btn btn-sm btn-outline-secondary rounded-circle" title="Mover de línea"><i class="bi bi-arrow-left-right"></i></button>
-                            <button class="btn btn-sm btn-outline-info rounded-circle" title="Gestionar operaciones"><i class="bi bi-diagram-3"></i></button>
-                          </div>
-                        </td>
-                      </tr>
-                      <!-- Fila 3: Trabajador eliminado -->
-                      <tr>
-                        <td class="px-4 py-3 fw-medium">10567</td>
-                        <td class="px-4 py-3">
-                          <div class="d-flex flex-column">
-                            <span class="fw-semibold">Roberto Jiménez</span>
-                            <small class="text-secondary">Puesto: Ensamblador</small>
-                          </div>
-                        </td>
-                        <td class="px-4 py-3"><span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">Odyssey</span></td>
-                        <td class="px-4 py-3"><span class="badge bg-danger bg-opacity-10 text-dark px-3 py-1 rounded-pill"><i class="bi bi-person-x-fill me-1"></i> Eliminado</span></td>
-                        <td class="px-4 py-3 text-end">
-                          <div class="d-flex gap-1 justify-content-end">
-                            <button class="btn btn-sm btn-outline-danger rounded-circle" ><i class="bi bi-trash3"></i></button>
-                            <button class="btn btn-sm btn-outline-secondary rounded-circle" ><i class="bi bi-arrow-left-right"></i></button>
-                            <button class="btn btn-sm btn-outline-info rounded-circle" ><i class="bi bi-diagram-3"></i></button>
-                          </div>
-                        </td>
-                      </tr>
-                      <!-- Fila 4: Otro disponible -->
-                      <tr>
-                        <td class="px-4 py-3 fw-medium">11021</td>
-                        <td class="px-4 py-3">
-                          <div class="d-flex flex-column">
-                            <span class="fw-semibold">Gabriela Ríos</span>
-                            <small class="text-secondary">Puesto: Supervisora de línea</small>
-                          </div>
-                        </td>
-                        <td class="px-4 py-3"><span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">Pilot</span></td>
-                        <td class="px-4 py-3"><span class="badge btn-success bg-opacity-15 text-dark px-3 py-1 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Disponible</span></td>
-                        <td class="px-4 py-3 text-end">
-                          <div class="d-flex gap-1 justify-content-end">
-                            <button class="btn btn-sm btn-outline-danger rounded-circle" title="Eliminar"><i class="bi bi-trash3"></i></button>
-                            <button class="btn btn-sm btn-outline-secondary rounded-circle" title="Mover de línea"><i class="bi bi-arrow-left-right"></i></button>
-                            <button class="btn btn-sm btn-outline-info rounded-circle" title="Gestionar operaciones"><i class="bi bi-diagram-3"></i></button>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+            <div id="ventanasModalPersonal">
+              <!--TABLA LISTADO DE PERSONAL -->
+                <div id="ventanaTablaListadoPersonal" class="fade-page show">
+                    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                      <div class="card-header bg-white border-bottom-0 py-3 px-4">
+                        <h5 class="mb-0 fw-semibold">
+                          <i class="bi bi-people-fill me-2" style="color: #0d6efd;"></i>
+                          Listado de personal
+                        </h5>
+                      </div>
+                      <div class="card-body p-0">
+                        <div class="table-responsive">
+                          <table id="tableListadoPersonal" class="table table-hover align-middle mb-0" style="min-width: 800px;">
+                            <thead class="bg-light">
+                              <tr>
+                                <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Nómina</th>
+                                <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Datos personales</th>
+                                <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Línea</th>
+                                <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Estatus</th>
+                                <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Acciones</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <!-- Fila 1: Trabajador disponible -->
+                              <tr>
+                                <td class="px-4 py-3 fw-medium">10256</td>
+                                <td class="px-4 py-3">
+                                  <div class="d-flex flex-column">
+                                    <span class="fw-semibold">Juan Carlos Pérez</span>
+                                    <small class="text-secondary">Puesto: Operador especializado</small>
+                                  </div>
+                                </td>
+                                <td class="px-4 py-3"><span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">CRV</span></td>
+                                <td class="px-4 py-3"><span class="badge btn-success bg-opacity-15 text-dark px-3 py-1 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Disponible</span></td>
+                                <td class="px-4 py-3 text-end">
+                                  <div class="d-flex gap-1 justify-content-end">
+                                    <button class="btn btn-sm btn-outline-danger rounded-circle" style="width: 32px; height: 32px;" title="Eliminar"><i class="bi bi-trash3"></i></button>
+                                    <button class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 32px; height: 32px;" title="Mover de línea"><i class="bi bi-arrow-left-right"></i></button>
+                                    <button class="btn btn-sm btn-outline-info rounded-circle tableBtnUpdateOperaciones" style="width: 32px; height: 32px;" title="Gestionar operaciones"><i class="bi bi-diagram-3"></i></button>
+                                  </div>
+                                </td>
+                              </tr>
+                              <!-- Fila 2: Trabajador asignado -->
+                              <tr>
+                                <td class="px-4 py-3 fw-medium">10983</td>
+                                <td class="px-4 py-3">
+                                  <div class="d-flex flex-column">
+                                    <span class="fw-semibold">María Fernanda López</span>
+                                    <small class="text-secondary">Puesto: Técnico de calidad</small>
+                                  </div>
+                                </td>
+                                <td class="px-4 py-3"><span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">Ford</span></td>
+                                <td class="px-4 py-3"><span class="badge btn-info bg-opacity-15 text-dark px-3 py-1 rounded-pill"><i class="bi bi-person-check-fill me-1"></i> Asignado</span></td>
+                                <td class="px-4 py-3 text-end">
+                                  <div class="d-flex gap-1 justify-content-end">
+                                    <button class="btn btn-sm btn-outline-danger rounded-circle" title="Eliminar"><i class="bi bi-trash3"></i></button>
+                                    <button class="btn btn-sm btn-outline-secondary rounded-circle" title="Mover de línea"><i class="bi bi-arrow-left-right"></i></button>
+                                    <button class="btn btn-sm btn-outline-info rounded-circle tableBtnUpdateOperaciones" title="Gestionar operaciones"><i class="bi bi-diagram-3"></i></button>
+                                  </div>
+                                </td>
+                              </tr>
+                              <!-- Fila 3: Trabajador eliminado -->
+                              <tr>
+                                <td class="px-4 py-3 fw-medium">10567</td>
+                                <td class="px-4 py-3">
+                                  <div class="d-flex flex-column">
+                                    <span class="fw-semibold">Roberto Jiménez</span>
+                                    <small class="text-secondary">Puesto: Ensamblador</small>
+                                  </div>
+                                </td>
+                                <td class="px-4 py-3"><span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">Odyssey</span></td>
+                                <td class="px-4 py-3"><span class="badge bg-danger bg-opacity-10 text-dark px-3 py-1 rounded-pill"><i class="bi bi-person-x-fill me-1"></i> Eliminado</span></td>
+                                <td class="px-4 py-3 text-end">
+                                  <div class="d-flex gap-1 justify-content-end">
+                                    <button class="btn btn-sm btn-outline-danger rounded-circle" ><i class="bi bi-trash3"></i></button>
+                                    <button class="btn btn-sm btn-outline-secondary rounded-circle" ><i class="bi bi-arrow-left-right"></i></button>
+                                    <button class="btn btn-sm btn-outline-info rounded-circle tableBtnUpdateOperaciones" ><i class="bi bi-diagram-3"></i></button>
+                                  </div>
+                                </td>
+                              </tr>
+                              <!-- Fila 4: Otro disponible -->
+                              <tr>
+                                <td class="px-4 py-3 fw-medium">11021</td>
+                                <td class="px-4 py-3">
+                                  <div class="d-flex flex-column">
+                                    <span class="fw-semibold">Gabriela Ríos</span>
+                                    <small class="text-secondary">Puesto: Supervisora de línea</small>
+                                  </div>
+                                </td>
+                                <td class="px-4 py-3"><span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">Pilot</span></td>
+                                <td class="px-4 py-3"><span class="badge btn-success bg-opacity-15 text-dark px-3 py-1 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Disponible</span></td>
+                                <td class="px-4 py-3 text-end">
+                                  <div class="d-flex gap-1 justify-content-end">
+                                    <button class="btn btn-sm btn-outline-danger rounded-circle" title="Eliminar"><i class="bi bi-trash3"></i></button>
+                                    <button class="btn btn-sm btn-outline-secondary rounded-circle" title="Mover de línea"><i class="bi bi-arrow-left-right"></i></button>
+                                    <button class="btn btn-sm btn-outline-info rounded-circle tableBtnUpdateOperaciones" title="Gestionar operaciones"><i class="bi bi-diagram-3"></i></button>
+                                  </div>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <div class="card-footer bg-white border-top-0 py-3 px-4 text-muted small">
+                        Mostrando 4 de 12 registros
+                      </div>
+                    </div>
                 </div>
-              </div>
-              <div class="card-footer bg-white border-top-0 py-3 px-4 text-muted small">
-                Mostrando 4 de 12 registros
-              </div>
+              <!--FIN TABLA LISTADO DE PERSONAL -->
+
+              <!-- FORMULARIO ACTUALIZAR OPERACIONES TRABAJADOR -->
+                <div id="ventanaActualizarOperaciones" class="fade-page d-none">
+                      <!-- Título del Formulario -->
+                      <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
+                          <i class="bi bi-person-plus-fill text-primary fs-4 me-2"></i>
+                          <h5 class="fw-bold m-0 text-dark">Actualizar registro de operaciones</h5>
+                      </div>
+
+                      <!-- INICIO DEL FORMULARIO -->
+                      <div class="row g-4">
+                          <!-- Columna Izquierda: Datos del empleado -->
+                          <div class="col-md-6">
+                              <!-- No. Reloj -->
+                              <div class="mb-3">
+                                  <label for="nominaModalRegistrarUpdate" class="form-label fw-bold text-secondary">
+                                      <i class="bi bi-clock me-1"></i> No. Reloj / ID Empleado <span class="text-danger">*</span>
+                                  </label>
+                                  <div class="form-control-plaintext py-2 fw-bold text-dark bg-light rounded-3 px-3 border">
+                                      11607
+                                  </div>
+                              </div>
+                          </div>
+                          <div class="col-md-6">
+                              <!-- Nombre del Empleado -->
+                              <div class="mb-3">
+                                  <label for="nombreModalRegistrarUpdate" class="form-label fw-bold text-secondary">Nombre Completo</label>
+                                  <input type="text" class="form-control bg-secondary-subtle text-uppercase fw-semibold rounded-3" 
+                                        id="nombreModalRegistrarUpdate" 
+                                        placeholder="JUAN PEPE PEREZ" 
+                                        readonly>
+                              </div>
+                          </div>
+
+                          <!-- Columna Derecha: Operaciones -->
+                          <div class="col-md-10">
+                              <label for="selectRegistrar" class="form-label fw-bold text-secondary">
+                                  <i class="bi bi-cpu me-1"></i> Operaciones liberadas <span class="text-danger">*</span>
+                              </label>
+                              <div class="d-flex align-items-start">
+                                  <select class="form-select form-select-lg rounded-3 flex-grow-1 me-3" id="selectRegistrarUpdate">
+                                      <option selected>Selecciona una operación...</option>
+                                      <option value="1">RE CORTE</option>
+                                      <option value="2">CRIMPADO 2</option>
+                                  </select>
+                                  
+                                  <button id="btnChipModalRegistrar" class="btn btn-info rounded-3 px-4" type="button" style="white-space: nowrap;">
+                                      <i class="bi bi-plus-lg"></i> Agregar
+                                  </button>
+                              </div>
+                          </div>
+
+
+                          <!-- Lista de operaciones asignadas (Chips) -->
+                          <div class="col-12 mt-3">
+                              <label class="form-label fw-bold text-secondary"><i class="bi bi-tags me-1"></i> Operaciones Asignadas</label>
+                              <div id="operationsListContainer" class="d-flex flex-wrap gap-2 p-3 bg-light rounded-3 border">
+                                  <!-- Chip 1 -->
+                                  <span class="badge rounded-pill bg-white text-dark border border-info py-1 px-3 d-inline-flex align-items-center gap-2 shadow-sm">
+                                      <span class="fw-normal fs-6">RE CORTE</span>
+                                      <i class="bi bi-x-circle-fill text-danger remove-icon" data-index="0" role="button" title="Eliminar"></i>
+                                  </span>
+                                  
+                                  <!-- Chip 2 -->
+                                  <span class="badge rounded-pill bg-white text-dark border border-info py-1 px-3 d-inline-flex align-items-center gap-2 shadow-sm">
+                                      <span class="fw-normal fs-6">CRIMPADO 2</span>
+                                      <i class="bi bi-x-circle-fill text-danger remove-icon" data-index="1" role="button" title="Eliminar"></i>
+                                  </span>
+                                  
+                                  <!-- Chip 3 -->
+                                  <span class="badge rounded-pill bg-white text-dark border border-info py-1 px-3 d-inline-flex align-items-center gap-2 shadow-sm">
+                                      <span class="fw-normal fs-6">DESFORRE TWST CAB R</span>
+                                      <i class="bi bi-x-circle-fill text-danger remove-icon" data-index="2" role="button" title="Eliminar"></i>
+                                  </span>
+                              </div>
+                          </div>
+
+                          <!-- Fecha de asignación -->
+                          <div class="col-md-6">
+                              <label for="fecharegistrar" class="form-label fw-bold text-secondary">
+                                  <i class="bi bi-calendar me-1"></i> Fecha de registro <span class="text-danger">*</span>
+                              </label>
+                              <input type="datetime-local" class="form-control rounded-3 bg-white" id="fecharegistrarUpdate" readonly>
+                          </div>
+
+                      </div>
+                      <!-- FIN DEL FORMULARIO -->
+
+                      <!-- Footer: Botones de acción -->
+                      <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                          <button id="btnBackModalPersonal" class="btn btn-success rounded-pill px-4 me-2">
+                              <i class="bi bi-arrow-left me-1"></i> Volver
+                          </button>
+                          <button type="button" class="btn btn-success rounded-pill px-4" id="btnRegistrarOperador">
+                              <i class="bi bi-check-circle me-1"></i> Guardar
+                          </button>
+                      </div>
+                </div>
+              <!-- FIN FORMULARIO ACTUALIZAR OPERACIONES TRABAJADOR -->
             </div>
           </div>
         </div>
@@ -524,13 +629,13 @@
                       <!-- CRIMPADO 3 -->
                       <tr>
                         <td class="px-4 py-3 fw-semibold text-dark">CRIMPADO 3</td>
-                        <td class="px-4 py-3"><span class="text-muted fst-italic small">Sin asignaCIONES</span></td>
+                        <td class="px-4 py-3"><span class="text-muted fst-italic small">Sin asignaciones</span></td>
                         <td class="px-4 py-3"><div class="d-flex gap-2"><select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Leticia Ortega (Cert)</option></select><button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button></div></td>
                       </tr>
                       <!-- INCERSION 2 -->
                       <tr>
                         <td class="px-4 py-3 fw-semibold text-dark">INCERSION 2</td>
-                        <td class="px-4 py-3"><span class="text-muted fst-italic small">Sin asignaCIONES</span></td>
+                        <td class="px-4 py-3"><span class="text-muted fst-italic small">Sin asignaciones</span></td>
                         <td class="px-4 py-3"><div class="d-flex gap-2"><select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Mario Fuentes (Cert)</option></select><button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button></div></td>
                       </tr>
                       <!-- MARCADO LASER L -->
@@ -542,7 +647,7 @@
                       <!-- MARCADO LASER R -->
                       <tr>
                         <td class="px-4 py-3 fw-semibold text-dark">MARCADO LASER R</td>
-                        <td class="px-4 py-3"><span class="text-muted fst-italic small">Sin asignaCIONES</span></td>
+                        <td class="px-4 py-3"><span class="text-muted fst-italic small">Sin asignaciones</span></td>
                         <td class="px-4 py-3"><div class="d-flex gap-2"><select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Cecilia Rojas (Cert)</option></select><button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button></div></td>                        
                       </tr>
                       <!-- DESFORRE TWST CAB R -->

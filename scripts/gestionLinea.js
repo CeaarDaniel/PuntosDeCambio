@@ -6,6 +6,8 @@
   let btnConfirmClose = document.getElementById('btnConfirmClose');
   let btnEvaluacion = document.getElementById('btnEvaluacion');
   let btnAsistencia = document.getElementById('btnAsistencia') //Boton para registrar una asistencia individual
+
+  let tableListadoPersonal = document.getElementById('tableListadoPersonal');
   btnRegistrarOperador = document.getElementById('btnRegistrarOperador') //Boton para registrar personal
 
   //BOTONES FLOTANTES
@@ -1862,12 +1864,13 @@
               let nombre = document.getElementById('nombreModalRegistrar').value;
               let fecha  = document.getElementById('fecharegistrar').value;
               
-              formDataAsig.append("opcion", "90");
+              formDataAsig.append("opcion", "28");
               formDataAsig.append("nomina", nomina);
               formDataAsig.append("nombre", nombre);
               formDataAsig.append("fecha", fecha);
               formDataAsig.append('codigoLinea', codigoLinea.value)
-              formDataAsig.append('operaciones', chipsEstaciones)
+              formDataAsig.append('operaciones', JSON.stringify(chipsEstaciones))
+              //console.log('Operaciones:'+  JSON.stringify(chipsEstaciones))
 
                 if(!nombre) { 
                   alert("No se encontro registro del empleado ingresado o se perdió la conexión con el servidor.")
@@ -2142,6 +2145,7 @@
         btnGuardarDisponible.addEventListener('click', registrarPNA); 
         btnRegistrarAsistencia.addEventListener('click', registrarAsistencia);
         btnMenuAsignarControlModal.addEventListener('click', function(){changeContent('ventanasModalPC','contAsignacion')});
+        btnMenuAsignarControlModal.addEventListener('click', function(){changeContent('ventanasModalPC','contAsignacion')});
         btnInfoRPC.addEventListener('click', function(){changeContent('ventanasModalPC','contInfoEstacion')});
         btnRegistroPc.addEventListener('click', function(){changeContent('ventanasModalPC','contregistroCambioForm')});
         //btnLiberarPC.addEventListener('click', function(){changeContent('ventanasModalPC', 'contLiberarPC')});
@@ -2266,6 +2270,22 @@
           $('#tools-panel').removeClass('d-none')
           //$('#layout-header').removeClass('d-none')
         })
+
+        //Evento para cambiar de pagina con el boton actualizar operaciones de la tabla de personal
+        $('#tableListadoPersonal').on('click', '.tableBtnUpdateOperaciones', function () {
+            changeContent('ventanasModalPersonal','ventanaActualizarOperaciones')
+            // Obtener atributos data
+            //const id = $(this).data('id');
+            //const nombre = $(this).data('nombre');
+            //const tipo = $(this).data('tipo');
+
+            //console.log(id);
+            //console.log(nombre);
+            //console.log(tipo);
+        });
+
+        //Boton para volver a la tabla del modal de registro de personal
+        $('#btnBackModalPersonal').on('click', function (){changeContent('ventanasModalPersonal', 'ventanaTablaListadoPersonal')})
 
       // Cargar las formas
       setTimeout(() => {

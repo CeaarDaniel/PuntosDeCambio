@@ -2213,7 +2213,7 @@ else
 
         $fecha = str_replace('T', ' ', $fecha);
        
-            if (!$codigoLinea || !$nomina) {
+            if (!$codigoLinea || !$nomina || !$nombre) {
                 echo json_encode(['estatus' => 'error',
                                   'mensaje'=>'Datos inválidos'
                                 ]);
@@ -2222,24 +2222,56 @@ else
 
         try {
             $conn->beginTransaction();
-            $sql = "INSERT INTO SPC_REGISTRO_ASISTENCIA (nomina, nombre, estatus, codigo_linea, turno, id_estacion, nombres_estaciones, comentarioAsistencia)
-                        VALUES (:nomina, :nombre, :estatus, :codigo_linea, :turno, :id_estacion, :nombres_estaciones, :comentarioAsistencia)";
-            $stmt = $conn->prepare($sql);
-            $stmt->execute([
-                ':nomina' => $nomina,
-                ':nombre' => $nombre,
-                ':estatus' => $estatusAsistencia,
-                ':id_estacion' => $estacion,
-                ':nombres_estaciones' => $nombreEstacion,
-                ':comentarioAsistencia' => $comentarios,
-                ':codigo_linea' => $codigoLinea,
-                ':turno' => $turno
-            ]);
 
-            $conn->commit();
-            $results = array('estatus' => 'ok',
-                              'mensaje' => 'Se ha hecho el registro de asistencia');
+             // VALIDAR SI LA NOMINA YA EXISTE
+                $sqlValidar = "SELECT COUNT(*) AS total FROM SPC_PERSONAL WHERE nomina = :nomina";
 
+                $stmtValidar = $conn->prepare($sqlValidar);
+                $stmtValidar->execute([':nomina' => $nomina]);
+                $existe = $stmtValidar->fetch(PDO::FETCH_ASSOC);
+                if ($existe['total'] > 0) {
+                    $conn->rollBack();
+                    echo json_encode([
+                                        'estatus' => 'error',
+                                        'mensaje' => 'La nómina ya se encuentra registrada'
+                                    ]);
+                    exit;
+                }
+
+            //INSERTAR REGISTRO
+                $sql = "INSERT INTO SPC_PERSONAL(nomina, nombre, estatus, codigo_linea, fecha_registro)
+                            VALUES (:nomina, :nombre, :estatus, :codigo_linea, :fecha_registro)";
+                $stmt = $conn->prepare($sql);
+                $stmt->execute([
+                    ':nomina' => $nomina,
+                    ':nombre' => $nombre,
+                    ':estatus' => '0', //0 DISPONIBLE 1 ASIGNADO 2 ELIMINADO 
+                    ':codigo_linea' => $codigoLinea,
+                    ':fecha_registro' => $fecha
+                ]);
+
+
+            // DECODIFICAR JSON DE OPERACIONES
+                $operacionesArray = json_decode($operaciones, true);
+
+                if (!is_array($operacionesArray)) {
+                    throw new Exception("El formato de operaciones es inválido");
+                }
+
+                // INSERTAR CADA OPERACION EN SPC_ILU
+                $sqlIlu = "INSERT INTO SPC_ILU (nomina, idE) VALUES(:nomina, :idE)";
+                $stmtIlu = $conn->prepare($sqlIlu);
+
+                foreach ($operacionesArray as $operacion) {
+                    $idE = isset($operacion['value']) ? $operacion['value'] : null;
+                    if (!$idE) {continue;}
+                    $stmtIlu->execute([':nomina' => $nomina,':idE' => $idE]);
+                }
+
+
+                $conn->commit();
+                $results = array('estatus' => 'ok',
+                                'mensaje' => 'Se ha hecho el registro del trabajador');
         } catch (Exception $e) {
             $conn->rollBack();
               $results = array('estatus' => 'error',
