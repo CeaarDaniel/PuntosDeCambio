@@ -428,12 +428,9 @@
                                   </label>
                                   <div class="d-flex align-items-start">
                                       <select class="form-select form-select-lg rounded-3 flex-grow-1 me-3" id="selectRegistrarUpdate">
-                                          <option selected>Selecciona una operación...</option>
-                                          <option value="1">RE CORTE</option>
-                                          <option value="2">CRIMPADO 2</option>
                                       </select>
                                       
-                                      <button id="btnChipModalRegistrar" class="btn btn-info rounded-3 px-4" type="button" style="white-space: nowrap;">
+                                      <button id="btnChipModalRegistrarUpdate" class="btn btn-info rounded-3 px-4" type="button" style="white-space: nowrap;">
                                           <i class="bi bi-plus-lg"></i> Agregar
                                       </button>
                                   </div>
@@ -443,23 +440,6 @@
                               <div class="col-12 mt-3">
                                   <label class="form-label fw-bold text-secondary"><i class="bi bi-tags me-1"></i> Operaciones Asignadas</label>
                                   <div id="operationsListContainerUpdate" class="d-flex flex-wrap gap-2 p-3 bg-light rounded-3 border">
-                                      <!-- Chip 1 -->
-                                      <span class="badge rounded-pill bg-white text-dark border border-info py-1 px-3 d-inline-flex align-items-center gap-2 shadow-sm">
-                                          <span class="fw-normal fs-6">RE CORTE</span>
-                                          <i class="bi bi-x-circle-fill text-danger remove-icon" data-index="0" role="button" title="Eliminar"></i>
-                                      </span>
-                                      
-                                      <!-- Chip 2 -->
-                                      <span class="badge rounded-pill bg-white text-dark border border-info py-1 px-3 d-inline-flex align-items-center gap-2 shadow-sm">
-                                          <span class="fw-normal fs-6">CRIMPADO 2</span>
-                                          <i class="bi bi-x-circle-fill text-danger remove-icon" data-index="1" role="button" title="Eliminar"></i>
-                                      </span>
-                                      
-                                      <!-- Chip 3 -->
-                                      <span class="badge rounded-pill bg-white text-dark border border-info py-1 px-3 d-inline-flex align-items-center gap-2 shadow-sm">
-                                          <span class="fw-normal fs-6">DESFORRE TWST CAB R</span>
-                                          <i class="bi bi-x-circle-fill text-danger remove-icon" data-index="2" role="button" title="Eliminar"></i>
-                                      </span>
                                   </div>
                               </div>
                           </div>
@@ -503,13 +483,13 @@
                     <p class="text-muted small mb-0">Gestión de personal certificado por proceso</p>
                   </div>
                   <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
-                    <i class="bi bi-diagram-3 me-1"></i>10 personas asignadas
+                    <i class="bi bi-diagram-3 me-1"></i> <span id="totalAsignadosBadge">0 personas asignadas</span>
                   </span>
                 </div>
               </div>
               <div class="card-body p-0">
                 <div class="table-responsive">
-                  <table class="table table-hover align-middle mb-0" style="min-width: 950px;">
+                  <table id="operationsTable" class="table table-hover align-middle mb-0" style="min-width: 950px;">
                     <thead class="bg-light">
                       <tr>
                         <th class="px-4 py-3 fw-bold small">OPERACIÓN</th>
@@ -518,147 +498,6 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <!-- CORTE -->
-                      <tr>
-                        <td class="px-4 py-3 fw-semibold text-dark">CORTE</td>
-                        <td class="px-4 py-3">
-                          <div class="d-flex flex-wrap gap-2">
-                            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm">
-                              <span class="small">Juan Pérez</span>
-                              <i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i>
-                            </div>
-                            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm">
-                              <span class="small">María López</span>
-                              <i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i>
-                            </div>
-                          </div>
-                        </td>
-                        <td class="px-4 py-3">
-                          <div class="d-flex gap-2">
-                            <select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3">
-                              <option>Seleccionar operario...</option>
-                              <option>Carlos Ruiz (Cert)</option>
-                              <option>Ana Torres (Cert)</option>
-                              <option>Luis Mendoza (Cert)</option>
-                            </select>
-                            <button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button>
-                          </div>
-                        </td>
-                      </tr>
-                      <!-- RE CORTE -->
-                      <tr>
-                        <td class="px-4 py-3 fw-semibold text-dark">RE CORTE</td>
-                        <td class="px-4 py-3">
-                          <div class="d-flex flex-wrap gap-2">
-                            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm">
-                              <span class="small">Roberto Díaz</span>
-                              <i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i>
-                            </div>
-                          </div>
-                        </td>
-                        <td class="px-4 py-3">
-                          <div class="d-flex gap-2">
-                            <select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3">
-                              <option>Seleccionar operario...</option>
-                              <option>Sandra Gómez (Cert)</option>
-                              <option>Pedro Vega (Cert)</option>
-                            </select>
-                            <button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button>
-                          </div>
-                        </td>
-                      </tr>
-                      <!-- DESFORRE -->
-                      <tr>
-                        <td class="px-4 py-3 fw-semibold text-dark">DESFORRE</td>
-                        <td class="px-4 py-3">
-                          <div class="d-flex flex-wrap gap-2">
-                            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm"><span class="small">Laura Jiménez</span><i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i></div>
-                            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm"><span class="small">Andrés Castro</span><i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i></div>
-                            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm"><span class="small">Mónica Ruiz</span><i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i></div>
-                          </div>
-                        </td>
-                        <td class="px-4 py-3">
-                          <div class="d-flex gap-2">
-                            <select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Fernando Ríos (Cert)</option><option>Claudia Paz (Cert)</option></select>
-                            <button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button>
-                          </div>
-                        </td>
-                      </tr>
-                      <!-- REDUCCION -->
-                      <tr>
-                        <td class="px-4 py-3 fw-semibold text-dark">REDUCCION</td>
-                        <td class="px-4 py-3"><span class="text-muted fst-italic small"> Sin asignar </span></td>
-                        <td class="px-4 py-3">
-                          <div class="d-flex gap-2">
-                            <select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Patricia Soto (Cert)</option><option>Ricardo Mora (Cert)</option></select>
-                            <button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button>
-                          </div>
-                        </td>
-                      </tr>
-                      <!-- CRIMPADO 1 -->
-                      <tr>
-                        <td class="px-4 py-3 fw-semibold text-dark">CRIMPADO 1</td>
-                        <td class="px-4 py-3">
-                          <div class="d-flex flex-wrap gap-2"><div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm"><span class="small">Héctor Suárez</span><i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i></div></div>
-                        </td>
-                        <td class="px-4 py-3">
-                          <div class="d-flex gap-2"><select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Verónica Núñez (Cert)</option></select><button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button></div>
-                        </td>
-                      </tr>
-                      <!-- INCERSION 1 -->
-                      <tr>
-                        <td class="px-4 py-3 fw-semibold text-dark">INCERSION 1</td>
-                        <td class="px-4 py-3"><span class="text-muted fst-italic small">Sin asignar</span></td>
-                        <td class="px-4 py-3">
-                          <div class="d-flex gap-2"><select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Raúl Espinoza (Cert)</option><option>Daniela Flores (Cert)</option></select><button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button></div>
-                        </td>
-                      </tr>
-                      <!-- CRIMPADO 2 -->
-                      <tr>
-                        <td class="px-4 py-3 fw-semibold text-dark">CRIMPADO 2</td>
-                        <td class="px-4 py-3"><div class="d-flex flex-wrap gap-2"><div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm"><span class="small">Sergio Méndez</span><i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i></div></div></td>
-                        <td class="px-4 py-3"><div class="d-flex gap-2"><select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Gabriel Flores (Cert)</option></select><button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button></div></td>
-                      </tr>
-                      <!-- CRIMPADO 3 -->
-                      <tr>
-                        <td class="px-4 py-3 fw-semibold text-dark">CRIMPADO 3</td>
-                        <td class="px-4 py-3"><span class="text-muted fst-italic small">Sin asignaciones</span></td>
-                        <td class="px-4 py-3"><div class="d-flex gap-2"><select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Leticia Ortega (Cert)</option></select><button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button></div></td>
-                      </tr>
-                      <!-- INCERSION 2 -->
-                      <tr>
-                        <td class="px-4 py-3 fw-semibold text-dark">INCERSION 2</td>
-                        <td class="px-4 py-3"><span class="text-muted fst-italic small">Sin asignaciones</span></td>
-                        <td class="px-4 py-3"><div class="d-flex gap-2"><select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Mario Fuentes (Cert)</option></select><button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button></div></td>
-                      </tr>
-                      <!-- MARCADO LASER L -->
-                      <tr>
-                        <td class="px-4 py-3 fw-semibold text-dark">MARCADO LASER L</td>
-                        <td class="px-4 py-3"><div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm"><span class="small">Norma Castillo</span><i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i></div></div></td>
-                        <td class="px-4 py-3"><div class="d-flex gap-2"><select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Ricardo López (Cert)</option></select><button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button></div></td>
-                      </tr>
-                      <!-- MARCADO LASER R -->
-                      <tr>
-                        <td class="px-4 py-3 fw-semibold text-dark">MARCADO LASER R</td>
-                        <td class="px-4 py-3"><span class="text-muted fst-italic small">Sin asignaciones</span></td>
-                        <td class="px-4 py-3"><div class="d-flex gap-2"><select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3"><option>Seleccionar operario...</option><option>Cecilia Rojas (Cert)</option></select><button class="btn btn-sm btn-info rounded-3"><i class="bi bi-plus-lg"></i></button></div></td>                        
-                      </tr>
-                      <!-- DESFORRE TWST CAB R -->
-                      <tr>
-                        <td class="px-4 py-3 fw-semibold text-dark">TWST CAB R</td>
-                        <td class="px-4 py-3"><div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm"><span class="small">Tomás Gutiérrez</span><i class="bi bi-x-circle-fill" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i></div></div></td>
-                        <td class="px-4 py-3">
-                          <div class="d-flex gap-2">
-                            <select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3">
-                              <option>Seleccionar operario...</option>
-                              <option>Elena Salas (Cert)</option>
-                            </select>
-                            <button class="btn btn-sm btn-info rounded-3">
-                              <i class="bi bi-plus-lg"></i>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
                     </tbody>
                   </table>
                 </div>

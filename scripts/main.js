@@ -44,8 +44,7 @@ const navLinks = document.querySelectorAll('a'); //Opciones de la barra de naveg
                             })
                             .catch(error => {
                                 console.log(`Script no encontrado: ${scriptUrl}`);
-                            });
-                       
+                            });                    
                     }
                 };
                 xhttp.open('POST', './pages/'+pagina + '.php', true); //SOLICITUD A LA PAGINA CON EL CONTENIDO NUEVO
@@ -184,3 +183,34 @@ const navLinks = document.querySelectorAll('a'); //Opciones de la barra de naveg
         });
       });
     */
+
+
+/*
+    --MODULO
+      -PRESNTACION
+      -DINAMICA
+      -EVALUACION ESCRITA
+
+    --REPORTES 
+      RESUMEN DE RESULTADOS
+      %DE ECTIVIDAD 
+
+
+    ¿Qué problema resuelve la app?
+    ¿Quién la va a usar?
+    ¿Qué resultado de negocio se espera?
+    ¿Cómo se medirá el éxito?
+*/
+
+/*
+Puntos de cambio
+Anormalidades
+Cumplimiento de operacion
+sistema de entrenamiento de terminales
+sistema de entrenamiento de moldeo
+inspeccion visual de SMT
+llamado de materiales
+llamado de mantenimiento
+Impresion de etiquetas de seguridad
+aplicación de evaluaciones para los lideres
+*/

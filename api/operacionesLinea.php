@@ -2318,48 +2318,138 @@ else
         }
     }
 
-    else 
-        if($opcion=='30'){
-            $nomina = !empty($_POST['nomina']) ? $_POST['nomina'] : null;
-            $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
+//OBTENER LISTADO DE OPERACIONES LIBERADAS POR TRABAJADOR
+else 
+    if($opcion=='30'){
+        $nomina = !empty($_POST['nomina']) ? $_POST['nomina'] : null;
+        $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
 
-            // Validar que se recibieron todos los datos
-            if (!$codigoLinea || !$nomina) {
-                    echo json_encode([
-                        'estatus' => 'error',
-                        'mensaje' => 'Error al enviar los datos.'
-                    ]);
-                exit; 
-            }
+        // Validar que se recibieron todos los datos
+        if (!$codigoLinea || !$nomina) {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'Error al enviar los datos.'
+                ]);
+            exit; 
+        }
 
-            try {
-                $sql= "SELECT P.nomina, ILU.idE, E.nombre_estacion FROM SPC_PERSONAL P INNER JOIN SPC_ILU ILU ON P.nomina = ILU.nomina
-                                                                    INNER JOIN SPC_ESTACIONES as E on e.id_estacion = ILU.idE
-                        WHERE p.codigo_linea = :codigo_linea and p.nomina=:nomina ";
-                $registro = $conn->prepare($sql);
-                $response;
+        try {
+            $sql= "SELECT ILU.idE, E.nombre_estacion FROM SPC_PERSONAL P INNER JOIN SPC_ILU ILU ON P.nomina = ILU.nomina
+                                                                INNER JOIN SPC_ESTACIONES as E on e.id_estacion = ILU.idE
+                    WHERE p.codigo_linea = :codigo_linea and p.nomina=:nomina ";
+            $registro = $conn->prepare($sql);
+            $response = [];
 
-                if($registro -> execute([':codigo_linea' => $codigoLinea, ':nomina'=> $nomina])){
-                    while($dsc= $registro->fetch(PDO::FETCH_ASSOC))
+            if($registro -> execute([':codigo_linea' => $codigoLinea, ':nomina'=> $nomina])){
+                while($dsc= $registro->fetch(PDO::FETCH_ASSOC))
                         $response[] = $dsc;
-                }
-
-                else {
-                    $response = $registro->errorInfo()[2];
-                    echo json_encode(array ('estatus'=> 'error', 'error' => $response));
-                    exit;
-                }
-
-                echo json_encode(array ('estatus'=> 'ok', 'data' => $response ));
-
-            } catch (Exception $e) {
-                $results = array('estatus' => 'error',
-                                'mensaje' => 'Ocurrió un error al realizar el registro',
-                                'error' => $e->getMessage());
             }
-    }
+
+            else {
+                $response = $registro->errorInfo()[2];
+                echo json_encode(array ('estatus'=> 'error', 'error' => $response));
+                exit;
+            }
+
+            echo json_encode(array ('estatus'=> 'ok', 'data' => $response ));
+
+        } catch (Exception $e) {
+            $results = array('estatus' => 'error',
+                            'mensaje' => 'Ocurrió un error al realizar el registro',
+                            'error' => $e->getMessage());
+            echo json_encode($results);
+        }
+}
 
 
+//FUNCION PARA GENERAR LOS DATOS PARA EL LISTADO DE OPERACIONES, PERSONAS ASIGNADAS Y LISTADO DE PERSONAS LIBERADAS POR ESTACION
+else 
+    if($opcion == '31'){
+        $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
+        $turno = !empty($_POST['turno']) ? $_POST['turno'] : null;
+
+        // Validar datos
+        if (!$codigoLinea || !$turno) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Error al enviar los datos.'
+            ]);
+            exit;
+        }
+
+        try {
+            $response = [];
+
+            // ESTACIONES + ASIGNADOS
+            $sqlOperaciones = "SELECT E.id_estacion, E.nombre_estacion, PE.nomina, PE.nombre
+                                FROM SPC_ESTACIONES E
+                                    LEFT JOIN SPC_PERSONAL_ESTACION PE ON E.id_estacion = PE.id_estacion
+                                     AND PE.fecha_fin IS NULL AND PE.turno = :turno
+                                 WHERE E.codigo_linea = :codigo_linea";
+
+            $operaciones = $conn->prepare($sqlOperaciones);
+            $operaciones->execute([
+                ':codigo_linea' => $codigoLinea,
+                ':turno' => $turno
+            ]);
+
+            // LIBERADOS
+            $sqlLiberados = "SELECT E.id_estacion, E.nombre_estacion, I.nomina, P.nombre
+                                    FROM SPC_ESTACIONES E
+                                        INNER JOIN SPC_ILU I ON E.id_estacion = I.idE
+                                        INNER JOIN SPC_PERSONAL P ON P.nomina = I.nomina
+                            WHERE E.codigo_linea = :codigo_linea AND P.turno = :turno";
+
+            $liberados = $conn->prepare($sqlLiberados);
+            $liberados->execute([':codigo_linea' => $codigoLinea,':turno' => $turno]);
+
+            // ARMAR ESTACIONES
+            while($row = $operaciones->fetch(PDO::FETCH_ASSOC)) {
+                $idEstacion = $row['id_estacion'];
+                if(!isset($response[$idEstacion])) {
+                    $response[$idEstacion] = [
+                        'id_estacion' => $idEstacion,
+                        'nombre_estacion' => $row['nombre_estacion'],
+                        'asignados' => [],
+                        'liberados' => []
+                    ];
+                }
+
+                // Si hay asignado
+                if(!empty($row['nomina'])) {
+                    $response[$idEstacion]['asignados'][] = [
+                        'nomina' => $row['nomina'],
+                        'nombre' => $row['nombre']
+                    ];
+                }
+            }
+
+            // AGREGAR LIBERADOS
+            while($row = $liberados->fetch(PDO::FETCH_ASSOC)) {
+                $idEstacion = $row['id_estacion'];
+                if(isset($response[$idEstacion])) {
+                    $response[$idEstacion]['liberados'][] = [
+                        'nomina' => $row['nomina'],
+                        'nombre' => $row['nombre']
+                    ];
+                }
+            }
+
+            // Reindexar
+            $response = array_values($response);
+            echo json_encode([
+                'estatus' => 'ok',
+                'data' => $response
+            ]);
+
+        } catch (Exception $e) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Ocurrió un error al realizar el registro',
+                'error' => $e->getMessage()
+            ]);
+        }
+}
 
 /*
     Resumen de asistencia

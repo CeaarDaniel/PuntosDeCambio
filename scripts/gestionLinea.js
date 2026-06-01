@@ -1256,7 +1256,7 @@
 
 
     //Funcion para los chips de agregar personal
-        //Función para agregar una talla
+        //Función para agregar una chip
             function agregarChipTalla() {
               //Se modifican las cadenas a mayusculas para que sea indistinto valores como Xsd y xSD en la busqueda del valor en el arreglo tallasAlta
               if (!chipsEstaciones.some(item => ((item.value).toUpperCase()).trim() === ((selectRegistrar.value).toUpperCase()).trim()) ) { //Se usa tallasAlta some ya que el arreglo es un objeto de pares clave valor 
@@ -1271,13 +1271,13 @@
                 else alert('Ya existe este registro');
             }
 
-            // Función para remover una talla
+            // Función para remover un chip
             function removerChipTalla(label) {
                 chipsEstaciones.splice(label, 1);
                 actualizarTallasAltaChips();
             }
 
-            // Función para actualizar los chips de tallas
+            // Función para actualizar los chips
             function actualizarTallasAltaChips() { //Esta funcion actualiza la vista de las tallas despues de agregar o eliminar una talla
                 const container = document.getElementById('operationsListContainer');
                 container.innerHTML = chipsEstaciones.map((t, index) => `
@@ -1298,6 +1298,59 @@
                     });
                 });
             }
+    //FIN FUNCION
+
+    //FUNCION PARA LOS CHIPS DE ACTUALIZAR OPERACIONES
+          //Agregar chip
+           function agregarChipTallaUpdate(data) {
+                //Se modifican las cadenas a mayusculas para que sea indistinto valores como Xsd y xSD
+                if(!data.some(item => ((item.idE).toUpperCase()).trim() === (($('#selectRegistrarUpdate').val()).toUpperCase()).trim())) {
+                    if ($('#selectRegistrarUpdate').val().trim() !== '') {
+                        data.push({
+                            nombre_estacion: $("#selectRegistrarUpdate option:selected").text(),
+                            idE: $('#selectRegistrarUpdate').val()
+                        });
+
+                        $('#selectRegistrarUpdate').val('');
+                        actualizarTallasAltaChipsUpdate(data);
+                    }
+
+                } else {
+                    alert('Ya existe este registro');
+                }
+            }
+
+            // Función para remover un chip
+            function removerChipTallaUpdate(data, index) {
+                data.splice(index, 1);
+                actualizarTallasAltaChipsUpdate(data);
+            }
+
+            // Función para actualizar los chips
+            function actualizarTallasAltaChipsUpdate(data) { //Esta funcion actualiza la vista de las tallas despues de agregar o eliminar una talla
+                const container = document.getElementById('operationsListContainerUpdate');
+
+                //limpeamos el contenedor de los chips
+                container.innerHTML ='';
+                container.innerHTML = data.map((t, index) => `
+                  <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-info bg-opacity-10 text-dark">
+                    <span> ${t.nombre_estacion}</span>
+                    <i class="bi bi-x-circle-fill remove-iconUpdate" data-index =${index} style="cursor: pointer; color: #dc3545;" title="Eliminar"></i>
+                  </div>
+                `).join(''); //Se agrega el indice (index) para poder eliminar mas facil lo elemetnos del arreglo
+
+                //Evento para eliminar los chips de lista de operaciones update
+                const removeIcons = container.querySelectorAll('.remove-iconUpdate');
+                removeIcons.forEach(icon => {
+                    icon.addEventListener("click", function(event) {
+                        event.preventDefault();
+                        // Remover el chip correspondiente
+                        const index = icon.getAttribute("data-index");
+                        removerChipTallaUpdate(data, index);
+                    });
+                });
+            }
+    //FIN FUNCION
 
     //Funcion para cargar el listado de personal
     function mostrarTablaPersonal(){
@@ -1348,7 +1401,7 @@
                                   render: function(data) {
                                       // Los botones tienen data-id con la nómina
                                       return `<button class="btn btn-sm btn-outline-danger rounded-circle data-nomina="${data.nomina}"><i class="bi bi-trash3"></i></button>
-                                              <button class="btn btn-sm btn-outline-secondary rounded-circle" data-nomina="${data.nomina}"><i class="bi bi-arrow-left-right"></i></button>
+                                              <!-- <button class="btn btn-sm btn-outline-secondary rounded-circle" data-nomina="${data.nomina}"><i class="bi bi-arrow-left-right"></i></button> -->
                                               <button class="btn btn-sm btn-outline-info rounded-circle tableBtnUpdateOperaciones" data-nomina="${data.nomina}" data-nombre="${data.nombre}" ><i class="bi bi-diagram-3"></i></button>`;
                                   },
                                   className: 'text-end',
@@ -1366,6 +1419,219 @@
                 .catch((error) => {
                   console.log(error);
             });
+    }
+
+    //Funcion para mostrar el listado de operaciones
+    function mostrarTablaOperaciones(){
+      // 1. JSON DE PRUEBA (exactamente el que proporcionaste)
+      const serverResponse = {
+        "estatus": "ok",
+        "data": [
+          {
+            "id_estacion": "14",
+            "nombre_estacion": "CORTE",
+            "asignados": [
+              { "nomina": "107524", "nombre": "BRISEÑO ARMENDARIZ, YARIDA MARICRUZ" }
+            ],
+            "liberados": [
+              { "nomina": "107802", "nombre": "MAURICIO CAMACHO, MARIA DEL CARMEN" }
+            ]
+          },
+          {
+            "id_estacion": "15",
+            "nombre_estacion": "RE CORTE",
+            "asignados": [
+              { "nomina": "107779", "nombre": "GARCIA DELGADILLO, JOSELIN AIDE" }
+            ],
+            "liberados": [
+              { "nomina": "107802", "nombre": "MAURICIO CAMACHO, MARIA DEL CARMEN" },
+              { "nomina": "4800", "nombre": "DE LIRA MONTAÑEZ, ZAIRA YARAVIT" }
+            ]
+          },
+          {
+            "id_estacion": "16",
+            "nombre_estacion": "DESFORRE",
+            "asignados": [
+              { "nomina": "107802", "nombre": "MAURICIO CAMACHO, MARIA DEL CARMEN" }
+            ],
+            "liberados": [
+              { "nomina": "107802", "nombre": "MAURICIO CAMACHO, MARIA DEL CARMEN" }
+            ]
+          },
+          {
+            "id_estacion": "17",
+            "nombre_estacion": "REDUCCION",
+            "asignados": [
+              { "nomina": "104236", "nombre": "ESPINO MARMOLEJO, FATIMA DEL ROSARIO" }
+            ],
+            "liberados": []
+          },
+          {
+            "id_estacion": "18",
+            "nombre_estacion": "CRIMPADO 1",
+            "asignados": [
+              { "nomina": "106320", "nombre": "CRUZ CIRINO, LESLIE LIZBETH" }
+            ],
+            "liberados": [
+              { "nomina": "107735", "nombre": "CORTES MORA, MAYRA ALICIA" }
+            ]
+          },
+          {
+            "id_estacion": "19",
+            "nombre_estacion": "INCERSION 1",
+            "asignados": [
+              { "nomina": "102073", "nombre": "M DEL CAMPO DE LA ROSA, LIZBETH ARELY" }
+            ],
+            "liberados": [
+              { "nomina": "107735", "nombre": "CORTES MORA, MAYRA ALICIA" }
+            ]
+          },
+          {
+            "id_estacion": "20",
+            "nombre_estacion": "CRIMPADO 2",
+            "asignados": [
+              { "nomina": "107887", "nombre": "CIBRIAN HERNANDEZ, MIRANDA ESTEFANI" }
+            ],
+            "liberados": [
+              { "nomina": "107735", "nombre": "CORTES MORA, MAYRA ALICIA" },
+              { "nomina": "11607", "nombre": "VEGA CARDENAS, CESAR DANIEL" }
+            ]
+          },
+          {
+            "id_estacion": "21",
+            "nombre_estacion": "CRIMPADO 3",
+            "asignados": [
+              { "nomina": "107735", "nombre": "CORTES MORA, MAYRA ALICIA" }
+            ],
+            "liberados": [
+              { "nomina": "107735", "nombre": "CORTES MORA, MAYRA ALICIA" }
+            ]
+          },
+          {
+            "id_estacion": "22",
+            "nombre_estacion": "INCERSION 2",
+            "asignados": [
+              { "nomina": "107758", "nombre": "GARCIA MONDRAGON, KARINA" }
+            ],
+            "liberados": [
+              { "nomina": "107735", "nombre": "CORTES MORA, MAYRA ALICIA" }
+            ]
+          },
+          {
+            "id_estacion": "23",
+            "nombre_estacion": "MARCADO LASER L",
+            "asignados": [
+              { "nomina": "107294", "nombre": "GONZALEZ SABAS, MARIA DOLORES" }
+            ],
+            "liberados": [
+              { "nomina": "107524", "nombre": "BRISEÑO ARMENDARIZ, YARIDA MARICRUZ" }
+            ]
+          }
+        ]
+      };
+
+      const data = serverResponse.data;
+
+      // 2. Variable para calcular total de asignaciones (para el badge)
+      let totalAsignados = 0;
+      data.forEach(item => {
+        totalAsignados += item.asignados.length;
+      });
+
+      $('#totalAsignadosBadge').text(`${totalAsignados} personas asignadas`);
+
+      // 3. Inicializar DataTable
+      const table = $('#operationsTable').DataTable({
+        data: data,
+        columns: [
+          {
+            data: 'nombre_estacion',
+            className: 'px-4 py-3 fw-semibold text-dark'
+          },
+          {
+            data: null,
+            className: 'px-4 py-3',
+            render: function (data) {
+              if (!data.asignados || data.asignados.length === 0) {
+                return `<span class="text-muted fst-italic small">Sin asignar</span>`;
+              }
+              // Renderizar chips
+              let html = '<div class="d-flex flex-wrap gap-2">';
+              data.asignados.forEach(person => {
+                html += `
+                                    <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm">
+                                        <span class="small">${person.nombre}</span>
+                                        <i class="bi bi-x-circle-fill remove-icon" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i>
+                                    </div>
+                                `;
+              });
+              html += '</div>';
+              return html;
+            }
+          },
+          {
+            data: null,
+            className: 'px-4 py-3',
+            render: function (data) {
+              // Construir select con operarios liberados
+              let selectHtml = `<select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3">`;
+              selectHtml += `<option>Seleccionar operario...</option>`;
+
+              if (data.liberados && data.liberados.length > 0) {
+                data.liberados.forEach(person => {
+                  // Mostramos nombre + (nómina) como en tu ejemplo "Carlos Ruiz (Cert)"
+                  selectHtml += `<option value="${person.nomina}">${person.nombre} (${person.nomina})</option>`;
+                });
+              } else {
+                selectHtml += `<option disabled>Sin liberados disponibles</option>`;
+              }
+              selectHtml += `</select>`;
+
+              // Botón +
+              const btnHtml = `
+                                <button class="btn btn-sm btn-info rounded-3" data-estacion="${data.id_estacion}">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            `;
+
+              return `
+                                <div class="d-flex gap-2 align-items-center">
+                                    ${selectHtml}
+                                    ${btnHtml}
+                                </div>
+                            `;
+            }
+          }
+        ],
+        pageLength: 10,
+        lengthMenu: [5, 10, 25, 50],
+        responsive: false,
+        scrollX: true
+        /*
+        initComplete: function () {
+          console.log('DataTable lista de operaciones cargada.');
+        } 
+        */
+      });
+
+      // 4. Manejar clic en el botón "+" (Agregar trabajador)
+      $('#operationsTable tbody').on('click', '.btn-add-worker', function () {
+        const estacionId = $(this).data('estacion');
+        const select = $(this).closest('div').find('select');
+        const selectedValue = select.val();
+        const selectedText = select.find('option:selected').text();
+
+        if (selectedValue && selectedValue !== 'Seleccionar operario...' && !select.find('option:selected').is(':disabled')) {
+          // Aquí puedes hacer una llamada AJAX para asignar el trabajador
+          console.log(`Asignar operario: ${selectedText} (${selectedValue}) a estación ${estacionId}`);
+          alert(`✅ Asignando a ${selectedText} a la estación ${estacionId}`);
+
+          // Ejemplo de cómo actualizarías la tabla (simulado)
+          // En producción harías un fetch() y luego recargarías la DataTable con ajax.reload()
+        } else {
+          alert('Por favor selecciona un operario válido.');
+        }
+      });
     }
 
 
@@ -1595,6 +1861,7 @@
       getHistorialLayout();
 
       mostrarTablaPersonal();
+      mostrarTablaOperaciones();
 
       //DECLARACION DE EVENTOS
         //OBTENER NUMERO DE NOMINA
@@ -2357,7 +2624,6 @@
 
               document.getElementById('nominaModalRegistrarUpdate').textContent= nomina;
               document.getElementById('nombreModalRegistrarUpdate').value= nombre;
-              
 
               //CARGAR LISTADO DE OPERACIONES EN EL SELECT
               selectRegistrarUpdate.innerHTML='';
@@ -2384,31 +2650,35 @@
                     .then((data) => {
                         data= JSON.parse(data)
                         if(data.estatus=='ok'){
-                            const container = document.getElementById('operationsListContainerUpdate');
-                            container.innerHTML = data.data.map((t, index) => `<div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-info bg-opacity-10 text-dark">
-                                                                                <span> ${t.nombre_estacion}</span>
-                                                                                <i class="bi bi-x-circle-fill remove-iconUpdate" data-index = ${index} style="cursor: pointer; color: #dc3545;" title="Eliminar"></i>
-                                                                              </div>`).join(''); //Se agrega el indice (index) para poder eliminar mas facil lo elemetnos del arreglo
+                          //Listar los chips
+
+                           // Si no existe el arreglo, crear uno vacío
+                            if (!Array.isArray(data.data)) {
+                                data.data = [];
+                            }
+
+                            actualizarTallasAltaChipsUpdate(data.data);
+                            console.log("datos operaciones registradas:",data)
+
+                            //Usamos off para eliminar los eventos previos y evitar que se aniden
+                             $('#btnChipModalRegistrarUpdate').off('click').on('click', function () {
+                                agregarChipTallaUpdate(data.data);
+                            });
                         }
 
-                        else 
-                          console.log(data.mensaje);
+                        else {
+                            console.log(data.mensaje);
+                            $('#operationsListContainerUpdate').text('SIN REGISTRO DE OPERACIONES LIBERADAS');
+                        }
 
                     }).catch((error) => {
                         console.log(error);
+                        $('#operationsListContainerUpdate').text('SIN REGISTRO DE OPERACIONES LIBERADAS');
                 });
               //FIN PETICION
         })
 
         
-        //Evento para eliminar el chip clicqueado en el formlario de operationsListContainerUpdate
-        $('#operationsListContainerUpdate').on('click', '.remove-iconUpdate', function () {
-            event.preventDefault();
-            // Remover el chip correspondiente
-            const label = icon.getAttribute("data-index");
-            removerChipTalla(label);
-        });
-
         //Boton para volver a la tabla del modal de registro de personal
         $('#btnBackModalPersonal').on('click', function (){changeContent('ventanasModalPersonal', 'ventanaTablaListadoPersonal')})
 
@@ -2419,3 +2689,34 @@
 
         applyZoom();
     });
+
+
+
+    //Cambio de modelo
+    /*
+      El cambio de modelo es cuando en la linea comienzan a fabricar piezas pero con caracteristicas diferentes
+      como por ejemplo la orientacion del bracket, las dimensiones de las piesas, las mesas en las que montan el arnez
+      o los componentes que se utilizan para fabricar el arness, por lo general no se suelen cambiar de componentes mas que en la linea de ford
+      aqui solo cambia que en un modelo se fabrica un braquet y en otro se usa un gromer, 
+      en la linea de ford se usan 4 modelos la posca blanca es para el lado derecho y la azul para el lado izquierdo
+      en crv solo son dos modelos el de el lado r y el del lado derecho, 
+      en mdx/pilot tambien son 4 modelos el de mdx izquiero y derecho y el de pilot lado izquiero y derecho, aqui se utilizan 
+      4 tipos de posca el blanco y azul para el modelo de mdx y el de amarillo y rojo para el modelo de pilot, igual uno para cada lado
+      cuando hacen el cambio de modelo pegan unas hojas en las maquinas o estaciones como ayuda visual que indican el modelo
+      que se esta fabricando, por ejemplo en mdx/pilot los que terminan con 610 son los del lado izquiero y los que terminan en 60
+      son los del lado derecho, en la lionea de ford los distinguen por las letras en las que termina el codigo que es el AC  y otro codigo,
+      en oddyseey tengo enentendido que tambien tienen 4 modelos y colo en crv tienen dos, y van ha meter otro color de posca que es morado
+      para un modelo llamado passport en la linea de mdx/pilot, 
+      Cuando se hace el cambio de modelo deben de cambiarse los programas en las maquinas, estos los cvambias el personal de mantenimiento
+      en algunas estaciones lo hace el mismo personal
+      Me explicaron que no hacen cambio de material al cambiar de modelo se usa el mismo material solo cambian las propiedades, orientacion, dimensiones
+      etc con las que se trabajan, con ecepcion de ford, pero de igual manera el material lo tienen en la linea y lo da el mismo
+      abastecedor, no es necesario hacer un proceso en especial para solicitar material al cambiar de modelo
+      El unico circuito que tienen aqui es el IC, este los pide derectamente la persona que esta en la estacion de moldeo de ic
+      al area donde tienen el material, no hay mas circuitos ademas de este, 
+
+      Dependiendo del modelo cada terminal se le pone un sello diferente, las terminalas van colocados en donde estan 
+      los conectores, y el IC va sobre el cabezal, las poscas son tinta de colores que colocan a los arneses para distinguir el modelo
+      hay modelos de arneses que no tienen IC, por lo que solo tiene el conector
+      las terminales y los IC se colocan en extremidades diferentes del arnes, las terminales se trabajan en el area de crimpado
+    */
