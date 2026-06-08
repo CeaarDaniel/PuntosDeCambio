@@ -33,13 +33,14 @@
         </span>
       </button>
 
-      <!--CONSULTAR PUNTO DE CAMBIO -->
+      <!--CONSULTAR PUNTO DE CAMBIO
         <button class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Punto de cambio">
           <span data-bs-toggle="modal" data-bs-target="#changePointsModal">
           <i class="bi bi-arrow-repeat"></i>
           <span>Cambio</span>
           </span>
-        </button>
+        </button> 
+      -->
 
       <!--REGISTRO DE ASISTENCIA -->
       <button id="btnMenuRegistroAs" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Registro de asistencia">
@@ -57,13 +58,15 @@
         </span>
       </button>
 
-      <!--BOTON PARA MOSTRAR HISTORIAL DE REGISTROS DEL LAYOUT -->
+      <!--BOTON PARA MOSTRAR HISTORIAL DE REGISTROS DEL LAYOUT
       <button id="btnHistorialLayout" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Consultar el acomodo del layout en alguna fecha">
          <span data-bs-toggle="modal" data-bs-target="#historialLayoutModal">
             <i class="bi bi-clock-history"></i>
             <span>Historial</span>
          </span> 
-      </button>
+      </button> 
+      -->
+
       <!-- Botón para mostrar modal de error 
         <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#errorModal">
             <i class="bi bi-exclamation-triangle-fill" style=""></i>

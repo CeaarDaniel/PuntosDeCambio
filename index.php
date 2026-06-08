@@ -38,7 +38,7 @@
       </div>
       
       <div id="content-area" class="content-area animacion">
-        <?php include('./pages/dashboard.php') ?>
+        <?php include('./pages/menuLineas.php') ?>
       </div>
     </div>
 </div>

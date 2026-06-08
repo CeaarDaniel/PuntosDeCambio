@@ -711,7 +711,7 @@
                                                 <option value="4" ${(row.estatus && row.estatus=='4') ? 'selected' : ''}>🏖️ VACACIONES</option>
                                                 <option value="5" ${(row.estatus && row.estatus=='5') ? 'selected' : ''}>🟡 PARO TÉCNICO</option>
                                                 <option value="6" ${(row.estatus && row.estatus=='6') ? 'selected' : ''}>⚪ DESCANSO</option>
-                                                <option value="7" ${(row.estatus && row.estatus=='7') ? 'selected' : ''}>🚫 SANCIÓN</option>
+                                                <option value="7" ${(row.estatus && row.estatus=='7') ? 'selected' : ''}>🚫 SUSPENSIÓN</option>
                                                 <option value="8" ${(row.estatus && row.estatus=='8') ? 'selected' : ''}>⏱️ TIEMPO EXTRA</option>
                                                 <option value="9" ${(row.estatus && row.estatus=='9') ? 'selected' : ''}>🏥 INCAPACIDAD</option>
                                               </select>`
@@ -1302,32 +1302,73 @@
 
     //FUNCION PARA LOS CHIPS DE ACTUALIZAR OPERACIONES
           //Agregar chip
-           function agregarChipTallaUpdate(data) {
+           function agregarChipTallaUpdate(estaciones, nomina = null) {
                 //Se modifican las cadenas a mayusculas para que sea indistinto valores como Xsd y xSD
-                if(!data.some(item => ((item.idE).toUpperCase()).trim() === (($('#selectRegistrarUpdate').val()).toUpperCase()).trim())) {
-                    if ($('#selectRegistrarUpdate').val().trim() !== '') {
-                        data.push({
-                            nombre_estacion: $("#selectRegistrarUpdate option:selected").text(),
-                            idE: $('#selectRegistrarUpdate').val()
-                        });
+                if(!estaciones.some(item => ((item.idE).toUpperCase()).trim() === (($('#selectRegistrarUpdate').val()).toUpperCase()).trim())) {
+                    if ($('#selectRegistrarUpdate').val().trim() !== '') { //Validar que se haya enviado algo
 
-                        $('#selectRegistrarUpdate').val('');
-                        actualizarTallasAltaChipsUpdate(data);
+                            //Enviar la peticion para el registro de la informacion en la base de datos
+                            const formData = new FormData();
+                            formData.append('opcion', 32);
+                            formData.append('nomina', nomina);
+                            formData.append('estacionId', $('#selectRegistrarUpdate').val());
+                              fetch("../api/operacionesLinea.php", {
+                                  method: "POST",
+                                  body: formData
+                              })
+                              .then(response => response.json())
+                                .then(data => {
+                                  if (data.estatus === 'ok') {
+                                    estaciones.push({
+                                      nombre_estacion: $("#selectRegistrarUpdate option:selected").text(),
+                                      idE: $('#selectRegistrarUpdate').val()
+                                    });
+
+                                    $('#selectRegistrarUpdate').val('');
+                                    actualizarTallasAltaChipsUpdate(estaciones, nomina);
+                                  }
+
+                                  else {
+                                    console.log(data.mensaje)
+                                  }
+                                })
+                                .catch(error => {
+                                  console.error(error);
+                                  alert('Error de conexión');
+                              });
                     }
-
                 } else {
                     alert('Ya existe este registro');
                 }
             }
 
-            // Función para remover un chip
-            function removerChipTallaUpdate(data, index) {
-                data.splice(index, 1);
-                actualizarTallasAltaChipsUpdate(data);
+            // Función para remover un chip en la tabla de listado de presonal
+            function removerChipTallaUpdate(estaciones, index, nomina) {
+                  const formData = new FormData();
+                  formData.append('opcion', 33);
+                  formData.append('nomina', nomina);
+                  formData.append('estacionId', estaciones[index].idE);
+                    fetch("../api/operacionesLinea.php", {
+                        method: "POST",
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.estatus === 'ok') {
+                            estaciones.splice(index, 1);
+                            actualizarTallasAltaChipsUpdate(estaciones, nomina);
+                        } else {
+                            console.log(data)
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        alert('Error de conexión');
+                    });
             }
 
-            // Función para actualizar los chips
-            function actualizarTallasAltaChipsUpdate(data) { //Esta funcion actualiza la vista de las tallas despues de agregar o eliminar una talla
+            // Función para actualizar los chips en la tabla de listao de personal
+            function actualizarTallasAltaChipsUpdate(data, nomina = null) { //Esta funcion actualiza la vista de las tallas despues de agregar o eliminar una talla
                 const container = document.getElementById('operationsListContainerUpdate');
 
                 //limpeamos el contenedor de los chips
@@ -1335,7 +1376,7 @@
                 container.innerHTML = data.map((t, index) => `
                   <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-info bg-opacity-10 text-dark">
                     <span> ${t.nombre_estacion}</span>
-                    <i class="bi bi-x-circle-fill remove-iconUpdate" data-index =${index} style="cursor: pointer; color: #dc3545;" title="Eliminar"></i>
+                    <i class="bi bi-x-circle-fill remove-iconUpdate" data-index='${index}' data-nomina='${nomina}' data-estacion='${t.idE}' style="cursor: pointer; color: #dc3545;" title="Eliminar"></i>
                   </div>
                 `).join(''); //Se agrega el indice (index) para poder eliminar mas facil lo elemetnos del arreglo
 
@@ -1346,7 +1387,7 @@
                         event.preventDefault();
                         // Remover el chip correspondiente
                         const index = icon.getAttribute("data-index");
-                        removerChipTallaUpdate(data, index);
+                        removerChipTallaUpdate(data, index, nomina);
                     });
                 });
             }
@@ -1366,6 +1407,7 @@
                 .then((data) => {
                   console.log(data);
                     data = JSON.parse(data)
+                    $('#tableListadoPersonal').DataTable().destroy();
                     const table = $('#tableListadoPersonal').DataTable({
                           data: data,
                           columns: [
@@ -1422,216 +1464,167 @@
     }
 
     //Funcion para mostrar el listado de operaciones
-    function mostrarTablaOperaciones(){
-      // 1. JSON DE PRUEBA (exactamente el que proporcionaste)
-      const serverResponse = {
-        "estatus": "ok",
-        "data": [
-          {
-            "id_estacion": "14",
-            "nombre_estacion": "CORTE",
-            "asignados": [
-              { "nomina": "107524", "nombre": "BRISEÑO ARMENDARIZ, YARIDA MARICRUZ" }
-            ],
-            "liberados": [
-              { "nomina": "107802", "nombre": "MAURICIO CAMACHO, MARIA DEL CARMEN" }
-            ]
-          },
-          {
-            "id_estacion": "15",
-            "nombre_estacion": "RE CORTE",
-            "asignados": [
-              { "nomina": "107779", "nombre": "GARCIA DELGADILLO, JOSELIN AIDE" }
-            ],
-            "liberados": [
-              { "nomina": "107802", "nombre": "MAURICIO CAMACHO, MARIA DEL CARMEN" },
-              { "nomina": "4800", "nombre": "DE LIRA MONTAÑEZ, ZAIRA YARAVIT" }
-            ]
-          },
-          {
-            "id_estacion": "16",
-            "nombre_estacion": "DESFORRE",
-            "asignados": [
-              { "nomina": "107802", "nombre": "MAURICIO CAMACHO, MARIA DEL CARMEN" }
-            ],
-            "liberados": [
-              { "nomina": "107802", "nombre": "MAURICIO CAMACHO, MARIA DEL CARMEN" }
-            ]
-          },
-          {
-            "id_estacion": "17",
-            "nombre_estacion": "REDUCCION",
-            "asignados": [
-              { "nomina": "104236", "nombre": "ESPINO MARMOLEJO, FATIMA DEL ROSARIO" }
-            ],
-            "liberados": []
-          },
-          {
-            "id_estacion": "18",
-            "nombre_estacion": "CRIMPADO 1",
-            "asignados": [
-              { "nomina": "106320", "nombre": "CRUZ CIRINO, LESLIE LIZBETH" }
-            ],
-            "liberados": [
-              { "nomina": "107735", "nombre": "CORTES MORA, MAYRA ALICIA" }
-            ]
-          },
-          {
-            "id_estacion": "19",
-            "nombre_estacion": "INCERSION 1",
-            "asignados": [
-              { "nomina": "102073", "nombre": "M DEL CAMPO DE LA ROSA, LIZBETH ARELY" }
-            ],
-            "liberados": [
-              { "nomina": "107735", "nombre": "CORTES MORA, MAYRA ALICIA" }
-            ]
-          },
-          {
-            "id_estacion": "20",
-            "nombre_estacion": "CRIMPADO 2",
-            "asignados": [
-              { "nomina": "107887", "nombre": "CIBRIAN HERNANDEZ, MIRANDA ESTEFANI" }
-            ],
-            "liberados": [
-              { "nomina": "107735", "nombre": "CORTES MORA, MAYRA ALICIA" },
-              { "nomina": "11607", "nombre": "VEGA CARDENAS, CESAR DANIEL" }
-            ]
-          },
-          {
-            "id_estacion": "21",
-            "nombre_estacion": "CRIMPADO 3",
-            "asignados": [
-              { "nomina": "107735", "nombre": "CORTES MORA, MAYRA ALICIA" }
-            ],
-            "liberados": [
-              { "nomina": "107735", "nombre": "CORTES MORA, MAYRA ALICIA" }
-            ]
-          },
-          {
-            "id_estacion": "22",
-            "nombre_estacion": "INCERSION 2",
-            "asignados": [
-              { "nomina": "107758", "nombre": "GARCIA MONDRAGON, KARINA" }
-            ],
-            "liberados": [
-              { "nomina": "107735", "nombre": "CORTES MORA, MAYRA ALICIA" }
-            ]
-          },
-          {
-            "id_estacion": "23",
-            "nombre_estacion": "MARCADO LASER L",
-            "asignados": [
-              { "nomina": "107294", "nombre": "GONZALEZ SABAS, MARIA DOLORES" }
-            ],
-            "liberados": [
-              { "nomina": "107524", "nombre": "BRISEÑO ARMENDARIZ, YARIDA MARICRUZ" }
-            ]
-          }
-        ]
-      };
+    function mostrarTablaOperaciones() {
+      let formDataOperaciones = new FormData();
+      formDataOperaciones.append('codigoLinea', codigoLinea.value);
+      formDataOperaciones.append('opcion', 31);
+      formDataOperaciones.append('turno', $('#turnoLayout').val());
 
-      const data = serverResponse.data;
+      fetch("../api/operacionesLinea.php", {
+        method: "POST",
+        body: formDataOperaciones,
+      })
+        .then((response) => response.text())
+        .then((data) => {
+          console.log(data);
+          data = JSON.parse(data);
+          const response = data.data;
 
-      // 2. Variable para calcular total de asignaciones (para el badge)
-      let totalAsignados = 0;
-      data.forEach(item => {
-        totalAsignados += item.asignados.length;
-      });
+          // Inicializar DataTable
+          const table = $('#operationsTable').DataTable({
+            data: response,
+            columns: [
+              {
+                data: 'nombre_estacion',
+                className: 'px-4 py-3 fw-semibold text-dark'
+              },
+              {
+                data: null,
+                className: 'px-4 py-3',
+                // Añadir clase dinámica al <td> mediante createdCell
+                createdCell: function (td, cellData, rowData, row, col) {
+                  $(td).addClass('chips-col-' + rowData.id_estacion);
+                },
+                render: function (rowData) {
+                  if (!rowData.asignados || rowData.asignados.length === 0) {
+                    return `<span class="text-muted fst-italic small placeholder-asignados">Sin asignar</span>`;
+                  }
+                  let html = '<div class="d-flex flex-wrap gap-2">';
+                  rowData.asignados.forEach(person => {
+                    html += `
+                      <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm chip-asignado"
+                          data-estacion="${rowData.id_estacion}" data-nomina="${person.nomina}">
+                        <span class="small">${person.nombre}</span>
+                        <i class="bi bi-x-circle-fill remove-assigned" 
+                          style="cursor: pointer; font-size: 0.8rem; color: #dc3545;"
+                          data-nomina="${person.nomina}" title="Quitar asignación"></i>
+                      </div>
+                    `;
+                  });
+                  html += '</div>';
+                  return html;
+                }
+              },
+              {
+                data: null,
+                className: 'px-4 py-3',
+                render: function (rowData) {
+                  let selectHtml = `<select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3">`;
+                  selectHtml += `<option value="">Seleccionar operario...</option>`;
 
-      $('#totalAsignadosBadge').text(`${totalAsignados} personas asignadas`);
+                  if (rowData.liberados && rowData.liberados.length > 0) {
+                    rowData.liberados.forEach(person => {
+                      selectHtml += `<option value="${person.nomina}">${person.nombre} (${person.nomina})</option>`;
+                    });
+                  } else {
+                    selectHtml += `<option disabled>Sin liberados disponibles</option>`;
+                  }
+                  selectHtml += `</select>`;
 
-      // 3. Inicializar DataTable
-      const table = $('#operationsTable').DataTable({
-        data: data,
-        columns: [
-          {
-            data: 'nombre_estacion',
-            className: 'px-4 py-3 fw-semibold text-dark'
-          },
-          {
-            data: null,
-            className: 'px-4 py-3',
-            render: function (data) {
-              if (!data.asignados || data.asignados.length === 0) {
-                return `<span class="text-muted fst-italic small">Sin asignar</span>`;
-              }
-              // Renderizar chips
-              let html = '<div class="d-flex flex-wrap gap-2">';
-              data.asignados.forEach(person => {
-                html += `
-                                    <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm">
-                                        <span class="small">${person.nombre}</span>
-                                        <i class="bi bi-x-circle-fill remove-icon" style="cursor: default; font-size: 0.8rem; color: #dc3545;"></i>
-                                    </div>
-                                `;
-              });
-              html += '</div>';
-              return html;
-            }
-          },
-          {
-            data: null,
-            className: 'px-4 py-3',
-            render: function (data) {
-              // Construir select con operarios liberados
-              let selectHtml = `<select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3">`;
-              selectHtml += `<option>Seleccionar operario...</option>`;
-
-              if (data.liberados && data.liberados.length > 0) {
-                data.liberados.forEach(person => {
-                  // Mostramos nombre + (nómina) como en tu ejemplo "Carlos Ruiz (Cert)"
-                  selectHtml += `<option value="${person.nomina}">${person.nombre} (${person.nomina})</option>`;
-                });
-              } else {
-                selectHtml += `<option disabled>Sin liberados disponibles</option>`;
-              }
-              selectHtml += `</select>`;
-
-              // Botón +
-              const btnHtml = `
-                                <button class="btn btn-sm btn-info rounded-3" data-estacion="${data.id_estacion}">
+                  const btnHtml = `<button class="btn btn-sm btn-info rounded-3 btn-add-worker" data-estacion="${rowData.id_estacion}">
                                     <i class="bi bi-plus-lg"></i>
-                                </button>
-                            `;
+                                  </button>`;
 
-              return `
-                                <div class="d-flex gap-2 align-items-center">
-                                    ${selectHtml}
-                                    ${btnHtml}
-                                </div>
-                            `;
-            }
-          }
-        ],
-        pageLength: 10,
-        lengthMenu: [5, 10, 25, 50],
-        responsive: false,
-        scrollX: true
-        /*
-        initComplete: function () {
-          console.log('DataTable lista de operaciones cargada.');
-        } 
-        */
-      });
+                  return `
+                    <div class="d-flex gap-2 align-items-center">
+                      ${selectHtml}
+                      ${btnHtml}
+                    </div>
+                  `;
+                }
+              }
+            ],
+            pageLength: 10,
+            lengthMenu: [5, 10, 25, 50],
+            responsive: false,
+            scrollX: true
+          });
 
-      // 4. Manejar clic en el botón "+" (Agregar trabajador)
-      $('#operationsTable tbody').on('click', '.btn-add-worker', function () {
-        const estacionId = $(this).data('estacion');
-        const select = $(this).closest('div').find('select');
-        const selectedValue = select.val();
-        const selectedText = select.find('option:selected').text();
+          // Badge inicial (basado en el DOM recién generado)
+          actualizarBadgeAsignadosDOM();
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
 
-        if (selectedValue && selectedValue !== 'Seleccionar operario...' && !select.find('option:selected').is(':disabled')) {
-          // Aquí puedes hacer una llamada AJAX para asignar el trabajador
-          console.log(`Asignar operario: ${selectedText} (${selectedValue}) a estación ${estacionId}`);
-          alert(`✅ Asignando a ${selectedText} a la estación ${estacionId}`);
 
-          // Ejemplo de cómo actualizarías la tabla (simulado)
-          // En producción harías un fetch() y luego recargarías la DataTable con ajax.reload()
-        } else {
-          alert('Por favor selecciona un operario válido.');
-        }
-      });
+    // Agrega un chip a la columna de la estación especificada
+    function agregarPersonaOperacion(estacionId, nomina, nombreCompleto) {
+      const $td = $(`#operationsTable td.chips-col-${estacionId}`);
+      if ($td.length === 0) {
+        console.warn(`No se encontró la columna para estación ${estacionId}`);
+        return;
+      }
+
+      // Verificar si la persona ya está en un chip (evita duplicado visual)
+      if ($td.find(`.chip-asignado[data-nomina="${nomina}"]`).length > 0) {
+        alert('Esta persona ya está asignada a esta estación.');
+        return;
+      }
+
+      // Eliminar el placeholder "Sin asignar" si existe
+      $td.find('.placeholder-asignados').remove();
+
+      // Crear el nuevo chip
+      const chipHtml = `
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm chip-asignado"
+            data-estacion="${estacionId}" data-nomina="${nomina}">
+          <span class="small">${nombreCompleto}</span>
+          <i class="bi bi-x-circle-fill remove-assigned" 
+            style="cursor: pointer; font-size: 0.8rem; color: #dc3545;"
+            data-nomina="${nomina}" title="Quitar asignación"></i>
+        </div>
+      `;
+
+      // Agregar al contenedor de chips (asumimos que el td contiene un div.d-flex.flex-wrap)
+      const $chipsContainer = $td.find('.d-flex.flex-wrap');
+      if ($chipsContainer.length) {
+        $chipsContainer.append(chipHtml);
+      } else {
+        // Si no hay contenedor (por ejemplo, solo el placeholder), lo creamos
+        $td.html(`<div class="d-flex flex-wrap gap-2">${chipHtml}</div>`);
+      }
+
+      actualizarBadgeAsignadosDOM();
+    }
+
+    // Elimina un chip a partir de su elemento contenedor
+    function removerPersonaOperacion($chipContainer) {
+      const $td = $chipContainer.closest('td');
+      $chipContainer.remove();
+
+      // Si ya no quedan chips, mostrar placeholder
+      const $chipsContainer = $td.find('.d-flex.flex-wrap');
+      if ($chipsContainer.length && $chipsContainer.children('.chip-asignado').length === 0) {
+        $td.html('<span class="text-muted fst-italic small placeholder-asignados">Sin asignar</span>');
+      } else if (!$chipsContainer.length) {
+        // Si no había contenedor, restaurar placeholder directamente
+        $td.html('<span class="text-muted fst-italic small placeholder-asignados">Sin asignar</span>');
+      }
+
+      actualizarBadgeAsignadosDOM();
+    }
+
+    // Actualiza el badge contando nóminas únicas de todos los chips visibles
+    function actualizarBadgeAsignadosDOM() {
+       const table = $('#operationsTable').DataTable();
+            const nominasSet = new Set();
+            table.rows().every(function () {
+              const asignados = this.data().asignados || [];
+              asignados.forEach(p => nominasSet.add(p.nomina));
+            });
+            $('#totalAsignadosBadge').text(`${nominasSet.size} personas asignadas`);
     }
 
 
@@ -2208,6 +2201,7 @@
               formDataAsig.append("fecha", fecha);
               formDataAsig.append('codigoLinea', codigoLinea.value)
               formDataAsig.append('operaciones', JSON.stringify(chipsEstaciones))
+              formDataAsig.append('turno', $('#turnoLayout').val())
               //console.log('Operaciones:'+  JSON.stringify(chipsEstaciones))
 
                 if(!nombre) { 
@@ -2230,6 +2224,7 @@
                             $('#nombreModalRegistrar').val('');
                             chipsEstaciones = [];
                             $('#operationsListContainer').html('');
+                            mostrarTablaPersonal()
                         }
 
                       else {
@@ -2494,7 +2489,7 @@
         fechaHistorial.addEventListener('change', getHistorialLayout);
         turnoHistorial.addEventListener('change', getHistorialLayout);
         btnEvaluacion.addEventListener('click', registrarEvaluacionPC);
-        btnHistorialLayout.addEventListener('click', getHistorialLayout);
+        //btnHistorialLayout.addEventListener('click', getHistorialLayout);
 
         // SELECT → change
         $('#attendanceTable tbody').on('change', 'select', function () {
@@ -2657,12 +2652,12 @@
                                 data.data = [];
                             }
 
-                            actualizarTallasAltaChipsUpdate(data.data);
+                            actualizarTallasAltaChipsUpdate(data.data, nomina);
                             console.log("datos operaciones registradas:",data)
 
                             //Usamos off para eliminar los eventos previos y evitar que se aniden
                              $('#btnChipModalRegistrarUpdate').off('click').on('click', function () {
-                                agregarChipTallaUpdate(data.data);
+                                agregarChipTallaUpdate(data.data, nomina);
                             });
                         }
 
@@ -2677,10 +2672,77 @@
                 });
               //FIN PETICION
         })
-
         
         //Boton para volver a la tabla del modal de registro de personal
         $('#btnBackModalPersonal').on('click', function (){changeContent('ventanasModalPersonal', 'ventanaTablaListadoPersonal')})
+
+        // Botón "+" para agregar en la tabla de lista de operaciones
+        $(document).on('click', '#operationsTable .btn-add-worker', function () {
+          const estacionId = $(this).data('estacion');
+          const $select = $(this).closest('td').find('select');
+          const nomina = $select.val();
+          const nombreMostrado = $select.find('option:selected').text();
+          const nombre = nombreMostrado.includes('(') ? nombreMostrado.split(' (')[0] : nombreMostrado;
+
+          if (!nomina || nomina === '') {
+            alert('Por favor selecciona un operario válido.');
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append('opcion', 3);
+          formData.append('nomina', nomina);
+          formData.append('estacion', estacionId);
+          formData.append('nombre', nombre);
+          formData.append('turno', $('#turnoLayout').val());
+          formData.append('codigoLinea', codigoLinea.val);
+
+            fetch("../api/operacionesLinea.php", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.estatus === 'ok') {
+                   agregarPersonaOperacion(estacionId, nomina, nombre);
+                } else {
+                    console.log(data.mensaje)
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                alert('Error de conexión');
+            });
+        });
+
+        // Icono ✖ para quitar en la tabla de lista de operaciones
+        $(document).on('click', '#operationsTable .remove-assigned', function (e) {
+          e.stopPropagation();
+
+          const estacionId = $(this).data('estacion');
+          const nomina = $(this).data('nomina');
+
+          const formData = new FormData();
+          formData.append('opcion', 33);
+          formData.append('nomina', nomina);
+          formData.append('estacionId', estacionId);
+            fetch("../api/operacionesLinea.php", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.estatus === 'ok') {
+                  removerPersonaOperacion($(this).closest('.chip-asignado'));
+                } else {
+                    console.log(data.mensaje)
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                alert('Error de conexión');
+            });
+        });
 
       // Cargar las formas
       setTimeout(() => {

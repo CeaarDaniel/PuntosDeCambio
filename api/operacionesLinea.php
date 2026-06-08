@@ -147,7 +147,7 @@ else
         $nomina =  $_POST['nomina'] ?? null;
         $nombre = $_POST['nombre'] ?? null;
         $estacion = $_POST['estacion'] ?? '';
-        $fecha = $_POST['fecha'] ?? null;
+        $fecha = $_POST['fecha'] ??  date('Y-m-d H:i:s');
         $turno = $_POST['turno'] ?? null;
         $comentarios = $_POST['comentarios'] ?? null;
         $codigoLinea = $_POST['codigoLinea'] ?? null;
@@ -1571,6 +1571,7 @@ else
            
             //Si no existe un registro de asistencia generar uno
             else {
+                /*
                 $sql= "SELECT t.nomina, MAX(t.nombre) AS nombre, 
                               STRING_AGG(CAST(t.id_estacion AS NVARCHAR(10)), ',') AS id_estacion,
                               STRING_AGG(COALESCE(e.nombre_estacion, 'SIN ASIGNAR'), ', ') AS nombre_estacion
@@ -1584,7 +1585,18 @@ else
                                 SELECT nomina, nombre, NULL AS id_estacion FROM SPC_PERSONAL_NAD
                                     WHERE eliminado = '0' AND codigo_linea = :codigoLinea and turno = :turno
                               ) t LEFT JOIN SPC_ESTACIONES e ON e.id_estacion = t.id_estacion  
-                        GROUP BY t.nomina ORDER BY t.nomina;";
+                        GROUP BY t.nomina ORDER BY t.nomina;"; */
+
+                $sql ="SELECT p.nomina, p.nombre,
+                            STRING_AGG(CAST(x.id_estacion AS NVARCHAR(10)), ',') AS id_estacion,
+                            COALESCE(STRING_AGG(e.nombre_estacion, ', '), 'SIN ASIGNAR') AS nombre_estacion
+                        FROM SPC_PERSONAL p LEFT JOIN (
+                        SELECT nomina, id_estacion FROM SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL AND turno = :turno
+                            UNION ALL
+                        SELECT nomina, id_estacion FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND turno = :turno AND codigo_linea = :codigoLinea) x
+                            ON x.nomina = p.nomina LEFT JOIN SPC_ESTACIONES e ON e.id_estacion = x.id_estacion
+                        WHERE p.codigo_linea = :codigoLinea AND p.turno = :turno
+                            GROUP BY p.nomina, p.nombre ORDER BY p.nomina;";
 
                 $stmt = $conn->prepare($sql);
                 $response= array();
@@ -2202,7 +2214,7 @@ else
 }
 
 
-//Registro individual de asistencia
+//Registro de personal
 else 
  if($opcion == '28'){
         $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
@@ -2210,6 +2222,7 @@ else
         $nombre = !empty($_POST['nombre']) ? $_POST['nombre'] : null;
         $operaciones = !empty($_POST['operaciones']) ? $_POST['operaciones'] : null;
         $fecha = !empty($_POST['fecha']) ? $_POST['fecha'] : null;
+        $turno = !empty($_POST['turno']) ? $_POST['turno'] : null;
 
         $fecha = str_replace('T', ' ', $fecha);
        
@@ -2239,15 +2252,16 @@ else
                 }
 
             //INSERTAR REGISTRO
-                $sql = "INSERT INTO SPC_PERSONAL(nomina, nombre, estatus, codigo_linea, fecha_registro)
-                            VALUES (:nomina, :nombre, :estatus, :codigo_linea, :fecha_registro)";
+                $sql = "INSERT INTO SPC_PERSONAL(nomina, nombre, estatus, codigo_linea, fecha_registro, turno)
+                            VALUES (:nomina, :nombre, :estatus, :codigo_linea, :fecha_registro, :turno)";
                 $stmt = $conn->prepare($sql);
                 $stmt->execute([
                     ':nomina' => $nomina,
                     ':nombre' => $nombre,
                     ':estatus' => '0', //0 DISPONIBLE 1 ASIGNADO 2 ELIMINADO 
                     ':codigo_linea' => $codigoLinea,
-                    ':fecha_registro' => $fecha
+                    ':fecha_registro' => $fecha,
+                    ':turno' => $turno
                 ]);
 
 
@@ -2259,7 +2273,7 @@ else
                 }
 
                 // INSERTAR CADA OPERACION EN SPC_ILU
-                $sqlIlu = "INSERT INTO SPC_ILU (nomina, idE) VALUES(:nomina, :idE)";
+                $sqlIlu = "INSERT INTO SPC_ILU (nomina, idE, estatus) VALUES(:nomina, :idE, 0)";
                 $stmtIlu = $conn->prepare($sqlIlu);
 
                 foreach ($operacionesArray as $operacion) {
@@ -2336,7 +2350,7 @@ else
         try {
             $sql= "SELECT ILU.idE, E.nombre_estacion FROM SPC_PERSONAL P INNER JOIN SPC_ILU ILU ON P.nomina = ILU.nomina
                                                                 INNER JOIN SPC_ESTACIONES as E on e.id_estacion = ILU.idE
-                    WHERE p.codigo_linea = :codigo_linea and p.nomina=:nomina ";
+                    WHERE p.codigo_linea = :codigo_linea and p.nomina=:nomina and ILU.estatus!= 1";
             $registro = $conn->prepare($sql);
             $response = [];
 
@@ -2398,7 +2412,7 @@ else
                                     FROM SPC_ESTACIONES E
                                         INNER JOIN SPC_ILU I ON E.id_estacion = I.idE
                                         INNER JOIN SPC_PERSONAL P ON P.nomina = I.nomina
-                            WHERE E.codigo_linea = :codigo_linea AND P.turno = :turno";
+                            WHERE E.codigo_linea = :codigo_linea AND P.turno = :turno AND I.estatus != 1";
 
             $liberados = $conn->prepare($sqlLiberados);
             $liberados->execute([':codigo_linea' => $codigoLinea,':turno' => $turno]);
@@ -2449,6 +2463,159 @@ else
                 'error' => $e->getMessage()
             ]);
         }
+}
+
+//Agregar operaciones
+else 
+if ($opcion == '32') {
+    $nomina = !empty($_POST['nomina']) ? $_POST['nomina'] : null;
+    $operacion = !empty($_POST['estacionId']) ? $_POST['estacionId'] : null;
+
+    // Guardar fecha y hora actual
+    $fecha = date('Y-m-d H:i:s');
+
+    // Validar que existan los datos necesarios
+    if (!$operacion || !$nomina) {
+        echo json_encode([
+            'estatus' => 'error',
+            'mensaje' => 'Error al recibir los datos'
+        ]);
+        exit;
+    }
+
+    try {
+        $conn->beginTransaction();
+
+        // VALIDAR SI EXISTE EL REGISTRO
+        $sqlValidar = "SELECT estatus FROM SPC_ILU WHERE nomina = :nomina AND idE = :idE";
+        $stmtValidar = $conn->prepare($sqlValidar);
+        $stmtValidar->execute([':nomina' => $nomina, ':idE' => $operacion]);
+
+        $existe = $stmtValidar->fetch(PDO::FETCH_ASSOC);
+
+        // Si existe
+        if ($existe) {
+            // Evaluar si el estatus es diferente de 1 (eliminado)
+            if ($existe['estatus'] != 1) {
+                // No está eliminado: actualizar fecha del registro correspondiente a la nomina y el idE
+                $sqlUpdate = "UPDATE SPC_ILU SET fecha_registro = :fecha WHERE nomina = :nomina AND idE = :idE";
+                $stmtUpdate = $conn->prepare($sqlUpdate);
+                $stmtUpdate->execute([
+                    ':fecha' => $fecha,
+                    ':nomina' => $nomina,
+                    ':idE' => $operacion
+                ]);
+                $mensaje = 'Registro actualizado correctamente.';
+            } else {
+                // Estatus es 1 (eliminado): actualizar el estatus a 0 y actualizar la fecha
+                $sqlUpdate = "UPDATE SPC_ILU SET estatus = 0, fecha_registro = :fecha WHERE nomina = :nomina AND idE = :idE";
+                $stmtUpdate = $conn->prepare($sqlUpdate);
+                $stmtUpdate->execute([
+                    ':fecha' => $fecha,
+                    ':nomina' => $nomina,
+                    ':idE' => $operacion
+                ]);
+                $mensaje = 'Registro actualizado correctamente';
+            }
+
+            $conn->commit();
+            echo json_encode([
+                'estatus' => 'ok',
+                'mensaje' => $mensaje
+            ]);
+            exit;
+        }
+
+        // Si NO existe: INSERTAR EL REGISTRO EN LA TABLA SPC_ILU
+        $sqlIlu = "INSERT INTO SPC_ILU (nomina, idE, estatus, fecha_registro) VALUES (:nomina, :idE, 0, :fecha)";
+        $stmtIlu = $conn->prepare($sqlIlu);
+        $stmtIlu->execute([
+            ':nomina' => $nomina,
+            ':idE' => $operacion,
+            ':fecha' => $fecha
+        ]);
+
+        $conn->commit();
+        echo json_encode([
+            'estatus' => 'ok',
+            'mensaje' => 'Se ha agregado la operacion'
+        ]);
+
+    } catch (Exception $e) {
+        $conn->rollBack();
+        echo json_encode([
+            'estatus' => 'error',
+            'mensaje' => 'Ocurrió un error al realizar el registro',
+            'error' => $e->getMessage()
+        ]);
+    }
+}
+
+//Eliminar operaciones
+else 
+if ($opcion == '33') {
+    $nomina = !empty($_POST['nomina']) ? $_POST['nomina'] : null;
+    $operacion = !empty($_POST['estacionId']) ? $_POST['estacionId'] : null;
+
+    if (!$operacion || !$nomina) {
+        echo json_encode([
+            'estatus' => 'error',
+            'mensaje' => 'Error al recibir los datos'
+        ]);
+        exit;
+    }
+
+    try {
+        $conn->beginTransaction();
+
+        // Verificar si el registro existe y obtener su estatus actual
+        $sqlCheck = "SELECT estatus FROM SPC_ILU WHERE nomina = :nomina AND idE = :idE";
+        $stmtCheck = $conn->prepare($sqlCheck);
+        $stmtCheck->execute([':nomina' => $nomina, ':idE' => $operacion]);
+        $registro = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+        if (!$registro) {
+            // No existe el registro
+            $conn->rollBack();
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'El registro no existe'
+            ]);
+            exit;
+        }
+
+        if ($registro['estatus'] == 1) {
+            // Ya estaba eliminado, no se hace nada adicional
+            $conn->commit(); // O rollback, pero como no hubo cambios, commit es válido
+            echo json_encode([
+                'estatus' => 'ok',
+                'mensaje' => 'El registro ya se encontraba eliminado'
+            ]);
+            exit;
+        }
+
+        // Cambiar el estatus del registro a 1 (eliminado) y actualizar la fecha
+        //$fecha = date('Y-m-d H:i:s');
+        $sqlUpdate = "UPDATE SPC_ILU SET estatus = 1 WHERE nomina = :nomina AND idE = :idE";
+        $stmtUpdate = $conn->prepare($sqlUpdate);
+        $stmtUpdate->execute([
+            ':nomina' => $nomina,
+            ':idE'    => $operacion
+        ]);
+
+        $conn->commit();
+        echo json_encode([
+            'estatus' => 'ok',
+            'mensaje' => 'Registro eliminado correctamente'
+        ]);
+    } catch (Exception $e) {
+        $conn->rollBack();
+        echo json_encode([
+            'estatus' => 'error',
+            'mensaje' => 'Ocurrió un error al eliminar el registro',
+            'error'   => $e->getMessage()
+        ]);
+    }
 }
 
 /*
