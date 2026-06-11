@@ -1232,6 +1232,7 @@
     //Funcion para actualizar el layout al cambiar de turno registrar una asistencia volver a renderisar la estaciones y el svg
     function actualizarVistaLayout(){
          let turno = $("#turnoLayout").val()
+         document.getElementById('turnoasignar').value = $("#turnoLayout").val()
 
           if(turno){
             document.getElementById('workspaceGrid').innerHTML =  `
@@ -1988,12 +1989,14 @@
             //obtner la ultima fecha de operacion en la estacion actual (antes-> obtener nombre modalPC)
             $('#nominaModalPC').on('change', function () {
                 if(nominaModalPC && nominaModalPC !='') {
-                    let formDataConsultarNombre = new FormData;
                     let idEstacion = document.getElementById('id_estacion').value;
+
+                    let formDataConsultarNombre = new FormData;
                     formDataConsultarNombre.append('nomina',nominaModalPC.value)
-                    formDataConsultarNombre.append('opcion', 7)
-                    formDataConsultarNombre.append('codigoLinea', codigoLinea.value)
-            
+                    formDataConsultarNombre.append('idE',idEstacion)
+                    formDataConsultarNombre.append('opcion', 35)
+                    //formDataConsultarNombre.append('codigoLinea', codigoLinea.value)
+     
                         fetch("../api/operacionesLinea.php", {
                                 method: "POST",
                                 body: formDataConsultarNombre,
@@ -2001,43 +2004,43 @@
                             .then((response) => response.text())
                             .then((data) => {
                                 data= JSON.parse(data)
-            
-                                // 1. Verificar si en el listado de estaciones donde ha sido asignado el trabajador se encuentra la estacion actual
-                                const estacion = data.allEst.find(e => e.id_estacion === idEstacion);
-
-                                //Si no existe la etacion
-                                  if (!estacion) {
-                                        document.getElementById('alertPC').textContent = "ESTE TRABAJADOR NO CUENTA CON UN REGISTRO ANTERIOR EN ESTE PROCESO";
-                                    }
-
-                                  //Si la estacion exsite
-                                  else //2. Evaluar si el registro no esta activo, si esta activo el valor debera ser null, de no estar activo tendra un valor la fecha
-                                    if(estacion.fecha_fin){
-                                      // 3. Convertir a objeto Date
-                                      const fechaBase = new Date(estacion.fecha_fin);
-                                      const fechaActual = new Date();
-
-                                      // 4. Calcular diferencia en días
-                                      const diffMs = fechaActual - fechaBase;
-                                      const diffDias = Math.round(diffMs / (1000 * 60 * 60 * 24));
-
-                                      if (diffDias > 30) {
-                                        document.getElementById('alertPC').textContent = "EL ULTIMO REGISTRO DE OPERACION ES MAYOR A 30 DIAS";
-                                      }
-
-                                      else 
-                                        document.getElementById('alertPC').textContent = "";
-                                    }
-
-                                  else {
-                                    //El trabajador sigue activo en la estacion
-                                    document.getElementById('alertPC').textContent = ""
-                                  }
 
                                 if(data.estatus=='ok'){
+                                  // 1. Verificar si en el listado de estaciones donde ha sido asignado el trabajador se encuentra la estacion actual
+                                  const estacion = data.allEst;
+
+                                  //Si no existe la etacion
+                                    if (!estacion) {
+                                          document.getElementById('alertPC').textContent = "ESTE TRABAJADOR NO CUENTA CON UN REGISTRO ANTERIOR EN ESTE PROCESO";
+                                      }
+
+                                    //Si la estacion exsite
+                                    else //2. Evaluar si el registro no esta activo, si esta activo el valor debera ser null, de no estar activo tendra un valor la fecha
+                                      if(estacion.fecha_fin){
+                                        // 3. Convertir a objeto Date
+                                        const fechaBase = new Date(estacion.fecha_fin);
+                                        const fechaActual = new Date();
+
+                                        // 4. Calcular diferencia en días
+                                        const diffMs = fechaActual - fechaBase;
+                                        const diffDias = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+                                        if (diffDias > 30) {
+                                          document.getElementById('alertPC').textContent = "EL ULTIMO REGISTRO DE OPERACION ES MAYOR A 30 DIAS";
+                                        }
+
+                                        else 
+                                          document.getElementById('alertPC').textContent = "";
+                                      }
+
+                                    else {
+                                      //El trabajador sigue activo en la estacion
+                                      document.getElementById('alertPC').textContent = ""
+                                    }
                                 }
                               
                                 else{
+                                    document.getElementById('alertPC').textContent = ""
                                     console.log(data.error); 
                                 }
 

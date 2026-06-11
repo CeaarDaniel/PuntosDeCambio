@@ -575,8 +575,6 @@ else
         //Variable donde se trae $connE
         include('./conexionEmpleado.php');
         $nomina = $_POST['nomina'] ?? null;
-        $codigolinea = (!empty($_POST['codigoLinea'])) ? $_POST['codigoLinea'] : null;
-        $UE= null;
 
         if(empty($nomina)) {
                 echo json_encode(['estatus' => 'error',
@@ -588,63 +586,13 @@ else
         try {
                 $sql = "SELECT nombre FROM empleado_mst WHERE No_Nomina = :nomina";
                 $stmt = $connE->prepare($sql);
-                //$stmt->bindParam(':nomina', $nomina);
                 $stmt->execute([':nomina' => $nomina]);
                 $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-                $estaciones = null;
-                
-                if(!empty($codigolinea)){
-                    //Consulta para obtener el listado de estaciones actuales del trabajador                    
-                    $sqlEstaciones = "SELECT STRING_AGG(E.nombre_estacion, ', ') AS ESTACIONES FROM SPC_ESTACIONES E
-                                        INNER JOIN (
-                                            SELECT id_estacion FROM SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL AND nomina = :nomina
-                                                UNION ALL
-                                            SELECT id_estacion FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina
-                                        ) T ON E.id_estacion = T.id_estacion
-                                    WHERE E.codigo_linea = :codigoLinea;";
-
-                    $stmtE = $conn->prepare($sqlEstaciones);
-                    //$stmtE->bindParam(':nomina', $nomina, PDO::PARAM_INT);
-                    //$stmtE->bindParam(':nomina2', $nomina, PDO::PARAM_INT);
-                    //$stmtE->bindParam(':codigoLinea', $codigolinea);
-       
-                    $stmtE->execute([':nomina' => $nomina, ':codigoLinea' => $codigolinea]);
-                    $dataEstaciones = $stmtE->fetch(PDO::FETCH_ASSOC);
-                    $estaciones = $dataEstaciones ? $dataEstaciones['ESTACIONES'] : null;
-                    //$estaciones = $dataEstaciones['ESTACIONES'] ?? null;
-
-                    //Obtener el listado de estaciones donde a sido asignado el operador con su ultima fecha de asigacion
-                    $sqlUltimaE = "WITH HistorialCompleto AS (
-                                        SELECT id_estacion, fecha_asignacion AS fecha_inicio, fecha_fin
-                                            FROM SPC_PERSONAL_ESTACION WHERE nomina = :nomina1
-                                        UNION ALL
-                                        SELECT id_estacion, fechaHora_inicio AS fecha_inicio, fechaHora_fin   AS fecha_fin
-                                            FROM SPC_PUNTOS_CAMBIO WHERE nomina = :nomina2),
-                                    HistorialOrdenado AS (
-                                        SELECT id_estacion, fecha_inicio, fecha_fin,
-                                            ROW_NUMBER() OVER (PARTITION BY id_estacion ORDER BY fecha_inicio DESC) AS rn
-                                        FROM HistorialCompleto
-                                    )
-                                    SELECT H.id_estacion, E.nombre_estacion, H.fecha_inicio, H.fecha_fin   
-                                            FROM HistorialOrdenado as H
-                                        LEFT JOIN SPC_ESTACIONES E ON H.id_estacion = E.id_estacion
-                                    WHERE rn = 1 AND E.codigo_linea = :codigoLinea ORDER BY H.fecha_inicio DESC; ";
-
-                    $stmtUE = $conn->prepare($sqlUltimaE);
-                    $stmtUE->execute([':nomina1' => $nomina, 
-                                      ':nomina2' => $nomina,
-                                      ':codigoLinea' => $codigolinea
-                                    ]);
-                    $dataUE = $stmtUE->fetchALL(PDO::FETCH_ASSOC);
-                    $UE = $dataUE ?? null;
-                }
                 
                 if ($resultado) {
                     echo json_encode([
                         'estatus' => 'ok',
                         'nombre' => $resultado['nombre'],
-                        'estaciones' => $estaciones, //Procesos/Estaciones actuales
-                        'allEst' => $UE //Todo el registro de las distintas estaciones 
                     ]);
                 } else {
                     echo json_encode([
@@ -1204,38 +1152,6 @@ else
 
             // Confirmar la transacción
             $conn->commit();
-                    include('./conexionEmpleado.php');
-
-                        //Guardar la imagen del trabajador
-                        $sqlCheck = "SELECT No_Nomina as nomina, nombre, foto FROM empleado_mst WHERE No_Nomina = :nomina";
-                        $stmtCheck = $connE->prepare($sqlCheck);
-                        $stmtCheck->execute([':nomina' => $nominaPC]);
-                        $empleado = $stmtCheck->fetch(PDO::FETCH_ASSOC);
-
-                        $nombre_archivo = ""; // Valor por defecto
-
-                        if ($empleado && !empty($empleado['foto'])) {
-                            // Detectar tipo de imagen
-                            $finfo = new finfo(FILEINFO_MIME_TYPE);
-                            $tipo_mime = $finfo->buffer($empleado['foto']);
-
-                            // Mapear extensión según MIME type
-                            $extensiones = [
-                                'image/jpeg' => 'jpg',
-                                'image/jpg' => 'jpg',
-                                'image/png' => 'png',
-                                'image/gif' => 'gif',
-                                'image/bmp' => 'bmp'
-                            ];
-
-                            $extension = $extensiones[$tipo_mime] ?? 'bin';
-                            $nombre_archivo = $nominaPC . "." . $extension;
-                              $ruta = "../img/personal/" . $nombre_archivo;
-
-                            // Guardar la imagen en el directorio
-                            file_put_contents($ruta, $empleado['foto']);
-                        }
-
 
             echo json_encode([
                 'estatus' => 'ok',
@@ -2675,6 +2591,42 @@ if($opcion == '34'){
             'error'   => $e->getMessage()
         ]);
     }
+}
+
+//Obtener ultima fecha de operacion de un trabajador en una estacion
+else 
+  if($opcion == '35'){
+        $nomina = $_POST['nomina'] ?? null;
+        $idE = (!empty($_POST['idE'])) ? $_POST['idE'] : null;
+
+        if(empty($nomina) || empty($idE)) {
+                echo json_encode(['estatus' => 'error',
+                                  'error' => "Error al buscar al trabajador"
+                                ]);
+            exit;
+        }
+
+        try {
+            //Consulta para obtener el listado de estaciones actuales del trabajador
+                $sqlEstaciones = "SELECT TOP 1 fecha_inicio, fecha_fin FROM (
+                                        SELECT fecha_asignacion AS fecha_inicio, fecha_fin FROM SPC_PERSONAL_ESTACION WHERE id_estacion = :idE AND nomina = :nomina
+                                            UNION ALL
+                                        SELECT fechaHora_inicio AS fecha_inicio, fechaHora_fin AS fecha_fin FROM SPC_PUNTOS_CAMBIO WHERE id_estacion = :idE AND nomina = :nomina
+                                    ) AS registros ORDER BY CASE  WHEN fecha_fin IS NULL THEN 1 ELSE 0 END DESC, ISNULL(fecha_fin, fecha_inicio) DESC";
+
+                $stmtE = $conn->prepare($sqlEstaciones);            
+                $stmtE->execute([':nomina' => $nomina, ':idE' => $idE]);
+                $dataEstaciones = $stmtE->fetch(PDO::FETCH_ASSOC);
+                echo json_encode([
+                                    'estatus' => 'ok',
+                                    'allEst' => $dataEstaciones
+                                ]);
+        } catch (PDOException $e) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => $e->getMessage()
+            ]);
+        }
 }
 /*
     Resumen de asistencia

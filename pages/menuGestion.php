@@ -18,7 +18,7 @@
       </button>
 
       <!-- TABLA DE ASIGNACIONES -->
-      <button id="btnMenuAsignar" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Asignar operador">
+      <button class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Asignar operador">
         <span data-bs-toggle="modal" data-bs-target="#modalListaOperaciones">
           <i class="bi-diagram-3"></i>
           <span>Asignaciones</span>
@@ -26,7 +26,7 @@
       </button>
 
       <!-- ASIGNAR OPERADOR -->
-      <button id="btnMenuAsignar" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Asignar operador">
+      <button id="btnMenuAsignar" class="tool-btn d-none" data-bs-toggle="tooltip" data-bs-placement="right" title="Asignar operador">
         <span data-bs-toggle="modal" data-bs-target="#modalAsignarOperador">
           <i class="bi-clipboard"></i> <!-- bi-clipboard-check -->
           <span>Asignar</span>

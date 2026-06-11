@@ -528,6 +528,36 @@
                   <p class="text-muted mb-4">Complete la información para asignar un operador a una estación específica</p>
                 </div>
 
+                <!-- Información de la Asignación -->
+                <div class="form-section">
+                  <h4 class="section-subtitle">
+                    <i class="bi bi-geo-alt"></i>
+                    Detalles de la Asignación
+                  </h4>
+                  
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="stationSelect" class="form-label required-field">
+                        <i class="bi bi-cpu"></i>Estación
+                      </label>
+                      <select class="form-control form-control-custom" id="stationSelect" required>
+                        <option value="">Selecciona una estación...</option>
+                      </select>
+                      <div class="form-help">Selecciona la estación donde se asignará el operador</div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                      <label for="assignmentDate" class="form-label required-field">
+                          <i class="bi bi-calendar"></i>
+                          Fecha de Asignación
+                      </label>
+                      <input type="datetime-local" class="form-control form-control-custom" 
+                        id="assignmentDate"  required>
+                      <div class="form-help">Fecha en la que inicia la asignación</div>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Información del Operador -->
                 <div class="form-section">
                   <h4 class="section-subtitle">
@@ -573,7 +603,7 @@
                     </div>
 
                     <!--Listado de estaciones asignadas -->
-                      <div class="col-12">
+                      <div class="col-12 d-none">
                         <label for="nomina" class="form-label">
                           <i class="bi bi-list"></i>
                             Listado de estaciones asignadas
@@ -585,43 +615,9 @@
                   </div>
                 </div>
 
-                <!-- Información de la Asignación -->
-                <div class="form-section">
-                  <h4 class="section-subtitle">
-                    <i class="bi bi-geo-alt"></i>
-                    Detalles de la Asignación
-                  </h4>
-                  
-                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <label for="stationSelect" class="form-label required-field">
-                        <i class="bi bi-cpu"></i>Estación
-                      </label>
-                      <select class="form-control form-control-custom" id="stationSelect" required>
-                        <option value="">Selecciona una estación...</option>
-                      </select>
-                      <div class="form-help">Selecciona la estación donde se asignará el operador</div>
-                    </div>
-                    
-                    <div class="col-md-6 mb-3">
-                      <label for="assignmentDate" class="form-label required-field">
-                          <i class="bi bi-calendar"></i>
-                          Fecha de Asignación
-                      </label>
-                      <input type="datetime-local" class="form-control form-control-custom" 
-                        id="assignmentDate"  required>
-                      <div class="form-help">Fecha en la que inicia la asignación</div>
-                    </div>
-                  </div>
-                </div>
-
                 <!-- Configuración Adicional -->
                 <div class="form-section">
-                  <h4 class="section-subtitle">
-                    <i class="bi bi-sliders"></i>
-                    Configuración Adicional
-                  </h4>
-                  
+                
                   <!-- TURNO ASIGNAR -->
                   <div class="row">
                     <div class="col-md-6 mb-3">
