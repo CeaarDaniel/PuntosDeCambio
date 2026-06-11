@@ -96,7 +96,16 @@
       
       //Actualizar y mostrar el modal de la estacion al abrirlo
       showStationModal(stationData) {
-        console.log('Datos de la estacion: ', stationData)
+
+        //Validar que la ruta de la imagen exista
+        const img = document.getElementById('imgInfochangeControlModal');
+
+        img.onerror = function() {
+            this.onerror = null;
+            this.src = '../img/personal/ok.jpg';
+        };
+
+
         document.getElementById('imgInfochangeControlModal').src= (stationData.nomina) ? `../img/personal/${stationData.nomina}.jpg` : `../img/personal/na.jpg`;
         document.getElementById('nombreEstacionModalPC').textContent = (stationData.name) ? (stationData.name).toUpperCase() : '';
         document.getElementById('idEstacionModalPC').value = stationData.id;
@@ -130,6 +139,7 @@
           }
 
           getOperator(stationData.nomina, stationData.id, stationData.idPC || null);
+          setLiberados(stationData.id, 'nominaModalPC')
 
 
         //Modal creado registro de punto de cambio
@@ -350,6 +360,7 @@
                       $('#comentarios').val('');
                       $('#listaOperacionesOperador').html('<span class="form-help">Lista de operaciones asignadas del trabajador en la linea </span>');
                       getEstacion(estacion);
+                      mostrarTablaOperaciones();
                   }
 
                 else {
@@ -412,8 +423,9 @@
           console.warn(`No se encontró la estación ${stationId}`);
 
         /* Actualizar el arreglo*/ // Buscamos solo el objeto necesario
-        let estation = stationsData.find(obj => obj.id === stationId);
-
+        let estation = stationsData.find(obj => String(obj.id) === String(stationId));
+        //Mostrar el valor real del objeto estation
+        //console.log('Antes', JSON.parse(JSON.stringify(estation)));
         if (estation) {
            (newData.operator) ? estation.operator = newData.operator : '';
           //estation.name =  (newData.name)'Estación en uso';
@@ -423,7 +435,7 @@
             estation.idPC = (newData.idPC) ?? null;
             estation.estatusPC = (newData.estatusPC) ?? null;
             estation.isCertificate = newData.isCertificate
-        } //console.log(stationsData);  
+        } 
     } 
 
     //Mostrar listado de estaciones registradas para colocar en los select
@@ -1405,7 +1417,7 @@
                 })
                 .then((response) => response.text())
                 .then((data) => {
-                  console.log(data);
+          
                     data = JSON.parse(data)
                     $('#tableListadoPersonal').DataTable().destroy();
                     const table = $('#tableListadoPersonal').DataTable({
@@ -1476,11 +1488,12 @@
       })
         .then((response) => response.text())
         .then((data) => {
-          console.log(data);
+
           data = JSON.parse(data);
           const response = data.data;
 
           // Inicializar DataTable
+          $('#operationsTable').DataTable().destroy();
           const table = $('#operationsTable').DataTable({
             data: response,
             columns: [
@@ -1503,11 +1516,12 @@
                   rowData.asignados.forEach(person => {
                     html += `
                       <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-warning bg-opacity-25 shadow-sm chip-asignado"
-                          data-estacion="${rowData.id_estacion}" data-nomina="${person.nomina}">
+                           data-nomina="${person.nomina}">
                         <span class="small">${person.nombre}</span>
                         <i class="bi bi-x-circle-fill remove-assigned" 
                           style="cursor: pointer; font-size: 0.8rem; color: #dc3545;"
-                          data-nomina="${person.nomina}" title="Quitar asignación"></i>
+                          data-nomina="${person.nomina}" 
+                          data-estacion="${rowData.id_estacion}" title="Quitar asignación"></i>
                       </div>
                     `;
                   });
@@ -1583,7 +1597,7 @@
           <span class="small">${nombreCompleto}</span>
           <i class="bi bi-x-circle-fill remove-assigned" 
             style="cursor: pointer; font-size: 0.8rem; color: #dc3545;"
-            data-nomina="${nomina}" title="Quitar asignación"></i>
+            data-nomina="${nomina}" data-estacion="${estacionId}" title="Quitar asignación"></i>
         </div>
       `;
 
@@ -1627,6 +1641,36 @@
             $('#totalAsignadosBadge').text(`${nominasSet.size} personas asignadas`);
     }
 
+    //Funcion para mostrar el listado de personal liberado en una operacion
+    function setLiberados(idE, select){
+      let nombreSelect = document.getElementById(select);
+      let formDataLiberados = new FormData();
+      formDataLiberados.append('idE', idE);
+      formDataLiberados.append('opcion', 34);
+      document.getElementById('alertPC').textContent = '';
+      fetch("../api/operacionesLinea.php", {
+        method: "POST",
+        body: formDataLiberados,
+      })
+        .then((response) => response.text())
+        .then((data) => {
+          data = JSON.parse(data);
+          nombreSelect.innerHTML = '<option value="">Selecciona una opción</option>';
+          if (data.estatus !== 'ok') {
+            return;
+          }
+          
+          data.data.forEach((persona) => {
+            const opcion = document.createElement('option');
+            opcion.value = persona.nomina;
+            opcion.textContent = persona.nombre;
+            nombreSelect.appendChild(opcion);
+          });
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
 
     // ========== DIAGRAMADOR SVG ==========
     let svg = document.getElementById('workspace-svg');
@@ -1941,9 +1985,8 @@
                   }
             })
 
-            //obtner nombre modalPC
+            //obtner la ultima fecha de operacion en la estacion actual (antes-> obtener nombre modalPC)
             $('#nominaModalPC').on('change', function () {
-                let nombreModalAsignar = document.getElementById('nombreModalPC');
                 if(nominaModalPC && nominaModalPC !='') {
                     let formDataConsultarNombre = new FormData;
                     let idEstacion = document.getElementById('id_estacion').value;
@@ -1951,10 +1994,6 @@
                     formDataConsultarNombre.append('opcion', 7)
                     formDataConsultarNombre.append('codigoLinea', codigoLinea.value)
             
-                    nominaModalPC.disabled = true
-                    nombreModalAsignar.value= ''; 
-                    nombreModalAsignar.placeholder= "Consultando datos del empleado...";  
-
                         fetch("../api/operacionesLinea.php", {
                                 method: "POST",
                                 body: formDataConsultarNombre,
@@ -1963,13 +2002,16 @@
                             .then((data) => {
                                 data= JSON.parse(data)
             
-                                // 1. Buscar la estación
+                                // 1. Verificar si en el listado de estaciones donde ha sido asignado el trabajador se encuentra la estacion actual
                                 const estacion = data.allEst.find(e => e.id_estacion === idEstacion);
+
+                                //Si no existe la etacion
                                   if (!estacion) {
                                         document.getElementById('alertPC').textContent = "ESTE TRABAJADOR NO CUENTA CON UN REGISTRO ANTERIOR EN ESTE PROCESO";
                                     }
 
-                                  else //2. Evaluar si el registro no esta activo
+                                  //Si la estacion exsite
+                                  else //2. Evaluar si el registro no esta activo, si esta activo el valor debera ser null, de no estar activo tendra un valor la fecha
                                     if(estacion.fecha_fin){
                                       // 3. Convertir a objeto Date
                                       const fechaBase = new Date(estacion.fecha_fin);
@@ -1993,20 +2035,13 @@
                                   }
 
                                 if(data.estatus=='ok'){
-                                    nombreModalAsignar.value= data.nombre;                              
-                                    $('#listaOperacionesOperadorPC').html(`${(data.estaciones) ? data.estaciones : 'SIN OPERACIONES ASIGNADAS EN LA LINEA'}`)
                                 }
                               
                                 else{
-                                    nombreModalAsignar.placeholder= "Nombre del empleado...";  
-                                    $('#listaOperacionesOperadorPC').html(`<span class="form-help">Lista de operaciones asignadas del trabajador en la linea</span>`)
                                     console.log(data.error); 
                                 }
 
-                              nominaModalPC.disabled = false;
                             }).catch((error) => {
-                              nombreModalAsignar.placeholder= "Nombre del empleado..."; 
-                              nominaModalPC.disabled = false;
                               console.log(error);
                         });
                   }
@@ -2137,7 +2172,7 @@
               var formDataAsig = new FormData;
               let assignmentFormPC= document.getElementById('assignmentFormPC');
               let nomina = document.getElementById('nominaModalPC').value;
-              let nombre = document.getElementById('nombreModalPC').value;
+              let nombre = $('#nominaModalPC').find('option:selected').text();
               let estacion = document.getElementById('id_estacion').value;
               let fecha  = document.getElementById('assignmentDatePC').value;
               let turno = document.getElementById('turnoasignarPC').value;
@@ -2172,8 +2207,8 @@
                                 $('#nominaModalPC').val('');
                                 $('#nombreModalPC').val('');
                                 $('#comentariospc').val('');
-                                $('#listaOperacionesOperadorPC').html('<span class="form-help">Lista de operaciones asignadas del trabajador en la linea </span>');
                                 getEstacion(estacion);
+                                mostrarTablaOperaciones();
                             }
 
                           else {
@@ -2278,6 +2313,8 @@
                                  let registrar = confirm('¿Desea agregar a esta persona al personal disponible?');
                                     if(registrar) registrarDisponible(nominaTrabajador, nombreTrabajador, $('#turnoLayout').val())
                               }
+
+                              mostrarTablaOperaciones();
                             }
 
                             else 
@@ -2677,7 +2714,7 @@
         $('#btnBackModalPersonal').on('click', function (){changeContent('ventanasModalPersonal', 'ventanaTablaListadoPersonal')})
 
         // Botón "+" para agregar en la tabla de lista de operaciones
-        $(document).on('click', '#operationsTable .btn-add-worker', function () {
+        $('#modalListaOperaciones').on('click', '#operationsTable .btn-add-worker', function () {
           const estacionId = $(this).data('estacion');
           const $select = $(this).closest('td').find('select');
           const nomina = $select.val();
@@ -2695,7 +2732,7 @@
           formData.append('estacion', estacionId);
           formData.append('nombre', nombre);
           formData.append('turno', $('#turnoLayout').val());
-          formData.append('codigoLinea', codigoLinea.val);
+          formData.append('codigoLinea', codigoLinea.value);
 
             fetch("../api/operacionesLinea.php", {
                 method: "POST",
@@ -2705,8 +2742,9 @@
             .then(data => {
                 if(data.estatus === 'ok') {
                    agregarPersonaOperacion(estacionId, nomina, nombre);
+                   getEstacion(estacionId);
                 } else {
-                    console.log(data.mensaje)
+                    console.log(data)
                 }
             })
             .catch(error => {
@@ -2716,16 +2754,18 @@
         });
 
         // Icono ✖ para quitar en la tabla de lista de operaciones
-        $(document).on('click', '#operationsTable .remove-assigned', function (e) {
+        $('#modalListaOperaciones').on('click', '#operationsTable .remove-assigned', function (e) {
           e.stopPropagation();
 
           const estacionId = $(this).data('estacion');
           const nomina = $(this).data('nomina');
 
           const formData = new FormData();
-          formData.append('opcion', 33);
+          formData.append('opcion', 10);
           formData.append('nomina', nomina);
-          formData.append('estacionId', estacionId);
+          formData.append('idEstacion', estacionId);
+          formData.append('turno', $('#turnoLayout').val());
+
             fetch("../api/operacionesLinea.php", {
                 method: "POST",
                 body: formData
@@ -2734,8 +2774,9 @@
             .then(data => {
                 if(data.estatus === 'ok') {
                   removerPersonaOperacion($(this).closest('.chip-asignado'));
+                  getEstacion(estacionId);
                 } else {
-                    console.log(data.mensaje)
+                    console.log(data)
                 }
             })
             .catch(error => {
@@ -2751,8 +2792,6 @@
 
         applyZoom();
     });
-
-
 
     //Cambio de modelo
     /*

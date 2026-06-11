@@ -1293,48 +1293,20 @@
                             </h4>
                             
                             <div class="row">
-                              <!--NOMINA -->
-                              <div class="col-md-6 mb-3">
-                                <label for="nominaModalPC" class="form-label required-field">
-                                  <i class="bi bi-clock"></i>
-                                  No. Reloj / ID Empleado
-                                </label>
-                                <div class="input-group-custom">
-                                  <input type="number" min=0 step=1 
-                                         class="form-control form-control-custom" 
-                                         id="nominaModalPC"
-                                         placeholder="Ej: EMP-12256" 
-                                         required>
-                                  <button type="button" class="input-icon">
-                                    <i class="bi bi-search"></i>
-                                  </button>
+                              <!--EMPLEADO-->
+                                <div class="col-md-8 mb-3">
+                                  <label for="nombreModalPC" class="form-label required-field">
+                                    <i class="bi bi-person"></i>Empleado
+                                  </label>
+                                  <select id="nominaModalPC" class="form-control form-select">
+                                  </select> 
                                 </div>
-                                <div class="form-help">Ingresa el número de reloj o ID único del empleado</div>
-                              </div>
-                              
-                              <!--NOMBRE-->
-                              <div class="col-md-6 mb-3">
-                                <label for="nombreModalPC" class="form-label required-field">
-                                  <i class="bi bi-person"></i>Nombre del Operador
-                                </label>
-                                <div class="input-group-custom">
-                                    <input 
-                                      type="text" 
-                                      class="form-control form-control-custom" 
-                                      id="nombreModalPC" 
-                                      placeholder="Selecciona o busca un operador"
-                                      readonly>
-                                    <button type="button" class="input-icon">
-                                      <i class="bi bi-people"></i>
-                                    </button>
-                                </div>
-                              </div>
 
                                 <!--Etiqueta para mostrar la alerta si se requiere un PC del trabajador asignado -->
                               <div class="text-danger fw-bold col-12 mb-4 " id="alertPC"></div>
 
                               <!--Listado de estaciones asignadas -->
-                                <div class="col-12">
+                                <div class="col-12 d-none">
                                   <label class="form-label">
                                     <i class="bi bi-list"></i>
                                       Listado de estaciones asignadas

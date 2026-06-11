@@ -296,40 +296,6 @@ else
 
                 $conn->commit();
 
-                include('./conexionEmpleado.php');
-
-                        //Guardar la imagen del trabajador
-                        $sqlCheck = "SELECT No_Nomina as nomina, nombre, foto FROM empleado_mst WHERE No_Nomina = :nomina";
-                        $stmtCheck = $connE->prepare($sqlCheck);
-                        $stmtCheck->execute([':nomina' => $nomina]);
-                        $empleado = $stmtCheck->fetch(PDO::FETCH_ASSOC);
-
-                        $nombre_archivo = ""; // Valor por defecto
-
-                        if ($empleado && !empty($empleado['foto'])) {
-                            // Detectar tipo de imagen
-                            $finfo = new finfo(FILEINFO_MIME_TYPE);
-                            $tipo_mime = $finfo->buffer($empleado['foto']);
-
-                            // Mapear extensión según MIME type
-                            $extensiones = [
-                                'image/jpeg' => 'jpg',
-                                'image/jpg' => 'jpg',
-                                'image/png' => 'png',
-                                'image/gif' => 'gif',
-                                'image/bmp' => 'bmp'
-                            ];
-
-                            $extension = $extensiones[$tipo_mime] ?? 'bin';
-                            $nombre_archivo = $nomina . "." . $extension;
-
-                            $ruta = "../img/personal/" . $nombre_archivo;
-
-                            // Guardar la imagen en el directorio
-                            file_put_contents($ruta, $empleado['foto']);
-                        }
-                
-
                 echo json_encode([
                     'estatus' => 'ok',
                     'mensaje' => 'Registro insertado correctamente.',
@@ -423,15 +389,38 @@ else
                     exit; 
             }
 
-        $sql= "SELECT E.id_estacion,  E.nombre_estacion, E.requiere_certificacion AS isCertificate,
-                        CASE WHEN PC.nomina IS NULL THEN EP.nomina ELSE PC.nomina END AS nomina,
-                        CASE WHEN PC.nombre IS NULL THEN EP.nombre ELSE PC.nombre END AS nombre,
-                        CASE  WHEN PC.nomina IS NULL THEN EP.fecha_asignacion ELSE PC.fechaHora_inicio END AS fecha_asignacion,
-                        E.codigo_linea, E.codigo_certificacion,  E.posicion_x,  E.posicion_y,  PC.estatusPC,  PC.idPC, A.estatus AS asistencia
+        $sql= "SELECT E.id_estacion, E.nombre_estacion, E.requiere_certificacion AS isCertificate,
+                        COALESCE(PC.nomina, EP.nomina) AS nomina,
+                        COALESCE(PC.nombre, EP.nombre) AS nombre,
+                        COALESCE(PC.fechaHora_inicio, EP.fecha_asignacion) AS fecha_asignacion,
+                        E.codigo_linea, E.codigo_certificacion, E.posicion_x, E.posicion_y,
+                        PC.estatusPC, PC.idPC, A.estatus AS asistencia
                     FROM SPC_ESTACIONES E
-                        LEFT JOIN ( SELECT id_estacion, nomina, nombre, fecha_asignacion  FROM SPC_PERSONAL_ESTACION  WHERE fecha_fin IS NULL AND turno = :turno ) AS EP ON E.id_estacion = EP.id_estacion
-                        LEFT JOIN ( SELECT idPC, id_estacion, nomina, nombre, estatusPC, fechaHora_inicio FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND turno = :turno) AS PC ON E.id_estacion = PC.id_estacion
-                        LEFT JOIN ( SELECT nomina, estatus FROM SPC_REGISTRO_ASISTENCIA WHERE turno = :turno AND fecha_operacion >= :fecha_inicio AND fecha_operacion < :fecha_fin) AS A ON A.nomina = COALESCE(PC.nomina, EP.nomina)
+                        OUTER APPLY (
+                            SELECT TOP (1) PE.nomina, PE.nombre, PE.fecha_asignacion
+                            FROM SPC_PERSONAL_ESTACION PE
+                            WHERE PE.id_estacion = E.id_estacion
+                                AND PE.fecha_fin IS NULL
+                                AND PE.turno = :turno
+                            ORDER BY PE.fecha_asignacion DESC, PE.id_asignacion DESC
+                        ) AS EP
+                        OUTER APPLY (
+                            SELECT TOP (1) P.idPC, P.nomina, P.nombre, P.estatusPC, P.fechaHora_inicio
+                            FROM SPC_PUNTOS_CAMBIO P
+                            WHERE P.id_estacion = E.id_estacion
+                                AND P.fechaHora_fin IS NULL
+                                AND P.turno = :turno
+                            ORDER BY P.fechaHora_inicio DESC, P.idPC DESC
+                        ) AS PC
+                        OUTER APPLY (
+                            SELECT TOP (1) RA.estatus
+                            FROM SPC_REGISTRO_ASISTENCIA RA
+                            WHERE RA.nomina = COALESCE(PC.nomina, EP.nomina)
+                                AND RA.turno = :turno
+                                AND RA.fecha_operacion >= :fecha_inicio
+                                AND RA.fecha_operacion < :fecha_fin
+                            ORDER BY RA.fecha_operacion DESC, RA.id_registro DESC
+                        ) AS A
                 WHERE E.codigo_linea = :codigoLinea";
 
         $stmt = $conn->prepare($sql);
@@ -2282,6 +2271,41 @@ else
                     $stmtIlu->execute([':nomina' => $nomina,':idE' => $idE]);
                 }
 
+                include('./conexionEmpleado.php');
+
+                //Guardar la imagen del trabajador
+                    $sqlCheck = "SELECT No_Nomina as nomina, nombre, foto FROM empleado_mst WHERE No_Nomina = :nomina";
+                    $stmtCheck = $connE->prepare($sqlCheck);
+                    $stmtCheck->execute([':nomina' => $nomina]);
+                    $empleado = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+                    $nombre_archivo = ""; // Valor por defecto
+
+                    if ($empleado && !empty($empleado['foto'])) {
+                        // Detectar tipo de imagen
+                        $finfo = new finfo(FILEINFO_MIME_TYPE);
+                        $tipo_mime = $finfo->buffer($empleado['foto']);
+
+                        // Mapear extensión según MIME type
+                        $extensiones = [
+                            'image/jpeg' => 'jpg',
+                            'image/jpg' => 'jpg',
+                            'image/png' => 'png',
+                            'image/gif' => 'gif',
+                            'image/bmp' => 'bmp'
+                        ];
+
+                        $extension = $extensiones[$tipo_mime] ?? 'bin';
+                        $nombre_archivo = $nomina . "." . $extension;
+
+                        $ruta = "../img/personal/" . $nombre_archivo;
+
+                        // Guardar la imagen en el directorio
+                        file_put_contents($ruta, $empleado['foto']);
+                    }
+                //Fin guardar la imagen
+
+
 
                 $conn->commit();
                 $results = array('estatus' => 'ok',
@@ -2618,6 +2642,40 @@ if ($opcion == '33') {
     }
 }
 
+//Listado de personal liberado por operacion
+else 
+if($opcion == '34'){
+    $idE = !empty($_POST['idE']) ? $_POST['idE'] : null;
+
+    if (!$idE) {
+        echo json_encode([
+            'estatus' => 'error',
+            'mensaje' => 'Error al recibir los datos'
+        ]);
+        exit;
+    }
+
+    try {
+         $response = [];
+            $sqlOperaciones = "SELECT i.nomina, p.nombre from SPC_ILU I 
+                                    INNER JOIN SPC_PERSONAL P ON I.nomina = P.nomina 
+                                WHERE idE = :idE and i.estatus != 1 ";
+            $liberados = $conn->prepare($sqlOperaciones);
+            $liberados->execute([':idE' => $idE]);
+            $response = $liberados->fetchAll(PDO::FETCH_ASSOC);
+
+            echo json_encode([
+                'estatus' => 'ok',
+                'data' => $response
+            ]);
+    } catch (Exception $e) {
+        echo json_encode([
+            'estatus' => 'error',
+            'mensaje' => 'Ocurrió un error al generar los datos',
+            'error'   => $e->getMessage()
+        ]);
+    }
+}
 /*
     Resumen de asistencia
     Asistencias
