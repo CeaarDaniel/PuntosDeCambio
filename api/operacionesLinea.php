@@ -2315,7 +2315,6 @@ else
         }
 }
 
-
 //FUNCION PARA GENERAR LOS DATOS PARA EL LISTADO DE OPERACIONES, PERSONAS ASIGNADAS Y LISTADO DE PERSONAS LIBERADAS POR ESTACION
 else 
     if($opcion == '31'){
@@ -2352,7 +2351,8 @@ else
                                     FROM SPC_ESTACIONES E
                                         INNER JOIN SPC_ILU I ON E.id_estacion = I.idE
                                         INNER JOIN SPC_PERSONAL P ON P.nomina = I.nomina
-                            WHERE E.codigo_linea = :codigo_linea AND P.turno = :turno AND I.estatus != 1";
+                            WHERE E.codigo_linea = :codigo_linea AND P.turno = :turno
+                                    AND P.codigo_linea = :codigo_linea AND I.estatus != 1";
 
             $liberados = $conn->prepare($sqlLiberados);
             $liberados->execute([':codigo_linea' => $codigoLinea,':turno' => $turno]);
@@ -2562,7 +2562,9 @@ if ($opcion == '33') {
 else 
 if($opcion == '34'){
     $idE = !empty($_POST['idE']) ? $_POST['idE'] : null;
-
+    $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : 0;
+    $turno = !empty($_POST['turno']) ? $_POST['turno'] : 0;
+    
     if (!$idE) {
         echo json_encode([
             'estatus' => 'error',
@@ -2575,9 +2577,22 @@ if($opcion == '34'){
          $response = [];
             $sqlOperaciones = "SELECT i.nomina, p.nombre from SPC_ILU I 
                                     INNER JOIN SPC_PERSONAL P ON I.nomina = P.nomina 
-                                WHERE idE = :idE and i.estatus != 1 ";
+                                WHERE i.estatus != 1 AND p.estatus != 1 AND idE = :idE ";
+            $params[':idE'] = $idE;
+
+            // Filtro nomina
+            if ($codigoLinea != 0) {
+                $sqlOperaciones .= " AND p.codigo_linea = :codigoLinea";
+                $params[':codigoLinea'] = $codigoLinea;
+            }
+
+            if ($turno != 0) {
+                $sqlOperaciones .= " AND p.turno = :turno";
+                $params[':turno'] = $turno;
+            }
+
             $liberados = $conn->prepare($sqlOperaciones);
-            $liberados->execute([':idE' => $idE]);
+            $liberados->execute($params);
             $response = $liberados->fetchAll(PDO::FETCH_ASSOC);
 
             echo json_encode([

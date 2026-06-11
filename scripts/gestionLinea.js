@@ -139,7 +139,12 @@
           }
 
           getOperator(stationData.nomina, stationData.id, stationData.idPC || null);
-          setLiberados(stationData.id, 'nominaModalPC')
+
+          //Cargar el select del formulario del registro de asignacion
+          setLiberados(stationData.id, 'nominaModalPC', codigoLinea.value)
+
+          //Cargar el select del formulario de registro del pc
+          setLiberados(stationData.id, 'nominaPC', null)
 
 
         //Modal creado registro de punto de cambio
@@ -1254,6 +1259,7 @@
                 <!-- Aquí se insertarán dinámicamente las estaciones (divs) -->
               </div>`;
             getEstaciones();
+            mostrarTablaOperaciones();
 
             svg = document.getElementById('workspace-svg');
             shapesGroup = $('#shapes-group');
@@ -1643,12 +1649,14 @@
     }
 
     //Funcion para mostrar el listado de personal liberado en una operacion
-    function setLiberados(idE, select){
+    function setLiberados(idE, select, codigoLinea = null){
       let nombreSelect = document.getElementById(select);
       let formDataLiberados = new FormData();
       formDataLiberados.append('idE', idE);
       formDataLiberados.append('opcion', 34);
-      document.getElementById('alertPC').textContent = '';
+      formDataLiberados.append('turno', $('#turnoLayout').val());
+      (codigoLinea && codigoLinea !='') ? formDataLiberados.append('codigoLinea', codigoLinea) : '';
+      
       fetch("../api/operacionesLinea.php", {
         method: "POST",
         body: formDataLiberados,
@@ -1656,6 +1664,7 @@
         .then((response) => response.text())
         .then((data) => {
           data = JSON.parse(data);
+          console.log(data)
           nombreSelect.innerHTML = '<option value="">Selecciona una opción</option>';
           if (data.estatus !== 'ok') {
             return;

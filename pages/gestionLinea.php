@@ -1381,29 +1381,16 @@
                               <!-- Información del Cambio -->
                               <div class="form-section">
                                 <div class="row">
-                                    <div class="col-md-6 mb-3">
+                                    <div class="col-md-10 mb-3">
                                       <label for="nominaPC" class="form-label required-field">
                                         <i class="bi bi-clock"></i>No. Reloj / ID Empleado
                                       </label>
                                       <div class="input-group-custom">
-                                        <input type="number" min="0" step="1" class="form-control form-control-custom" id="nominaPC" placeholder="Ej: 256" required>
-                                        <button type="button" class="input-icon" id="searchEmployee">
-                                          <i class="bi bi-search"></i>
-                                        </button>
+                                        <select class="form-control form-select" id="nominaPC" required>
+                                            <option value="">Seleccione un empleado...</option>
+                                        </select>
                                       </div>
                                       <div class="form-help">Ingresa el número de reloj o ID único del empleado</div>
-                                    </div>
-                                    
-                                    <div class="col-md-6 mb-3">
-                                      <label for="nombrePC" class="form-label">
-                                        <i class="bi bi-person"></i> Nombre del trabajador
-                                      </label>
-                                      <div class="input-group-custom">
-                                        <input type="text" class="form-control form-control-custom" id="nombrePC" placeholder="Selecciona o busca un operador" readonly>
-                                        <button type="button" class="input-icon">
-                                          <i class="bi bi-people"></i>
-                                        </button>
-                                      </div>
                                     </div>
                                 </div>
 
