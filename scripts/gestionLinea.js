@@ -1999,8 +1999,8 @@
             $('#nominaModalPC').on('change', function () {
                 if(nominaModalPC && nominaModalPC !='') {
                     let idEstacion = document.getElementById('id_estacion').value;
-
                     let formDataConsultarNombre = new FormData;
+
                     formDataConsultarNombre.append('nomina',nominaModalPC.value)
                     formDataConsultarNombre.append('idE',idEstacion)
                     formDataConsultarNombre.append('opcion', 35)
@@ -2139,18 +2139,15 @@
                   }
             })
 
+          /*
             nominaPC.addEventListener('change', function(){
-              let nombrePC = document.getElementById('nombrePC');
-            
                 if(nominaPC && nominaPC !='') {
-
-                    nominaPC.disabled = true
-                    nombrePC.value= ''; 
-                    nombrePC.placeholder= "Consultando datos del empleado..."; 
-
+                    let idEstacion = document.getElementById('id_estacion').value;
                     let formDataConsultarNombre = new FormData;
+                    
                     formDataConsultarNombre.append('nomina',nominaPC.value)
-                    formDataConsultarNombre.append('opcion', 7)
+                    formDataConsultarNombre.append('idE',idEstacion)
+                    formDataConsultarNombre.append('opcion', 35)
 
                         fetch("../api/operacionesLinea.php", {
                                 method: "POST",
@@ -2161,22 +2158,19 @@
                                   data= JSON.parse(data)
                             
                                 if(data.estatus=='ok')
-                                    nombrePC.value= data.nombre;
+                                   
                               
                                 else{
-                                   nombrePC.placeholder= "Nombre del empleado..."; 
-                                   console.log(data); 
+
                                 }
 
-                              nominaPC.disabled = false
                             })
                             .catch((error) => {
-                                nominaPC.disabled = false
-                                nombrePC.placeholder= "Nombre del empleado...";  
                               console.log(error);
                         });
                   }
-            })
+            }) 
+          */
         //FIN OBTENER NUMERO DE NOMINA
 
         //ASIGNAR TRABAJADOR DESDE EL MODAL DEL PC
@@ -2345,7 +2339,7 @@
 
           if(!registroCambioForm.reportValidity()) return;
 
-          if(document.getElementById('nombrePC').value == '' || document.getElementById('nombrePC').value == null){
+          if(document.getElementById('nominaPC').value == '' || document.getElementById('nominaPC').value == null){
                 alert('No se encontro registro del empleado ingresado o se perdió la conexión con el servidor.');
                 return;
           }
@@ -2359,7 +2353,7 @@
           }
 
           formDataPuntoCambio.append('nominaPC', document.getElementById('nominaPC').value);
-          formDataPuntoCambio.append('nombrePC', document.getElementById('nombrePC').value);
+          formDataPuntoCambio.append('nombrePC', $('#nominaPC').find('option:selected').text());
           formDataPuntoCambio.append('tipoCambio', document.getElementById('tipo_cambio').value);
           formDataPuntoCambio.append('fechaInicio', document.getElementById('fechaHora_inicio').value);
           formDataPuntoCambio.append('turno', document.getElementById('turnoPuntoCambio').value);
