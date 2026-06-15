@@ -1434,44 +1434,7 @@ else
             //Si existe un registro de asistencia mostrar el registro
             $personal = $stmtV->fetchAll(PDO::FETCH_ASSOC);
             if (!empty($personal)) {
-                    //Consulta para obtener el resumen de la asistencia
-                    $sqlR = "SELECT
-                                -- Contar las asistencias
-                                SUM(CASE WHEN estatus IN ('1', '8') THEN 1 ELSE 0 END) AS asistencias,
-
-                                -- Contar las faltas
-                                SUM(CASE WHEN estatus IN ('2', '5', '6', '7') THEN 1 ELSE 0 END) AS faltas,
-
-                                -- Contar los permisos
-                                SUM(CASE WHEN estatus = '3' THEN 1 ELSE 0 END) AS permisos,
-
-                                -- Contar las vacaciones
-                                SUM(CASE WHEN estatus = '4' THEN 1 ELSE 0 END) AS vacaciones,
-
-                                -- Contar las incapacidades
-                                SUM(CASE WHEN estatus = '9' THEN 1 ELSE 0 END) AS incapacidad,
-
-                                -- Calcular el porcentaje de asistencia
-                                ROUND (
-                                        CAST(SUM(CASE WHEN estatus IN ('1', '8') THEN 1 ELSE 0 END) AS FLOAT) /
-                                        NULLIF(COUNT(estatus), 0) * 100, 2
-                                       ) AS porcentajeA
-                            FROM SPC_REGISTRO_ASISTENCIA
-                                WHERE fecha_operacion > :fechaInicio AND fecha_operacion < :fechaFin 
-                                    AND codigo_linea = :codigoLinea";
-
-                $stmtR = $conn->prepare($sqlR);
-                $stmtR->execute([':fechaInicio' => $inicio->format('Y-m-d H:i'),
-                                ':fechaFin'    => $fin->format('Y-m-d H:i'),
-                                ':codigoLinea' => $codigoLinea
-                                ]);
-
-                //resumen de la asistencia
-                $resumen = $stmtR->fetch(PDO::FETCH_ASSOC);
-
-                 $response = ['personal' => $personal, 
-                              'resumen' => $resumen
-                             ];
+                 $response = ['personal' => $personal];
             }
            
             //Si no existe un registro de asistencia generar uno
@@ -1659,17 +1622,15 @@ else
                 WHERE id_registro = :idRegistro';
 
         try {
-
             $conn->beginTransaction();
 
             $stmt = $conn->prepare($sql);
             $stmt->execute($params);
-
             $conn->commit();
 
             $results = [
                 'estatus' => 'ok',
-                'mensaje' => 'Se ha actualizado el registro'
+                'mensaje' => 'Se ha actualizado el registro',
             ];
 
         } catch (Exception $e) {
@@ -1704,8 +1665,8 @@ else
                     AND nomina IN (". implode(',', $datosAsistenciaCheck).")";
                 //AND nomina IN (" . implode(',', $placeholders) . ")";
 
-        $sql2 = "UPDATE SPC_PERSONAL_NAD SET turno = :turnoCambio WHERE turno = :turnoActual 
-                    AND codigo_linea = :codigoLinea AND eliminado = 0 
+        $sql2 = "UPDATE SPC_PERSONAL SET turno = :turnoCambio WHERE turno = :turnoActual 
+                    AND codigo_linea = :codigoLinea AND estatus != 2 
                     AND nomina IN (". implode(',', $datosAsistenciaCheck).")";
 
         $sql3 = "UPDATE PE SET PE.turno = :turnoCambio from SPC_PERSONAL_ESTACION AS PE
@@ -1752,7 +1713,7 @@ else
         echo json_encode($results);
     }
 
-//Obtener los datos de un trabajdor 
+//Obtener los datos de asignacion de un trabajdor en una estacion 
 else 
     if($opcion == '20'){
         $nomina = !empty($_POST['nomina']) ? $_POST['nomina'] : null;
@@ -2252,7 +2213,7 @@ else
         }
 
         try {
-            $sql= "SELECT nomina, nombre, estatus FROM SPC_PERSONAL where codigo_linea = :codigo_linea";
+            $sql= "SELECT nomina, nombre, estatus FROM SPC_PERSONAL where codigo_linea = :codigo_linea and estatus !=2";
 
             $params[':codigo_linea'] = $codigoLinea;
 
@@ -2587,7 +2548,7 @@ if($opcion == '34'){
          $response = [];
             $sqlOperaciones = "SELECT i.nomina, p.nombre from SPC_ILU I 
                                     INNER JOIN SPC_PERSONAL P ON I.nomina = P.nomina 
-                                WHERE i.estatus != 1 AND p.estatus != 1 AND idE = :idE ";
+                                WHERE i.estatus != 1 AND p.estatus != 2 AND idE = :idE ";
             $params[':idE'] = $idE;
 
             // Filtro nomina
@@ -2653,6 +2614,79 @@ else
             ]);
         }
 }
+
+//Generar resumen de asistencia
+else 
+  if($opcion == '36'){
+        $codigoLinea = empty(!$_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
+        $ahora = new DateTime();
+        $turno = !empty($_POST['turno']) ? $_POST['turno'] : null;
+
+        //Setear rango de fecha y hora para el resumen
+            //Turno 1
+                $inicio = new DateTime('today 08:00');
+                $fin    = new DateTime('today 19:59');
+
+            //Turno 2
+            if ($turno == '2') {
+                if ($ahora >= new DateTime('today 20:00')) { // Después de las 8 pm
+                    $inicio = new DateTime('today 20:00');
+                    $fin    = new DateTime('tomorrow 07:59');
+                } else { // Antes de las 8 pm
+                    $inicio = new DateTime('yesterday 20:00');
+                    $fin    = new DateTime('today 07:59');
+                } //Despues de la 8 de la noche la fecha de inicio es hoy 8:00 pm fecha de fin mañana 8:00 am
+                //Antes de 8 de la noche la fecha de inicio es ayer 8:00 pm y la fecha de fin hoy 8:00 am 
+            }
+
+        $sqlR = "SELECT
+                    -- Contar las asistencias
+                    SUM(CASE WHEN estatus IN ('1', '8') THEN 1 ELSE 0 END) AS asistencias,
+
+                    -- Contar las faltas
+                    SUM(CASE WHEN estatus IN ('2', '5', '6', '7') THEN 1 ELSE 0 END) AS faltas,
+
+                    -- Contar los permisos
+                    SUM(CASE WHEN estatus = '3' THEN 1 ELSE 0 END) AS permisos,
+
+                    -- Contar las vacaciones
+                    SUM(CASE WHEN estatus = '4' THEN 1 ELSE 0 END) AS vacaciones,
+
+                    -- Contar las incapacidades
+                    SUM(CASE WHEN estatus = '9' THEN 1 ELSE 0 END) AS incapacidad,
+
+                    -- Calcular el porcentaje de asistencia
+                    ROUND (
+                            CAST(SUM(CASE WHEN estatus IN ('1', '8') THEN 1 ELSE 0 END) AS FLOAT) /
+                            NULLIF(COUNT(estatus), 0) * 100, 2
+                            ) AS porcentajeA
+                FROM SPC_REGISTRO_ASISTENCIA
+                    WHERE fecha_operacion > :fechaInicio AND fecha_operacion < :fechaFin 
+                        AND codigo_linea = :codigoLinea";
+
+        try {
+            $stmtR = $conn->prepare($sqlR);
+            $stmtR->execute([':fechaInicio' => $inicio->format('Y-m-d H:i'),
+                             ':fechaFin'    => $fin->format('Y-m-d H:i'),
+                             ':codigoLinea' => $codigoLinea
+                            ]);
+            $resumen = $stmtR->fetch(PDO::FETCH_ASSOC);
+
+            $results = [
+                'estatus' => 'ok',
+                'resumen' => $resumen
+            ];
+
+        } catch (Exception $e) {
+              $conn->rollBack();
+              $results = array('estatus' => 'error',
+                               'mensaje' => 'Ocurrió un error al consultar la informacion',
+                               'error' => $e->getMessage());
+        }
+        // Devolver resultado
+        echo json_encode($results);
+}
+
 /*
     Resumen de asistencia
     Asistencias

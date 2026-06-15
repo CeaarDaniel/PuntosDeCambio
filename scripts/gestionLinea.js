@@ -188,7 +188,7 @@
             })
             .then((response) => response.text())
             .then((data) => {
-              console.log(data);
+              //console.log(data);
 
               if(showMessage == true) return;
 
@@ -646,33 +646,25 @@
             .then((data) => {   
                       data= JSON.parse(data)
                       let formAsistencia = document.getElementById('formAsistencia')
-                      let resumenAsistencia = document.getElementById('resumenAsistencia');
 
-                      console.log(data)
+                      if(!data.personal || (data.personal).length<1){
+                         $('#attendanceTable').DataTable().clear().draw();
+                        return;
+                      }
+
                       datosAsistenciaCheck = data.personal.map(item => Number(item.nomina));
 
-                      //Mostrar el formulario de registro para una asistencia individual si no ya se ha echo el registro de asistencia
-                      if (data.personal.length > 0 && 'id_registro' in data.personal[0])
+                      //Mostrar el formulario de registro para una asistencia individual si ya se ha echo el registro de asistencia
+                      if (data.personal.length > 0 && 'id_registro' in data.personal[0]){
                             formAsistencia.classList.remove('d-none'); 
+                          }
                         
                       //Ocultar el formulario de registro si no se ha echo el registro de asistencia
-                      else
+                      else{
                           formAsistencia.classList.add('d-none');
+                      }
 
-                    // Ocultar la información de resumen de asistencia
-                    if (!data.resumen || data.resumen.length <= 0) {
-                        resumenAsistencia.classList.add('d-none');
-                        
-                    } else {
-                        // Mostrar la información de resumen de asistencia
-                        resumenAsistencia.classList.remove('d-none'); 
-                         document.getElementById('countAsistencia').textContent = data.resumen.asistencias
-                          document.getElementById('countPermisos').textContent = data.resumen.permisos
-                          document.getElementById('countFaltas').textContent = data.resumen.faltas
-                          document.getElementById('countVacaciones').textContent = data.resumen.vacaciones
-                          document.getElementById('countIncapacidades').textContent = data.resumen.incapacidad
-                          document.getElementById('countPAsistencia').textContent = `% ${parseFloat(data.resumen.porcentajeA).toFixed(2)}`;
-                    }
+                      resumenAsistencia();
 
                       $('#attendanceTable').DataTable().destroy();
                       $('#attendanceTable').DataTable({
@@ -758,6 +750,7 @@
                           ]
                       });
                   }).catch((error) => {
+                     $('#attendanceTable').DataTable().destroy();
                     console.log(error);
               });            
     }
@@ -953,7 +946,7 @@
               formDataUpdate.append('opcion', 18);
               formDataUpdate.append('id_registro', data['id_registro'])
               formDataUpdate.append(clave, nuevoValor);
-              console.log(nuevoValor)
+              //console.log(nuevoValor)
 
                fetch("../api/operacionesLinea.php", {
                       method: "POST",
@@ -970,6 +963,7 @@
                       else  // actualizar el data interno de DataTables
                         if (campo) {
                             data[campo] = nuevoValor; //table.row($row).data(data).invalidate();
+                            resumenAsistencia();
                         }
 
                     }).catch((error) => {
@@ -980,6 +974,50 @@
           //else {
             //console.log('Aun no se ha registrado la asistencia')
           //}
+    }
+
+    function resumenAsistencia(){
+      let resumenAsistencia = document.getElementById('resumenAsistencia');
+      let formResumen = new FormData();
+      formResumen.append('opcion', 36);
+      formResumen.append('turno', $('#turnoLayout').val());
+      formResumen.append('codigoLinea', codigoLinea.value);
+      
+        fetch("../api/operacionesLinea.php", {
+          method: "POST",
+          body: formResumen,
+        })
+          .then((response) => response.text())
+          .then((data) => {
+            data = JSON.parse(data)
+
+            if (data.error){
+                console.log(data);
+                resumenAsistencia.classList.add('d-none');
+              }
+
+            else {
+                // Ocultar la información de resumen de asistencia
+                if (!data.resumen.porcentajeA || data.resumen.length <= 0) {
+                  resumenAsistencia.classList.add('d-none');
+                } 
+                
+                else {
+                  // Mostrar la información de resumen de asistencia
+                  resumenAsistencia.classList.remove('d-none');
+                  document.getElementById('countAsistencia').textContent = data.resumen.asistencias
+                  document.getElementById('countPermisos').textContent = data.resumen.permisos
+                  document.getElementById('countFaltas').textContent = data.resumen.faltas
+                  document.getElementById('countVacaciones').textContent = data.resumen.vacaciones
+                  document.getElementById('countIncapacidades').textContent = data.resumen.incapacidad
+                  document.getElementById('countPAsistencia').textContent = `% ${parseFloat(data.resumen.porcentajeA).toFixed(2)}`;
+                  console.log('Resumen',data)
+                }
+              }
+          }).catch((error) => {
+            console.log(error);
+            resumenAsistencia.classList.add('d-none');
+          });
     }
 
     //Funcion para cambiar el turno de los trabajadores registrados en la linea
@@ -1010,6 +1048,9 @@
                         let modalAgregarEstacion = bootstrap.Modal.getInstance(document.getElementById('attendanceModal'));
                         modalAgregarEstacion.hide();
                         alert(data.mensaje)
+
+                        mostrarTablaOperaciones();
+                        mostrarTablaPersonal();
                     }
 
                   else{
@@ -1237,6 +1278,7 @@
     //Funcion para actualizar el layout al cambiar de turno registrar una asistencia volver a renderisar la estaciones y el svg
     function actualizarVistaLayout(){
          let turno = $("#turnoLayout").val()
+         seleccionadosGlobal = [];
          document.getElementById('turnoasignar').value = $("#turnoLayout").val()
 
           if(turno){
@@ -1261,6 +1303,7 @@
             getEstaciones();
             mostrarTablaOperaciones();
             mostrarTablaPersonal();
+            generarTablaAsistencia();
 
             svg = document.getElementById('workspace-svg');
             shapesGroup = $('#shapes-group');
@@ -1666,7 +1709,7 @@
         .then((response) => response.text())
         .then((data) => {
           data = JSON.parse(data);
-          console.log(data)
+          //console.log(data)
           nombreSelect.innerHTML = '<option value="">Selecciona una opción</option>';
           if (data.estatus !== 'ok') {
             return;
@@ -1720,7 +1763,7 @@
         });
       });
 
-      console.log(result)
+      //console.log(result)
       return result;
     }
 

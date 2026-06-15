@@ -1327,7 +1327,7 @@
                                     <i class="bi bi-calendar"></i>Fecha de Asignación
                                 </label>
                                 <input type="datetime-local" class="form-control form-control-custom" 
-                                  id="assignmentDatePC" required>
+                                  id="assignmentDatePC" readonly>
                                 <div class="form-help">Fecha en la que inicia la asignación</div>
                               </div>
                   
@@ -1424,7 +1424,7 @@
                                     <label for="fechaHora_inicio" class="form-label required-field">
                                       <i class="bi bi-calendar-event"></i> Fecha y Hora Inicio
                                     </label>
-                                    <input type="datetime-local" class="form-control form-control-custom" id="fechaHora_inicio" required>
+                                    <input type="datetime-local" class="form-control form-control-custom" id="fechaHora_inicio" readonly>
                                   </div>
 
                                   <!--TURNO PUNTO DE CAMBIO -->
@@ -1531,7 +1531,7 @@
                                                           <label for="fechaEvaluacion" class="form-label required-field">
                                                               <i class="bi bi-calendar-date"></i> Fecha de evaluación
                                                           </label>
-                                                          <input type="datetime-local" class="form-control form-control-custom" id="fechaEvaluacion" required>
+                                                          <input type="datetime-local" class="form-control form-control-custom" id="fechaEvaluacion" readonly>
                                                       </div>
                                                   </div>
                                               </div>
@@ -1626,7 +1626,7 @@
                                               <div class="row">
                                                 <div class="col-md-6">
                                                   <label for="fechaCierre" class="form-label fw-bold">Fecha de Cierre</label>
-                                                  <input type="datetime-local" class="form-control form-control-custom" id="fechaCierre" required>
+                                                  <input type="datetime-local" class="form-control form-control-custom" id="fechaCierre" readonly>
                                                 </div>
                                               </div>
 
