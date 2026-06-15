@@ -2240,6 +2240,7 @@ else
 else 
     if($opcion=="29"){
          $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
+         $turno = !empty($_POST['turno']) ? $_POST['turno'] : 0;
 
         // Validar que se recibieron todos los datos
         if (!$codigoLinea) {
@@ -2252,10 +2253,19 @@ else
 
         try {
             $sql= "SELECT nomina, nombre, estatus FROM SPC_PERSONAL where codigo_linea = :codigo_linea";
+
+            $params[':codigo_linea'] = $codigoLinea;
+
+            // Filtro nomina
+            if ($turno != 0) {
+                $sql .= " AND turno = :turno";
+                $params[':turno'] = $turno;
+            }
+
             $registro = $conn->prepare($sql);
             $response= array();
 
-            if($registro -> execute([':codigo_linea' => $codigoLinea])){
+            if($registro->execute($params)){
                 while($dsc= $registro->fetch(PDO::FETCH_ASSOC))
                     $response[] = $dsc;
             }

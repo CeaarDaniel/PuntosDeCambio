@@ -1260,6 +1260,7 @@
               </div>`;
             getEstaciones();
             mostrarTablaOperaciones();
+            mostrarTablaPersonal();
 
             svg = document.getElementById('workspace-svg');
             shapesGroup = $('#shapes-group');
@@ -1416,6 +1417,7 @@
     function mostrarTablaPersonal(){
           let formDataPersonal = new FormData 
           formDataPersonal.append('codigoLinea', codigoLinea.value)
+          formDataPersonal.append('turno', $('#turnoLayout').val())
           formDataPersonal.append('opcion', 29)
           
             fetch("../api/operacionesLinea.php", {
