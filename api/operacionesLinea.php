@@ -2051,6 +2051,31 @@ else
 
         try {
             $conn->beginTransaction();
+
+            // VALIDAR SI YA EXISTE ASISTENCIA PARA ESTA NÓMINA EN EL TURNO ACTUAL
+            $sqlValidarAsistencia = "SELECT COUNT(*) AS total FROM SPC_REGISTRO_ASISTENCIA
+                                WHERE nomina = :nomina AND turno = :turno AND fecha_operacion >= :inicio_turno
+                            AND fecha_operacion <= :fin_turno";
+
+            $stmtValidarAsistencia = $conn->prepare($sqlValidarAsistencia);
+            $stmtValidarAsistencia->execute([
+                ':nomina' => $nomina,
+                ':turno' => $turno,
+                ':inicio_turno' => $inicio_turno->format('Y-m-d H:i:s'),
+                ':fin_turno' => $fin_turno->format('Y-m-d H:i:s')
+            ]);
+
+            $existeAsistencia = $stmtValidarAsistencia->fetch(PDO::FETCH_ASSOC);
+
+            if ($existeAsistencia['total'] > 0) {
+                $conn->rollBack();
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'La asistencia de esta persona ya fue registrada en el turno actual'
+                ]);
+                exit;
+            }
+
             $sql = "INSERT INTO SPC_REGISTRO_ASISTENCIA (nomina, nombre, estatus, codigo_linea, turno, id_estacion, nombres_estaciones, comentarioAsistencia)
                         VALUES (:nomina, :nombre, :estatus, :codigo_linea, :turno, :id_estacion, :nombres_estaciones, :comentarioAsistencia)";
             $stmt = $conn->prepare($sql);
