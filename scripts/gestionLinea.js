@@ -279,6 +279,8 @@
         .then((response) => response.text())
         .then((data) => {
           stationsData = JSON.parse(data);
+          //Limpeamos el contenedor donde se cargan las estaciones evitando modificar el contenedor donde se cargan las formas svg
+          $('#dynamicContainer').siblings().remove();
 
           // Crear estaciones
           stationsData.forEach(station => {
@@ -292,7 +294,7 @@
     }
 
     //Funcion para obtener datos de una estacion en especifico. 
-    function getEstacion(id){
+    async function getEstacion(id){
      //Se usa cuando, tras finalizar un punto de cambio, es necesario recuperar la información real del usuario asignado a la estación, ya que el listado muestra datos sobrescritos por el usuario del PC
      let formDataEstacion = new FormData;
       formDataEstacion.append('opcion', 15);
@@ -644,6 +646,7 @@
             })
             .then((response) => response.text())
             .then((data) => {   
+                      console.log(data)
                       data= JSON.parse(data)
                       let formAsistencia = document.getElementById('formAsistencia')
 
@@ -665,7 +668,6 @@
                       }
 
                       resumenAsistencia();
-
                       $('#attendanceTable').DataTable().destroy();
                       $('#attendanceTable').DataTable({
                         //scrollY: '300px',
@@ -687,18 +689,6 @@
                                     ],
                         */
                         columns: [
-                            /*
-                              {
-                                data: null,
-                                render: (data, type, row, meta) => {
-                                  const station = (meta.row + 1).toString().padStart(2, '0');
-                                  return `
-                                    <div class="station-badge bg-primary text-white rounded text-center py-1">
-                                      <strong>${station}</strong>
-                                    </div>`;
-                                }
-                              },
-                            */
                             { data: null, /*{ data: 'nombre' } so le dice a la tabla: “en esta columna muestra row.nombre”. */
                               render: row => `<div class="fw-bold" data-nombre="${row.nombre}" 
                                                                    data-nomina="${row.nomina}"
@@ -713,7 +703,7 @@
                             },
                             {
                               data: null,
-                              render: row => `<select name="estatusAsistencia" class="form-control form-control-custom attendance-status">
+                              render: row => `<select name="estatusAsistencia" class="form-control form-control-custom attendance-status" data-id_estacion="${row.id_estacion}">
                                                 <option value="1" ${(row.estatus && row.estatus=='1') ? 'selected' : ''}>✅ ASISTENCIA</option>
                                                 <option value="2" ${(row.estatus && row.estatus=='2') ? 'selected' : ''}>❌ FALTA INJUSTIFICADA</option>
                                                 <option value="3" ${(row.estatus && row.estatus=='3') ? 'selected' : ''}>🟢 PERMISO SIN GOCE DE SUELDO</option>
@@ -741,7 +731,6 @@
                                   <input class="form-check-input"
                                          data-nomina="${row.nomina}"
                                         type="checkbox" id="cambio_${row.nomina}">
-                                        
                                   <label class="form-check-label mx-1" for="cambio_${row.nomina}"> 
                                       <i class="bi bi-clock-history"></i> 
                                   </label>
@@ -806,7 +795,7 @@
 
                   //Actualizar el layout
 
-                  actualizarVistaLayout();
+                  //actualizarVistaLayout();
                   return getEstaciones();
               }
 
@@ -929,7 +918,7 @@
         });
     }
     
-    function updateAsistencia(element, clave){
+    async function updateAsistencia(element, clave){
           let table = $('#attendanceTable').DataTable();
           let $row = $(element).closest('tr');
           let data = table.row($row).data();
@@ -1045,10 +1034,11 @@
                   data= JSON.parse(data)
                   if(data.estatus == 'ok'){
                         //Ocurtar modal
-                        let modalAgregarEstacion = bootstrap.Modal.getInstance(document.getElementById('attendanceModal'));
-                        modalAgregarEstacion.hide();
+                        let modalListadoPersonal = bootstrap.Modal.getInstance(document.getElementById('modalListadoPersonal'));
+                        modalListadoPersonal.hide();
                         alert(data.mensaje)
 
+                        getEstaciones();
                         mostrarTablaOperaciones();
                         mostrarTablaPersonal();
                     }
@@ -1282,24 +1272,28 @@
          document.getElementById('turnoasignar').value = $("#turnoLayout").val()
 
           if(turno){
-            document.getElementById('workspaceGrid').innerHTML =  `
-            <!-- Contenedor dinámico que se expandirá con el contenido -->
-              <div id="dynamicContainer">
-                <!-- SVG dinámico (se ajustará al contenido) -->
-                <svg id="workspace-svg">
-                  <defs>
-                    <pattern id="grid" patternUnits="userSpaceOnUse" width="20" height="20">
-                      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#cbd5e1" stroke-width="0.8"/>
-                    </pattern>
-                    <marker id="arrowMarker" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
-                      <polygon points="0 0, 9 5, 0 10" fill="context-stroke" stroke="none" />
-                    </marker>
-                  </defs>
-                  <rect x="0" y="0" width="100%" height="100%" fill="none" />
-                  <g id="shapes-group"></g>
-                </svg>
-                <!-- Aquí se insertarán dinámicamente las estaciones (divs) -->
-              </div>`;
+            /*
+              document.getElementById('workspaceGrid').innerHTML =  `
+                  <!-- Contenedor dinámico que se expandirá con el contenido -->
+                    <div id="dynamicContainer">
+                      <!-- SVG dinámico (se ajustará al contenido) -->
+                      <svg id="workspace-svg">
+                        <defs>
+                          <pattern id="grid" patternUnits="userSpaceOnUse" width="20" height="20">
+                            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#cbd5e1" stroke-width="0.8"/>
+                          </pattern>
+                          <marker id="arrowMarker" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+                            <polygon points="0 0, 9 5, 0 10" fill="context-stroke" stroke="none" />
+                          </marker>
+                        </defs>
+                        <rect x="0" y="0" width="100%" height="100%" fill="none" />
+                        <g id="shapes-group"></g>
+                      </svg>
+                      <!-- Aquí se insertarán dinámicamente las estaciones (divs) -->
+                    </div>`; 
+            */
+
+            $('#dynamicContainer').siblings().remove();
             getEstaciones();
             mostrarTablaOperaciones();
             mostrarTablaPersonal();
@@ -1316,7 +1310,6 @@
             }, 500);
           }
     }
-
 
     //Funcion para los chips de agregar personal
         //Función para agregar una chip
@@ -1462,7 +1455,8 @@
           formDataPersonal.append('codigoLinea', codigoLinea.value)
           formDataPersonal.append('turno', $('#turnoLayout').val())
           formDataPersonal.append('opcion', 29)
-          
+          document.getElementById('checkPadre').checked = false
+
             fetch("../api/operacionesLinea.php", {
                     method: "POST",
                     body: formDataPersonal,
@@ -1471,6 +1465,7 @@
                 .then((data) => {
           
                     data = JSON.parse(data)
+                     datosAsistenciaCheck = data.map(item => Number(item.nomina));
                     $('#tableListadoPersonal').DataTable().destroy();
                     const table = $('#tableListadoPersonal').DataTable({
                           data: data,
@@ -1505,21 +1500,33 @@
                               { 
                                   data: null,
                                   render: function(data) {
-                                      // Los botones tienen data-id con la nómina
-                                      return `<button class="btn btn-sm btn-outline-danger rounded-circle data-nomina="${data.nomina}"><i class="bi bi-trash3"></i></button>
+                                      return `<button class="btn btn-sm btn-outline-danger rounded-circle btnElimPer" data-nomina="${data.nomina}"><i class="bi bi-trash3"></i></button>
                                               <!-- <button class="btn btn-sm btn-outline-secondary rounded-circle" data-nomina="${data.nomina}"><i class="bi bi-arrow-left-right"></i></button> -->
                                               <button class="btn btn-sm btn-outline-info rounded-circle tableBtnUpdateOperaciones" data-nomina="${data.nomina}" data-nombre="${data.nombre}" ><i class="bi bi-diagram-3"></i></button>`;
                                   },
                                   className: 'text-end',
                                   orderable: false
+                              },
+                              {
+                                data: null,
+                                className: "text-center",
+                                render: (data, type, row) => `
+                                  <div class="form-check d-flex justify-content-center">
+                                    <input class="form-check-input"
+                                          data-nomina="${row.nomina}"
+                                          type="checkbox" id="cambio_${row.nomina}">
+                                    <label class="form-check-label mx-1" for="cambio_${row.nomina}"> 
+                                        <i class="bi bi-clock-history"></i> 
+                                    </label>
+                                  </div>`
                               }
                           ],
-                          // Configuración visual idéntica a la imagen
-                        
                           pageLength: 10,
                           lengthMenu: [5, 10, 25, 50],
                           responsive: false,
-                          scrollX: true
+                          scrollX: true,
+                          deferRender: false,
+                          paging: true
                     });
                 })
                 .catch((error) => {
@@ -1725,6 +1732,31 @@
         .catch((error) => {
           console.error(error);
         });
+    }
+
+    //Funcion para eliminar personal
+    function eliminarPersonal(nomina){
+          let formDataE = new FormData();
+          formDataE.append('opcion', 37);
+          formDataE.append('nomina', nomina); 
+                   
+            fetch("../api/operacionesLinea.php", {
+                method: "POST",
+                body: formDataE
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.estatus === 'ok') {
+                  mostrarTablaPersonal();
+                  alert('Trabajador eliminado')                  
+                } else {
+                    console.log(data)
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                alert('Error de conexión');
+            });
     }
 
     // ========== DIAGRAMADOR SVG ==========
@@ -2260,6 +2292,7 @@
                                 $('#comentariospc').val('');
                                 getEstacion(estacion);
                                 mostrarTablaOperaciones();
+                                mostrarTablaPersonal();
                             }
 
                           else {
@@ -2366,6 +2399,7 @@
                               }
 
                               mostrarTablaOperaciones();
+                              mostrarTablaPersonal();
                             }
 
                             else 
@@ -2425,6 +2459,7 @@
                          // Si no es arreglo, lo convertimos en uno
                           let estacionesA = Array.isArray(idEstacion) ? idEstacion : [idEstacion];
                           estacionesA.forEach(id => {getEstacion(id);});
+                          mostrarTablaPersonal();
                     } 
                     else  alert(data.mensaje);
                 })
@@ -2479,6 +2514,8 @@
                               let registrar = confirm('¿Desea agregar a esta persona al personal disponible?');
                               if(registrar) registrarDisponible(nominaAPC.value, nombreTrabajador, $('#turnoLayout').val());
                             }
+
+                            mostrarTablaPersonal();
                         }
 
                       else  alert(data.mensaje);
@@ -2580,8 +2617,15 @@
         //btnHistorialLayout.addEventListener('click', getHistorialLayout);
 
         // SELECT → change
-        $('#attendanceTable tbody').on('change', 'select', function () {
+        $('#attendanceTable tbody').on('change', 'select', async function () {
             updateAsistencia(this, 'estatus');
+            const estaciones = $(this).data('id_estacion');
+
+            if (estaciones === undefined || estaciones === null || estaciones === '') {
+                return [];
+            }
+
+            let idsEstaciones = String(estaciones).split(',').map(id => id.trim()).filter(id => id !== '' && id.toLowerCase() !== 'null' && id.toLowerCase() !== 'undefined');
         });
 
         // INPUT → Enter
@@ -2597,21 +2641,21 @@
         checkPadre.addEventListener('change', function(){
           if (checkPadre.checked) {
                   seleccionadosGlobal = [...datosAsistenciaCheck] //Esto genera un nuevo arreglo
-                  $('#attendanceTable').DataTable().rows({ page: 'all' }).every(function () {
+                  $('#tableListadoPersonal').DataTable().rows({ page: 'all' }).every(function () {
                       $(this.node()).find('input[type="checkbox"]').prop('checked', true);
                   });
             }
 
           else {
                   seleccionadosGlobal = [];
-                  $('#attendanceTable').DataTable().rows({ page: 'all' }).every(function () {
+                  $('#tableListadoPersonal').DataTable().rows({ page: 'all' }).every(function () {
                     $(this.node()).find('input[type="checkbox"]').prop('checked', false);
                   });
           }
         })
 
         // Delegación de eventos para checkboxes dinámicos
-        $('#attendanceTable tbody').on('change', 'input[type="checkbox"]', function(){
+        $('#tableListadoPersonal tbody').on('change', 'input[type="checkbox"]', function(){
             const nomina = $(this).data('nomina');
             const index = seleccionadosGlobal.indexOf(nomina);
             
@@ -2776,7 +2820,7 @@
             alert('Por favor selecciona un operario válido.');
             return;
           }
-
+ 
           const formData = new FormData();
           formData.append('opcion', 3);
           formData.append('nomina', nomina);
@@ -2794,6 +2838,7 @@
                 if(data.estatus === 'ok') {
                    agregarPersonaOperacion(estacionId, nomina, nombre);
                    getEstacion(estacionId);
+                   mostrarTablaPersonal();
                 } else {
                     console.log(data)
                 }
@@ -2826,6 +2871,7 @@
                 if(data.estatus === 'ok') {
                   removerPersonaOperacion($(this).closest('.chip-asignado'));
                   getEstacion(estacionId);
+                  mostrarTablaPersonal();
                 } else {
                     console.log(data)
                 }
@@ -2834,6 +2880,13 @@
                 console.error(error);
                 alert('Error de conexión');
             });
+        });
+
+        //Evento boton eliminar listado de personal
+        $('#tableListadoPersonal').on('click', '.btnElimPer', function () {
+          const nomina = $(this).data('nomina');
+          console.log(nomina)
+          eliminarPersonal(nomina);
         });
 
       // Cargar las formas

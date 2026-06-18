@@ -286,6 +286,19 @@
                           Listado de personal
                         </h5>
                       </div>
+                      
+                        <div class="card-body">
+                          <div class="m-1" name="checkBoxContainer">
+                              <input type='checkbox' id="checkPadre" class='select-checkbox'>
+                              <label for="checkPadre"> <b>SELECCIONAR TODOS</b></label>                
+                          </div>
+                          <div class="d-grid gap-2 d-md-flex">
+                            <button class="btn btn-outline-success" id="btnCambioTurno">
+                              <i class="bi bi-clock"></i> Cambio de turno
+                            </button>
+                          </div>
+                        </div>
+
                       <div class="card-body p-0">
                         <div class="table-responsive">
                           <table id="tableListadoPersonal" class="table table-hover align-middle mb-0" style="min-width: 800px;">
@@ -296,91 +309,13 @@
                                 <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Línea</th>
                                 <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Estatus</th>
                                 <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Acciones</th>
+                                <th scope="col" class="px-4 py-3 text-muted small fw-semibold">Cambio de turno</th>
                               </tr>
                             </thead>
                             <tbody>
-                              <!-- Fila 1: Trabajador disponible -->
-                              <tr>
-                                <td class="px-4 py-3 fw-medium">10256</td>
-                                <td class="px-4 py-3">
-                                  <div class="d-flex flex-column">
-                                    <span class="fw-semibold">Juan Carlos Pérez</span>
-                                    <small class="text-secondary">Puesto: Operador especializado</small>
-                                  </div>
-                                </td>
-                                <td class="px-4 py-3"><span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">CRV</span></td>
-                                <td class="px-4 py-3"><span class="badge btn-success bg-opacity-15 text-dark px-3 py-1 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Disponible</span></td>
-                                <td class="px-4 py-3 text-end">
-                                  <div class="d-flex gap-1 justify-content-end">
-                                    <button class="btn btn-sm btn-outline-danger rounded-circle" style="width: 32px; height: 32px;" title="Eliminar"><i class="bi bi-trash3"></i></button>
-                                    <button class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 32px; height: 32px;" title="Mover de línea"><i class="bi bi-arrow-left-right"></i></button>
-                                    <button class="btn btn-sm btn-outline-info rounded-circle tableBtnUpdateOperaciones" style="width: 32px; height: 32px;" title="Gestionar operaciones"><i class="bi bi-diagram-3"></i></button>
-                                  </div>
-                                </td>
-                              </tr>
-                              <!-- Fila 2: Trabajador asignado -->
-                              <tr>
-                                <td class="px-4 py-3 fw-medium">10983</td>
-                                <td class="px-4 py-3">
-                                  <div class="d-flex flex-column">
-                                    <span class="fw-semibold">María Fernanda López</span>
-                                    <small class="text-secondary">Puesto: Técnico de calidad</small>
-                                  </div>
-                                </td>
-                                <td class="px-4 py-3"><span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">Ford</span></td>
-                                <td class="px-4 py-3"><span class="badge btn-info bg-opacity-15 text-dark px-3 py-1 rounded-pill"><i class="bi bi-person-check-fill me-1"></i> Asignado</span></td>
-                                <td class="px-4 py-3 text-end">
-                                  <div class="d-flex gap-1 justify-content-end">
-                                    <button class="btn btn-sm btn-outline-danger rounded-circle" title="Eliminar"><i class="bi bi-trash3"></i></button>
-                                    <button class="btn btn-sm btn-outline-secondary rounded-circle" title="Mover de línea"><i class="bi bi-arrow-left-right"></i></button>
-                                    <button class="btn btn-sm btn-outline-info rounded-circle tableBtnUpdateOperaciones" title="Gestionar operaciones"><i class="bi bi-diagram-3"></i></button>
-                                  </div>
-                                </td>
-                              </tr>
-                              <!-- Fila 3: Trabajador eliminado -->
-                              <tr>
-                                <td class="px-4 py-3 fw-medium">10567</td>
-                                <td class="px-4 py-3">
-                                  <div class="d-flex flex-column">
-                                    <span class="fw-semibold">Roberto Jiménez</span>
-                                    <small class="text-secondary">Puesto: Ensamblador</small>
-                                  </div>
-                                </td>
-                                <td class="px-4 py-3"><span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">Odyssey</span></td>
-                                <td class="px-4 py-3"><span class="badge bg-danger bg-opacity-10 text-dark px-3 py-1 rounded-pill"><i class="bi bi-person-x-fill me-1"></i> Eliminado</span></td>
-                                <td class="px-4 py-3 text-end">
-                                  <div class="d-flex gap-1 justify-content-end">
-                                    <button class="btn btn-sm btn-outline-danger rounded-circle" ><i class="bi bi-trash3"></i></button>
-                                    <button class="btn btn-sm btn-outline-secondary rounded-circle" ><i class="bi bi-arrow-left-right"></i></button>
-                                    <button class="btn btn-sm btn-outline-info rounded-circle tableBtnUpdateOperaciones" ><i class="bi bi-diagram-3"></i></button>
-                                  </div>
-                                </td>
-                              </tr>
-                              <!-- Fila 4: Otro disponible -->
-                              <tr>
-                                <td class="px-4 py-3 fw-medium">11021</td>
-                                <td class="px-4 py-3">
-                                  <div class="d-flex flex-column">
-                                    <span class="fw-semibold">Gabriela Ríos</span>
-                                    <small class="text-secondary">Puesto: Supervisora de línea</small>
-                                  </div>
-                                </td>
-                                <td class="px-4 py-3"><span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">Pilot</span></td>
-                                <td class="px-4 py-3"><span class="badge btn-success bg-opacity-15 text-dark px-3 py-1 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Disponible</span></td>
-                                <td class="px-4 py-3 text-end">
-                                  <div class="d-flex gap-1 justify-content-end">
-                                    <button class="btn btn-sm btn-outline-danger rounded-circle" title="Eliminar"><i class="bi bi-trash3"></i></button>
-                                    <button class="btn btn-sm btn-outline-secondary rounded-circle" title="Mover de línea"><i class="bi bi-arrow-left-right"></i></button>
-                                    <button class="btn btn-sm btn-outline-info rounded-circle tableBtnUpdateOperaciones" title="Gestionar operaciones"><i class="bi bi-diagram-3"></i></button>
-                                  </div>
-                                </td>
-                              </tr>
                             </tbody>
                           </table>
                         </div>
-                      </div>
-                      <div class="card-footer bg-white border-top-0 py-3 px-4 text-muted small">
-                        Mostrando 4 de 12 registros
                       </div>
                     </div>
                 </div>
@@ -1063,21 +998,7 @@
                 <span class="badge bg-light text-dark me-2">
                   Total: 15 trabajadores
                 </span>
-         
-              <div class="m-1" name="checkBoxContainer">
-                  <input type='checkbox' id="checkPadre" class='select-checkbox'>
-                  <label for="checkPadre">Seleccionar todos</label>                
-              </div>
             </div>
-
-            <div class="card-body">
-              <div class="d-grid gap-2 d-md-flex">
-                <button class="btn btn-outline-success" id="btnCambioTurno">
-                  <i class="bi bi-clock"></i> Cambio de turno
-                </button>
-              </div>
-            </div>
-                  
 
             <!-- Tabla de asistencia -->
               <div class="card-body p-0">
@@ -1492,7 +1413,6 @@
                             <!--CONTENIDO PRINCIPAL DE LOS TAB -->
                             <div class="tab-content" id="puntoCambioTabsContent">
 
-                            
                                 <!-- EVALUACIÓN DEL PUNTO DE CAMBIO -->
                                   <div class="tab-pane fade show active" id="evaluacion" role="tabpanel" aria-labelledby="evaluacion-tab">
 
@@ -1824,7 +1744,7 @@
                           </h4>
                         </div>
 
-                        <!-- Información del Cambio 
+                        <!- Información del Cambio 
                         <div class="info-card">
                           <h6 class="info-title">
                             <i class="bi bi-info-circle"></i>
@@ -1862,14 +1782,14 @@
                           </div>
                         </div>
 
-                        <!-- Formulario de cierre de punto de cambio
+                        <!- Formulario de cierre de punto de cambio
                         <div class= "decision-option option-close">
                           <form class="form" id="cierreControlCambioForm">
 
-                              <!--ID del punto de cambio-
+                              <!-ID del punto de cambio-
                               <input type="hidden" name="idPC" id="idPC">
 
-                              <!--Fecha de cierre del punto de cambio
+                              <!-Fecha de cierre del punto de cambio
                               <div class="row">
                                 <div class="col-md-6">
                                   <label for="fechaCierre" class="form-label fw-bold">Fecha de Cierre</label>
@@ -1877,7 +1797,7 @@
                                 </div>
                               </div>
 
-                              <!-- Notas Adicionales 
+                              <!- Notas Adicionales 
                               <div class="mt-4">
                                 <label for="notasAdicionales" class="form-label fw-bold">
                                   <i class="bi bi-chat-text me-2"></i>Notas Adicionales
@@ -1885,7 +1805,7 @@
                                 <textarea class="form-control form-control-custom" id="notasAdicionales" rows="3" placeholder="Agregue cualquier observación o comentario adicional sobre el cierre del control de cambio..."></textarea>
                               </div>
 
-                              <!--FIRMAS PARA EL CIERRE DEL PC 
+                              <!-FIRMAS PARA EL CIERRE DEL PC 
                                   <div class="row mt-4">
                                     <div class="col-md-6 mb-3">
                                       <div class="signature-box">
@@ -1906,7 +1826,7 @@
                           </form>
                         </div>
 
-                        <!-- Sección de Decisión 
+                        <!- Sección de Decisión 
                           <div class="decision-section">
                             <h4 class="decision-title">
                               <i class="bi bi-clipboard-check me-2"></i>
@@ -2006,7 +1926,7 @@
                           </div>
                         
 
-                        <!-- Footer del Modal 
+                        <!- Footer del Modal 
                         <div class="modal-footer">
                           <button type="button" class="btn btn-close-custom" data-bs-dismiss="modal">
                             <i class="bi bi-x-circle me-2"></i>Cancelar
@@ -2019,7 +1939,7 @@
                           </button>
                         </div>
                     </div>
-                   <!-- Fin Formulario de liberacion 
+                   <!- Fin Formulario de liberacion 
                   -->
               </div>
             <!-- FIN VENTANAS -->

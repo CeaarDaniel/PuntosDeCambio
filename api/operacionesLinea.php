@@ -278,24 +278,24 @@ else
             
 
                 //Verificar si hay algun registro en la tabla de PERSONAL_NAD de la persona asignada
-                $sqlPNAD = 'SELECT id_registro from SPC_personal_NAD where nomina = :nomina and fechaE IS NULL';
-                $stmtGETPNAD = $conn->prepare($sqlPNAD);
-                $stmtGETPNAD->execute([':nomina' => $nomina]);
+                //$sqlPNAD = 'SELECT id_registro from SPC_personal_NAD where nomina = :nomina and fechaE IS NULL';
+                //$stmtGETPNAD = $conn->prepare($sqlPNAD);
+                //$stmtGETPNAD->execute([':nomina' => $nomina]);
 
-                $resultado = $stmtGETPNAD->fetch(PDO::FETCH_ASSOC);
+                //$resultado = $stmtGETPNAD->fetch(PDO::FETCH_ASSOC);
 
                     //Actualizar el registro en la tabla de personal_nad si se encontro algun registro activo
-                    if ($resultado) {
-                        $id_registro = $resultado['id_registro'];
-                        $sqlUpdatePNAD = "UPDATE SPC_PERSONAL_NAD SET fechaE = getDate(), eliminado = 1
-                                            WHERE id_registro = :id_registro";
-                        
-                        $stmtUpdatePNAD = $conn->prepare($sqlUpdatePNAD);
-                        $stmtUpdatePNAD->execute([':id_registro' => $id_registro]);
-                    } 
+                    //if ($resultado) {
+                //$id_registro = $resultado['id_registro'];
+
+                //Actaulizar el estatus de la persona a asignado (1)
+                $sqlUpdateEP = "UPDATE SPC_PERSONAL SET estatus = 1 WHERE nomina = :nomina 
+                                    AND estatus NOT IN (1, 2)";
+                $stmtUpdateEP = $conn->prepare($sqlUpdateEP);
+                $stmtUpdateEP->execute([':nomina' => $nomina]);
+                //} 
 
                 $conn->commit();
-
                 echo json_encode([
                     'estatus' => 'ok',
                     'mensaje' => 'Registro insertado correctamente.',
@@ -809,13 +809,8 @@ else
             $conn->beginTransaction();
 
             // Preparar la sentencia con parámetros
-            $sql = "UPDATE SPC_PERSONAL_ESTACION 
-                        SET fecha_fin = GETDATE() 
-                    WHERE id_estacion = :id_estacion 
-                        AND nomina = :nomina
-                        AND fecha_fin IS NULL
-                        AND turno = :turno";
-
+            $sql = "UPDATE SPC_PERSONAL_ESTACION SET fecha_fin = GETDATE() WHERE id_estacion = :id_estacion 
+                        AND nomina = :nomina AND fecha_fin IS NULL AND turno = :turno";
             $stmt = $conn->prepare($sql);
 
             // Ejecutar con los parámetros
@@ -831,18 +826,21 @@ else
                             (SELECT nomina FROM SPC_PERSONAL_ESTACION PE WHERE PE.fecha_fin IS NULL AND PE.nomina = :nomina AND PE.turno = :turno
                                         UNION ALL
                             SELECT nomina FROM SPC_PUNTOS_CAMBIO PC WHERE fechaHora_fin IS NULL and PC.nomina = :nomina AND PC.turno = :turno
-                                        UNION ALL
-                            SELECT nomina FROM SPC_PERSONAL_NAD PN WHERE PN.fechaE IS NULL and PN.nomina = :nomina AND PN.turno = :turno
                             ) as Z
                         ) THEN 1 ELSE 0 END";
 
                 $stmtVerificar = $conn->prepare($sqlVerificar);
-                $stmtVerificar->execute([':nomina' => $nomina,
-                                        ':turno' => $turno
-                                        ]);
+                $stmtVerificar->execute([':nomina' => $nomina,':turno' => $turno]);
 
                 $resultado = $stmtVerificar->fetch(PDO::FETCH_ASSOC);
                 $asignacion = $resultado['asignacion'];
+
+                //Si no hay registro de asignaciones actualizar el estatus del empleado
+                if($asignacion == 0){ 
+                    $sqlUpdateEP = "UPDATE SPC_PERSONAL SET estatus = 0 WHERE nomina = :nomina AND estatus NOT IN (0, 2)";
+                    $stmtUpdateEP = $conn->prepare($sqlUpdateEP);
+                    $stmtUpdateEP->execute([':nomina' => $nomina]);
+                }
             //Fin verificacion
 
             // Confirmar la transacción
@@ -1132,22 +1130,20 @@ else
 
             // Obtener el ID del registro insertado
             $insertedId = $conn->lastInsertId();
-              //Actualizar la tabla de personal NAD despues de incertar el punto de cambio
-              
-                $sqlPNAD = 'SELECT id_registro from SPC_personal_NAD where nomina = :nomina and fechaE IS NULL';
-                $stmtGETPNAD = $conn->prepare($sqlPNAD);
-                $stmtGETPNAD->execute([':nomina' => $nominaPC]);
-                $resultado = $stmtGETPNAD->fetch(PDO::FETCH_ASSOC);
+
+              //Actualizar la tabla de personal NAD despues de incertar el punto de cambio  
+                //$sqlPNAD = 'SELECT id_registro from SPC_personal_NAD where nomina = :nomina and fechaE IS NULL';
+                //$stmtGETPNAD = $conn->prepare($sqlPNAD);
+                //$stmtGETPNAD->execute([':nomina' => $nominaPC]);
+                //$resultado = $stmtGETPNAD->fetch(PDO::FETCH_ASSOC);
 
                     //Actualizar el registro en la tabla de personal_nad si se encontro algun registro activo
-                    if ($resultado) {
-                        $id_registro = $resultado['id_registro'];
-                        $sqlUpdatePNAD = "UPDATE SPC_PERSONAL_NAD SET fechaE = getDate(), eliminado = 1
-                                            WHERE id_registro = :id_registro";
-                        
-                        $stmtUpdatePNAD = $conn->prepare($sqlUpdatePNAD);
-                        $stmtUpdatePNAD->execute([':id_registro' => $id_registro]);
-                    }  
+                    //if ($resultado) {
+                       $sqlUpdateEP = "UPDATE SPC_PERSONAL SET estatus = 1 WHERE nomina = :nomina 
+                                         AND estatus NOT IN (1, 2)";
+                       $stmtUpdateEP = $conn->prepare($sqlUpdateEP);
+                       $stmtUpdateEP->execute([':nomina' => $nominaPC]);
+                    //}  
             
 
             // Confirmar la transacción
@@ -1235,8 +1231,6 @@ else
                             (SELECT nomina FROM SPC_PERSONAL_ESTACION PE WHERE PE.fecha_fin IS NULL AND PE.nomina = :nomina
                                         UNION ALL
                             SELECT nomina FROM SPC_PUNTOS_CAMBIO PC WHERE fechaHora_fin IS NULL AND PC.nomina = :nomina
-                                        UNION ALL
-                            SELECT nomina FROM SPC_PERSONAL_NAD PN WHERE PN.fechaE IS NULL AND PN.nomina = :nomina
                             ) as Z
                         ) THEN 1 ELSE 0 END";
 
@@ -1245,6 +1239,13 @@ else
 
                 $resultado = $stmtVerificar->fetch(PDO::FETCH_ASSOC);
                 $asignacion = $resultado['asignacion'];
+
+                //Si no hay registro de asignaciones actualizar el estatus del empleado
+                if($asignacion == 0){  //Disponible
+                    $sqlUpdateEP = "UPDATE SPC_PERSONAL SET estatus = 0 WHERE nomina = :nomina AND estatus NOT IN (0, 2)";
+                    $stmtUpdateEP = $conn->prepare($sqlUpdateEP);
+                    $stmtUpdateEP->execute([':nomina' => $nomina]);
+                }
             //Fin verificacion
 
             // Confirmar la transacción
@@ -2104,7 +2105,6 @@ else
         echo json_encode($results);
 }
 
-
 //Registro de personal
 else 
  if($opcion == '28'){
@@ -2710,6 +2710,50 @@ else
         }
         // Devolver resultado
         echo json_encode($results);
+}
+
+//Eliminar personal
+else 
+ if($opcion == '37'){
+        $nomina = $_POST['nomina'] ?? null;
+
+        // Validar que se recibieron todos los datos
+        if (!$nomina) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Error de conexion al enviar los datos'
+            ]);
+            exit; 
+        }
+
+        try { 
+            // Iniciar transacción
+            $conn->beginTransaction();
+
+             //ACtualizar estatus a eliminado
+                $sqlUpdate = "UPDATE SPC_PERSONAL SET estatus = 2 WHERE nomina = :nomina AND estatus NOT IN (2)";
+                $stmtUpdate = $conn->prepare($sqlUpdate);
+                $stmtUpdate->execute([':nomina' => $nomina]);
+
+            // Confirmar la transacción
+            $conn->commit();
+
+            echo json_encode([
+                'estatus' => 'ok',
+                'mensaje' => 'Trabajador eliminado',
+            ]);
+        } catch (PDOException $e) {
+            // Si ocurre algún error, revertir la transacción
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }   
+            // Respuesta JSON con el error
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Error inseperado',
+                'detalle' => $e->getMessage()
+            ]);
+        }
 }
 
 /*

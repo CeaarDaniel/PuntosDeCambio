@@ -25,83 +25,41 @@
             --Si es necesario dar seguimiento a todo el proceso: agregar paginacion y un estatus a cada tab para dar seguimietno a todo el proceso que se sigue en el formato
             --Hay que validar que la persona que se va ha colocar para el punto de cambio este capasitada para la operacion
 
-        Registro de asistencia 
-            --Tal vez en un futuro sea mejor crear una lista de personal, que sea especifica para la personas que estan
-              en el area de sensor o electronicos para registrar informacion mas especifica y poder hacer consultas mas rapido
-              ya existe una pero es general de varias plantas
 
     Al mover los empleados de las estaciones este proceso debe de ser rapido, puede que se mueva un operador disponible a otra estacion en la misma linea 
     o puede moversa a otra linea, por ejemplo hoy sucedio que un operador se movio a otra linea en una estacion donde si habia operador y el operador de la estacion
-    se movio a la estacion vacia de esa linea
-    Tambien puede pasar que el operador disponible se mueva a alguna estacion dentro de la misma linea donde si halla algun trabajador y este trabajor se mueva a una estacion
+    se movio a la estacion vacia de esa linea. Tambien puede pasar que el operador disponible se mueva a alguna estacion dentro de la misma linea donde si halla algun trabajador y este trabajor se mueva a una estacion
     de otra linea donde se prestara
-
-    Para esto podria registrarlo como putno de cambio y quitar la restriccion de que no se pueda reigstrar un trabajador si es de otra linea, solo para la parte de 
-    los puntos de cambio, y tal vez agregar otro campo que indique que es prestado, si queda muy confuso o no agrada esto, tal vez podría agregar otra seccion que 
-    sea para el prestado de trabajadores a otras lineas que sea un registro similar al PC pero exclusivo para cuando el trabajador no estaq en su estacion
 
     --De mometno me parece mas optimo lo primero solo agregare una opcion al tipo de cambio que diga otro para indicar que no necesariamente es un punto de cambio tal cual, 
 
     Tienen el reporte de asistencia y aparte tienen otro reporte donde registran tambien a las personas prestadas y cuantan cuantos lideres hay en la linea, ademas de las faltas, asistencias, descanso, vacaciones, incapacidades etc.
-    ¿Si la operacion o en la estacion no es necesaria una certificacion como se libera o comprueba el conocimiento del operador en a linea?
 */  
 
 /*
 Revisar si es necesario hacer el registro del layout dos veces al hacer el registro de la asistencia o dejar solo un registro
-Al asignar al operador mostrar un listado de las personas certificadas o liberadas en el proceso o en la estacion
 Hacer restricciones y validaciones correspondientes
 Modificar el codigo de la linea por un numero consecutivo
 Hacer el contenido responsivo
 Pruebas
 Generar permisos de usuarios
 Generar usuarios
-Cuando el codigo de la linea que se envia en la url ocurre un error que no esta atrabado en algun catch o condicion
-Mostrar una lista del personal liberado o certificado al asignar la persona a la proceso desde el modal de la estacion
-
-Al parecer hay algo que llaman los desplazados, todos los dias descansan 5 personas por lo que esto hace que deban 
-de poder estar mas de una persona asignadas a la estacion. Hay que cambiar el cdigo para que se puedan registrar 
-por lo menos dos trabajadores por estacion y modificar todas las validaciones, los registros, los formularios, 
-cambiar parte de la logica del codigo para gestionar las estaciones
+Cuando el codigo de la linea que se envia en la url ocurre un error que no esta atrapado en algun catch o condicion
 
 Dividir la pantalla de layout en otras 3 pantallas 
-  --Una para todo el registro de los puntos de cambio y las operaciones de los operadores
   --Otro para la consulta del historial del layout y a lo mejor generacion de reportes
+  --Una para todo el registro de los puntos de cambio y las operaciones de los operadores - ok
   --otra pantalla para la creacion del layout agrgar estaciones, editar informacion de la linea, agregar 
-    las formas del layoput
+    las formas del layoput -ok
 
 En la consulta donde se valida que el trabajador no este registrado en otro turno, seria mejor que no ponga como filtro la linea y lo revise en general para todas las lineas
 Hay que evaluar la logica de la opcion 19 en las operacionesLinea para tratar de encontrar algun posible error o falla en la logica del codigo
 verificar que el trabajador no pueda registrarse en otro turno al registrarlo en otra linea
-Creo que los datos que se agregan a la variable de stationData al crear/agregar la estacion no coinciden con los datos que existen al acutalizar los datos de las estaciones, --update: creo que esyo ya lo corregi
 Revisar que sucede cuando la fecha de asignacion no es en la fecha actual sino que es antes o despues de la fecha actual-- o dejar solo como campo de readonly para guardarlo con la fecha actual
 
-En el procesos de agregar o eliminar personal a la tabla pNAD al finalizar o registramr un PC puede que de problemas si la persona es prestada 
-de otra linea, al finalizar el registro preguntar si se quiere registrar al personal_nad de la linea actual y no de la linea de la que se presto
-podria poner una condicion para que solo se elimine de la tabla personal_nad si el registro o asignacion o PC se dentro de la misma linea
-
-Quitar las restricciones en la asignacion de los trabajadores a una estacion para que se puedan registrar varios trabajadores en una estacion
-¿como mostrar los trabajadores en el layout, actualmente solo se puede mostrar uno? 
-¿Tambien en el modal de gestion de la estion, esta echa para mostrar la informacion de un solo trabajador
-lo que pienso que se podria hacer mostrar a ambos trabajdores y mostrar al que esta en la estacion hasta despues de pasar la lista
-En caso de hacer esto cambiaria los datos de el stationdata, la nomina seria un arreglo [] con las nominas de la persona registrada en la estacion
-
-creo que esto ya esta 
-Al asignar a una persona que esta en la tabla de personal NAD a otra tabla como de PC, eliminarla de esta tabla o cambiar su estatus
-Se ha elimiado a esta persona del registro de todas las estaciones, ¿desea agregalo al listado de personal disponible o personal no asignado?)
-
 Validar en la evaluacion si el numero de evaluacion corresponde con el numero de evaluacion realizada
-
 Mostrar reportes e informacion de la asistencia y los PC registrados con sus evaluaciones
 Crear seccion de certificaciones
-
-dejar que las asignaciones se hagan con el ILU, tener el listado de las operaciones en una tabla y desde ahi
-hacer la asignacion y que este registro se quede fijo hasta hacer algun cambio, listare todos los procesos y
-en la tabla dentro del processo listare internamente en la fila a las personas asignadas al proceso, hay que
-dar opcion para que dentro de este mismo listado se pueda agregar y eliminar a una persona activa en el 
-proceso del listado de personas certificadas
-
-Considerar el registrar el turno de asignacion de la persona dentro de la tabla de personal en vez de guardarlo
-en la tabla de personal_estacion, ver si es factible y util guardar la informacion de esta manera o no
 
     ESPICIFICACIONES/MODIFICACIONES OK
     Agregar una restriccion para no poder registrar la asistencia si no se esta dentro del horario correspondiente al turno
@@ -140,6 +98,24 @@ en la tabla de personal_estacion, ver si es factible y util guardar la informaci
     Mostrar una alerta o un mensaje en rojo que indique la feha de la ultima operacion en la estacion 
     o si tiene registro de operacion en la estacion (mostrar su ultima fecha de operacion en la estacion del operador)
     Dejar otra opcion para que se puede finalizar y/o asignar al operador como titular de la estacion
+    Al parecer hay algo que llaman los desplazados, todos los dias descansan 5 personas por lo que esto hace que deban 
+    de poder estar mas de una persona asignadas a la estacion. Hay que cambiar el cdigo para que se puedan registrar 
+    por lo menos dos trabajadores por estacion y modificar todas las validaciones, los registros, los formularios, 
+    cambiar parte de la logica del codigo para gestionar las estaciones
+    Considerar el registrar el turno de asignacion de la persona dentro de la tabla de personal en vez de guardarlo
+    en la tabla de personal_estacion, ver si es factible y util guardar la informacion de esta manera o no
+    Al asignar a una persona que esta en la tabla de personal NAD a otra tabla como de PC, eliminarla de esta tabla o cambiar su estatus
+    Se ha elimiado a esta persona del registro de todas las estaciones, ¿desea agregalo al listado de personal disponible o personal no asignado?)
+    Al asignar al operador mostrar un listado de las personas certificadas o liberadas en el proceso o en la estacion
+    Mostrar una lista del personal liberado o certificado al asignar la persona a la proceso desde el modal de la estacion
+    dejar que las asignaciones se hagan con el ILU, tener el listado de las operaciones en una tabla y desde ahi
+    hacer la asignacion y que este registro se quede fijo hasta hacer algun cambio, listare todos los procesos y
+    en la tabla dentro del processo listare internamente en la fila a las personas asignadas al proceso, hay que
+    dar opcion para que dentro de este mismo listado se pueda agregar y eliminar a una persona activa en el 
+    proceso del listado de personas certificadas
+    Quitar las restricciones en la asignacion de los trabajadores a una estacion para que se puedan registrar varios trabajadores en una estacion
+    ¿como mostrar los trabajadores en el layout, actualmente solo se puede mostrar uno? 
+    Creo que los datos que se agregan a la variable de stationData al crear/agregar la estacion no coinciden con los datos que existen al acutalizar los datos de las estaciones, --update: creo que esyo ya lo corregi
 
     TNA TERMINAL NO ACENTADA
     FALTA DE RECINA
@@ -176,7 +152,6 @@ en la tabla de personal_estacion, ver si es factible y util guardar la informaci
 
 
 /*
-No hay un solo “dulce más caro del mundo” definitivo, porque depende del tipo (chocolate, pastel, helado, etc.). Pero sí hay ejemplos extremos que se consideran los más caros jamás creados 😳:
 
 🥇 El más caro (en general)
 Un bombón de lujo con diamante creado por el chocolatero portugués Daniel Gomes.
@@ -185,7 +160,6 @@ Precio: más de 27 millones de pesos mexicanos aprox.
 Lleva oro comestible de 23 quilates
 Tiene forma de diamante y está hecho como pieza de exhibición
 
-👉 Básicamente, el precio no es por el sabor… sino por el lujo extremo.
 
 🥈 Otro caso famoso
 Un bombón con diamante incrustado (literalmente una joya comestible)
@@ -205,8 +179,6 @@ Chocolate artesanal de alta gama (como To’ak): cientos o miles de dólares por
 
 Si cuentan cosas “decoradas con joyas”, el más caro es un bombón con oro/diamantes.
 Si hablamos de algo realmente para comer, el récord lo tiene un helado de lujo japonés.
-
-Si quieres, dime y te digo cuál es el dulce más caro que podrías comprar en México (algo realista, no de millonarios 😅).
 
     A veces miramos el cielo buscando respuestas,
     como si las estrellas guardaran secretos que nosotros olvidamos.
