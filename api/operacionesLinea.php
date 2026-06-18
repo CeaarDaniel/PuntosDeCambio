@@ -1464,7 +1464,7 @@ else
                             UNION ALL
                         SELECT nomina, id_estacion FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND turno = :turno AND codigo_linea = :codigoLinea) x
                             ON x.nomina = p.nomina LEFT JOIN SPC_ESTACIONES e ON e.id_estacion = x.id_estacion
-                        WHERE p.codigo_linea = :codigoLinea AND p.turno = :turno
+                        WHERE p.codigo_linea = :codigoLinea AND p.turno = :turno and p.estatus NOT IN (2)
                             GROUP BY p.nomina, p.nombre ORDER BY p.nomina;";
 
                 $stmt = $conn->prepare($sql);

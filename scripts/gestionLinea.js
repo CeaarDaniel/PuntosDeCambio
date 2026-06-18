@@ -296,11 +296,11 @@
     //Funcion para obtener datos de una estacion en especifico. 
     async function getEstacion(id){
      //Se usa cuando, tras finalizar un punto de cambio, es necesario recuperar la información real del usuario asignado a la estación, ya que el listado muestra datos sobrescritos por el usuario del PC
-     let formDataEstacion = new FormData;
+     let formDataEstacion = new FormData();
       formDataEstacion.append('opcion', 15);
       formDataEstacion.append('idEstacion', id);
-      formDataEstacion.append('turno', $('#turnoLayout').val())
-          fetch("../api/operacionesLinea.php", {
+      formDataEstacion.append('turno', $('#turnoLayout').val());
+       return fetch("../api/operacionesLinea.php", {
                   method: "POST",
                   body: formDataEstacion,
               })
@@ -316,13 +316,18 @@
                                                 'estatusPC': data.estacion.estatusPC,
                                                 'isCertificate' : data.estacion.isCertificate
                                           })
+                       return true;
                     }
 
-                    else { alert(data.mensaje);}
+                    else { 
+                        alert(data.mensaje);
+                        return false;
+                    }
                 }
               ).catch((error) => {
                   console.log(error);
-            });
+                  return false;
+                });
     }
 
     //Asignar un operador a una linea
@@ -646,7 +651,6 @@
             })
             .then((response) => response.text())
             .then((data) => {   
-                      console.log(data)
                       data= JSON.parse(data)
                       let formAsistencia = document.getElementById('formAsistencia')
 
@@ -918,51 +922,60 @@
         });
     }
     
-    async function updateAsistencia(element, clave){
-          let table = $('#attendanceTable').DataTable();
-          let $row = $(element).closest('tr');
-          let data = table.row($row).data();
+    async function updateAsistencia(element, clave) {
+        let table = $('#attendanceTable').DataTable();
+        let $row = $(element).closest('tr');
+        let rowData = table.row($row).data();
 
-            if(data['id_registro']){
-              //console.log('Fila:', data);
-              //console.log('Campo:', campo);
-              //console.log('Nuevo valor:', nuevoValor);
+        // Validar que exista información de la fila y el id_registro
+        if (!rowData || !rowData['id_registro']) {
+            // console.log('Aun no se ha registrado la asistencia');
+            return false;
+        }
 
-              //Logica para actualizar el registro de la tabla
-              let nuevoValor = $(element).val();
-              let campo = $(element).attr('name');
-              let formDataUpdate = new FormData();
-              formDataUpdate.append('opcion', 18);
-              formDataUpdate.append('id_registro', data['id_registro'])
-              formDataUpdate.append(clave, nuevoValor);
-              //console.log(nuevoValor)
+        // Obtener nuevo valor y campo modificado
+        let nuevoValor = $(element).val();
+        let campo = $(element).attr('name');
 
-               fetch("../api/operacionesLinea.php", {
-                      method: "POST",
-                      body: formDataUpdate,
-                  })
-                  .then((response) => response.text())
-                  .then((data) => {
-                    console.log(data);
-                      data= JSON.parse(data)
+        let formDataUpdate = new FormData();
+        formDataUpdate.append('opcion', 18);
+        formDataUpdate.append('id_registro', rowData['id_registro']);
+        formDataUpdate.append(clave, nuevoValor);
 
-                      if(data.error) 
-                          alert(data.mensaje);
+        try {
+            const response = await fetch("../api/operacionesLinea.php", {
+                method: "POST",
+                body: formDataUpdate,
+            });
 
-                      else  // actualizar el data interno de DataTables
-                        if (campo) {
-                            data[campo] = nuevoValor; //table.row($row).data(data).invalidate();
-                            resumenAsistencia();
-                        }
+            const text = await response.text();
 
-                    }).catch((error) => {
-                      console.log(error);
-                });
+            console.log(text);
+
+            const responseData = JSON.parse(text);
+
+            if (responseData.error) {
+                alert(responseData.mensaje);
+                return false;
             }
 
-          //else {
-            //console.log('Aun no se ha registrado la asistencia')
-          //}
+            // Actualizar el data interno de DataTables
+            if (campo) {
+                rowData[campo] = nuevoValor;
+
+                // Actualizar la fila internamente en DataTables
+                //table.row($row).data(rowData).invalidate();
+                resumenAsistencia();
+
+                return true;
+            }
+
+            return false;
+
+        } catch (error) {
+            console.log(error);
+            return false;
+        }
     }
 
     function resumenAsistencia(){
@@ -2617,15 +2630,33 @@
         //btnHistorialLayout.addEventListener('click', getHistorialLayout);
 
         // SELECT → change
-        $('#attendanceTable tbody').on('change', 'select', async function () {
-            updateAsistencia(this, 'estatus');
-            const estaciones = $(this).data('id_estacion');
+        $('#attendanceTable tbody').on('change', 'select', async function (e) {     
+          
+          const actualizado = await updateAsistencia(this, 'estatus'); 
+          
+          if(!actualizado) {
+                console.log(actualizado)
+              return;
+          }
 
-            if (estaciones === undefined || estaciones === null || estaciones === '') {
-                return [];
-            }
+          console.log(actualizado)
 
-            let idsEstaciones = String(estaciones).split(',').map(id => id.trim()).filter(id => id !== '' && id.toLowerCase() !== 'null' && id.toLowerCase() !== 'undefined');
+          
+          const estaciones = $(this).data('id_estacion'); //Si se queda informacion en el cache con esta funcion puede no actualizarse los valores de data
+          //const estaciones = $(this).attr('data-id_estacion'); //como estos se acutalizan de manera dinamica es mejor usar attr
+
+
+          if (estaciones === undefined || estaciones === null || estaciones === '') {
+              return;
+          }
+
+          //Obtener los id separados por ","
+          let idsEstaciones = String(estaciones).split(',').map(id => id.trim()).filter(id => id !== '' && id.toLowerCase() !== 'null' && id.toLowerCase() !== 'undefined');
+
+            await Promise.all(
+               idsEstaciones.map( function (idEstacion) { getEstacion(idEstacion)})
+            );
+
         });
 
         // INPUT → Enter
