@@ -1455,7 +1455,7 @@ else
                                     WHERE eliminado = '0' AND codigo_linea = :codigoLinea and turno = :turno
                               ) t LEFT JOIN SPC_ESTACIONES e ON e.id_estacion = t.id_estacion  
                         GROUP BY t.nomina ORDER BY t.nomina;"; */
-
+ 
                 $sql ="SELECT p.nomina, p.nombre,
                             STRING_AGG(CAST(x.id_estacion AS NVARCHAR(10)), ',') AS id_estacion,
                             COALESCE(STRING_AGG(e.nombre_estacion, ', '), 'SIN ASIGNAR') AS nombre_estacion
