@@ -169,21 +169,18 @@ else
                 $conn->beginTransaction();
 
                 //Verificar si el trabajdor esta asignado en otra linea o si la estacion ya tiene un trabajador asignado
-                $sql_check = "SELECT estacion_ocupada = CASE WHEN EXISTS (SELECT 1 FROM SPC_PERSONAL_ESTACION 
+                $sql_check = "SELECT estacion_ocupada = CASE WHEN EXISTS (SELECT 1 FROM SPC_PERSONAL_ESTACION
                                 WHERE id_estacion = :id_estacion AND fecha_fin IS NULL AND turno = :turno) THEN 1 ELSE 0 END,
-                            trabajador_asignado = CASE WHEN EXISTS
-                                (SELECT 1 FROM
-                                    ( SELECT PE.nomina FROM SPC_PERSONAL_ESTACION PE 
-                                            INNER JOIN SPC_ESTACIONES E on PE.id_estacion = E.id_estacion
-                                        WHERE PE.fecha_fin IS NULL AND PE.nomina= :nomina AND E.codigo_linea <> :codigoLinea
-                                            UNION  ALL
-                                        SELECT nomina FROM SPC_PERSONAL_NAD WHERE fechaE IS NULL AND nomina= :nomina2 
-                                                AND codigo_linea <> :codigoLinea2
-                                            UNION ALL
-                                        SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina3 
-                                                AND codigo_linea <> :codigoLinea3
-                                    ) X
-                                )THEN 1 ELSE 0 END;";
+                                    trabajador_asignado = CASE WHEN EXISTS
+                                        (SELECT 1 FROM
+                                            (SELECT PE.nomina FROM SPC_PERSONAL_ESTACION PE 
+                                                    INNER JOIN SPC_ESTACIONES E on PE.id_estacion = E.id_estacion
+                                                WHERE PE.fecha_fin IS NULL AND PE.nomina= :nomina AND E.codigo_linea <> :codigoLinea
+                                                    UNION ALL
+                                             SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina3 
+                                                    AND codigo_linea <> :codigoLinea3
+                                            ) X
+                                        )THEN 1 ELSE 0 END;";
             
                 /*Revisar que el trabajador no este registrado en otro turno en esta linea*/
                 $sqlCheckT = 'SELECT otroTurno = CASE WHEN EXISTS 
@@ -207,8 +204,6 @@ else
                     ':id_estacion' => $estacion,
                     ':nomina' => $nomina,
                     ':codigoLinea' => $codigoLinea,
-                    ':nomina2' => $nomina,
-                    ':codigoLinea2' => $codigoLinea,
                     ':nomina3' => $nomina,
                     ':codigoLinea3' => $codigoLinea,
                 ]);
@@ -990,24 +985,24 @@ else
                                 (SELECT PE.nomina FROM SPC_PERSONAL_ESTACION PE   
                                         INNER JOIN SPC_ESTACIONES E on PE.id_estacion = E.id_estacion
                                     WHERE PE.fecha_fin IS NULL AND PE.nomina= :nomina AND E.codigo_linea <> :codigoLinea
-                                        UNION  ALL
-                                    SELECT nomina FROM SPC_PERSONAL_NAD WHERE fechaE IS NULL AND nomina= :nomina2 
-                                            AND codigo_linea <> :codigoLinea2
                                         UNION ALL
                                     SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina3 
                                             AND codigo_linea <> :codigoLinea3
                                 ) X
-                            )THEN 1 ELSE 0 END;";
+                            )THEN 1 ELSE 0 END,
+                            codigo_linea = (
+                                  SELECT P.codigo_linea
+                                        FROM SPC_PERSONAL P
+                                 WHERE P.nomina = :nomina
+                            );";
 
             /*Revisar que el trabajador no este registrado en otro turno en esta linea*/
-            $sqlCheckT = 'SELECT otroTurno = CASE WHEN EXISTS 
-                            (SELECT 1 FROM 
-                                (SELECT nomina FROM SPC_PERSONAL_ESTACION PE inner JOIN SPC_ESTACIONES E ON PE.id_estacion = E.id_estacion 
+            $sqlCheckT = 'SELECT otroTurno = CASE WHEN EXISTS
+                            (SELECT 1 FROM
+                                (SELECT nomina FROM SPC_PERSONAL_ESTACION PE inner JOIN SPC_ESTACIONES E ON PE.id_estacion = E.id_estacion
                                         WHERE PE.fecha_fin IS NULL AND PE.nomina= :nomina AND E.codigo_linea = :codigoLinea AND PE.turno <> :turno
                                             UNION ALL
                                     SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina= :nomina and codigo_linea =:codigoLinea AND turno <> :turno
-                                            UNION ALL
-                                    SELECT nomina FROM SPC_PERSONAL_NAD WHERE fechaE IS NULL AND nomina = :nomina AND codigo_linea = :codigoLinea and turno <> :turno
                                 ) as Z
                             ) THEN 1 ELSE 0 END;';
 
@@ -1020,8 +1015,6 @@ else
                                     ':nomina' => $nominaPC,
                                     ':turno' => $turno,
                                     ':codigoLinea' => $codigoLinea,
-                                    ':nomina2' => $nominaPC,
-                                    ':codigoLinea2' => $codigoLinea,
                                     ':nomina3' => $nominaPC,
                                     ':codigoLinea3' => $codigoLinea,
                                 ]);
@@ -1069,7 +1062,6 @@ else
                         ]);
                     exit;
             }
-
 
         try { 
             // Iniciar transacción
@@ -1139,10 +1131,16 @@ else
 
                     //Actualizar el registro en la tabla de personal_nad si se encontro algun registro activo
                     //if ($resultado) {
-                       $sqlUpdateEP = "UPDATE SPC_PERSONAL SET estatus = 1 WHERE nomina = :nomina 
+
+                    $estatusEM = 1; //Asignado en la linea actual del empleado
+
+                    //Si el codigoLinea de la linea es difernete al codigo_linea actual del empleado
+                    if($codigoLinea != $registroPC['codigo_linea']) $estatusEM = 3; //Asignado en otra linea
+
+                       $sqlUpdateEP = "UPDATE SPC_PERSONAL SET estatus = :estatus WHERE nomina = :nomina 
                                          AND estatus NOT IN (1, 2)";
                        $stmtUpdateEP = $conn->prepare($sqlUpdateEP);
-                       $stmtUpdateEP->execute([':nomina' => $nominaPC]);
+                       $stmtUpdateEP->execute([':nomina' => $nominaPC, ':estatus' => $estatusEM]);
                     //}  
             
 
@@ -1455,7 +1453,7 @@ else
                                     WHERE eliminado = '0' AND codigo_linea = :codigoLinea and turno = :turno
                               ) t LEFT JOIN SPC_ESTACIONES e ON e.id_estacion = t.id_estacion  
                         GROUP BY t.nomina ORDER BY t.nomina;"; */
- 
+
                 $sql ="SELECT p.nomina, p.nombre,
                             STRING_AGG(CAST(x.id_estacion AS NVARCHAR(10)), ',') AS id_estacion,
                             COALESCE(STRING_AGG(e.nombre_estacion, ', '), 'SIN ASIGNAR') AS nombre_estacion
@@ -2286,7 +2284,7 @@ else
         try {
             $sql= "SELECT ILU.idE, E.nombre_estacion FROM SPC_PERSONAL P INNER JOIN SPC_ILU ILU ON P.nomina = ILU.nomina
                                                                 INNER JOIN SPC_ESTACIONES as E on e.id_estacion = ILU.idE
-                    WHERE p.codigo_linea = :codigo_linea and p.nomina=:nomina and ILU.estatus!= 1";
+                    WHERE p.codigo_linea = :codigo_linea and p.nomina=:nomina and ILU.estatus!= 1 and e.codigo_linea = :codigo_linea";
             $registro = $conn->prepare($sql);
             $response = [];
 
@@ -2755,13 +2753,4 @@ else
             ]);
         }
 }
-
-/*
-    Resumen de asistencia
-    Asistencias
-    Permisos
-    Faltas
-    Vacaciones
-    % Asistencia
-*/
 ?>

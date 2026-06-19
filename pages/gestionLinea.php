@@ -385,9 +385,6 @@
                               <button id="btnBackModalPersonal" class="btn btn-success rounded-pill px-4 me-2">
                                   <i class="bi bi-arrow-left me-1"></i> Volver
                               </button>
-                              <button type="button" class="btn btn-success rounded-pill px-4" id="btnRegistrarOperador">
-                                  <i class="bi bi-check-circle me-1"></i> Guardar
-                              </button>
                           </div>
                       </div>
                 </div>

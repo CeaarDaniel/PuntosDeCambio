@@ -51,7 +51,7 @@
       </button>
 
       <!--BOTON PARA REGISTRA/VER PERSONAL DISPOPNIBLE O NO ASIGNADO A UNA ESTACION -->
-      <button id ='btnMenuRegiswtroNAD' class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Ver personal disponible">
+      <button id ='btnMenuRegiswtroNAD' class="tool-btn d-none" data-bs-toggle="tooltip" data-bs-placement="right" title="Ver personal disponible">
         <span data-bs-toggle="modal" data-bs-target="#modalPersonalDisponible">
           <i class="bi-person-check"></i>
           <span>Disponibles</span>

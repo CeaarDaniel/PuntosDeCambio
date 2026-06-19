@@ -1311,6 +1311,7 @@
             mostrarTablaOperaciones();
             mostrarTablaPersonal();
             generarTablaAsistencia();
+            resumenAsistencia();
 
             svg = document.getElementById('workspace-svg');
             shapesGroup = $('#shapes-group');
@@ -1497,7 +1498,7 @@
                               { 
                                   data: null,
                                   render: function(data) {
-                                      return `<span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">CRV</span>`;
+                                      return `<span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill text-uppercase">${codigoLinea.value}</span>`;
                                   }
                               },
                               { 
@@ -1507,6 +1508,7 @@
                                         if(data == '0')  estatus = '<span class="badge btn-success bg-opacity-15 text-dark px-3 py-1 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Disponible</span>';
                                         else if(data == '1') estatus = '<span class="badge btn-info bg-opacity-15 text-dark px-3 py-1 rounded-pill"><i class="bi bi-person-check-fill me-1"></i> Asignado</span>';
                                         else if(data == '2') estatus = '<span class="badge bg-danger bg-opacity-10 text-dark px-3 py-1 rounded-pill"><i class="bi bi-person-x-fill me-1"></i> Eliminado</span>';
+                                        else if(data == '3') estatus = '<span class="badge bg-warning bg-opacity-10 text-dark px-3 py-1 rounded-pill"><i class="bi bi-person-x-fill me-1"></i> Asignado en otra linea</span>';
                                      return estatus;
                                   }
                               },
@@ -2306,6 +2308,9 @@
                                 getEstacion(estacion);
                                 mostrarTablaOperaciones();
                                 mostrarTablaPersonal();
+
+                                let modalActual = bootstrap.Modal.getInstance(document.getElementById('changeControlModal'));
+                                (modalActual) ? modalActual.hide() : '';
                             }
 
                           else {
@@ -2405,12 +2410,6 @@
                                let modalActual = bootstrap.Modal.getInstance(document.getElementById('changeControlModal'));
                               (modalActual) ? modalActual.hide() : '';
                               getEstacion(estacionId)
-
-                              if(data.asignacion==0){
-                                 let registrar = confirm('¿Desea agregar a esta persona al personal disponible?');
-                                    if(registrar) registrarDisponible(nominaTrabajador, nombreTrabajador, $('#turnoLayout').val())
-                              }
-
                               mostrarTablaOperaciones();
                               mostrarTablaPersonal();
                             }
@@ -2522,12 +2521,6 @@
                           // Si no es arreglo, lo convertimos en uno
                           let estacionesA = Array.isArray(idEstacion) ? idEstacion : [idEstacion];
                           estacionesA.forEach(id => {getEstacion(id);});
-
-                            if(data.asignacion==0){
-                              let registrar = confirm('¿Desea agregar a esta persona al personal disponible?');
-                              if(registrar) registrarDisponible(nominaAPC.value, nombreTrabajador, $('#turnoLayout').val());
-                            }
-
                             mostrarTablaPersonal();
                         }
 
@@ -2927,32 +2920,3 @@
 
         applyZoom();
     });
-
-    //Cambio de modelo
-    /*
-      El cambio de modelo es cuando en la linea comienzan a fabricar piezas pero con caracteristicas diferentes
-      como por ejemplo la orientacion del bracket, las dimensiones de las piesas, las mesas en las que montan el arnez
-      o los componentes que se utilizan para fabricar el arness, por lo general no se suelen cambiar de componentes mas que en la linea de ford
-      aqui solo cambia que en un modelo se fabrica un braquet y en otro se usa un gromer, 
-      en la linea de ford se usan 4 modelos la posca blanca es para el lado derecho y la azul para el lado izquierdo
-      en crv solo son dos modelos el de el lado r y el del lado derecho, 
-      en mdx/pilot tambien son 4 modelos el de mdx izquiero y derecho y el de pilot lado izquiero y derecho, aqui se utilizan 
-      4 tipos de posca el blanco y azul para el modelo de mdx y el de amarillo y rojo para el modelo de pilot, igual uno para cada lado
-      cuando hacen el cambio de modelo pegan unas hojas en las maquinas o estaciones como ayuda visual que indican el modelo
-      que se esta fabricando, por ejemplo en mdx/pilot los que terminan con 610 son los del lado izquiero y los que terminan en 60
-      son los del lado derecho, en la lionea de ford los distinguen por las letras en las que termina el codigo que es el AC  y otro codigo,
-      en oddyseey tengo enentendido que tambien tienen 4 modelos y colo en crv tienen dos, y van ha meter otro color de posca que es morado
-      para un modelo llamado passport en la linea de mdx/pilot, 
-      Cuando se hace el cambio de modelo deben de cambiarse los programas en las maquinas, estos los cvambias el personal de mantenimiento
-      en algunas estaciones lo hace el mismo personal
-      Me explicaron que no hacen cambio de material al cambiar de modelo se usa el mismo material solo cambian las propiedades, orientacion, dimensiones
-      etc con las que se trabajan, con ecepcion de ford, pero de igual manera el material lo tienen en la linea y lo da el mismo
-      abastecedor, no es necesario hacer un proceso en especial para solicitar material al cambiar de modelo
-      El unico circuito que tienen aqui es el IC, este los pide derectamente la persona que esta en la estacion de moldeo de ic
-      al area donde tienen el material, no hay mas circuitos ademas de este, 
-
-      Dependiendo del modelo cada terminal se le pone un sello diferente, las terminalas van colocados en donde estan 
-      los conectores, y el IC va sobre el cabezal, las poscas son tinta de colores que colocan a los arneses para distinguir el modelo
-      hay modelos de arneses que no tienen IC, por lo que solo tiene el conector
-      las terminales y los IC se colocan en extremidades diferentes del arnes, las terminales se trabajan en el area de crimpado
-    */
