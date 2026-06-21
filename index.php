@@ -31,7 +31,7 @@
     <div class="main-content">
       <div class="top-bar">
         <h4 id="page-title" class="page-title">Dashboard</h4>
-        <div class="user-info">
+        <div class="user-info d-none">
           <span>Usuario: Admin</span>
           <i class="bi bi-bell ms-3"></i>
         </div>

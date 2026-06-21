@@ -1,4 +1,5 @@
 <!-- Dashboard Section -->
+ <!--
 <div id="dashboard" class="">
 
     <h2 class="section-title text-center">Resumen General</h2>
@@ -101,5 +102,6 @@
             </div>
         </div>
     </div>
-</div>
+</div> 
+-->
 <!--Fin dashboar --

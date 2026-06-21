@@ -11,7 +11,7 @@ let lineDescription = document.getElementById('lineDescription')
 let contenedorLineas = document.getElementById('contenedorLineas');
 
 function openLayout(codigo,nombre){
-    const url = "./pages/layoutFuncional.php?codigo="+ encodeURIComponent(codigo)+"&nombre="+ encodeURIComponent(nombre);
+    const url = "./pages/gestionLinea.php?codigo="+ encodeURIComponent(codigo)+"&nombre="+ encodeURIComponent(nombre);
     const nombreVentana = "Layout";
     const anchoPantalla = screen.width;
     const altoPantalla = screen.height;
