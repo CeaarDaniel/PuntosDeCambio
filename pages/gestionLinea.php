@@ -75,6 +75,23 @@
           color: #14532d;
           transform: translateY(-1px);
         }
+
+        #contenedorAlertTableOperacion{
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 8px;
+            align-items: center;
+        }
+
+        #contenedorAlertTableOperacion .select-operaciones {
+            width: 100%;
+            min-width: 0;
+        }
+
+        #contenedorAlertTableOperacion .alerTableOperaciones {
+            grid-column: 1 / -1;
+            width: 100%;
+        }
   </style>
 
 </head>  

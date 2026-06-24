@@ -2753,4 +2753,50 @@ else
             ]);
         }
 }
+
+//Obtener registro de puntos de cambio
+else 
+if($opcion == '38'){
+    $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : 0;
+    $turno = !empty($_POST['turno']) ? $_POST['turno'] : 0;
+    
+    if (!$codigoLinea) {
+        echo json_encode([
+            'estatus' => 'error',
+            'mensaje' => 'Error al recibir los datos'
+        ]);
+     exit;
+    }
+
+    try {
+         $response = [];
+            $sqlPC = "SELECT idPC, no_controlCambio, nomina, nombre, id_estacion, motivo, 
+                                        fechaHora_inicio, fechaHora_fin, tipo_cambio, estatusPC
+                                from SPC_PUNTOS_CAMBIO where codigo_linea = :codigoLinea";
+
+            $params[':codigoLinea'] = $codigoLinea;
+
+            // Filtro turno
+            if ($turno != 0) {
+                $sqlPC .= " AND turno = :turno";
+                $params[':turno'] = $turno;
+            }
+
+            $pc = $conn->prepare($sqlPC);
+            $pc->execute($params);
+            $response = $pc->fetchAll(PDO::FETCH_ASSOC);
+
+            echo json_encode([
+                'estatus' => 'ok',
+                'data' => $response
+            ]);
+
+    } catch (Exception $e) {
+        echo json_encode([
+            'estatus' => 'error',
+            'mensaje' => 'Ocurrió un error al generar los datos',
+            'error'   => $e->getMessage()
+        ]);
+    }
+}
 ?>

@@ -1607,7 +1607,8 @@
                 data: null,
                 className: 'px-4 py-3',
                 render: function (rowData) {
-                  let selectHtml = `<select class="form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3">`;
+                  let selectHtml = `<select class="w-100 form-select form-select-sm bg-info bg-opacity-10 border-0 rounded-3 select-operaciones"
+                                      data-estacion="${rowData.id_estacion}">`;
                   selectHtml += `<option value="">Seleccionar operario...</option>`;
 
                   if (rowData.liberados && rowData.liberados.length > 0) {
@@ -1624,11 +1625,11 @@
                                   </button>`;
 
                   return `
-                    <div class="d-flex gap-2 align-items-center">
+                    <div id="contenedorAlertTableOperacion">
                       ${selectHtml}
                       ${btnHtml}
-                    </div>
-                  `;
+                      <div class="text-danger fw-bold w-100 d-none alerTableOperaciones"></div>
+                    </div>`;
                 }
               }
             ],
@@ -2831,6 +2832,75 @@
         
         //Boton para volver a la tabla del modal de registro de personal
         $('#btnBackModalPersonal').on('click', function (){changeContent('ventanasModalPersonal', 'ventanaTablaListadoPersonal')})
+
+        //Evennto para obtener el trabajador seleccionado
+        $('#operationsTable').on('change', '.select-operaciones', function(){
+            const $select = $(this);
+            const $mensaje = $select.siblings('.alerTableOperaciones');
+            const nomina = $(this).val();
+            const estacion = $(this).data('estacion');
+
+            let formData = new FormData();
+            formData.append('nomina',nomina)
+            formData.append('idE',estacion)
+            formData.append('opcion', 35)
+     
+            if(!nomina){
+              $mensaje.addClass('d-none').text('');
+              return;
+            }
+
+            fetch("../api/operacionesLinea.php", {
+                    method: "POST",
+                    body: formData,
+                })
+                .then((response) => response.text())
+                .then((data) => {
+                    data= JSON.parse(data)
+
+                    if(data.estatus=='ok'){
+                      // 1. Verificar si en el listado de estaciones donde ha sido asignado el trabajador se encuentra la estacion actual
+                      const estacion = data.allEst;
+
+                      //Si no existe la etacion
+                        if (!estacion) {
+                              $mensaje.removeClass('d-none').text('ESTE TRABAJADOR NO CUENTA CON UN REGISTRO ANTERIOR EN ESTE PROCESO');
+                          }
+
+                        //Si la estacion exsite
+                        else //2. Evaluar si el registro no esta activo, si esta activo el valor debera ser null, de no estar activo tendra un valor la fecha
+                          if(estacion.fecha_fin){
+                            // 3. Convertir a objeto Date
+                            const fechaBase = new Date(estacion.fecha_fin);
+                            const fechaActual = new Date();
+
+                            // 4. Calcular diferencia en días
+                            const diffMs = fechaActual - fechaBase;
+                            const diffDias = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+                            if (diffDias > 30) {
+                              $mensaje.removeClass('d-none').text('EL ULTIMO REGISTRO DE OPERACION ES MAYOR A 30 DIAS');
+                            }
+
+                            else 
+                              $mensaje.addClass('d-none').text('');
+                          }
+
+                          else{
+                            $mensaje.addClass('d-none').text('');
+                          }
+                    }
+                  
+                    else{
+                        $mensaje.addClass('d-none').text('');
+                        console.log(data.error); 
+                    }
+
+                }).catch((error) => {
+                  console.log(error);
+                  $mensaje.addClass('d-none').text('');
+            });
+        })
 
         // Botón "+" para agregar en la tabla de lista de operaciones
         $('#modalListaOperaciones').on('click', '#operationsTable .btn-add-worker', function () {
