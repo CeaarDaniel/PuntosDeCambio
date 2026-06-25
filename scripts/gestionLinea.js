@@ -110,6 +110,7 @@
         document.getElementById('nombreEstacionModalPC').textContent = (stationData.name) ? (stationData.name).toUpperCase() : '';
         document.getElementById('idEstacionModalPC').value = stationData.id;
         document.getElementById('idTrabajadorAsignado').value = stationData.nomina || '';
+        document.getElementById('alertPC').textContent = "";
 
         //Setear valores del formulario de registro de PC
           getNoControl().then(resultado => { document.getElementById('no_controlCambio').value = resultado;});
@@ -1647,6 +1648,138 @@
         });
     }
 
+    function mostrarTablaPC(){
+      let formData= new FormData();
+      formData.append('codigoLinea', codigoLinea.value);
+      formData.append('opcion', 38);
+      formData.append('turno', $('#turnoLayout').val());
+
+      fetch("../api/operacionesLinea.php", {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => response.text())
+        .then((data) => {
+
+          data = JSON.parse(data);
+          const response = data.data;
+
+          // Inicializar DataTable listado de puntos de cambio
+          $('#tablePC').DataTable().destroy();
+          
+          const table = $('#tablePC').DataTable({
+            data: response,
+            columns: [
+              { 
+                data: 'no_controlCambio',
+                className: 'px-4 py-3 fw-medium',
+                orderable: false
+              },
+              { 
+                data: 'nomina',
+                className: 'px-4 py-3 fw-medium'
+              },
+              { 
+                data: 'nombre',
+                width: '200px',
+                className: 'px-4 py-3',
+                render: function(data) {
+                  return `<span class="fw-semibold">${data ?? ''}</span>`;
+                }
+              },
+              { 
+                data: 'estacion',
+                className: 'px-4 py-3',
+                orderable: false
+              },
+              { 
+                data: 'motivo',
+                className: 'px-4 py-3',
+                render: function(data) {
+                  return `<span class="text-wrap">${data ?? ''}</span>`;
+                }
+              },
+              {
+                data: 'fechaHora_inicio',
+                className: 'px-4 py-3',
+                orderable: false,
+                render: function(data) {
+                  if (!data) return '';
+                  
+                  const fecha = new Date(data.replace(' ', 'T'));
+                  const dia = String(fecha.getDate()).padStart(2, '0');
+                  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+                  const anio = fecha.getFullYear();
+                  const horas = String(fecha.getHours()).padStart(2, '0');
+                  const minutos = String(fecha.getMinutes()).padStart(2, '0');
+
+                  return `<span class="text-nowrap">${dia}/${mes}/${anio} ${horas}:${minutos}</span>`;
+                }
+              },
+              { 
+                data: 'fechaHora_fin',
+                className: 'px-4 py-3',
+                orderable: false,
+                render: function(data) {
+                    if (!data) return '';
+                    const fecha = new Date(data.replace(' ', 'T'));
+                    const dia = String(fecha.getDate()).padStart(2, '0');
+                    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+                    const anio = fecha.getFullYear();
+                    const horas = String(fecha.getHours()).padStart(2, '0');
+                    const minutos = String(fecha.getMinutes()).padStart(2, '0');
+                     return `<span class="text-nowrap">${dia}/${mes}/${anio} ${horas}:${minutos}</span>`;
+                }
+              },
+              { 
+                data: 'tipo_cambio',
+                className: 'px-4 py-3',
+                render: function(data) {
+                  let badge = '';
+                  if (data == '1') {
+                    badge = '<span class="badge bg-warning bg-opacity-10 text-dark px-3 py-1 rounded-pill">Inesperado</span>';
+                  } else if (data == '2') {
+                    badge = '<span class="badge bg-success bg-opacity-10 text-dark px-3 py-1 rounded-pill">Programado</span>';
+                  } else {
+                    badge = `<span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">${data ?? 'N/A'}</span>`;
+                  }
+                  return badge;
+                }
+              },
+              { 
+                data: 'estatusPC',
+                className: 'px-4 py-3',
+                render: function(data) {
+                  let estatus = '';
+                  if (data == '1') {
+                    estatus = '<span class="badge bg-success bg-opacity-10 text-dark px-3 py-1 rounded-pill">Activo</span>';
+                  } else if (data == '2') {
+                    estatus = '<span class="badge bg-danger bg-opacity-10 text-dark px-3 py-1 rounded-pill">Cancelado</span>';
+                  } else if (data == '3') {
+                    estatus = '<span class="badge bg-info bg-opacity-10 text-dark px-3 py-1 rounded-pill">Finalizado</span>';
+                  } else {
+                    estatus = `<span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">N/A</span>`;
+                  }
+                  return estatus;
+                }
+              }
+            ],
+            pageLength: 10,
+            lengthMenu: [5, 10, 25, 50],
+            responsive: false,
+            scrollX: true,
+            deferRender: false,
+            paging: true,
+            order: []
+          });
+          
+          // Badge inicial (basado en el DOM recién generado)
+          //actualizarBadgeAsignadosDOM();
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
 
     // Agrega un chip a la columna de la estación especificada
     function agregarPersonaOperacion(estacionId, nomina, nombreCompleto) {
@@ -2002,6 +2135,7 @@
 
       mostrarTablaPersonal();
       mostrarTablaOperaciones();
+      mostrarTablaPC();
 
       //DECLARACION DE EVENTOS
         //OBTENER NUMERO DE NOMINA
@@ -2982,6 +3116,11 @@
           console.log(nomina)
           eliminarPersonal(nomina);
         });
+
+        //Evento para cargar la tabla de listado de puntos de cambio al abrir el modal
+        $('#btnMenuTablaPC').on('click', function (){
+            mostrarTablaPC();
+        })
 
       // Cargar las formas
       setTimeout(() => {

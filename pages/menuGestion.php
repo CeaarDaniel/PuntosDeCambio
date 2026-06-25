@@ -33,14 +33,13 @@
         </span>
       </button>
 
-      <!--CONSULTAR PUNTO DE CAMBIO
-        <button class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Punto de cambio">
+      <!--CONSULTAR PUNTO DE CAMBIO -->
+        <button id="btnMenuTablaPC" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Punto de cambio">
           <span data-bs-toggle="modal" data-bs-target="#changePointsModal">
           <i class="bi bi-arrow-repeat"></i>
           <span>Cambio</span>
           </span>
         </button> 
-      -->
 
       <!--REGISTRO DE ASISTENCIA -->
       <button id="btnMenuRegistroAs" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Registro de asistencia">

@@ -610,211 +610,52 @@
 
   <!-- Consultar Puntos de Cambio -->
   <div class="modal fade" id="changePointsModal" tabindex="-1" aria-labelledby="changePointsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-fullscreen">
+    <div class="modal-dialog modal-dialog-scrollable modal-xl">
       <div class="modal-content">
         <!-- Header del Modal -->
         <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color), #1a2530); color: white;">
           <div class="d-flex align-items-center">
             <i class="bi bi-arrow-left-right me-2" style="font-size: 1.5rem;"></i>
-            <h5 class="modal-title" id="changePointsModalLabel">Seguimiento de Puntos de Cambio</h5>
+            <h5 class="modal-title" id="changePointsModalLabel">Listado de puntos de cambio</h5>
           </div>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         
         <!-- Body del Modal -->
         <div class="modal-body p-4">
-          <!-- Barra de herramientas -->
+          <!-- Barra de herramientas  y filtros -->
           <div class="d-flex justify-content-between align-items-center mb-4">
-            <div class="d-flex gap-2">
-              <div class="input-group" style="width: 300px;">
-                <input type="text" class="form-control" placeholder="Buscar puntos de cambio...">
-                <button class="btn btn-outline-secondary" type="button">
-                  <i class="bi bi-search"></i>
-                </button>
-              </div>
-              <select class="form-select" style="width: 200px;">
-                <option selected>Filtrar por estado</option>
-                <option>En progreso</option>
-                <option>Completado</option>
-                <option>Cancelado</option>
-              </select>
-              <select class="form-select" style="width: 200px;">
-                <option selected>Filtrar por tipo</option>
-                <option>Programado</option>
-                <option>Inesperado</option>
-                <option>Especial</option>
-              </select>
-            </div>
           </div>
-
-
 
           <!-- Tabla de Puntos de Cambio -->
           <div class="card">
             <div class="card-body p-0">
               <div class="table-responsive">
-                <table class="table table-striped table-hover mb-0">
-                  <thead class="table-dark">
+                <table id="tablePC" class="table table-hover align-middle mb-0" style="min-width: 1200px;">
+                  <thead class="bg-light">
                     <tr>
-                      <th>ID</th>
-                      <th>Estación</th>
-                      <th>Operador Anterior</th>
-                      <th>Operador Nuevo</th>
-                      <th>Fecha</th>
-                      <th>Tipo</th>
-                      <th>Estado</th>
-                      <th>Acciones</th>
+                      <th scope="col" class="px-4 py-3 fw-bold">No.</th>
+                      <th scope="col" class="px-4 py-3 fw-bold">Nómina</th>
+                      <th scope="col" class="px-4 py-3 fw-bold">Nombre</th>
+                      <th scope="col" class="px-4 py-3 fw-bold">ID Estación</th>
+                      <th scope="col" class="px-4 py-3 fw-bold">Motivo</th>
+                      <th scope="col" class="px-4 py-3 fw-bold">Inicio</th>
+                      <th scope="col" class="px-4 py-3 fw-bold">Fin</th>
+                      <th scope="col" class="px-4 py-3 fw-bold">Tipo Cambio</th>
+                      <th scope="col" class="px-4 py-3 fw-bold">Estatus</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    <tr>
-                      <td><strong>PC-001</strong></td>
-                      <td>Estación 02</td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">JP</div>
-                          <span>Juan Pérez</span>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">MG</div>
-                          <span>María González</span>
-                        </div>
-                      </td>
-                      <td>15/11/2025</td>
-                      <td><span class="badge bg-info">Programado</span></td>
-                      <td><span class="badge bg-warning">En progreso</span></td>
-                      <td>
-                        <div class="btn-group">
-                          <button class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Seguimiento">
-                            <i class="bi bi-clipboard-check"></i>
-                          </button>
-                          <button class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" title="Detalles">
-                            <i class="bi bi-eye"></i>
-                          </button>
-                          <button class="btn btn-sm btn-outline-warning" data-bs-toggle="tooltip" title="Editar">
-                            <i class="bi bi-pencil"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong>PC-002</strong></td>
-                      <td>Estación 07</td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">RS</div>
-                          <span>Roberto Sánchez</span>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">CR</div>
-                          <span>Carlos Ruiz</span>
-                        </div>
-                      </td>
-                      <td>10/03/2025</td>
-                      <td><span class="badge bg-warning">Inesperado</span></td>
-                      <td><span class="badge bg-success">Completado</span></td>
-                      <td>
-                        <div class="btn-group">
-                          <button class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Ver">
-                            <i class="bi bi-eye"></i>
-                          </button>
-                          <button class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" title="Reporte">
-                            <i class="bi bi-file-earmark-text"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong>PC-003</strong></td>
-                      <td>Estación 05</td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">AL</div>
-                          <span>Ana López</span>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">LF</div>
-                          <span>Luis Fernández</span>
-                        </div>
-                      </td>
-                      <td>08/11/2025</td>
-                      <td><span class="badge bg-secondary">Especial</span></td>
-                      <td><span class="badge bg-success">Completado</span></td>
-                      <td>
-                        <div class="btn-group">
-                          <button class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Ver">
-                            <i class="bi bi-eye"></i>
-                          </button>
-                          <button class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" title="Reporte">
-                            <i class="bi bi-file-earmark-text"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong>PC-004</strong></td>
-                      <td>Estación 12</td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">JG</div>
-                          <span>Jorge Gómez</span>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">MP</div>
-                          <span>Marta Paredes</span>
-                        </div>
-                      </td>
-                      <td>05/11/2025</td>
-                      <td><span class="badge bg-info">Programado</span></td>
-                      <td><span class="badge bg-secondary">Cancelado</span></td>
-                      <td>
-                        <div class="btn-group">
-                          <button class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Ver">
-                            <i class="bi bi-eye"></i>
-                          </button>
-                          <button class="btn btn-sm btn-outline-warning" data-bs-toggle="tooltip" title="Reactivar">
-                            <i class="bi bi-arrow-clockwise"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
+                  <tbody></tbody>
                 </table>
               </div>
             </div>
           </div>
-
-          <!-- Paginación -->
-          <nav class="mt-4">
-            <ul class="pagination justify-content-center">
-              <li class="page-item disabled">
-                <a class="page-link" href="#" tabindex="-1">Anterior</a>
-              </li>
-              <li class="page-item active"><a class="page-link" href="#">1</a></li>
-              <li class="page-item"><a class="page-link" href="#">2</a></li>
-              <li class="page-item"><a class="page-link" href="#">3</a></li>
-              <li class="page-item">
-                <a class="page-link" href="#">Siguiente</a>
-              </li>
-            </ul>
-          </nav>
         </div>
         
         <!-- Footer del Modal -->
         <div class="modal-footer">
-          <div class="me-auto">
-            <span class="text-muted">Mostrando 4 de 24 registros</span>
-          </div>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-          <button type="button" class="btn btn-primary">
+          <button type="button" class="btn btn-primary d-none">
             <i class="bi bi-download"></i> Exportar
           </button>
         </div>
@@ -940,68 +781,7 @@
               </div>  
             </form>
           <!--FIN FORMULARIO ASISTENCIA -->
-
-          <!-- Tarjetas de resumen 
-            <div class="row mb-4">
-              <div class="col-md-3">
-                <div class="card bg-success text-white">
-                  <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                      <div>
-                        <h6 class="card-title">Asistencia</h6>
-                        <h3 class="mb-0">12</h3>
-                        <small>78% del personal</small>
-                      </div>
-                      <i class="bi bi-check-circle" style="font-size: 2.5rem; opacity: 0.7;"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-3">
-                <div class="card bg-warning text-dark">
-                  <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                      <div>
-                        <h6 class="card-title">Permisos</h6>
-                        <h3 class="mb-0">2</h3>
-                        <small>13% del personal</small>
-                      </div>
-                      <i class="bi bi-clock" style="font-size: 2.5rem; opacity: 0.7;"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-3">
-                <div class="card bg-danger text-white">
-                  <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                      <div>
-                        <h6 class="card-title">Faltas</h6>
-                        <h3 class="mb-0">1</h3>
-                        <small>7% del personal</small>
-                      </div>
-                      <i class="bi bi-x-circle" style="font-size: 2.5rem; opacity: 0.7;"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-3">
-                <div class="card bg-info text-white">
-                  <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                      <div>
-                        <h6 class="card-title">Vacaciones</h6>
-                        <h3 class="mb-0">0</h3>
-                        <small>0% del personal</small>
-                      </div>
-                      <i class="bi bi-sun" style="font-size: 2.5rem; opacity: 0.7;"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          -->
-
+          
           <!-- Tabla de Asistencia -->
           <div class="card">
             <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
@@ -1009,9 +789,6 @@
                   <i class="bi bi-list-check me-2"></i>
                   Detalle de Asistencia por Estación
                 </h6>
-                <span class="badge bg-light text-dark me-2">
-                  Total: 15 trabajadores
-                </span>
             </div>
 
             <!-- Tabla de asistencia -->
@@ -1213,7 +990,7 @@
                               <i class="bi bi-person-plus" style="font-size: 1.4rem;"></i>
                                   Asignar trabajador a una estación
                             </h3>
-                            <p class="text-muted mb-4">Complete la información para asignar un operador a una estación específica</p>
+                            <p class="text-muted mb-1">Complete la información para asignar un operador a una estación específica</p>
                           </div>
 
                           <!-- Información del Operador -->
@@ -2017,111 +1794,12 @@
                           <table class="table table-hover mb-0" id="tablaPersonalNoAsignado">
                               <thead class="table-light">
                                   <tr>
-                                              <th style="width: 15%;" class="py-3 px-4">Nómina</th>
-                                              <th style="width: 30%;" class="py-3 px-4">Nombre del Empleado</th>
-                                              <th style="width: 55%;" class="py-3 px-4 text-center">Acciones</th>
+                                      <th style="width: 15%;" class="py-3 px-4">Nómina</th>
+                                      <th style="width: 30%;" class="py-3 px-4">Nombre del Empleado</th>
+                                      <th style="width: 55%;" class="py-3 px-4 text-center">Acciones</th>
                                   </tr>
                               </thead>
                               <tbody id="tablaBodyPersonalNoAsignado">
-                                  <!-- Fila 1 -->
-                                  <tr>
-                                      <td class="px-4 align-middle">
-                                          <span class="fw-semibold">EMP-02345</span>
-                                      </td>
-                                      <td class="px-4 align-middle">
-                                          <div class="d-flex align-items-center">
-                                              <div>
-                                                  <div class="fw-medium">Carlos Rodríguez</div>
-                                              </div>
-                                          </div>
-                                      </td>
-                                      <td class="px-4 align-middle text-center">
-                                          <button class="btn btn-sm btn-outline-primary d-inline-flex align-items-center" id="btnAsignarModalDisponibles">
-                                              <i class="bi bi-gear me-1"></i>
-                                              Asignar a Estación
-                                          </button>
-                                      </td>
-                                  </tr>
-                                  
-                                  <!-- Fila 2 -->
-                                  <tr>
-                                      <td class="px-4 align-middle">
-                                          <span class="fw-semibold">EMP-01892</span>
-                                      </td>
-                                      <td class="px-4 align-middle">
-                                          <div class="d-flex align-items-center">
-                                              <div>
-                                                  <div class="fw-medium">María González</div>
-                                              </div>
-                                          </div>
-                                      </td>
-                                      <td class="px-4 align-middle text-center">
-                                          <button class="btn btn-sm btn-outline-primary d-inline-flex align-items-center">
-                                              <i class="bi bi-gear me-1"></i>
-                                              Asignar a Estación
-                                          </button>
-                                      </td>
-                                  </tr>
-                                  
-                                  <!-- Fila 3 -->
-                                  <tr>
-                                      <td class="px-4 align-middle">
-                                          <span class="fw-semibold">EMP-03215</span>
-                                      </td>
-                                      <td class="px-4 align-middle">
-                                          <div class="d-flex align-items-center">
-                                              <div>
-                                                  <div class="fw-medium">Juan Pérez</div>
-                                              </div>
-                                          </div>
-                                      </td>
-                                      <td class="px-4 align-middle text-center">
-                                          <button class="btn btn-sm btn-outline-primary d-inline-flex align-items-center">
-                                              <i class="bi bi-gear me-1"></i>
-                                              Asignar a Estación
-                                          </button>
-                                      </td>
-                                  </tr>
-                                  
-                                  <!-- Fila 4 -->
-                                  <tr>
-                                      <td class="px-4 align-middle">
-                                          <span class="fw-semibold">EMP-04128</span>
-                                      </td>
-                                      <td class="px-4 align-middle">
-                                          <div class="d-flex align-items-center">
-                                              <div>
-                                                  <div class="fw-medium">Ana López</div>
-                                              </div>
-                                          </div>
-                                      </td>
-                                      <td class="px-4 align-middle text-center">
-                                          <button class="btn btn-sm btn-outline-primary d-inline-flex align-items-center">
-                                              <i class="bi bi-gear me-1"></i>
-                                              Asignar a Estación
-                                          </button>
-                                      </td>
-                                  </tr>
-                                  
-                                  <!-- Fila 5 -->
-                                  <tr>
-                                      <td class="px-4 align-middle">
-                                          <span class="fw-semibold">EMP-02763</span>
-                                      </td>
-                                      <td class="px-4 align-middle">
-                                          <div class="d-flex align-items-center">
-                                              <div>
-                                                  <div class="fw-medium">Roberto Martínez</div>
-                                              </div>
-                                          </div>
-                                      </td>
-                                      <td class="px-4 align-middle text-center">
-                                          <button class="btn btn-sm btn-outline-primary d-inline-flex align-items-center">
-                                              <i class="bi bi-gear me-1"></i>
-                                              Asignar a Estación
-                                          </button>
-                                      </td>
-                                  </tr>
                               </tbody>
                           </table>
                       </div>

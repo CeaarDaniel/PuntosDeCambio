@@ -2770,9 +2770,10 @@ if($opcion == '38'){
 
     try {
          $response = [];
-            $sqlPC = "SELECT idPC, no_controlCambio, nomina, nombre, id_estacion, motivo, 
-                                        fechaHora_inicio, fechaHora_fin, tipo_cambio, estatusPC
-                                from SPC_PUNTOS_CAMBIO where codigo_linea = :codigoLinea";
+            $sqlPC = "SELECT PC.idPC, PC.no_controlCambio, PC.nomina, PC.nombre, E.nombre_estacion estacion, PC.motivo,
+                            PC.fechaHora_inicio, PC.fechaHora_fin, PC.tipo_cambio, PC.estatusPC
+                        from SPC_PUNTOS_CAMBIO PC inner join SPC_ESTACIONES E ON PC.id_estacion = E.id_estacion
+                     where PC.codigo_linea = :codigoLinea";
 
             $params[':codigoLinea'] = $codigoLinea;
 
@@ -2781,6 +2782,8 @@ if($opcion == '38'){
                 $sqlPC .= " AND turno = :turno";
                 $params[':turno'] = $turno;
             }
+
+            $sqlPC .=" ORDER BY PC.idPC";
 
             $pc = $conn->prepare($sqlPC);
             $pc->execute($params);
