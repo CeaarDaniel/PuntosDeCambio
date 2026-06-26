@@ -272,10 +272,7 @@
 
             </div>
             <div class="d-flex justify-content-end mt-2 ">
-              <button type="button" class="btn btn-secondary mx-2" data-bs-dismiss="modal">
-                <i class="bi bi-x-circle"></i> Cancelar
-              </button>
-              <button type="button" class="btn btn-primary mx-2" id="btnRegistrarOperador">
+              <button type="button bg-success" class="btn btn-primary mx-2" id="btnRegistrarOperador">
                 <i class="bi bi-check-circle"></i> Guardar
               </button>
             </div>
@@ -353,30 +350,34 @@
                               <!-- Columna Izquierda: Datos del empleado -->
                               <div class="col-md-6">
                                   <!-- No. Reloj -->
-                                  <div class="mb-3">
+                                  <div class="mb-1">
                                       <label for="nominaModalRegistrarUpdate" class="form-label fw-bold text-secondary">
                                           <i class="bi bi-clock me-1"></i> No. Reloj / ID Empleado <span class="text-danger">*</span>
                                       </label>
                                       <div id="nominaModalRegistrarUpdate" class="form-control-plaintext py-2 fw-bold text-dark bg-light rounded-3 px-3 border">
-                                          11607
                                       </div>
                                   </div>
-                              </div>
-                              <div class="col-md-6">
+
                                   <!-- Nombre del Empleado -->
-                                  <div class="mb-3">
+                                  <div class="mb-1">
                                       <label for="nombreModalRegistrarUpdate" class="form-label fw-bold text-secondary">Nombre Completo</label>
                                       <input type="text" class="form-control bg-secondary-subtle text-uppercase fw-semibold rounded-3" 
-                                            id="nombreModalRegistrarUpdate" 
-                                            placeholder="NOMBRE DEL EMPLEADO" 
-                                            readonly>
+                                            id="nombreModalRegistrarUpdate"  placeholder="NOMBRE DEL EMPLEADO" readonly>
                                   </div>
+                              </div>
+
+                              <!-- COLUMNA DERECHA IMAGEN DEL EMPLEADO-->
+                              <div class="col-md-6 text-center">
+                                <div style="margin-bottom: 1px; text-align: center;">
+                                  <img id="imgmodalListadoPersonal" src="" alt="Foto del operador" 
+                                        style="width: 200px; height: 200px; border-radius: 10px; object-fit: cover; border: 3px solid #e9ecef; margin-bottom: 1px;">
+                                </div>
                               </div>
 
                               <!-- Columna Derecha: Operaciones -->
                               <div class="col-md-10">
                                   <label for="selectRegistrarUpdate" class="form-label fw-bold text-secondary">
-                                      <i class="bi bi-cpu me-1"></i> Operaciones liberadas <span class="text-danger">*</span>
+                                      <i class="bi bi-cpu me-1"></i>Agregar operaciones liberadas <span class="text-danger">*</span>
                                   </label>
                                   <div class="d-flex align-items-start">
                                       <select class="form-select form-select-lg rounded-3 flex-grow-1 me-3" id="selectRegistrarUpdate">
@@ -388,11 +389,34 @@
                                   </div>
                               </div>
 
-                              <!-- Lista de operaciones asignadas (Chips) -->
-                              <div class="col-12 mt-3">
-                                  <label class="form-label fw-bold text-secondary"><i class="bi bi-tags me-1"></i> Operaciones Asignadas</label>
+                              <!-- Lista de operaciones liberadas (Chips) -->
+                              <div class="col-12 my-4">
+                                  <label class="form-label fw-bold"><i class="bi bi-tags me-1"></i> Listado de operaciones liberadas</label>
                                   <div id="operationsListContainerUpdate" class="d-flex flex-wrap gap-2 p-3 bg-light rounded-3 border">
                                   </div>
+                              </div>
+
+                              <hr>
+
+                            <!--Listado de operaciones asignadas -->
+                              <div class="col-12 mt-3">
+                                  <label class="form-label fw-bold"><i class="bi bi-table me-1"></i> Listado de operaciones asignadas</label>
+                                    <div class="card-body px-0 pb-4 pt-2 border border-1 border-info rounded" 
+                                         id="contenedorAsignacionesListadoPersonal">
+                                      <div class="table-responsive">
+                                        <table id="tableListadoOperacionesTrabajador" class="table table-hover align-middle mb-0" style="min-width: 800px;">
+                                          <thead class="bg-light">
+                                            <tr>
+                                              <th scope="col" class="px-4 py-3 fw-bold">Operación</th>
+                                              <th scope="col" class="px-4 py-3 fw-bold">Fecha de inicio</th>
+                                              <th scope="col" class="px-4 py-3 fw-bold">Comentarios</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    </div>
                               </div>
                           </div>
                           <!-- FIN DEL FORMULARIO -->
@@ -846,6 +870,10 @@
                         <small class="text-muted">Incapacidades</small>
                       </div>
                       <div class="col">
+                        <div class="h4 text-primary" id="countPDisponibles"></div>
+                        <small class="text-muted">Disponibles</small>
+                      </div>
+                      <div class="col">
                         <div class="h4" id="countPAsistencia"></div>
                         <b><small class="text-muted">Procentaje de asistencia</small></b>
                       </div>
@@ -1180,7 +1208,6 @@
                               <button type="button" class="btn btn-success" id="confirmChange">
                                 <i class="bi bi-check-lg"></i> Confirmar Registro
                               </button>
-                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                             </div>
                         </div>
                       <!--FIN FORMULARIO REGISTRO DE PC -->
@@ -1291,9 +1318,6 @@
                                               <div class="form-actions">
                                                   <button type="button" class="btn btn-success" id="btnEvaluacion">
                                                     <i class="bi bi-check-lg"></i> Confirmar Registro
-                                                  </button>
-                                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                      Cancelar
                                                   </button>
                                               </div>
                                           </form>
@@ -1410,9 +1434,6 @@
 
                                         <!-- Footer del Modal -->
                                         <div class="modal-footer">
-                                          <button type="button" class="btn btn-close-custom" data-bs-dismiss="modal">
-                                            <i class="bi bi-x-circle me-2"></i>Cancelar
-                                          </button>
                                           <button type="button" class="btn btn-confirm-custom" id="btnConfirmClose">
                                             <i class="bi bi-check-lg me-2"></i>Cerrar punto de cambio
                                           </button>
@@ -1980,10 +2001,6 @@
   <!-- Bootstrap JS -->
   <script src="../scripts/bootstrap.bundle.min.js"></script>
 
-  <!-- DataTables 
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script> 
-  -->
   <script src="../DataTables/datatables.min.js"></script>  
   <!--Custmo js -->
   <script src="../scripts/gestionLinea.js"></script> 

@@ -553,11 +553,11 @@
     }
 
     function clearSelection() {
-      $('.selected').removeClass('selected');
+      $('#workspaceGrid .selected').removeClass('selected');
       selectedElement = null;
-      $('.attr-section').hide();
-      $('#noSelectionMsg').show();
-      $('.common-attrs').hide();
+      //$('.attr-section').hide();
+      //$('#noSelectionMsg').show();
+      //$('.common-attrs').hide();
       $('.element-list-item').removeClass('selected-in-list');
     }
 
@@ -631,6 +631,7 @@
     /*Funcion para obtener los elementos del SV*/
     function getAllSVGElements() {
       // Seleccionar todos los elementos dentro del SVG (excluyendo el propio <svg>)
+      clearSelection();
       const allElements = document.querySelectorAll('#shapes-group *');
       console.log("longitus svg"+allElements.length)
       const result = [];
@@ -782,9 +783,12 @@
 
     $(window).on('mouseup', function() { draggingShape = null; });
 
-    $('#workspaceGrid').on('click', '#workspace-svg', function(e) {
-      if (e.target === this || e.target.tagName === 'rect' || e.target.tagName === 'circle' || e.target.tagName === 'line' || e.target.tagName === 'text') return;
-      clearSelection();
+    $(document).on('click', function(e) {
+      const clickedOnShape = $(e.target).closest('[data-list-id]').length > 0;
+      const clickedOnTools = $(e.target).closest('#tools-panel').length > 0;
+        if (!clickedOnShape && !clickedOnTools) {
+          clearSelection();
+        }
     });
 
     // Atributos

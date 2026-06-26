@@ -267,6 +267,17 @@
       parent.appendChild(station);
     }
 
+    function formatearFecha(fecha){
+       if (!fecha) return '';
+                  
+        const fechaF = new Date(fecha.replace(' ', 'T'));
+        const dia = String(fechaF.getDate()).padStart(2, '0');
+        const mes = String(fechaF.getMonth() + 1).padStart(2, '0');
+        const anio = fechaF.getFullYear();
+        const horas = String(fechaF.getHours()).padStart(2, '0');
+        const minutos = String(fechaF.getMinutes()).padStart(2, '0');
+        return `<span class="text-nowrap">${dia}/${mes}/${anio} ${horas}:${minutos}</span>`;
+    }
     //Obtener las estaciones creadas e invocar la funcion para mostrarlas en el layout
     function getEstaciones() {
       const formData = new FormData;
@@ -1013,6 +1024,7 @@
                   document.getElementById('countFaltas').textContent = data.resumen.faltas
                   document.getElementById('countVacaciones').textContent = data.resumen.vacaciones
                   document.getElementById('countIncapacidades').textContent = data.resumen.incapacidad
+                  document.getElementById('countPDisponibles').textContent = data.resumen.disponibles;
                   document.getElementById('countPAsistencia').textContent = `% ${parseFloat(data.resumen.porcentajeA).toFixed(2)}`;
                   console.log('Resumen',data)
                 }
@@ -1704,16 +1716,7 @@
                 className: 'px-4 py-3',
                 orderable: false,
                 render: function(data) {
-                  if (!data) return '';
-                  
-                  const fecha = new Date(data.replace(' ', 'T'));
-                  const dia = String(fecha.getDate()).padStart(2, '0');
-                  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-                  const anio = fecha.getFullYear();
-                  const horas = String(fecha.getHours()).padStart(2, '0');
-                  const minutos = String(fecha.getMinutes()).padStart(2, '0');
-
-                  return `<span class="text-nowrap">${dia}/${mes}/${anio} ${horas}:${minutos}</span>`;
+                  return formatearFecha(data);
                 }
               },
               { 
@@ -1721,14 +1724,7 @@
                 className: 'px-4 py-3',
                 orderable: false,
                 render: function(data) {
-                    if (!data) return '';
-                    const fecha = new Date(data.replace(' ', 'T'));
-                    const dia = String(fecha.getDate()).padStart(2, '0');
-                    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-                    const anio = fecha.getFullYear();
-                    const horas = String(fecha.getHours()).padStart(2, '0');
-                    const minutos = String(fecha.getMinutes()).padStart(2, '0');
-                     return `<span class="text-nowrap">${dia}/${mes}/${anio} ${horas}:${minutos}</span>`;
+                  return formatearFecha(data);
                 }
               },
               { 
@@ -1885,6 +1881,8 @@
 
     //Funcion para eliminar personal
     function eliminarPersonal(nomina){
+      const respuesta = confirm('¿Seguro que deseas eliminar este trabajador?');
+        if (respuesta) {
           let formDataE = new FormData();
           formDataE.append('opcion', 37);
           formDataE.append('nomina', nomina); 
@@ -1906,6 +1904,110 @@
                 console.error(error);
                 alert('Error de conexión');
             });
+        }
+    }
+
+    //Función para obtener el listado de operaciones asignadas actualmente de un trabajador
+    function getOperaciones(nomina){
+      let formData= new FormData();
+      formData.append('opcion', 39);
+      formData.append('codigoLinea', codigoLinea.value);
+      formData.append('turno', $('#turnoLayout').val());
+      formData.append('nomina', nomina);
+
+      fetch("../api/operacionesLinea.php", {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => response.text())
+        .then((data) => {
+
+          data = JSON.parse(data);
+          const response = data.data;
+
+          // Inicializar DataTable listado de puntos de cambio
+          $('#tableListadoOperacionesTrabajador').DataTable().destroy();
+
+          $('#tableListadoOperacionesTrabajador').DataTable({
+            data: response,
+
+            columns: [
+              {
+                data: null,
+                className: 'px-4 py-3',
+                render: function(data, type, row) {
+                  return `
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-2 rounded-pill">
+                        ${row.nombre_estacion ?? ''}
+                      </span>
+                    </div>
+                  `;
+                }
+              },
+              {
+                data: 'fecha_inicio',
+                className: 'px-4 py-3',
+                render: function(data, type) {
+                  if (!data) {
+                    return `
+                      <span class="badge bg-light text-muted px-3 py-2 rounded-pill">
+                        Sin fecha
+                      </span>
+                    `;
+                  }
+
+                  // Para ordenar correctamente por fecha
+                  if (type === 'sort' || type === 'type') {
+                    return data;
+                  }
+
+                  return `
+                    <span class="badge bg-info bg-opacity-10 text-dark px-3 py-2 rounded-pill">
+                      <i class="bi bi-calendar-event me-1"></i>
+                      ${formatearFecha(data)}
+                    </span>
+                  `;
+                }
+              },
+              {
+                data: 'comentarios',
+                className: 'px-4 py-3',
+                render: function(data) {
+                  if (!data || data.trim() === '') {
+                    return `
+                      <span class="text-muted fst-italic">
+                        Sin comentarios
+                      </span>
+                    `;
+                  }
+
+                  return `
+                    <span class="text-dark">
+                      ${data}
+                    </span>
+                  `;
+                }
+              }
+            ],
+
+            pageLength: 10,
+            lengthChange: false,
+            responsive: true,
+            scrollX: true,
+            deferRender: false,
+            paging: true,
+            searching: false,
+            ordering: false,
+            autoWidth: false,
+          });
+          
+          // Badge inicial (basado en el DOM recién generado)
+          //actualizarBadgeAsignadosDOM();
+        })
+        .catch((error) => {
+          console.error(error);
+        });
     }
 
     // ========== DIAGRAMADOR SVG ==========
@@ -2919,6 +3021,15 @@
               noneA.textContent = 'Selecciona una estación...';
               selectRegistrarUpdate.appendChild(noneA);
 
+              let img = document.getElementById('imgmodalListadoPersonal');
+              img.onerror = function() {
+                  this.onerror = null;
+                  this.src = '../img/personal/ok.jpg';
+                };
+
+              document.getElementById('imgmodalListadoPersonal').src= (nomina) ? `../img/personal/${nomina}.jpg` : `../img/personal/na.jpg`;
+
+
               stationsData.forEach(station => {
                 const option = document.createElement('option');
                 option.value = station.id;   
@@ -2926,6 +3037,9 @@
                 selectRegistrarUpdate.appendChild(option);
               });
               //FIN LISTADO DE OPERACIONES
+
+
+              getOperaciones(nomina);
 
               //OBTENER LISTA DE OPERACIONES CARGADAS 
                 fetch("../api/operacionesLinea.php", {
@@ -3113,14 +3227,11 @@
         //Evento boton eliminar listado de personal
         $('#tableListadoPersonal').on('click', '.btnElimPer', function () {
           const nomina = $(this).data('nomina');
-          console.log(nomina)
           eliminarPersonal(nomina);
         });
 
         //Evento para cargar la tabla de listado de puntos de cambio al abrir el modal
-        $('#btnMenuTablaPC').on('click', function (){
-            mostrarTablaPC();
-        })
+        $('#btnMenuTablaPC').on('click', function (){ mostrarTablaPC(); })
 
       // Cargar las formas
       setTimeout(() => {

@@ -2678,9 +2678,11 @@ else
                     -- Contar las incapacidades
                     SUM(CASE WHEN estatus = '9' THEN 1 ELSE 0 END) AS incapacidad,
 
+                    --Calcular el personal disponible
+                    SUM(CASE WHEN (nombres_estaciones = 'SIN ASIGNAR' and estatus IN ('1', '8')) THEN 1 ELSE 0 END) AS disponibles,
+
                     -- Calcular el porcentaje de asistencia
-                    ROUND (
-                            CAST(SUM(CASE WHEN estatus IN ('1', '8') THEN 1 ELSE 0 END) AS FLOAT) /
+                    ROUND (CAST(SUM(CASE WHEN estatus IN ('1', '8') THEN 1 ELSE 0 END) AS FLOAT) /
                             NULLIF(COUNT(estatus), 0) * 100, 2
                             ) AS porcentajeA
                 FROM SPC_REGISTRO_ASISTENCIA
@@ -2788,6 +2790,52 @@ if($opcion == '38'){
             $pc = $conn->prepare($sqlPC);
             $pc->execute($params);
             $response = $pc->fetchAll(PDO::FETCH_ASSOC);
+
+            echo json_encode([
+                'estatus' => 'ok',
+                'data' => $response
+            ]);
+
+    } catch (Exception $e) {
+        echo json_encode([
+            'estatus' => 'error',
+            'mensaje' => 'Ocurrió un error al generar los datos',
+            'error'   => $e->getMessage()
+        ]);
+    }
+}
+
+//Obtener listado de operaciones asignadas por operador
+else 
+if($opcion == '39'){
+     $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : 0;
+     $turno = !empty($_POST['turno']) ? $_POST['turno'] : 0;
+     $nomina = !empty($_POST['nomina']) ? $_POST['nomina'] : 0;
+    
+    if (!$nomina || !$turno || !$codigoLinea) {
+        echo json_encode([
+            'estatus' => 'error',
+            'mensaje' => 'Error al recibir los datos'
+        ]);
+        exit;
+    }
+
+    try {
+         $response = [];
+         $sqlOperaciones = "SELECT PE.id_estacion, E.nombre_estacion, PE.fecha_asignacion AS fecha_inicio, PE.fecha_fin, PE.comentarios
+                                FROM SPC_PERSONAL_ESTACION PE INNER JOIN SPC_ESTACIONES E ON PE.id_estacion = E.id_estacion
+                            WHERE E.codigo_linea = :codigoLinea AND PE.fecha_fin IS NULL AND PE.turno = :turno AND PE.nomina = :nomina
+                                UNION ALL
+                            SELECT PC.id_estacion, E.nombre_estacion, PC.fechaHora_inicio AS fecha_inicio,  PC.fechaHora_fin, PC.motivo AS comentarios
+                                FROM SPC_PUNTOS_CAMBIO PC INNER JOIN SPC_ESTACIONES E ON pc.id_estacion = E.id_estacion
+                            WHERE PC.codigo_linea = :codigoLinea AND PC.fechaHora_fin IS NULL AND PC.turno = :turno AND PC.nomina = :nomina";
+
+            $operaciones = $conn->prepare($sqlOperaciones);
+            $operaciones->execute([":codigoLinea" => $codigoLinea, 
+                                   ":turno" => $turno, 
+                                   ":nomina" => $nomina 
+                                  ]);
+            $response = $operaciones->fetchAll(PDO::FETCH_ASSOC);
 
             echo json_encode([
                 'estatus' => 'ok',
