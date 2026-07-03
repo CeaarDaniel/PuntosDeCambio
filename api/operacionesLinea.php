@@ -91,7 +91,7 @@ else
             $conn->beginTransaction();
 
             // Preparar la sentencia con parámetros
-            $sql = "INSERT INTO SPC_ESTACIONES (nombre_estacion, descripcion, requiere_certificacion, codigo_certificacion, posicion_x , posicion_y, codigo_linea) 
+            $sql = "INSERT INTO SPC_ESTACIONES (nombre_estacion, descripcion, requiere_certificacion, id_certificacion, posicion_x , posicion_y, codigo_linea) 
                             OUTPUT INSERTED.id_estacion 
                             VALUES (:nombre_estacion, :descripcion, :requiere_certificacion, :codigo_certificacion, :x, :y, :codigo_linea)";
 
@@ -167,10 +167,11 @@ else
         try {
                 // Iniciar transacción
                 $conn->beginTransaction();
+                /*estacion_ocupada = *CASE WHEN EXISTS (SELECT 1 FROM SPC_PERSONAL_ESTACION WHERE id_estacion = :id_estacion AND fecha_fin IS NULL AND turno = :turno) THEN 1 ELSE 0 END*/
 
                 //Verificar si el trabajdor esta asignado en otra linea o si la estacion ya tiene un trabajador asignado
-                $sql_check = "SELECT estacion_ocupada = CASE WHEN EXISTS (SELECT 1 FROM SPC_PERSONAL_ESTACION
-                                WHERE id_estacion = :id_estacion AND fecha_fin IS NULL AND turno = :turno) THEN 1 ELSE 0 END,
+                $sql_check = "SELECT estacion_ocupada = CASE WHEN EXISTS (SELECT 1 FROM SPC_PERSONAL_ESTACION 
+                                WHERE id_estacion = :id_estacion AND fecha_fin IS NULL AND turno = :turno AND nomina = :nomina1) THEN 1 ELSE 0 END,
                                     trabajador_asignado = CASE WHEN EXISTS
                                         (SELECT 1 FROM
                                             (SELECT PE.nomina FROM SPC_PERSONAL_ESTACION PE 
@@ -180,12 +181,16 @@ else
                                              SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina3 
                                                     AND codigo_linea <> :codigoLinea3
                                             ) X
-                                        )THEN 1 ELSE 0 END;";
+                                        )THEN 1 ELSE 0 END, 
+                                        PCexist = CASE WHEN EXISTS (SELECT 1 from SPC_PUNTOS_CAMBIO PC 
+                                                    INNER JOIN SPC_ESTACIONES_PC epc ON epc.idPC = pc.idPC
+                                            WHERE epc.idE = :id_estacion AND pc.fechaHora_fin IS NULL AND pc.turno = :turno) 
+                                        THEN 1 ELSE 0 END;";
             
                 /*Revisar que el trabajador no este registrado en otro turno en esta linea*/
                 $sqlCheckT = 'SELECT otroTurno = CASE WHEN EXISTS 
                                 (SELECT 1 FROM 
-                                    (SELECT nomina FROM SPC_PERSONAL_ESTACION PE inner JOIN SPC_ESTACIONES E ON PE.id_estacion = E.id_estacion 
+                                    (SELECT nomina FROM SPC_PERSONAL_ESTACION PE INNER JOIN SPC_ESTACIONES E ON PE.id_estacion = E.id_estacion 
                                             WHERE PE.fecha_fin IS NULL AND PE.nomina= :nomina AND E.codigo_linea = :codigoLinea AND PE.turno <> :turno
                                                 UNION ALL
                                         SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina= :nomina and codigo_linea =:codigoLinea AND turno <> :turno
@@ -199,14 +204,14 @@ else
                 $stmt_check = $conn->prepare($sql_check);
                 $stmtCT = $conn->prepare($sqlCheckT);
 
-                $stmt_check->execute([
-                    ':turno' => $turno,
-                    ':id_estacion' => $estacion,
-                    ':nomina' => $nomina,
-                    ':codigoLinea' => $codigoLinea,
-                    ':nomina3' => $nomina,
-                    ':codigoLinea3' => $codigoLinea,
-                ]);
+                $stmt_check->execute([":turno" => $turno, 
+                                      ":id_estacion" => $estacion, 
+                                      ":nomina1" => $nomina,
+                                      ":nomina" => $nomina,
+                                      ":codigoLinea" => $codigoLinea,
+                                      ":nomina3" => $nomina,
+                                      ":codigoLinea3" => $codigoLinea
+                                      ]);
 
                 $stmtCT->execute([
                     ':nomina' => $nomina,
@@ -227,12 +232,24 @@ else
                             echo json_encode([
                                 'estatus' => 'error',
                                 //'mensaje' => 'Esta persona ya cuenta con una asignación en la estación seleccionada'
-                                'mensaje' => 'Esta estación ya cuenta con un trabajador asignado'
+                                //'mensaje' => 'Esta estación ya cuenta con un trabajador asignado'
+                                'mensaje' => 'Este trabajador ya ha sido asignado a esta estación'
                             ]);
                         exit;
                 }
 
-                
+                if ($result['PCexist'] == 1) {
+                    // Ya existe
+                    $conn->rollBack();
+                            echo json_encode([
+                                'estatus' => 'error',
+                                //'mensaje' => 'Esta persona ya cuenta con una asignación en la estación seleccionada'
+                                //'mensaje' => 'Esta estación ya cuenta con un trabajador asignado'
+                                'mensaje' => 'El punto de cambio debe ser cerrado antes de asignar al trabajador'
+                            ]);
+                        exit;
+                }
+
                 if ($result['trabajador_asignado'] == 1){
                     // Ya existe
                     $conn->rollBack();
@@ -257,8 +274,7 @@ else
                 }
             
                 // Insertar
-                $sql_insert = "INSERT INTO SPC_PERSONAL_ESTACION 
-                            (id_estacion, nomina, nombre, fecha_asignacion, turno, comentarios)
+                $sql_insert = "INSERT INTO SPC_PERSONAL_ESTACION (id_estacion, nomina, nombre, fecha_asignacion, turno, comentarios)
                             VALUES (:id_estacion, :nomina, :nombre, :fecha_asignacion, :turno, :comentarios)";
 
                 $stmt_insert = $conn->prepare($sql_insert);
@@ -273,22 +289,12 @@ else
             
 
                 //Verificar si hay algun registro en la tabla de PERSONAL_NAD de la persona asignada
-                //$sqlPNAD = 'SELECT id_registro from SPC_personal_NAD where nomina = :nomina and fechaE IS NULL';
-                //$stmtGETPNAD = $conn->prepare($sqlPNAD);
-                //$stmtGETPNAD->execute([':nomina' => $nomina]);
-
-                //$resultado = $stmtGETPNAD->fetch(PDO::FETCH_ASSOC);
-
-                    //Actualizar el registro en la tabla de personal_nad si se encontro algun registro activo
-                    //if ($resultado) {
-                //$id_registro = $resultado['id_registro'];
 
                 //Actaulizar el estatus de la persona a asignado (1)
                 $sqlUpdateEP = "UPDATE SPC_PERSONAL SET estatus = 1 WHERE nomina = :nomina 
                                     AND estatus NOT IN (1, 2)";
                 $stmtUpdateEP = $conn->prepare($sqlUpdateEP);
                 $stmtUpdateEP->execute([':nomina' => $nomina]);
-                //} 
 
                 $conn->commit();
                 echo json_encode([
@@ -340,20 +346,6 @@ else
       $fin;
       //AGREGAR FILTROS DE TURNO
         // Preparar la sentencia con parámetros
-       
-       /*
-            $sql= "SELECT E.id_estacion, E.nombre_estacion, E.requiere_certificacion AS isCertificate,
-                    CASE WHEN PC.nomina IS NULL THEN EP.nomina
-                        ELSE PC.nomina
-                    END AS nomina, 
-                    CASE  WHEN PC.nombre IS NULL THEN EP.nombre
-                        ELSE PC.nombre 
-                    END AS nombre, E.codigo_linea, E.codigo_certificacion, E.posicion_x, E.posicion_y, PC.estatusPC, PC.idPC
-                                        FROM SPC_ESTACIONES E 
-                LEFT JOIN (SELECT id_estacion, nomina, nombre from SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL AND turno = :turno1) AS EP ON E.id_estacion = EP.id_estacion
-                LEFT JOIN (select idPC, id_estacion, nomina, nombre, estatusPC from SPC_PUNTOS_CAMBIO where fechaHora_fin IS NULL AND turno = :turno2) AS PC on E.id_estacion = PC.id_estacion
-            WHERE E.codigo_linea= :codigoLinea";
-        */
 
         //Verificar si ya existe un registro de asistencia
             //Turno 1
@@ -388,7 +380,7 @@ else
                         COALESCE(PC.nomina, EP.nomina) AS nomina,
                         COALESCE(PC.nombre, EP.nombre) AS nombre,
                         COALESCE(PC.fechaHora_inicio, EP.fecha_asignacion) AS fecha_asignacion,
-                        E.codigo_linea, E.codigo_certificacion, E.posicion_x, E.posicion_y,
+                        E.codigo_linea, E.id_certificacion as codigo_certificacion, E.posicion_x, E.posicion_y,
                         PC.estatusPC, PC.idPC, A.estatus AS asistencia
                     FROM SPC_ESTACIONES E
                         OUTER APPLY (
@@ -401,8 +393,9 @@ else
                         ) AS EP
                         OUTER APPLY (
                             SELECT TOP (1) P.idPC, P.nomina, P.nombre, P.estatusPC, P.fechaHora_inicio
-                            FROM SPC_PUNTOS_CAMBIO P
-                            WHERE P.id_estacion = E.id_estacion
+                                FROM SPC_PUNTOS_CAMBIO P 
+                        INNER JOIN SPC_ESTACIONES_PC EPC ON EPC.idPC = P.idPC
+                            WHERE EPC.idE = E.id_estacion
                                 AND P.fechaHora_fin IS NULL
                                 AND P.turno = :turno
                             ORDER BY P.fechaHora_inicio DESC, P.idPC DESC
@@ -956,7 +949,6 @@ else
 //Registrar punto de cambio
 else 
     if($opcion == '13'){
-        $idEstacion = !empty($_POST['idEstacion']) ? $_POST['idEstacion'] : null;
         $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
         $tipoCambio = !empty($_POST['tipoCambio']) ? $_POST['tipoCambio'] : null;
         $nominaPC = !empty ($_POST['nominaPC']) ? $_POST['nominaPC'] : null;
@@ -964,11 +956,12 @@ else
         $fechaInicio = !empty($_POST['fechaInicio']) ? $_POST['fechaInicio'] :  null;
         $turno = !empty($_POST['turno']) ? $_POST['turno'] : null;
         $motivo = !empty($_POST['motivo']) ? $_POST['motivo'] : null;
+        $estaciones =  json_decode($_POST['estaciones'], true);
 
         $fechaHoraInicio = str_replace('T', ' ', $fechaInicio) . ':00';
 
         // Validar que se recibieron todos los datos
-        if ( is_null($codigoLinea) || is_null($idEstacion) || is_null($fechaInicio) || is_null($turno) || 
+        if ( is_null($codigoLinea) || is_null($fechaInicio) || is_null($turno) || 
              is_null($nominaPC) || is_null($tipoCambio)) {
             echo json_encode([
                 'estatus' => 'error',
@@ -977,24 +970,76 @@ else
             exit; 
         }   
 
+        if (!is_array($estaciones) || empty($estaciones)) {
+            die("No se recibieron estaciones válidas");
+        }
+
+        // Tomar solo los values
+        $idsEstaciones = array_column($estaciones, 'value');
+
+        // Limpiar: únicos e ինտ
+        $idsEstaciones = array_values(array_unique(array_map('intval', $idsEstaciones)));
+
+        if (empty($idsEstaciones)) {
+            die("No se encontraron IDs válidos en estaciones");
+        }
+
+        $placeholdersEstaciones = implode(',', array_fill(0, count($idsEstaciones), '?'));
+
         //Validar la existencia de un punto de cambio 
-        $sqlCheckPC = "SELECT PCexist = CASE WHEN EXISTS (SELECT 1 from SPC_PUNTOS_CAMBIO WHERE id_estacion = :id_estacion
-                        AND fechaHora_fin IS NULL AND turno = :turno) THEN 1 ELSE 0 END,
-                            trabajador_asignado = CASE WHEN EXISTS
-                            (SELECT 1 FROM  /* Esta validacion hay que quitarla*/
-                                (SELECT PE.nomina FROM SPC_PERSONAL_ESTACION PE   
-                                        INNER JOIN SPC_ESTACIONES E on PE.id_estacion = E.id_estacion
-                                    WHERE PE.fecha_fin IS NULL AND PE.nomina= :nomina AND E.codigo_linea <> :codigoLinea
-                                        UNION ALL
-                                    SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina3 
-                                            AND codigo_linea <> :codigoLinea3
-                                ) X
-                            )THEN 1 ELSE 0 END,
-                            codigo_linea = (
-                                  SELECT P.codigo_linea
-                                        FROM SPC_PERSONAL P
-                                 WHERE P.nomina = :nomina
-                            );";
+        $sqlCheckPC = "SELECT 
+            PCexist = CASE 
+                WHEN EXISTS (
+                    SELECT 1 
+                    FROM SPC_PUNTOS_CAMBIO pc
+                    INNER JOIN SPC_ESTACIONES_PC epc 
+                        ON epc.idPC = pc.idPC
+                    WHERE pc.fechaHora_fin IS NULL 
+                    AND pc.turno = ? 
+                    AND (epc.idE IN ($placeholdersEstaciones))
+                ) THEN 1 ELSE 0 
+            END,
+
+            asignado = CASE 
+                WHEN EXISTS (
+                    SELECT 1 
+                    FROM SPC_PERSONAL_ESTACION 
+                    WHERE id_estacion IN ($placeholdersEstaciones)
+                    AND fecha_fin IS NULL 
+                    AND turno = ? 
+                    AND nomina = ?
+                ) THEN 1 ELSE 0 
+            END,
+
+            otraLinea = CASE 
+                WHEN EXISTS (
+                    SELECT 1 
+                    FROM (
+                        SELECT PE.nomina 
+                        FROM SPC_PERSONAL_ESTACION PE   
+                        INNER JOIN SPC_ESTACIONES E 
+                            ON PE.id_estacion = E.id_estacion
+                        WHERE PE.fecha_fin IS NULL 
+                        AND PE.nomina = ? 
+                        AND E.codigo_linea <> ?
+
+                        UNION ALL
+
+                        SELECT nomina 
+                        FROM SPC_PUNTOS_CAMBIO 
+                        WHERE fechaHora_fin IS NULL 
+                        AND nomina = ? 
+                        AND codigo_linea <> ?
+                    ) X
+                ) THEN 1 ELSE 0 
+            END,
+
+            codigo_linea = (
+                SELECT TOP 1 P.codigo_linea
+                FROM SPC_PERSONAL P
+                WHERE P.nomina = ?
+            );
+        ";
 
             /*Revisar que el trabajador no este registrado en otro turno en esta linea*/
             $sqlCheckT = 'SELECT otroTurno = CASE WHEN EXISTS
@@ -1010,18 +1055,20 @@ else
             $stmtCheckPC = $conn->prepare($sqlCheckPC);
             $stmtCT = $conn->prepare($sqlCheckT);
 
-            $stmtCheckPC->execute([
-                                    ':id_estacion' => $idEstacion,
-                                    ':nomina' => $nominaPC,
-                                    ':turno' => $turno,
-                                    ':codigoLinea' => $codigoLinea,
-                                    ':nomina3' => $nominaPC,
-                                    ':codigoLinea3' => $codigoLinea,
-                                ]);
+            $params = array_merge(
+                [$turno],
+                $idsEstaciones,
+                $idsEstaciones,
+                [$turno, $nominaPC],
+                [$nominaPC, $codigoLinea],
+                [$nominaPC, $codigoLinea],
+                [$nominaPC]
+            );
+
+            $stmtCheckPC->execute($params);
 
             
-            $stmtCT->execute([
-                                ':nomina' => $nominaPC,
+            $stmtCT->execute([  ':nomina' => $nominaPC,
                                 ':codigoLinea' => $codigoLinea,
                                 ':turno' => $turno,
                             ]);
@@ -1046,7 +1093,15 @@ else
                 exit;
             }
 
-            if ($registroPC['trabajador_asignado'] == 1) {
+            if ($registroPC['asignado'] == 1) {
+                echo json_encode([
+                    'estatus' => 'error', 
+                    'mensaje' => 'No se puede crear el punto de cambio ya que el trabajador está asignado a esta estación.'
+                ]);
+                exit;
+            }
+
+            if ($registroPC['otraLinea'] == 1) {
                 echo json_encode([
                     'estatus' => 'error', 
                     'mensaje' => 'Este trabajador se encuentra asignado en otra linea'
@@ -1100,10 +1155,11 @@ else
 
             // Preparar la sentencia con parámetros
             $sql = "INSERT INTO SPC_PUNTOS_CAMBIO(no_controlCambio, fechaHora_inicio, motivo, tipo_cambio,
-                                                    codigo_linea, id_estacion, estatusPC, turno, nomina,
+                                                    codigo_linea, estatusPC, turno, nomina,
                                                     nombre) 
+                                                    OUTPUT INSERTED.idPC
                                 values ( :no_control, :fechaHora_inicio, :motivo, :tipoCambio, :codigo_linea, 
-                                         :id_estacion, '1', :turno, :nomina_operador,:nombre)";
+                                         '1', :turno, :nomina_operador, :nombre)";
 
             $stmt = $conn->prepare($sql);
 
@@ -1114,23 +1170,25 @@ else
                 ':motivo' => $motivo,
                 ':tipoCambio' => $tipoCambio,
                 ':codigo_linea' => $codigoLinea,
-                ':id_estacion' => $idEstacion,
                 ':turno' => $turno,
                 ':nomina_operador' => $nominaPC, 
                 ':nombre' => $nombrePC
             ]);
 
-            // Obtener el ID del registro insertado
-            $insertedId = $conn->lastInsertId();
+            // Obtener el idPC generado
+            $idPC = $stmt->fetchColumn();
 
-              //Actualizar la tabla de personal NAD despues de incertar el punto de cambio  
-                //$sqlPNAD = 'SELECT id_registro from SPC_personal_NAD where nomina = :nomina and fechaE IS NULL';
-                //$stmtGETPNAD = $conn->prepare($sqlPNAD);
-                //$stmtGETPNAD->execute([':nomina' => $nominaPC]);
-                //$resultado = $stmtGETPNAD->fetch(PDO::FETCH_ASSOC);
+            //Incertar las estaciones del PC
+            $sqlIE = "INSERT INTO SPC_ESTACIONES_PC(idPC, idE) VALUES (:idPC, :idE)";
+            $stmtE = $conn->prepare($sqlIE);
 
-                    //Actualizar el registro en la tabla de personal_nad si se encontro algun registro activo
-                    //if ($resultado) {
+            foreach ($estaciones as $row) {
+                //if (empty($row['nomina']) || empty($row['nombre']) || empty($row['estatus'])) { throw new Exception('Datos incompletos en asistencia');}
+                $stmtE->execute([
+                    ':idPC' => $idPC,
+                    ':idE' => $row['value'],
+                ]);
+            }
 
                     $estatusEM = 1; //Asignado en la linea actual del empleado
 
@@ -1141,8 +1199,6 @@ else
                                          AND estatus NOT IN (1, 2)";
                        $stmtUpdateEP = $conn->prepare($sqlUpdateEP);
                        $stmtUpdateEP->execute([':nomina' => $nominaPC, ':estatus' => $estatusEM]);
-                    //}  
-            
 
             // Confirmar la transacción
             $conn->commit();
@@ -1150,7 +1206,7 @@ else
             echo json_encode([
                 'estatus' => 'ok',
                 'mensaje' => 'Punto de cambio registrado correctamente.',
-                'idPC' => $insertedId
+                'idPC' => $idPC
             ]);
 
         } catch (PDOException $e) {
@@ -1158,6 +1214,8 @@ else
             if ($conn->inTransaction()) {
                 $conn->rollBack();
             }
+
+              $conn->rollBack();
 
             // Respuesta JSON con el error
             echo json_encode([
@@ -1272,127 +1330,184 @@ else
 
 //Consulta para obtener los datos de una sola estacion
 else 
-    if($opcion=='15'){
-        $idEstacion = !empty($_POST['idEstacion']) ? $_POST['idEstacion'] : null;
-        $turno = !empty($_POST['turno']) ? $_POST['turno'] : null;
-        $ahora = new DateTime();
+if ($opcion == '15') {
+            $idEstacion = !empty($_POST['idEstacion']) ? $_POST['idEstacion'] : null;
+            $idPC = !empty($_POST['idPC']) ? $_POST['idPC'] : null;
+            $turno = !empty($_POST['turno']) ? $_POST['turno'] : null;
 
-        //Verificar si ya existe un registro de asistencia
-            //Turno 1
-            if($turno == '1'){
+            $ahora = new DateTime();
+
+            // Validar turno
+            if ($turno == '1') {
                 $inicio = new DateTime('today 08:00');
                 $fin    = new DateTime('today 19:59');
+            } else if ($turno == '2') {
+                if ($ahora >= new DateTime('today 20:00')) {
+                    $inicio = new DateTime('today 20:00');
+                    $fin    = new DateTime('tomorrow 07:59');
+                } else {
+                    $inicio = new DateTime('yesterday 20:00');
+                    $fin    = new DateTime('today 07:59');
+                }
+            } else {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'Turno no válido'
+                ]);
+                exit;
             }
 
-            //Turno 2
-            else
-                if ($turno == '2') {
-                    if ($ahora >= new DateTime('today 20:00')) { // Después de las 8 pm
-                        $inicio = new DateTime('today 20:00');
-                        $fin    = new DateTime('tomorrow 07:59');
-                    } 
-                    
-                    else { // Antes de las 8 pm
-                        $inicio = new DateTime('yesterday 20:00');
-                        $fin    = new DateTime('today 07:59');
-                    } //Despues de la 8 de la noche la fecha de inicio es hoy 8:00 pm fecha de fin mañana 8:00 am
-                    //Antes de 8 de la noche la fecha de inicio es ayer 8:00 pm y la fecha de fin hoy 8:00 am 
-                }
-            
-            else {
-                    echo json_encode(['estatus' => 'error',
-                                      'mensaje' => 'Turno no valido'
-                                    ]);
-                    exit; 
+            // Validar que venga al menos idEstacion o idPC
+            if (!$idEstacion && !$idPC) {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'Debe enviar idEstacion o idPC.'
+                ]);
+                exit;
             }
 
-        // Validar que se recibieron todos los datos
-        if (!$idEstacion) {
-            echo json_encode(['estatus' => 'error',
-                              'mensaje' => 'Faltan datos obligatorios.']);
-            exit; 
-        }
+            $fechaInicio = $inicio->format('Y-m-d H:i:s');
+            $fechaFin    = $fin->format('Y-m-d H:i:s');
 
-        // Preparar la sentencia con parámetros
-        $sql= "SELECT E.id_estacion, E.nombre_estacion, E.requiere_certificacion AS isCertificate,
-                        CASE WHEN PC.nomina IS NULL THEN EP.nomina ELSE PC.nomina END AS nomina, 
-                        CASE WHEN PC.nombre IS NULL THEN EP.nombre ELSE PC.nombre END AS nombre,
-                        CASE WHEN PC.nomina IS NULL THEN EP.fecha_asignacion ELSE PC.fechaHora_inicio END AS fecha_asignacion,
-                        E.codigo_linea, E.codigo_certificacion, PC.estatusPC, PC.idPC, A.estatus AS asistencia
-                                            FROM SPC_ESTACIONES E 
-                    LEFT JOIN (SELECT id_estacion, nomina, nombre, fecha_asignacion from SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL AND turno = :turno) AS EP ON E.id_estacion = EP.id_estacion
-                    LEFT JOIN (SELECT idPC, id_estacion, nomina, nombre, estatusPC, fechaHora_inicio from SPC_PUNTOS_CAMBIO where fechaHora_fin IS NULL AND turno = :turno) AS PC on E.id_estacion = PC.id_estacion
-                    LEFT JOIN (SELECT nomina, estatus FROM SPC_REGISTRO_ASISTENCIA WHERE turno = :turno AND fecha_operacion >= :fecha_inicio AND fecha_operacion < :fecha_fin) AS A ON A.nomina = COALESCE(PC.nomina, EP.nomina)
-                WHERE E.id_estacion = :idEstacion";
+            /*
+                Si viene idPC, significa que queremos actualizar todas las estaciones
+                asociadas a ese punto de cambio.
 
-        $stmt = $conn->prepare($sql);
-        $response= array();
+                Si no viene idPC, usamos idEstacion para actualizar solo una estación.
+            */
+            if ($idPC) {
+                $whereEstacion = "
+                    E.id_estacion IN (
+                        SELECT EPC.idE
+                        FROM SPC_ESTACIONES_PC EPC
+                        WHERE EPC.idPC = :idPC
+                    )
+                ";
+            } else {
+                $whereEstacion = "E.id_estacion = :idEstacion";
+            }
 
-        $fechaInicio = $inicio->format('Y-m-d H:i:s');
-        $fechaFin    = $fin->format('Y-m-d H:i:s');
+            $sql = "SELECT E.id_estacion, E.nombre_estacion, E.requiere_certificacion AS isCertificate,
+                    COALESCE(PC.nomina, EP.nomina) AS nomina,
+                    COALESCE(PC.nombre, EP.nombre) AS nombre,
+                    COALESCE(PC.fechaHora_inicio, EP.fecha_asignacion) AS fecha_asignacion,
+                    E.codigo_linea, E.id_certificacion AS codigo_certificacion, PC.estatusPC, PC.idPC, 
+                     A.estatus AS asistencia
+                FROM SPC_ESTACIONES E
 
-        // Ejecutar con los parámetros
-        if($stmt->execute([':idEstacion' => $idEstacion, ':turno' => $turno, ':fecha_inicio' => $fechaInicio, ':fecha_fin' => $fechaFin
-                         ]))
-        {
-            if($estacion= $stmt->fetch(PDO::FETCH_ASSOC)){
+                OUTER APPLY (
+                    SELECT TOP (1) PE.nomina, PE.nombre, PE.fecha_asignacion
+                    FROM SPC_PERSONAL_ESTACION PE
+                    WHERE PE.id_estacion = E.id_estacion AND PE.fecha_fin IS NULL AND PE.turno = :turno
+                    ORDER BY PE.fecha_asignacion DESC, PE.id_asignacion DESC
+                ) AS EP
 
-            if($estacion['estatusPC'] == '1') 
-                 $coloClass = 'station-color-2'; 
+                OUTER APPLY (
+                    SELECT TOP (1) 
+                        P.idPC, 
+                        P.nomina, 
+                        P.nombre, 
+                        P.estatusPC, 
+                        P.fechaHora_inicio
+                    FROM SPC_PUNTOS_CAMBIO P
+                    INNER JOIN SPC_ESTACIONES_PC EPC 
+                        ON EPC.idPC = P.idPC
+                    WHERE EPC.idE = E.id_estacion
+                        AND P.fechaHora_fin IS NULL
+                        AND P.turno = :turno
+                    ORDER BY 
+                        P.fechaHora_inicio DESC, 
+                        P.idPC DESC
+                ) AS PC
 
-            else  
-                if(!empty($estacion['nomina'])) $coloClass = 'station-color-1';
-            
-            else $coloClass = 'station-color-7';  
+                OUTER APPLY (
+                    SELECT TOP (1) 
+                        RA.estatus
+                    FROM SPC_REGISTRO_ASISTENCIA RA
+                    WHERE RA.nomina = COALESCE(PC.nomina, EP.nomina)
+                        AND RA.turno = :turno
+                        AND RA.fecha_operacion >= :fecha_inicio
+                        AND RA.fecha_operacion < :fecha_fin
+                    ORDER BY 
+                        RA.fecha_operacion DESC, 
+                        RA.id_registro DESC
+                ) AS A
+                WHERE $whereEstacion ORDER BY E.id_estacion ";
 
+            $stmt = $conn->prepare($sql);
 
+            $params = [ ':turno' => $turno,
+                        ':fecha_inicio' => $fechaInicio,
+                        ':fecha_fin' => $fechaFin
+                      ];
 
-            //Estatus de asistencia
-                $asistencia = '';
+            if ($idPC) {
+                $params[':idPC'] = $idPC;
+            } else {
+                $params[':idEstacion'] = $idEstacion;
+            }
 
-                if(empty($estacion['nomina'])){
-                    $asistencia = 'pending';
-                }
+            $response = [];
 
-                else 
-                    if(!empty($estacion['asistencia'])){
-                        $asistencia = ($estacion['asistencia'] == '1' || $estacion['asistencia'] == '8') ? 'occupied' : 'absent';
+            if ($stmt->execute($params)) {
+                $estacionesResponse = [];
+
+                while ($estacion = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                    // Definir color de estación
+                    if ($estacion['estatusPC'] == '1') {
+                        $colorClass = 'station-color-2';
+                    } else if (!empty($estacion['nomina'])) {
+                        $colorClass = 'station-color-1';
+                    } else {
+                        $colorClass = 'station-color-7';
                     }
 
-                else 
-                    if(empty($estacion['asistencia'])){
+                    // Definir estatus de asistencia
+                    $asistencia = '';
+
+                    if (empty($estacion['nomina'])) {
+                        $asistencia = 'pending';
+                    } else if (!empty($estacion['asistencia'])) {
+                        $asistencia = ($estacion['asistencia'] == '1' || $estacion['asistencia'] == '8') 
+                            ? 'occupied' 
+                            : 'absent';
+                    } else if (empty($estacion['asistencia'])) {
                         $fechaAsignacion = new DateTime($estacion['fecha_asignacion']);
 
-                        if($fechaAsignacion >= $inicio && $fechaAsignacion <= $fin) {
+                        if ($fechaAsignacion >= $inicio && $fechaAsignacion <= $fin) {
                             $asistencia = 'occupied';
                         } else {
                             $asistencia = 'absent';
                         }
                     }
 
+                    $estacionesResponse[] = [
+                        'id'            => $estacion['id_estacion'],
+                        'nomina'        => $estacion['nomina'],
+                        'name'          => $estacion['nombre_estacion'],
+                        'operator'      => !empty($estacion['nomina']) ? $estacion['nombre'] : '',
+                        'status'        => $asistencia,
+                        'certification' => $estacion['codigo_certificacion'],
+                        'idPC'          => $estacion['idPC'],
+                        'colorClass'    => $colorClass,
+                        'estatusPC'     => $estacion['estatusPC'],
+                        'isCertificate' => $estacion['isCertificate']
+                    ];
+                }
 
-                $response = array ( 'estatus' => 'ok',
-                                    'estacion' => array('id' => $estacion['id_estacion'],
-                                                        'nomina' => $estacion['nomina'],
-                                                        'name' => $estacion['nombre_estacion'], 
-                                                        'operator' =>  !empty($estacion['nomina']) ? $estacion['nombre'] : '',  
-                                                        'status' => $asistencia, //pending: sin asignar, occupied: operador asignado
-                                                        'certification' => $estacion['codigo_certificacion'],
-                                                        'idPC' => $estacion['idPC'],
-                                                        'colorClass' => $coloClass,
-                                                        'estatusPC' => $estacion['estatusPC'],
-                                                        'isCertificate' => $estacion['isCertificate']
-                                                        )
-                                    );
+                $response = [
+                    'estatus' => 'ok',
+                    'estaciones' => $estacionesResponse
+                ];
+            } else {
+                $response = [
+                    'estatus' => 'error',
+                    'mensaje' => $stmt->errorInfo()[2]
+                ];
             }
-        }
 
-        else 
-            $response = array( 'estatus' => 'error',
-                               'mensaje' =>  $stmt->errorInfo()[2]);
-
-        echo json_encode($response);
-    }
+            echo json_encode($response);
+}
 
 //Consulta para generar una lista de asistencia con los PC, PNAD y asignados 
 else 
@@ -1438,29 +1553,16 @@ else
            
             //Si no existe un registro de asistencia generar uno
             else {
-                /*
-                $sql= "SELECT t.nomina, MAX(t.nombre) AS nombre, 
-                              STRING_AGG(CAST(t.id_estacion AS NVARCHAR(10)), ',') AS id_estacion,
-                              STRING_AGG(COALESCE(e.nombre_estacion, 'SIN ASIGNAR'), ', ') AS nombre_estacion
-                        FROM (SELECT pc.nomina, pc.nombre, pc.id_estacion FROM SPC_PUNTOS_CAMBIO pc
-                                WHERE PC.codigo_linea = :codigoLinea AND PC.fechaHora_fin IS NULL AND PC.turno = :turno
-                                        UNION ALL
-                                SELECT p.nomina, p.nombre, p.id_estacion FROM SPC_PERSONAL_ESTACION p
-                                    WHERE p.fecha_fin IS NULL AND p.turno = :turno
-                                      AND EXISTS ( SELECT 1 FROM SPC_ESTACIONES e WHERE e.id_estacion = p.id_estacion AND e.codigo_linea = :codigoLinea)
-                                        UNION ALL
-                                SELECT nomina, nombre, NULL AS id_estacion FROM SPC_PERSONAL_NAD
-                                    WHERE eliminado = '0' AND codigo_linea = :codigoLinea and turno = :turno
-                              ) t LEFT JOIN SPC_ESTACIONES e ON e.id_estacion = t.id_estacion  
-                        GROUP BY t.nomina ORDER BY t.nomina;"; */
 
                 $sql ="SELECT p.nomina, p.nombre,
                             STRING_AGG(CAST(x.id_estacion AS NVARCHAR(10)), ',') AS id_estacion,
                             COALESCE(STRING_AGG(e.nombre_estacion, ', '), 'SIN ASIGNAR') AS nombre_estacion
                         FROM SPC_PERSONAL p LEFT JOIN (
-                        SELECT nomina, id_estacion FROM SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL AND turno = :turno
-                            UNION ALL
-                        SELECT nomina, id_estacion FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND turno = :turno AND codigo_linea = :codigoLinea) x
+                                                        SELECT nomina, id_estacion FROM SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL AND turno = :turno
+                                                            UNION
+                                                        SELECT nomina, EPC.idE as id_estacion FROM SPC_PUNTOS_CAMBIO PC INNER JOIN SPC_ESTACIONES_PC EPC ON PC.idPC = EPC.idPC 
+                                                        WHERE fechaHora_fin IS NULL AND turno = :turno AND codigo_linea = :codigoLinea
+                                                      ) x
                             ON x.nomina = p.nomina LEFT JOIN SPC_ESTACIONES e ON e.id_estacion = x.id_estacion
                         WHERE p.codigo_linea = :codigoLinea AND p.turno = :turno and p.estatus NOT IN (2)
                             GROUP BY p.nomina, p.nombre ORDER BY p.nomina;";
@@ -1723,8 +1825,9 @@ else
                 WHERE nomina = :nomina AND id_estacion = :idEstacion AND fecha_fin IS NULL
                     UNION ALL
                 SELECT nomina, nombre, FORMAT(fechaHora_inicio, 'yyyy/MM/dd HH:mm') AS fecha_inicio, fechaHora_fin AS fecha_fin, 
-                        turno, motivo AS descripcion, 'PUNTO_CAMBIO' AS origen FROM SPC_PUNTOS_CAMBIO 
-                WHERE nomina = :nomina2 AND id_estacion = :idEstacion2 AND fechaHora_fin IS NULL";
+                        turno, motivo AS descripcion, 'PUNTO_CAMBIO' AS origen 
+                    FROM SPC_PUNTOS_CAMBIO PC LEFT JOIN SPC_ESTACIONES_PC EPC on PC.idPC = EPC.idPC
+                WHERE nomina = :nomina2 AND EPC.idE = :idEstacion2 AND fechaHora_fin IS NULL";
             
             $stmt = $conn->prepare($sql);
             $stmt->bindParam(':nomina', $nomina);
@@ -2282,13 +2385,14 @@ else
         }
 
         try {
-            $sql= "SELECT ILU.idE, E.nombre_estacion FROM SPC_PERSONAL P INNER JOIN SPC_ILU ILU ON P.nomina = ILU.nomina
-                                                                INNER JOIN SPC_ESTACIONES as E on e.id_estacion = ILU.idE
-                    WHERE p.codigo_linea = :codigo_linea and p.nomina=:nomina and ILU.estatus!= 1 and e.codigo_linea = :codigo_linea";
+            $sql= "SELECT ILU.idE, E.nombre_certificacion as nombre_estacion FROM SPC_ILU ILU
+                        INNER JOIN SPC_CERTIFICACIONES as E on e.idCR = ILU.idE
+                    WHERE ILU.nomina = :nomina AND ILU.estatus <> 1";
+
             $registro = $conn->prepare($sql);
             $response = [];
 
-            if($registro -> execute([':codigo_linea' => $codigoLinea, ':nomina'=> $nomina])){
+            if($registro -> execute([ /*':codigo_linea' => $codigoLinea,*/ ':nomina'=> $nomina])){
                 while($dsc= $registro->fetch(PDO::FETCH_ASSOC))
                         $response[] = $dsc;
             }
@@ -2552,54 +2656,93 @@ if ($opcion == '33') {
     }
 }
 
-//Listado de personal liberado por operacion
+//Listado de personal liberado por certificacion
 else 
 if($opcion == '34'){
-    $idE = !empty($_POST['idE']) ? $_POST['idE'] : null;
-    $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : 0;
-    $turno = !empty($_POST['turno']) ? $_POST['turno'] : 0;
-    
-    if (!$idE) {
-        echo json_encode([
-            'estatus' => 'error',
-            'mensaje' => 'Error al recibir los datos'
-        ]);
-        exit;
-    }
+        $codigoLineaPost = isset($_POST['codigoLinea']) ? trim((string)$_POST['codigoLinea']) : '';
+        $ordenLineaPost = isset($_POST['ordenLinea']) ? trim((string)$_POST['ordenLinea']) : '';
+        $turnoPost = isset($_POST['turno']) ? trim((string)$_POST['turno']) : '';
+        $idCRPost = isset($_POST['idCR']) ? trim((string)$_POST['idCR']) : '';
 
-    try {
-         $response = [];
-            $sqlOperaciones = "SELECT i.nomina, p.nombre from SPC_ILU I 
-                                    INNER JOIN SPC_PERSONAL P ON I.nomina = P.nomina 
-                                WHERE i.estatus != 1 AND p.estatus != 2 AND idE = :idE ";
-            $params[':idE'] = $idE;
+        $codigoLinea = ($codigoLineaPost !== '' && $codigoLineaPost !== '0') ? $codigoLineaPost : null;
+        $ordenLinea = ($ordenLineaPost !== '' && $ordenLineaPost  !== '0') ? $ordenLineaPost : null;
+        $turno = ($turnoPost !== '' && $turnoPost !== '0') ? $turnoPost : null;
+        $idCR = ($idCRPost !== '' && $idCRPost !== '0') ? $idCRPost : null;
 
-            // Filtro nomina
-            if ($codigoLinea != 0) {
-                $sqlOperaciones .= " AND p.codigo_linea = :codigoLinea";
+        if (!$idCR) {
+            echo json_encode(['estatus' => 'error',
+                              'mensaje' => 'Error al recibir los datos'
+                            ]);
+            exit;
+        }
+
+        try {
+            $params = [':idCR' => $idCR];
+
+            /* ordenLinea:
+                0 = Personal de la línea actual
+                1 = Personal de otra línea
+            */
+         if ($ordenLinea !== null) {
+                $campoOrdenLinea = " CASE WHEN p.codigo_linea = :ordenLineaSelect 
+                                        THEN 0
+                                        ELSE 1 
+                                    END AS ordenLinea";
+
+                $params[':ordenLineaSelect'] = $ordenLinea;
+            } else {
+                $campoOrdenLinea = " 0 AS ordenLinea";
+            }
+
+            $sqlBase = "SELECT i.nomina, p.nombre, p.codigo_linea, p.turno, p.estatus,
+                            $campoOrdenLinea FROM SPC_ILU AS i
+                        INNER JOIN SPC_PERSONAL AS p ON i.nomina = p.nomina
+                        WHERE i.estatus = 0  AND i.idE = :idCR ";
+
+            // Filtrar datos por línea
+            if ($codigoLinea !== null) {
+                $sqlBase .= " AND p.codigo_linea = :codigoLinea AND p.estatus <> 2";
+
                 $params[':codigoLinea'] = $codigoLinea;
             }
 
-            if ($turno != 0) {
-                $sqlOperaciones .= " AND p.turno = :turno";
+            // Filtro por turno
+            if ($turno !== null) {
+                $sqlBase .= " AND p.turno = :turno";
+
                 $params[':turno'] = $turno;
             }
 
+            // Consulta final usando subconsulta
+            $sqlOperaciones = "SELECT q.nomina, q.nombre, q.codigo_linea, q.turno, q.estatus, q.ordenLinea
+                                FROM ( $sqlBase) AS q";
+
+            // Si no existe filtro de línea, aplicar regla por ordenLinea
+            if ($codigoLinea === null) {
+                $sqlOperaciones .= " WHERE (q.ordenLinea = 1 AND q.estatus IN (0,3) )
+                                        OR
+                                    ( q.ordenLinea = 0 AND q.estatus <> 2 )";
+            }
+
+            $sqlOperaciones .= " ORDER BY q.ordenLinea, q.nombre";
+
             $liberados = $conn->prepare($sqlOperaciones);
             $liberados->execute($params);
+
             $response = $liberados->fetchAll(PDO::FETCH_ASSOC);
 
             echo json_encode([
                 'estatus' => 'ok',
                 'data' => $response
             ]);
-    } catch (Exception $e) {
-        echo json_encode([
-            'estatus' => 'error',
-            'mensaje' => 'Ocurrió un error al generar los datos',
-            'error'   => $e->getMessage()
-        ]);
-    }
+
+        } catch (Exception $e) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Ocurrió un error al generar los datos',
+                'error'   => $e->getMessage()
+            ]);
+        }
 }
 
 //Obtener ultima fecha de operacion de un trabajador en una estacion
@@ -2620,8 +2763,10 @@ else
                 $sqlEstaciones = "SELECT TOP 1 fecha_inicio, fecha_fin FROM (
                                         SELECT fecha_asignacion AS fecha_inicio, fecha_fin FROM SPC_PERSONAL_ESTACION WHERE id_estacion = :idE AND nomina = :nomina
                                             UNION ALL
-                                        SELECT fechaHora_inicio AS fecha_inicio, fechaHora_fin AS fecha_fin FROM SPC_PUNTOS_CAMBIO WHERE id_estacion = :idE AND nomina = :nomina
-                                    ) AS registros ORDER BY CASE  WHEN fecha_fin IS NULL THEN 1 ELSE 0 END DESC, ISNULL(fecha_fin, fecha_inicio) DESC";
+                                        SELECT fechaHora_inicio AS fecha_inicio, fechaHora_fin AS fecha_fin FROM SPC_PUNTOS_CAMBIO PC 
+                                            INNER JOIN SPC_ESTACIONES_PC EPC ON PC.idPC = EPC.idPC 
+                                        WHERE EPC.idE = :idE AND nomina = :nomina 
+                                    ) AS registros ORDER BY CASE WHEN fecha_fin IS NULL THEN 1 ELSE 0 END DESC, ISNULL(fecha_fin, fecha_inicio) DESC";
 
                 $stmtE = $conn->prepare($sqlEstaciones);            
                 $stmtE->execute([':nomina' => $nomina, ':idE' => $idE]);
@@ -2772,10 +2917,9 @@ if($opcion == '38'){
 
     try {
          $response = [];
-            $sqlPC = "SELECT PC.idPC, PC.no_controlCambio, PC.nomina, PC.nombre, E.nombre_estacion estacion, PC.motivo,
+            $sqlPC = "SELECT PC.idPC, PC.no_controlCambio, PC.nomina, PC.nombre, PC.motivo,
                             PC.fechaHora_inicio, PC.fechaHora_fin, PC.tipo_cambio, PC.estatusPC
-                        from SPC_PUNTOS_CAMBIO PC inner join SPC_ESTACIONES E ON PC.id_estacion = E.id_estacion
-                     where PC.codigo_linea = :codigoLinea";
+                        from SPC_PUNTOS_CAMBIO PC where PC.codigo_linea = :codigoLinea";
 
             $params[':codigoLinea'] = $codigoLinea;
 
@@ -2824,10 +2968,11 @@ if($opcion == '39'){
          $response = [];
          $sqlOperaciones = "SELECT PE.id_estacion, E.nombre_estacion, PE.fecha_asignacion AS fecha_inicio, PE.fecha_fin, PE.comentarios
                                 FROM SPC_PERSONAL_ESTACION PE INNER JOIN SPC_ESTACIONES E ON PE.id_estacion = E.id_estacion
-                            WHERE E.codigo_linea = :codigoLinea AND PE.fecha_fin IS NULL AND PE.turno = :turno AND PE.nomina = :nomina
-                                UNION ALL
-                            SELECT PC.id_estacion, E.nombre_estacion, PC.fechaHora_inicio AS fecha_inicio,  PC.fechaHora_fin, PC.motivo AS comentarios
-                                FROM SPC_PUNTOS_CAMBIO PC INNER JOIN SPC_ESTACIONES E ON pc.id_estacion = E.id_estacion
+                                    WHERE E.codigo_linea = :codigoLinea AND PE.fecha_fin IS NULL AND PE.turno = :turno AND PE.nomina = :nomina
+                            UNION
+                            SELECT EPC.idE AS id_estacion, E.nombre_estacion, PC.fechaHora_inicio AS fecha_inicio, PC.fechaHora_fin as fecha_fin, PC.motivo AS comentarios
+                                FROM SPC_PUNTOS_CAMBIO PC INNER JOIN SPC_ESTACIONES_PC EPC ON PC.idPC = EPC.idPC
+                            INNER JOIN SPC_ESTACIONES E ON E.id_estacion = EPC.idE
                             WHERE PC.codigo_linea = :codigoLinea AND PC.fechaHora_fin IS NULL AND PC.turno = :turno AND PC.nomina = :nomina";
 
             $operaciones = $conn->prepare($sqlOperaciones);
@@ -2840,6 +2985,43 @@ if($opcion == '39'){
             echo json_encode([
                 'estatus' => 'ok',
                 'data' => $response
+            ]);
+
+    } catch (Exception $e) {
+        echo json_encode([
+            'estatus' => 'error',
+            'mensaje' => 'Ocurrió un error al generar los datos',
+            'error'   => $e->getMessage()
+        ]);
+    }
+}
+
+//Obtener listado de certificaciones
+else 
+if($opcion == '40'){
+     $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : 0;
+     //Agregar campo de area y si existe filtrar certificaciones por area sino mostrar todas las certificaciones
+    
+     /*
+        if (!$codigoLinea) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Error al recibir los datos'
+            ]);
+        exit;
+    } */
+
+    try {
+         $response = [];
+         $sql = "SELECT idCR, nombre_certificacion from SPC_CERTIFICACIONES";
+
+            $certificaciones = $conn->prepare($sql);
+           $certificaciones->execute();
+            $response = $certificaciones->fetchAll(PDO::FETCH_ASSOC);
+
+            echo json_encode([
+                'estatus' => 'ok',
+                'certificaciones' => $response
             ]);
 
     } catch (Exception $e) {

@@ -661,7 +661,6 @@
                       <th scope="col" class="px-4 py-3 fw-bold">No.</th>
                       <th scope="col" class="px-4 py-3 fw-bold">Nómina</th>
                       <th scope="col" class="px-4 py-3 fw-bold">Nombre</th>
-                      <th scope="col" class="px-4 py-3 fw-bold">ID Estación</th>
                       <th scope="col" class="px-4 py-3 fw-bold">Motivo</th>
                       <th scope="col" class="px-4 py-3 fw-bold">Inicio</th>
                       <th scope="col" class="px-4 py-3 fw-bold">Fin</th>
@@ -1123,7 +1122,7 @@
                                 <div class="row">
                                     <div class="col-md-10 mb-3">
                                       <label for="nominaPC" class="form-label required-field">
-                                        <i class="bi bi-clock"></i>No. Reloj / ID Empleado
+                                        <i class="bi bi-clock"></i>Empleado
                                       </label>
                                       <div class="input-group-custom">
                                         <select class="form-control form-select" id="nominaPC" required>
@@ -1132,6 +1131,28 @@
                                       </div>
                                       <div class="form-help">Ingresa el número de reloj o ID único del empleado</div>
                                     </div>
+
+                                  <!--LISTADO DE ESTACIONES-->
+                                  <div class="col-md-10">
+                                    <label for="selectEstacionesPC" class="form-label required-field">
+                                        <i class="bi bi-cpu me-1"></i>Estaciones donde aplica el PC
+                                    </label>
+                                    <div class="d-flex align-items-start">
+                                        <select class="form-control form-select rounded-3 flex-grow-1 me-3" id="selectEstacionesPC">
+                                          <option value="">Seleccione una opcion</option>
+                                        </select>
+                                        <button id="btnEstacionesPC" class="btn btn-info rounded-3 px-2" type="button" style="white-space: nowrap;">
+                                            <i class="bi bi-plus-lg"></i>
+                                        </button>
+                                    </div>
+                                  </div>
+
+                                  <!-- CHIPS DE ESTACIONES -->
+                                  <div class="col-12 my-4">
+                                    <label class="form-label" for="listEstacionesPC"><i class="bi bi-tags me-1"></i>Listado estaciones</label>
+                                      <div id="listEstacionesPC" class="d-flex flex-wrap gap-2 p-3 rounded-3 border">
+                                      </div>
+                                  </div>
                                 </div>
 
                                 <div class="row">
