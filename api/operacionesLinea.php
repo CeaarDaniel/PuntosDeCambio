@@ -2385,8 +2385,8 @@ else
         }
 
         try {
-            $sql= "SELECT ILU.idE, E.nombre_certificacion as nombre_estacion FROM SPC_ILU ILU
-                        INNER JOIN SPC_CERTIFICACIONES as E on e.idCR = ILU.idE
+            $sql= "SELECT ILU.idE, C.nombre_certificacion as nombre_estacion FROM SPC_ILU ILU
+                        INNER JOIN SPC_CERTIFICACIONES as C on C.idCR = ILU.idE
                     WHERE ILU.nomina = :nomina AND ILU.estatus <> 1";
 
             $registro = $conn->prepare($sql);
@@ -3022,6 +3022,45 @@ if($opcion == '40'){
             echo json_encode([
                 'estatus' => 'ok',
                 'certificaciones' => $response
+            ]);
+
+    } catch (Exception $e) {
+        echo json_encode([
+            'estatus' => 'error',
+            'mensaje' => 'Ocurrió un error al generar los datos',
+            'error'   => $e->getMessage()
+        ]);
+    }
+}
+
+//Obtener listado de estaciones en las que el trabajador puede operar o esta liberado
+
+else 
+if($opcion == '41'){
+     $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : 0;
+     $nomina = !empty($_POST['nomina']) ? $_POST['nomina'] : 0;
+
+        if (!$codigoLinea || !$nomina) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Error al recibir los datos'
+            ]);
+            exit;
+        } 
+
+    try {
+         $response = [];
+         $sql = "SELECT E.id_estacion, E.nombre_estacion FROM SPC_ILU I 
+                    INNER JOIN SPC_ESTACIONES E ON E.id_certificacion = I.idE 
+                 WHERE E.codigo_linea = :codigoLinea AND I.nomina = :nomina";
+
+           $estaciones = $conn->prepare($sql);
+           $estaciones->execute([':codigoLinea'=> $codigoLinea, ':nomina' => $nomina]);
+           $response = $estaciones->fetchAll(PDO::FETCH_ASSOC);
+
+            echo json_encode([
+                'estatus' => 'ok',
+                'estaciones' => $response
             ]);
 
     } catch (Exception $e) {

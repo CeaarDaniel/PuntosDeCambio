@@ -175,26 +175,6 @@
           //Cargar el select del formulario de registro del pc
           setLiberados('nominaPC', null, codigoLinea.value, stationData.certification)
 
-          let selectEstacionesPC = document.getElementById('selectEstacionesPC');
-          
-
-        //CARGAR LISTADO DE OPERACIONES EN EL SELECT DEL PC
-          selectEstacionesPC.innerHTML='';
-
-          let noneA = document.createElement('option');
-          noneA.value = '';
-          noneA.textContent = 'Selecciona una estación...';
-          selectEstacionesPC.appendChild(noneA);
-
-          stationsData.forEach(station => {
-            const option = document.createElement('option');
-            option.value = station.id;   
-            option.textContent = station.name; 
-            selectEstacionesPC.appendChild(option);
-          });
-        //FIN LISTADO DE OPERACIONES
-
-
         //Modal creado registro de punto de cambio
             const stationModal = new bootstrap.Modal(document.getElementById('changeControlModal'));
             stationModal.show();
@@ -1957,12 +1937,11 @@
       let formDataLiberados = new FormData();
       formDataLiberados.append('opcion', 34);
       formDataLiberados.append('turno', $('#turnoLayout').val());
-      formDataLiberados.append('ordenLinea', ordenLinea);
-      formDataLiberados.append('idCR', certification);
 
+      (ordenLinea && ordenLinea !='') ? formDataLiberados.append('ordenLinea', ordenLinea) : '';
       (codigoLinea && codigoLinea !='') ? formDataLiberados.append('codigoLinea', codigoLinea) : '';
-    
-      console.log(certification)
+      (certification && certification !='') ? formDataLiberados.append('idCR', certification) : '';
+
       
       fetch("../api/operacionesLinea.php", {
         method: "POST",
@@ -1974,7 +1953,10 @@
           console.log(data)
           //console.log(data)
           nombreSelect.innerHTML = '<option value="">Selecciona una opción</option>';
+
           if (data.estatus !== 'ok') {
+              nombreSelect.innerHTML = '<option value="">Selecciona una opción</option>';
+              console.log(data);
             return;
           }
           
@@ -1986,6 +1968,7 @@
           });
         })
         .catch((error) => {
+           nombreSelect.innerHTML = '<option value="">Selecciona una opción</option>';
           console.error(error);
         });
     }
@@ -2620,30 +2603,48 @@
                   }
             })
 
-          /*
+          //Cargar el listado de operaciones donde esta liberado el trabajador seleccionado
             nominaPC.addEventListener('change', function(){
-                let estacionId = document.getElementById('idEstacionModalPC').value;
                 if(nominaPC && nominaPC.value !='') {
-                    //let idEstacion = document.getElementById('id_estacion').value; 
+                    let formDataEstaciones = new FormData();
+                    formDataEstaciones.append('opcion', 41)
+                    formDataEstaciones.append('codigoLinea', codigoLinea.value)
+                    formDataEstaciones.append('nomina', nominaPC.value)
 
-                    const estacionesFiltradas = stationsData.filter(
-                        estacion => (String(estacion.nomina) === String(nominaPC.value)  && estacion.idPC == null )
-                    );
+                       fetch("../api/operacionesLinea.php", {
+                            method: "POST",
+                            body: formDataEstaciones,
+                        })
+                        .then((response) => response.text())
+                        .then((data) => {
+                            data= JSON.parse(data)
+                            if(data.estatus=='ok'){
+                                //CARGAR LISTADO DE OPERACIONES EN EL SELECT DEL PC
+                                  selectEstacionesPC.innerHTML='';
 
+                                  let noneA = document.createElement('option');
+                                  noneA.value = '';
+                                  noneA.textContent = 'Selecciona una estación...';
+                                  selectEstacionesPC.appendChild(noneA);
 
-                    estacionesFiltradas.forEach(estacion => {
-                        if(estacionId != estacion.id){
-                          chipsEstacionesPC.push({ label: (estacion.name) ? (estacion.name).toUpperCase() : '',
-                              value: estacion.id || '' ,
-                              remove : true,
-                          });   
-                        }
+                                  data.estaciones.forEach(station => {
+                                    const option = document.createElement('option');
+                                    option.value = station.id_estacion;   
+                                    option.textContent = station.nombre_estacion; 
+                                    selectEstacionesPC.appendChild(option);
+                                  });
+                                //FIN LISTADO DE OPERACIONES
+                            }
+
+                          else {
+                            console.log(data)
+                          }
+                        })
+                        .catch((error) => {
+                          console.log(error);
                     });
-
-                    
-                    actualizarEstacionChips();
                 }
-            }) */
+            }) 
         
         //FIN OBTENER NUMERO DE NOMINA
 
