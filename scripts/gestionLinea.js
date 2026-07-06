@@ -3371,11 +3371,3 @@
 
         applyZoom();
     }); 
-
-
-    /*
-      PROBLEMAS 
-      Permitir el dejar cargada una lista de asistencia contemplando los desplazados o al personal que descansa por rango de 
-      fechas, algo como agregar a tal persona de tal fecha tal fecha en un procesos de tal fecha a tal fecha y vacaciones programadas,
-      Permitir cargar registros con anticipacion principalmente para las vacaciones programadas 
-    */

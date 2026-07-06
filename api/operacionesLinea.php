@@ -2447,7 +2447,7 @@ else
             // LIBERADOS
             $sqlLiberados = "SELECT E.id_estacion, E.nombre_estacion, I.nomina, P.nombre
                                     FROM SPC_ESTACIONES E
-                                        INNER JOIN SPC_ILU I ON E.id_estacion = I.idE
+                                        INNER JOIN SPC_ILU I ON E.id_certificacion = I.idE
                                         INNER JOIN SPC_PERSONAL P ON P.nomina = I.nomina
                             WHERE E.codigo_linea = :codigo_linea AND P.turno = :turno
                                     AND P.codigo_linea = :codigo_linea AND I.estatus != 1";
