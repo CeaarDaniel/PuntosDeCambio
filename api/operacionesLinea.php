@@ -3034,7 +3034,6 @@ if($opcion == '40'){
 }
 
 //Obtener listado de estaciones en las que el trabajador puede operar o esta liberado
-
 else 
 if($opcion == '41'){
      $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : 0;
@@ -3070,5 +3069,78 @@ if($opcion == '41'){
             'error'   => $e->getMessage()
         ]);
     }
+}
+
+//Obtener detalle del punto de cambio
+else 
+    if($opcion == '42'){
+        $idPC = !empty($_POST['idPC']) ? $_POST['idPC'] : 0;
+        
+        if (!$idPC) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Error al consultar la informacion'
+            ]);
+            exit;
+        } 
+
+        try {     
+                $response = [];
+
+                //DATOS DEL PC
+                $sqlPC = "SELECT PC.no_controlCambio, PC.fechaHora_inicio, PC.fechaHora_fin, 
+                                PC.motivo, PC.tipo_cambio, PC.estatusPC, 
+                                PC.turno, PC.nomina, p.nombre
+                            FROM SPC_PUNTOS_CAMBIO PC LEFT JOIN SPC_PERSONAL P ON PC.nomina = P.nomina
+                        WHERE idPC = :idPC";
+
+                //ESTACIONES ASIGNADAS AL PC
+                $sqlEs = "SELECT EPC.idE, E.nombre_estacion FROM SPC_ESTACIONES_PC EPC INNER JOIN 
+                            SPC_ESTACIONES E ON EPC.idE = E.id_estacion
+                        WHERE EPC.idPC = :idPC";
+
+                //EVALUACION DEL PC
+                $sqlEva = "SELECT idE, fechaEvaluacion, numeroDia, numeroEvaluacion, 
+                                metrica1, metrica2, metrica3, comentarios, fechaRegistro 
+                            FROM SPC_EVALUACIONPC WHERE idPC = :idPC";
+
+                //CIERRE DEL PC
+                $sqlCierre = "SELECT fechaCierre, comentarios FROM SPC_CIERRE_PC WHERE idPC = :idPC";
+
+                //Obtener los datos del punto de cambio
+                $PC = $conn->prepare($sqlPC);
+                $PC->execute([':idPC'=> $idPC]);
+                $dataPC = $PC->fetchAll(PDO::FETCH_ASSOC);
+
+                //Obtener estaciones involucradas en el pc
+                $estaciones = $conn->prepare($sqlEs);
+                $estaciones->execute([':idPC'=> $idPC]);
+                $dataEstaciones = $estaciones->fetchAll(PDO::FETCH_ASSOC);
+
+                //Obtener estaciones involucradas en el pc
+                $evaluacionPC = $conn->prepare($sqlEva);
+                $evaluacionPC->execute([':idPC'=> $idPC]);
+                $evaluacion = $evaluacionPC->fetchAll(PDO::FETCH_ASSOC);
+
+                //Obtener estaciones involucradas en el pc
+                $cierrePC = $conn->prepare($sqlCierre);
+                $cierrePC->execute([':idPC'=> $idPC]);
+                $cierre = $cierrePC->fetchAll(PDO::FETCH_ASSOC);
+
+                echo json_encode([
+                    'estatus' => 'ok',
+                    'dataPC' => $dataPC,
+                    'estaciones' => $dataEstaciones,
+                    'evaluaciones' => $evaluacion,
+                    'cierre' => $cierre,
+                ]);
+
+        } catch (Exception $e) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Ocurrió un error al generar los datos',
+                'error'   => $e->getMessage()
+            ]);
+        }
 }
 ?>

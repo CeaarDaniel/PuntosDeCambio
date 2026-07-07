@@ -647,40 +647,525 @@
         
         <!-- Body del Modal -->
         <div class="modal-body p-4">
-          <!-- Barra de herramientas  y filtros -->
-          <div class="d-flex justify-content-between align-items-center mb-4">
-          </div>
+            <!--Ventanas consulta de puntos de cambio-->
+              <div id="ventanasConsultaPC">
+                  <!-- TABLA LISTADO PUNTOS DE CAMBIO-->
+                  <div id="ventanaTablaPC" class="fade-page show">
+                        <!-- Barra de herramientas  y filtros -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                        </div>
 
-          <!-- Tabla de Puntos de Cambio -->
-          <div class="card">
-            <div class="card-body p-0">
-              <div class="table-responsive">
-                <table id="tablePC" class="table table-hover align-middle mb-0" style="min-width: 1200px;">
-                  <thead class="bg-light">
-                    <tr>
-                      <th scope="col" class="px-4 py-3 fw-bold">No.</th>
-                      <th scope="col" class="px-4 py-3 fw-bold">Nómina</th>
-                      <th scope="col" class="px-4 py-3 fw-bold">Nombre</th>
-                      <th scope="col" class="px-4 py-3 fw-bold">Motivo</th>
-                      <th scope="col" class="px-4 py-3 fw-bold">Inicio</th>
-                      <th scope="col" class="px-4 py-3 fw-bold">Fin</th>
-                      <th scope="col" class="px-4 py-3 fw-bold">Tipo Cambio</th>
-                      <th scope="col" class="px-4 py-3 fw-bold">Estatus</th>
-                    </tr>
-                  </thead>
-                  <tbody></tbody>
-                </table>
+                        <!-- Tabla de Puntos de Cambio -->
+                        <div class="card">
+                          <div class="card-body p-0">
+                            <div class="table-responsive">
+                              <table id="tablePC" class="table table-hover align-middle mb-0" style="min-width: 1200px;">
+                                <thead class="bg-light">
+                                  <tr>
+                                    <th scope="col" class="px-4 py-3 fw-bold">No.</th>
+                                    <th scope="col" class="px-4 py-3 fw-bold">Nómina</th>
+                                    <th scope="col" class="px-4 py-3 fw-bold">Nombre</th>
+                                    <th scope="col" class="px-4 py-3 fw-bold">Motivo</th>
+                                    <th scope="col" class="px-4 py-3 fw-bold">Inicio</th>
+                                    <th scope="col" class="px-4 py-3 fw-bold">Fin</th>
+                                    <th scope="col" class="px-4 py-3 fw-bold">Tipo Cambio</th>
+                                    <th scope="col" class="px-4 py-3 fw-bold">Estatus</th>
+                                    <th></th>
+                                  </tr>
+                                </thead>
+                                <tbody></tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                  </div>
+
+                  <!-- DETALLE DE PC-->
+                  <div id="ventanaDetallePC" class="fade-page d-none">
+                          <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                              <h4 class="form-title">
+                                <i class="bi bi-clipboard-data"></i>
+                                Reporte de Punto de Cambio
+                              </h4>
+                          </div>
+
+                        <section id="seccionDetallePC" class="container-fluid pb-4">
+                          <div class="form-container mx-auto" style="max-width: 1150px;">
+                            
+                            <!-- HEADER -->
+                            <div class="form-header">
+                              <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                                <div>
+                                  <h4 class="form-title mb-2">
+                                    <i class="bi bi-clipboard-data"></i>
+                                    Reporte de Punto de Cambio
+                                  </h4>
+
+                                  <div class="d-flex flex-wrap gap-2">
+                                    <span class="badge bg-light text-dark">ID PC: 1284</span>
+                                    <span class="badge bg-success">Cerrado</span>
+                                    <span class="badge bg-light text-dark">Tipo: Temporal</span>
+                                    <span class="badge bg-light text-dark">Línea: L-02</span>
+                                    <span class="badge bg-light text-dark">Turno: 1</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div class="form-body">
+
+                              <!-- RESUMEN RÁPIDO -->
+                              <div class="row g-3 mb-4">
+                                <div class="col-6 col-lg-3">
+                                  <div class="card h-100">
+                                    <div class="card-body">
+                                      <div class="text-muted small mb-1">Estaciones</div>
+                                      <div class="fs-4 fw-semibold">3</div>
+                                      <div class="small text-muted">Relacionadas al punto</div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div class="col-6 col-lg-3">
+                                  <div class="card h-100">
+                                    <div class="card-body">
+                                      <div class="text-muted small mb-1">Evaluaciones</div>
+                                      <div class="fs-4 fw-semibold">4</div>
+                                      <div class="small text-muted">Registradas</div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div class="col-6 col-lg-3">
+                                  <div class="card h-100">
+                                    <div class="card-body">
+                                      <div class="text-muted small mb-1">Inicio</div>
+                                      <div class="fw-semibold">01/07/2026</div>
+                                      <div class="small text-muted">07:00 AM</div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div class="col-6 col-lg-3">
+                                  <div class="card h-100">
+                                    <div class="card-body">
+                                      <div class="text-muted small mb-1">Fin</div>
+                                      <div class="fw-semibold">03/07/2026</div>
+                                      <div class="small text-muted">03:30 PM</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <!-- INFO GENERAL -->
+                              <div class="row g-3 mb-4">
+                                <div class="col-lg-8">
+                                  <div class="info-card h-100 mb-0">
+                                    <div class="info-title">
+                                      <i class="bi bi-info-circle"></i>
+                                      Información general
+                                    </div>
+
+                                    <div class="row">
+                                      <div class="col-md-6">
+                                        <div class="info-item">
+                                          <span class="info-label">No. Control</span>
+                                          <span class="info-value">PC-2026-0128</span>
+                                        </div>
+                                        <div class="info-item">
+                                          <span class="info-label">Nómina</span>
+                                          <span class="info-value">784521</span>
+                                        </div>
+                                        <div class="info-item">
+                                          <span class="info-label">Nombre</span>
+                                          <span class="info-value">Laura Gómez Ramírez</span>
+                                        </div>
+                                        <div class="info-item">
+                                          <span class="info-label">Tipo de cambio</span>
+                                          <span class="info-value">Temporal</span>
+                                        </div>
+                                      </div>
+
+                                      <div class="col-md-6">
+                                        <div class="info-item">
+                                          <span class="info-label">Fecha / hora inicio</span>
+                                          <span class="info-value">01/07/2026 07:00</span>
+                                        </div>
+                                        <div class="info-item">
+                                          <span class="info-label">Fecha / hora fin</span>
+                                          <span class="info-value">03/07/2026 15:30</span>
+                                        </div>
+                                        <div class="info-item">
+                                          <span class="info-label">Código línea</span>
+                                          <span class="info-value">L-02</span>
+                                        </div>
+                                        <div class="info-item">
+                                          <span class="info-label">Estatus</span>
+                                          <span class="info-value">Cerrado</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div class="col-lg-4">
+                                  <div class="card mb-3">
+                                    <div class="card-body">
+                                      <h5 class="section-title mb-3">
+                                        <i class="bi bi-person-badge"></i>
+                                        Responsable
+                                      </h5>
+
+                                      <div class="employee-preview mt-0">
+                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-semibold"
+                                            style="width: 40px; height: 40px;">
+                                          LG
+                                        </div>
+                                        <div class="employee-info">
+                                          <p class="employee-name mb-0">Laura Gómez Ramírez</p>
+                                          <p class="employee-role mb-0">Nómina 784521</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div class="card">
+                                    <div class="card-body">
+                                      <h5 class="section-title mb-3">
+                                        <i class="bi bi-chat-left-text"></i>
+                                        Motivo
+                                      </h5>
+
+                                      <div class="alert alert-light border rounded-3 mb-0">
+                                        Cambio temporal por ajuste de parámetros y validación de proceso
+                                        en estaciones críticas de la línea L-02 para asegurar estabilidad
+                                        operativa y cumplimiento de métricas.
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <!-- ESTACIONES -->
+                              <div class="form-section">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                                  <h5 class="section-title mb-0">
+                                    <i class="bi bi-diagram-3"></i>
+                                    Estaciones relacionadas
+                                  </h5>
+                                  <span class="badge bg-secondary">3 estaciones</span>
+                                </div>
+
+                                <div class="row g-3">
+                                  <div class="col-md-4">
+                                    <div class="card h-100">
+                                      <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                          <h6 class="mb-0">Estación 101</h6>
+                                          <span class="badge bg-light text-dark border">Relación #1</span>
+                                        </div>
+                                        <div class="small text-muted">Vinculada al punto de cambio ID 1284.</div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div class="col-md-4">
+                                    <div class="card h-100">
+                                      <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                          <h6 class="mb-0">Estación 104</h6>
+                                          <span class="badge bg-light text-dark border">Relación #2</span>
+                                        </div>
+                                        <div class="small text-muted">Vinculada al punto de cambio ID 1284.</div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div class="col-md-4">
+                                    <div class="card h-100">
+                                      <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                          <h6 class="mb-0">Estación 110</h6>
+                                          <span class="badge bg-light text-dark border">Relación #3</span>
+                                        </div>
+                                        <div class="small text-muted">Vinculada al punto de cambio ID 1284.</div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <!-- EVALUACIONES -->
+                              <div class="form-section">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                                  <h5 class="section-title mb-0">
+                                    <i class="bi bi-clipboard2-pulse"></i>
+                                    Seguimiento de evaluaciones
+                                  </h5>
+                                  <span class="badge bg-primary">4 evaluaciones</span>
+                                </div>
+
+                                <!-- INDICADOR DE DÍAS -->
+                                <div class="progress-container rounded-3 p-3 mb-4">
+                                  <div class="d-flex align-items-start justify-content-between gap-2">
+                                    <div class="step-indicator active">
+                                      <div class="step-circle">1</div>
+                                      <div class="step-label">
+                                        Día 1<br>
+                                        <small>2 eval.</small>
+                                      </div>
+                                    </div>
+
+                                    <div class="step-connector"></div>
+
+                                    <div class="step-indicator active">
+                                      <div class="step-circle">2</div>
+                                      <div class="step-label">
+                                        Día 2<br>
+                                        <small>1 eval.</small>
+                                      </div>
+                                    </div>
+
+                                    <div class="step-connector"></div>
+
+                                    <div class="step-indicator active">
+                                      <div class="step-circle">3</div>
+                                      <div class="step-label">
+                                        Día 3<br>
+                                        <small>1 eval.</small>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div class="row g-3">
+
+                                  <!-- DÍA 1 -->
+                                  <div class="col-lg-4">
+                                    <div class="card h-100">
+                                      <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                          <h5 class="mb-0">Día 1</h5>
+                                          <span class="badge bg-dark">2 evaluaciones</span>
+                                        </div>
+
+                                        <div class="border rounded-3 p-3 bg-light mb-3">
+                                          <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <strong>Evaluación 1</strong>
+                                            <span class="badge bg-secondary">01/07/2026 09:00</span>
+                                          </div>
+
+                                          <div class="row g-2 mb-2">
+                                            <div class="col-4">
+                                              <div class="border rounded-3 p-2 bg-white text-center">
+                                                <div class="small text-muted">Métrica 1</div>
+                                                <div class="fw-semibold">95%</div>
+                                              </div>
+                                            </div>
+                                            <div class="col-4">
+                                              <div class="border rounded-3 p-2 bg-white text-center">
+                                                <div class="small text-muted">Métrica 2</div>
+                                                <div class="fw-semibold">97%</div>
+                                              </div>
+                                            </div>
+                                            <div class="col-4">
+                                              <div class="border rounded-3 p-2 bg-white text-center">
+                                                <div class="small text-muted">Métrica 3</div>
+                                                <div class="fw-semibold">96%</div>
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          <div class="small text-muted mb-1">Comentarios</div>
+                                          <div class="small">Arranque estable, sin incidencias y buena adaptación al cambio.</div>
+                                        </div>
+
+                                        <div class="border rounded-3 p-3 bg-light">
+                                          <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <strong>Evaluación 2</strong>
+                                            <span class="badge bg-secondary">01/07/2026 01:00 PM</span>
+                                          </div>
+
+                                          <div class="row g-2 mb-2">
+                                            <div class="col-4">
+                                              <div class="border rounded-3 p-2 bg-white text-center">
+                                                <div class="small text-muted">Métrica 1</div>
+                                                <div class="fw-semibold">94%</div>
+                                              </div>
+                                            </div>
+                                            <div class="col-4">
+                                              <div class="border rounded-3 p-2 bg-white text-center">
+                                                <div class="small text-muted">Métrica 2</div>
+                                                <div class="fw-semibold">98%</div>
+                                              </div>
+                                            </div>
+                                            <div class="col-4">
+                                              <div class="border rounded-3 p-2 bg-white text-center">
+                                                <div class="small text-muted">Métrica 3</div>
+                                                <div class="fw-semibold">95%</div>
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          <div class="small text-muted mb-1">Comentarios</div>
+                                          <div class="small">Se mantiene desempeño aceptable; solo se ajustó ritmo de operación.</div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <!-- DÍA 2 -->
+                                  <div class="col-lg-4">
+                                    <div class="card h-100">
+                                      <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                          <h5 class="mb-0">Día 2</h5>
+                                          <span class="badge bg-dark">1 evaluación</span>
+                                        </div>
+
+                                        <div class="border rounded-3 p-3 bg-light mb-3">
+                                          <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <strong>Evaluación 1</strong>
+                                            <span class="badge bg-secondary">02/07/2026 09:30</span>
+                                          </div>
+
+                                          <div class="row g-2 mb-2">
+                                            <div class="col-4">
+                                              <div class="border rounded-3 p-2 bg-white text-center">
+                                                <div class="small text-muted">Métrica 1</div>
+                                                <div class="fw-semibold">96%</div>
+                                              </div>
+                                            </div>
+                                            <div class="col-4">
+                                              <div class="border rounded-3 p-2 bg-white text-center">
+                                                <div class="small text-muted">Métrica 2</div>
+                                                <div class="fw-semibold">99%</div>
+                                              </div>
+                                            </div>
+                                            <div class="col-4">
+                                              <div class="border rounded-3 p-2 bg-white text-center">
+                                                <div class="small text-muted">Métrica 3</div>
+                                                <div class="fw-semibold">97%</div>
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          <div class="small text-muted mb-1">Comentarios</div>
+                                          <div class="small">Mejora visible en estabilidad del proceso y reducción de variación.</div>
+                                        </div>
+
+                                        <div class="alert alert-light border rounded-3 mb-0">
+                                          <div class="small text-muted mb-1">Fecha de registro</div>
+                                          <div class="small fw-semibold">02/07/2026 09:45</div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <!-- DÍA 3 -->
+                                  <div class="col-lg-4">
+                                    <div class="card h-100">
+                                      <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                          <h5 class="mb-0">Día 3</h5>
+                                          <span class="badge bg-dark">1 evaluación</span>
+                                        </div>
+
+                                        <div class="border rounded-3 p-3 bg-light mb-3">
+                                          <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <strong>Evaluación 1</strong>
+                                            <span class="badge bg-secondary">03/07/2026 10:00</span>
+                                          </div>
+
+                                          <div class="row g-2 mb-2">
+                                            <div class="col-4">
+                                              <div class="border rounded-3 p-2 bg-white text-center">
+                                                <div class="small text-muted">Métrica 1</div>
+                                                <div class="fw-semibold">98%</div>
+                                              </div>
+                                            </div>
+                                            <div class="col-4">
+                                              <div class="border rounded-3 p-2 bg-white text-center">
+                                                <div class="small text-muted">Métrica 2</div>
+                                                <div class="fw-semibold">99%</div>
+                                              </div>
+                                            </div>
+                                            <div class="col-4">
+                                              <div class="border rounded-3 p-2 bg-white text-center">
+                                                <div class="small text-muted">Métrica 3</div>
+                                                <div class="fw-semibold">98%</div>
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          <div class="small text-muted mb-1">Comentarios</div>
+                                          <div class="small">Resultados estables; se recomienda cierre del punto de cambio.</div>
+                                        </div>
+
+                                        <div class="alert alert-success mb-0 rounded-3">
+                                          Punto listo para cierre con desempeño consistente.
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                </div>
+                              </div>
+
+                              <!-- CIERRE -->
+                              <div class="form-section border-0 mb-0 pb-0">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                                  <h5 class="section-title mb-0">
+                                    <i class="bi bi-check2-circle"></i>
+                                    Cierre del Punto de Cambio
+                                  </h5>
+                                  <span class="badge bg-success">Registrado</span>
+                                </div>
+
+                                <div class="row g-3">
+                                  <div class="col-md-4">
+                                    <div class="info-card h-100 mb-0">
+                                      <div class="info-title">
+                                        <i class="bi bi-calendar-check"></i>
+                                        Fecha de cierre
+                                      </div>
+                                      <div class="fw-semibold">03/07/2026 04:00 PM</div>
+                                      <div class="small text-muted mt-2">Registro realizado al finalizar el día 3.</div>
+                                    </div>
+                                  </div>
+
+                                  <div class="col-md-8">
+                                    <div class="info-card h-100 mb-0">
+                                      <div class="info-title">
+                                        <i class="bi bi-chat-square-text"></i>
+                                        Comentarios de cierre
+                                      </div>
+                                      <div class="text-muted">
+                                        Se concluye el punto de cambio con resultados dentro del objetivo.
+                                        El proceso quedó estable, validado y listo para continuar su operación normal.
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                            </div>
+                          </div>
+                        </section>
+                  </div>
               </div>
-            </div>
-          </div>
+            <!--Ventanas consulta de puntos de cambio-->
         </div>
         
         <!-- Footer del Modal -->
         <div class="modal-footer">
+          <div class="d-flex flex-wrap gap-2">
+            <button type="button" id="btnVolverConsultaPC" class="btn btn-info btn-sm d-none">
+              <i class="bi bi-arrow-left"></i> Volver
+            </button>
+          </div>
+
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-          <button type="button" class="btn btn-primary d-none">
-            <i class="bi bi-download"></i> Exportar
-          </button>
         </div>
       </div>
     </div>

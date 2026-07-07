@@ -6,9 +6,11 @@
   let btnConfirmClose = document.getElementById('btnConfirmClose');
   let btnEvaluacion = document.getElementById('btnEvaluacion');
   let btnAsistencia = document.getElementById('btnAsistencia') //Boton para registrar una asistencia individual
-
+  
   let tableListadoPersonal = document.getElementById('tableListadoPersonal');
   btnRegistrarOperador = document.getElementById('btnRegistrarOperador') //Boton para registrar personal
+
+  let seccionDetallePC = document.getElementById('seccionDetallePC');
 
   //BOTONES FLOTANTES
     let btncloseSidebar = document.getElementById('btncloseSidebar')
@@ -81,6 +83,9 @@
   //Inputs para el registro de evaluacion del PC
   let numeroDia = document.getElementById('numeroDiaEvaluacion')
   let numeroEvaluacion = document.getElementById('numeroEvaluacion')
+
+//Boton volver en la seccion de detalledel modal de consulta de pc
+ let btnVolverConsultaPC = document.getElementById('btnVolverConsultaPC');
 
   // Estado del workspace
   const workspaceState = {zoomLevel: 0.4};
@@ -1567,6 +1572,463 @@
             }
     //FIN FUNCION
 
+    //Funciones para renderizar el detalle del PC
+            function escapeHTML(value) {
+              return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+              }[char]));
+            }
+
+            function obtenerIniciales(nombre) {
+              const partes = String(nombre || '').trim().split(/\s+/).filter(Boolean);
+              if (!partes.length) return '--';
+              return partes.slice(0, 2).map(p => p[0].toUpperCase()).join('');
+            }
+
+            function obtenerTextoTipoCambio(tipo) {
+              if (String(tipo) === '2') return 'Programado';
+              if (String(tipo) === '1') return 'Inesperado';
+              return 'Sin definir';
+            }
+
+            function obtenerEstatusPC(estatus) {
+              switch (String(estatus)) {
+                case '1':
+                  return { texto: 'Activo', clase: 'bg-warning text-dark' };
+                case '2':
+                  return { texto: 'Eliminado / Cancelado', clase: 'bg-danger' };
+                case '3':
+                  return { texto: 'Finalizado', clase: 'bg-success' };
+                default:
+                  return { texto: 'Sin estatus', clase: 'bg-secondary' };
+              }
+            }
+
+            function agruparEvaluacionesPorDia(evaluaciones = []) {
+              const dias = { 1: [], 2: [], 3: [] };
+
+              evaluaciones.forEach(ev => {
+                const dia = Number(ev.numeroDia);
+                if (!dias[dia]) dias[dia] = [];
+                dias[dia].push(ev);
+              });
+
+              Object.values(dias).forEach(lista => {
+                lista.sort((a, b) => Number(a.numeroEvaluacion) - Number(b.numeroEvaluacion));
+              });
+
+              return dias;
+            }
+
+            function renderMetrica(titulo, valor) {
+              const cumple = String(valor) === '1';
+
+              return `
+                <div class="col-12">
+                  <div class="border rounded-3 p-2 bg-white text-center h-100">
+                    <div class="small text-muted">${titulo}                    
+                        <span class="fw-semibold ${cumple ? 'text-success' : 'text-danger'}">
+                          ${cumple ? 'OK' : 'NG'}
+                        </span>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }
+
+            function renderEvaluacion(ev) {
+              const comentarios = String(ev.comentarios || '').trim() || 'Sin comentarios.';
+
+              return `
+                <div class="border rounded-3 p-3 bg-light mb-3">
+                  <div class="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap">
+                    <strong>Evaluación ${escapeHTML(ev.numeroEvaluacion || '-')}</strong>
+                    <span class="badge bg-secondary">${formatearFecha(ev.fechaEvaluacion)}</span>
+                  </div>
+
+                  <div class="row g-2 mb-2">
+                    ${renderMetrica('Cumple la operación', ev.metrica1)}
+                    ${renderMetrica('Acabado del producto ', ev.metrica2)}
+                    ${renderMetrica('Dificultad de la operación ', ev.metrica3)}
+                  </div>
+
+                  <div class="small text-muted mb-1">Comentarios</div>
+                  <div class="small">${escapeHTML(comentarios)}</div>
+
+                  ${ev.fechaRegistro ? `
+                    <div class="alert alert-light border rounded-3 mt-3 mb-0">
+                      <div class="small text-muted mb-1">Fecha de registro</div>
+                      <div class="small fw-semibold">${formatearFecha(ev.fechaRegistro)}</div>
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }
+
+            function renderBloqueDia(numeroDia, evaluacionesDia = []) {
+              const cantidad = evaluacionesDia.length;
+
+              return `
+                <div class="col-lg-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Día ${numeroDia}</h5>
+                        <span class="badge bg-dark">${cantidad} evaluación${cantidad === 1 ? '' : 'es'}</span>
+                      </div>
+
+                      ${cantidad
+                  ? evaluacionesDia.map(renderEvaluacion).join('')
+                  : `
+                          <div class="alert alert-light border mb-0">
+                            No hay evaluaciones registradas para el día ${numeroDia}.
+                          </div>
+                        `
+                }
+                    </div>
+                  </div>
+                </div>
+              `;
+            }
+
+            function renderIndicadorDias(evaluacionesPorDia) {
+              return [1, 2, 3].map((dia, index) => {
+                const cantidad = (evaluacionesPorDia[dia] || []).length;
+
+                return `
+                  ${index > 0 ? '<div class="step-connector"></div>' : ''}
+                  <div class="step-indicator ${cantidad ? 'active' : ''}">
+                    <div class="step-circle">${dia}</div>
+                    <div class="step-label">
+                      Día ${dia}<br>
+                      <small>${cantidad} eval.</small>
+                    </div>
+                  </div>
+                `;
+              }).join('');
+            }
+
+            function renderDetallePC(respuesta) {
+              const pc = respuesta.dataPC?.[0] || {};
+              const estaciones = Array.isArray(respuesta.estaciones) ? respuesta.estaciones : [];
+              const evaluaciones = Array.isArray(respuesta.evaluaciones) ? respuesta.evaluaciones : [];
+              const cierre = Array.isArray(respuesta.cierre) && respuesta.cierre.length ? respuesta.cierre[0] : null;
+
+              const estatusPC = obtenerEstatusPC(pc.estatusPC);
+              const tipoCambioTexto = obtenerTextoTipoCambio(pc.tipo_cambio);
+              const turnoTexto = pc.turno ? `Turno ${escapeHTML(pc.turno)}` : 'Sin turno';
+              const nombre = String(pc.nombre || '').trim() || 'Sin nombre registrado';
+              const nomina = String(pc.nomina || '').trim() || 'Sin nómina';
+              const motivo = String(pc.motivo || '').trim() || 'Sin motivo / comentario registrado.';
+              const iniciales = obtenerIniciales(nombre);
+              const evaluacionesPorDia = agruparEvaluacionesPorDia(evaluaciones);
+              const finMostrar = cierre?.fechaCierre || pc.fechaHora_fin || '';
+              const badgeCierre = cierre?.fechaCierre ? 'bg-success' : 'bg-secondary';
+              const textoCierre = cierre?.fechaCierre ? 'Registrado' : 'Pendiente';
+
+              seccionDetallePC.innerHTML = `
+                <div class="pb-4">
+                  <div class="Smx-auto" style="width:100%;">
+                    <div class="form-body px-0 mx-0">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                          <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-light text-dark">No. Control: ${escapeHTML(pc.no_controlCambio || 'Sin dato')}</span>
+                            <span class="badge ${estatusPC.clase}">${estatusPC.texto}</span>
+                            <span class="badge bg-light text-dark">Tipo: ${tipoCambioTexto}</span>
+                            <span class="badge bg-light text-dark">${turnoTexto}</span>
+                          </div>
+                        </div>
+                        
+                        <br>
+
+                      <div class="row g-3 mb-4">
+                        <div class="col-6 col-lg-3">
+                          <div class="card h-100">
+                            <div class="card-body">
+                              <div class="text-muted small mb-1">Estaciones</div>
+                              <div class="fs-4 fw-semibold">${estaciones.length}</div>
+                              <div class="small text-muted">Relacionadas al punto</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="col-6 col-lg-3">
+                          <div class="card h-100">
+                            <div class="card-body">
+                              <div class="text-muted small mb-1">Evaluaciones</div>
+                              <div class="fs-4 fw-semibold">${evaluaciones.length}</div>
+                              <div class="small text-muted">Registradas</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="col-6 col-lg-3">
+                          <div class="card h-100">
+                            <div class="card-body">
+                              <div class="text-muted small mb-1">Inicio</div>
+                              <div class="fw-semibold">${pc.fechaHora_inicio ? formatearFecha(pc.fechaHora_inicio) : 'Sin registro'}</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="col-6 col-lg-3">
+                          <div class="card h-100">
+                            <div class="card-body">
+                              <div class="text-muted small mb-1">Fin / cierre</div>
+                              <div class="fw-semibold">${finMostrar ? formatearFecha(finMostrar) : 'Sin registro'}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="row g-3 mb-4">
+                        <div class="col-lg-8">
+                          <div class="info-card h-100 mb-0">
+                            <div class="info-title">
+                              <i class="bi bi-info-circle"></i>
+                              Información general
+                            </div>
+
+                            <div class="row">
+                              <div class="col-md-6">
+                                <div class="info-item">
+                                  <span class="info-label">No. Control</span>
+                                  <span class="info-value">${escapeHTML(pc.no_controlCambio || 'Sin dato')}</span>
+                                </div>
+                                <div class="info-item">
+                                  <span class="info-label">Nómina</span>
+                                  <span class="info-value">${escapeHTML(nomina)}</span>
+                                </div>
+                                <div class="info-item">
+                                  <span class="info-label">Nombre</span>
+                                  <span class="info-value">${escapeHTML(nombre)}</span>
+                                </div>
+                                <div class="info-item">
+                                  <span class="info-label">Tipo de cambio</span>
+                                  <span class="info-value">${tipoCambioTexto}</span>
+                                </div>
+                              </div>
+
+                              <div class="col-md-6">
+                                <div class="info-item">
+                                  <span class="info-label">Fecha / hora inicio</span>
+                                  <span class="info-value">${pc.fechaHora_inicio ? formatearFecha(pc.fechaHora_inicio) : 'Sin registro'}</span>
+                                </div>
+                                <div class="info-item">
+                                  <span class="info-label">Fecha / hora fin</span>
+                                  <span class="info-value">${pc.fechaHora_fin ? formatearFecha(pc.fechaHora_fin) : 'Sin registro'}</span>
+                                </div>
+                                <div class="info-item">
+                                  <span class="info-label">Turno</span>
+                                  <span class="info-value">${turnoTexto}</span>
+                                </div>
+                                <div class="info-item">
+                                  <span class="info-label">Estatus</span>
+                                  <span class="info-value">${estatusPC.texto}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                          <div class="card mb-3">
+                            <div class="card-body">
+                              <h5 class="section-title mb-3">
+                                <i class="bi bi-person-badge"></i>
+                                Responsable
+                              </h5>
+
+                              <div class="employee-preview mt-0">
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-semibold"
+                                    style="width: 40px; height: 40px;">
+                                  ${escapeHTML(iniciales)}
+                                </div>
+                                <div class="employee-info">
+                                  <p class="employee-name mb-0">${escapeHTML(nombre)}</p>
+                                  <p class="employee-role mb-0">Nómina ${escapeHTML(nomina)}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="card">
+                            <div class="card-body">
+                              <h5 class="section-title mb-3">
+                                <i class="bi bi-chat-left-text"></i>
+                                Motivo
+                              </h5>
+
+                              <div class="alert alert-light border rounded-3 mb-0">
+                                ${escapeHTML(motivo)}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="form-section">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                          <h5 class="section-title mb-0">
+                            <i class="bi bi-diagram-3"></i>
+                            Estaciones relacionadas
+                          </h5>
+                          <span class="badge bg-secondary">${estaciones.length} estación${estaciones.length === 1 ? '' : 'es'}</span>
+                        </div>
+
+                        <div class="row g-3">
+                          ${estaciones.length
+                  ? estaciones.map((estacion, index) => `
+                                  <div class="col-md-4">
+                                    <div class="card h-100">
+                                      <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
+                                          <h6 class="mb-0">${escapeHTML(estacion.nombre_estacion || `Estación ${estacion.idE || index + 1}`)}</h6>
+                                          <span class="badge bg-light text-dark border">ID ${escapeHTML(estacion.idE || '-')}</span>
+                                        </div>
+                                        <div class="small text-muted">
+                                          Relación #${index + 1} vinculada al punto de cambio ${escapeHTML(pc.no_controlCambio || '')}.
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                `).join('')
+                  : `
+                                <div class="col-12">
+                                  <div class="alert alert-light border mb-0">
+                                    No hay estaciones registradas para este punto de cambio.
+                                  </div>
+                                </div>
+                              `
+                }
+                        </div>
+                      </div>
+
+                      <div class="form-section">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                          <h5 class="section-title mb-0">
+                            <i class="bi bi-clipboard2-pulse"></i>
+                            Seguimiento de evaluaciones
+                          </h5>
+                          <span class="badge bg-primary">${evaluaciones.length} evaluación${evaluaciones.length === 1 ? '' : 'es'}</span>
+                        </div>
+
+                        <div class="progress-container rounded-3 p-3 mb-4">
+                          <div class="d-flex align-items-start justify-content-between gap-2">
+                            ${renderIndicadorDias(evaluacionesPorDia)}
+                          </div>
+                        </div>
+
+                        <div class="row g-3">
+                          ${renderBloqueDia(1, evaluacionesPorDia[1])}
+                          ${renderBloqueDia(2, evaluacionesPorDia[2])}
+                          ${renderBloqueDia(3, evaluacionesPorDia[3])}
+                        </div>
+                      </div>
+
+                      <div class="form-section border-0 mb-0 pb-0">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                          <h5 class="section-title mb-0">
+                            <i class="bi bi-check2-circle"></i>
+                            Cierre del Punto de Cambio
+                          </h5>
+                          <span class="badge ${badgeCierre}">${textoCierre}</span>
+                        </div>
+
+                        ${cierre
+                  ? `
+                              <div class="row g-3">
+                                <div class="col-md-4">
+                                  <div class="info-card h-100 mb-0">
+                                    <div class="info-title">
+                                      <i class="bi bi-calendar-check"></i>
+                                      Fecha de cierre
+                                    </div>
+                                    <div class="fw-semibold">${formatearFecha(cierre.fechaCierre)}</div>
+                                  </div>
+                                </div>
+
+                                <div class="col-md-8">
+                                  <div class="info-card h-100 mb-0">
+                                    <div class="info-title">
+                                      <i class="bi bi-chat-square-text"></i>
+                                      Comentarios de cierre
+                                    </div>
+                                    <div class="text-muted">
+                                      ${escapeHTML(String(cierre.comentarios || '').trim() || 'Sin comentarios de cierre.')}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            `
+                  : `
+                              <div class="alert alert-warning mb-0">
+                                Este punto de cambio aún no tiene registro de cierre.
+                              </div>
+                            `
+                }
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+              `;
+            }
+
+            function renderDetallePCError(mensaje) {
+              seccionDetallePC.innerHTML = `
+                <div class="container-fluid py-4">
+                  <div class="alert alert-danger mb-0">
+                    ${escapeHTML(mensaje)}
+                  </div>
+                </div>
+              `;
+            }
+
+            async function cargarDetallePC(noControlCambio) {
+              try {
+                seccionDetallePC.innerHTML = `
+                  <div class="container-fluid py-4">
+                    <div class="alert alert-info mb-0">Cargando detalle del punto de cambio...</div>
+                  </div>
+                `;
+
+                const formData = new FormData();
+                formData.append('opcion', 42);
+                formData.append('idPC', noControlCambio);
+
+                const response = await fetch('../api/operacionesLinea.php', {
+                  method: 'POST',
+                  body: formData
+                });
+
+                console.log(response)
+
+                if (!response.ok) {
+                  throw new Error(`Error HTTP ${response.status}`);
+                }
+
+                const respuesta = await response.json();
+
+                console.log('respuesta', respuesta);
+                console.log('id',noControlCambio)
+
+                if (respuesta.estatus !== 'ok') {
+                  throw new Error('El servidor no devolvió un resultado válido.');
+                }
+
+                renderDetallePC(respuesta);
+              } catch (error) {
+                console.error(error);
+                renderDetallePCError(error.message || 'No fue posible cargar el detalle.');
+              }
+            }
+    //FIN Funciones para renderizar el detalle del PC
+
     //Funcion para cargar el listado de personal
     function mostrarTablaPersonal(){
           let formDataPersonal = new FormData 
@@ -1843,6 +2305,20 @@
                     estatus = `<span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">N/A</span>`;
                   }
                   return estatus;
+                }
+              },
+              {
+                data: null,
+                className: 'px-4 py-3',
+                render: function(data, row) {
+                  return `
+                    <button type="button"
+                            class="btn btn-info btn-sm btnDetallePC"
+                            data-idpc="${data.idPC}"
+                            title="Ver detalle">
+                      <i class="bi bi-eye"></i>
+                    </button>
+                  `;
                 }
               }
             ],
@@ -3001,6 +3477,14 @@
         //btnLiberarPC.addEventListener('click', function(){changeContent('ventanasModalPC', 'contLiberarPC')});
         btnTablaPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contTablaDisponibles')});
         btnRegistroPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contRegistroPersonalDisponible')});
+
+        btnVolverConsultaPC.addEventListener('click', function (){
+          changeContent('ventanasConsultaPC', 'ventanaTablaPC')
+
+            btnVolverConsultaPC.classList.add("d-none")
+          console.log('clic btn')
+        })
+
         btnMenuRegistroAs.addEventListener('click', generarTablaAsistencia);
         btnCambioTurno.addEventListener('click', cambiarTurno);
         fechaHistorial.addEventListener('change', getHistorialLayout);
@@ -3149,7 +3633,7 @@
         //Evento para cambiar de pagina con el boton actualizar operaciones de la tabla de personal
         $('#tableListadoPersonal').on('click', '.tableBtnUpdateOperaciones', async function () {
             changeContent('ventanasModalPersonal','ventanaActualizarOperaciones')
-            
+
             //Obtener atributos data
               let nomina = $(this).data('nomina');
               let nombre = $(this).data('nombre');
@@ -3209,7 +3693,21 @@
                 });
               //FIN PETICION
         })
-        
+
+        //Evento para cambiar de pagina con el boton de detalla pc de la tabla pc
+        $('#tablePC').on('click', '.btnDetallePC', async function () {
+          changeContent('ventanasConsultaPC','ventanaDetallePC')
+
+              const noControlCambio = this.dataset.idpc;
+              await cargarDetallePC(noControlCambio);
+
+              btnVolverConsultaPC.classList.remove('d-none');
+
+              // ajusta este changeContent a la vista donde muestras el detalle
+              changeContent('ventanasConsultaPC', 'seccionDetallePC');
+              return;
+        })
+
         //Boton para volver a la tabla del modal de registro de personal
         $('#btnBackModalPersonal').on('click', function (){changeContent('ventanasModalPersonal', 'ventanaTablaListadoPersonal')})
 
