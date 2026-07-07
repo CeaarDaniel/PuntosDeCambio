@@ -2465,7 +2465,8 @@
             .then(data => {
                 if(data.estatus === 'ok') {
                   mostrarTablaPersonal();
-                  alert('Trabajador eliminado')                  
+                  alert('Trabajador eliminado')
+                  actualizarVistaLayout();         
                 } else {
                     console.log(data)
                 }
@@ -2823,6 +2824,27 @@
     // Inicializar el workspace
     document.addEventListener('DOMContentLoaded', function() {
       workspaceGrid = document.getElementById('workspaceGrid');
+
+        const ahora = new Date();
+        const hora = ahora.getHours();
+        const minutos = ahora.getMinutes();
+        const minutosActuales = (hora * 60) + minutos;
+
+        const inicioTurno1 = 8 * 60;        // 08:00
+        const finTurno1 = (19 * 60) + 59;   // 19:59
+
+        const inicioTurno2 = 20 * 60;       // 20:00
+        const finTurno2 = (7 * 60) + 59;    // 07:59
+
+        if (minutosActuales >= inicioTurno1 && minutosActuales <= finTurno1) {
+          $('#turnoLayout').val('1')
+        } 
+
+        else 
+          if(minutosActuales >= inicioTurno2 || minutosActuales <= finTurno2) {
+              $('#turnoLayout').val('2')
+        }
+      
       getEstaciones();
 
       // Inicializar tooltips
