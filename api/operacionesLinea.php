@@ -2534,26 +2534,20 @@ if ($opcion == '32') {
         // Si existe
         if ($existe) {
             // Evaluar si el estatus es diferente de 1 (eliminado)
-            if ($existe['estatus'] != 1) {
+            if ($existe['estatus'] != 0) {
                 // No está eliminado: actualizar fecha del registro correspondiente a la nomina y el idE
-                $sqlUpdate = "UPDATE SPC_ILU SET fecha_registro = :fecha WHERE nomina = :nomina AND idE = :idE";
+                $sqlUpdate = "UPDATE SPC_ILU SET estatus = 0 WHERE nomina = :nomina AND idE = :idE";
                 $stmtUpdate = $conn->prepare($sqlUpdate);
                 $stmtUpdate->execute([
-                    ':fecha' => $fecha,
-                    ':nomina' => $nomina,
-                    ':idE' => $operacion
-                ]);
+                                        ':nomina' => $nomina,
+                                        ':idE' => $operacion
+                                    ]);
+
                 $mensaje = 'Registro actualizado correctamente.';
-            } else {
-                // Estatus es 1 (eliminado): actualizar el estatus a 0 y actualizar la fecha
-                $sqlUpdate = "UPDATE SPC_ILU SET estatus = 0, fecha_registro = :fecha WHERE nomina = :nomina AND idE = :idE";
-                $stmtUpdate = $conn->prepare($sqlUpdate);
-                $stmtUpdate->execute([
-                    ':fecha' => $fecha,
-                    ':nomina' => $nomina,
-                    ':idE' => $operacion
-                ]);
-                $mensaje = 'Registro actualizado correctamente';
+            } 
+
+            else {
+                $mensaje = 'El trabajador ya cuenta con este registro';
             }
 
             $conn->commit();
@@ -2632,7 +2626,7 @@ if ($opcion == '33') {
             exit;
         }
 
-        // Cambiar el estatus del registro a 1 (eliminado) y actualizar la fecha
+        // Cambiar el estatus del registro a 1 (eliminado)
         //$fecha = date('Y-m-d H:i:s');
         $sqlUpdate = "UPDATE SPC_ILU SET estatus = 1 WHERE nomina = :nomina AND idE = :idE";
         $stmtUpdate = $conn->prepare($sqlUpdate);
@@ -2878,15 +2872,49 @@ else
              //ACtualizar estatus a eliminado
                 $sqlUpdate = "UPDATE SPC_PERSONAL SET estatus = 2 WHERE nomina = :nomina AND estatus NOT IN (2)";
                 $stmtUpdate = $conn->prepare($sqlUpdate);
-                $stmtUpdate->execute([':nomina' => $nomina]);
+                $ejecutado = $stmtUpdate->execute([':nomina' => $nomina]);
 
-            // Confirmar la transacción
+                if (!$ejecutado) {
+                    throw new Exception('No se pudo ejecutar la consulta de actualización.');
+                }
+            
+            // Conf irmar la transacción 
+            $filasAfectadas = $stmtUpdate->rowCount();
+
+            if ($filasAfectadas > 0) {
+            
+                //Cerrar los registros de asignaciones en las estaciones
+                $sql1 = "UPDATE SPC_PERSONAL_ESTACION SET fecha_fin = GETDATE() 
+                            WHERE nomina = :nomina AND fecha_fin IS NULL";
+
+                $stmt1 = $conn->prepare($sql1);
+                $stmt1->execute([':nomina' => $nomina]);
+                    
+                //Cerrar los registros de los puntos de cambio
+                $sql2 = "UPDATE SPC_PUNTOS_CAMBIO SET fechaHora_fin = GETDATE(), estatusPC = 3 
+                            WHERE nomina = :nomina AND fechaHora_fin IS NULL";
+
+                $stmt2 = $conn->prepare($sql2);
+                $stmt2->execute([':nomina' => $nomina]);
+
             $conn->commit();
 
-            echo json_encode([
-                'estatus' => 'ok',
-                'mensaje' => 'Trabajador eliminado',
-            ]);
+                echo json_encode([
+                    'estatus' => 'ok',
+                    'mensaje' => 'Trabajador eliminado',
+                ]);
+            } 
+
+            else {
+                $conn->rollBack();
+
+                echo json_encode([
+                    'estatus' => 'warning',
+                    'mensaje' => 'No se modificó ningún registro. La nómina no existe o ya estaba eliminada.',
+                    'filas_afectadas' => 0
+                ]);
+            }
+
         } catch (PDOException $e) {
             // Si ocurre algún error, revertir la transacción
             if ($conn->inTransaction()) {
