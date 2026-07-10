@@ -1,6 +1,5 @@
 
   let btnAsignarOperador = document.getElementById('btnAsignarOperador');
-  let btnGuardarDisponible = document.getElementById('btnGuardarDisponible');
   let confirmChange = document.getElementById('confirmChange');
   let btnAsignarOperadorPC = document.getElementById('btnAsignarOperadorPC') //Boton de asignacion desde el modal de gestion pc
   let btnConfirmClose = document.getElementById('btnConfirmClose');
@@ -45,25 +44,13 @@
   //Inputs del modal consultar historial
   let fechaHistorial = document.getElementById('fechaHistorial');
   let turnoHistorial = document.getElementById('turnoHistorial');
-
-  //document.getElementById('turnoasignar').value = $('#turnoLayout option:selected').text();
-  document.getElementById('turnoAsignarPersonalDisponible').value = $('#turnoLayout').val();
   
   //Botones de menu del modal
       //Modal de registro de PC
         let btnInfoRPC = document.getElementById('btnInfoRPC');
         let btnRegistroPc = document.getElementById('btnRegistroPc');
         let btnMenuAsignarControlModal = document.getElementById('btnMenuAsignarControlModal');
-
-        //Modal de personal personal sin asignar
-        let btnTablaPNA = document.getElementById('btnTablaPNA');
-        let btnRegistroPNA = document.getElementById('btnRegistroPNA');
   //Fin botones menu modal
-
-  //Inputs del modal personal disponible
-      //Formulario de registro de personal no asignado
-      var nominaNoAsignado= document.getElementById('nominaNoAsignado');
-  //Fin inputs personal disponible 
 
   //IDENTIFICADOR DE LA LINEA
   let codigoLinea = document.getElementById('codigoLinea');
@@ -118,6 +105,8 @@
                                  value: stationData.id || '' ,
                                  remove : false,
                               });
+
+        selectEstacionesPC.innerHTML='<option value="">Selecciona una estación...</option>';
 
         //Obtener las estaciones a las que esta asignada la persona actual que no sean un PC
         if(stationData.nomina && stationData.nomina != null){
@@ -324,7 +313,7 @@
       })
         .then((response) => response.text())
         .then((data) => {
-          console.log(data);
+      
           stationsData = JSON.parse(data);
           //Limpeamos el contenedor donde se cargan las estaciones evitando modificar el contenedor donde se cargan las formas svg
           $('#dynamicContainer').siblings().remove();
@@ -340,13 +329,13 @@
         });
     }
 
-    //Funcion para obtener datos de una estacion en especifico. 
+    //Funcion para obtener datos de una estacion en especifico, al hacer alguna modficicacion en algun registro que afecte a las estaciones 
     async function getEstacion(idEstacion = null, idPC = null){
-     //Se usa cuando, tras finalizar un punto de cambio, es necesario recuperar la información real del usuario asignado a la estación, ya que el listado muestra datos sobrescritos por el usuario del PC
+
       let formDataEstacion = new FormData();
       formDataEstacion.append('opcion', 15);
 
-      // Solo mandar idEstacion si realmente tiene valor
+      //Solo mandar idEstacion si realmente tiene valor
       if (idEstacion !== null && idEstacion !== undefined && idEstacion !== '') {
           formDataEstacion.append('idEstacion', idEstacion);
       }
@@ -363,7 +352,6 @@
               })
               .then((response) => response.text())
               .then((data) => {
-                    console.log(data);
                     data= JSON.parse(data)
                     if(data.estatus=='ok'){
 
@@ -399,7 +387,7 @@
                 });
     }
 
-    //Asignar un operador a una linea
+    /* Asignar un operador a una linea
     function asignarEstaciones(){
       var formDataAsig = new FormData;
       let nomina = document.getElementById('nominaModalAsignar').value;
@@ -454,7 +442,8 @@
                 console.log(error);
           });
       }
-    }
+    } 
+    */
 
     //Funcion para actualizar el layout y los datos de la estacion en tiempo real
     function actualizarEstacion(stationId, newData){
@@ -507,7 +496,9 @@
         /* Actualizar el arreglo*/ // Buscamos solo el objeto necesario
         let estation = stationsData.find(obj => String(obj.id) === String(stationId));
         //Mostrar el valor real del objeto estation
-        //console.log('Antes', JSON.parse(JSON.stringify(estation)));
+        
+        console.log('Antes', JSON.parse(JSON.stringify(estation)));
+
         if (estation) {
            (newData.operator) ? estation.operator = newData.operator : '';
           //estation.name =  (newData.name)'Estación en uso';
@@ -518,6 +509,8 @@
             estation.estatusPC = (newData.estatusPC) ?? null;
             estation.isCertificate = newData.isCertificate
         } 
+
+       console.log('Despues', JSON.parse(JSON.stringify(estation)));
     } 
 
     //Mostrar listado de estaciones registradas para colocar en los select
@@ -552,148 +545,6 @@
         });
 
         listadoCertificaciones('selectRegistrar');
-    }
-
-    //Registrar personal no asignado
-    function registrarPNA(){
-      let formDataNoAsignado = new FormData
-      let fmPersonalNoAsignado = document.getElementById('fmPersonalNoAsignado');
-
-      if(fmPersonalNoAsignado.reportValidity()){
-
-          if( document.getElementById('nombreNoAsignado').value == '' || document.getElementById('nombreNoAsignado').value == null){
-                alert('No se encontro registro del empleado ingresado o se perdió la conexión con el servidor.') 
-                return;
-          }
-
-            formDataNoAsignado.append('nomina', document.getElementById("nominaNoAsignado").value)
-            formDataNoAsignado.append('nombre', document.getElementById("nombreNoAsignado").value)
-            formDataNoAsignado.append('turno', document.getElementById("turnoAsignarPersonalDisponible").value)
-            formDataNoAsignado.append('fechaR',document.getElementById("assignmentDatePNA").value)
-            formDataNoAsignado.append('comentarios', document.getElementById("comentariosNoAsignado").value)
-            formDataNoAsignado.append('codigoLinea',  codigoLinea.value)
-            formDataNoAsignado.append('opcion', 8)
-        
-              fetch("../api/operacionesLinea.php", {
-                    method: "POST",
-                    body: formDataNoAsignado,
-                })
-                .then((response) => response.text())
-                .then((data) => {
-                     console.log(data);
-                      data= JSON.parse(data)
-                      if(data.estatus=='ok'){
-                          alert(data.mensaje)
-                          //fmPersonalNoAsignado.reset();
-
-                          $('#nominaNoAsignado').val('')
-                          $('#nombreNoAsignado').val('')
-                          $('#comentariosNoAsignado').val('')
-
-                          mostrarTablaPNA();
-                          generarTablaAsistencia();
-                      }
-                  
-                        else{
-                            alert(data.mensaje);
-                            console.log(data);
-                        }
-                })
-                .catch((error) => {
-                  console.log(error);
-            });
-      }
-    }
-
-    //Registrar personal disponible sin formulario
-    function registrarDisponible(nomina, nombre, turno){
-      let formDataNoAsignado = new FormData
-      let fecha = (new Date()).toLocaleString('sv-SE').slice(0, 16)
-
-      formDataNoAsignado.append('nomina', nomina)
-      formDataNoAsignado.append('nombre', nombre)
-      formDataNoAsignado.append('turno', turno)
-      formDataNoAsignado.append('fechaR', fecha)
-      formDataNoAsignado.append('codigoLinea',  codigoLinea.value)
-      formDataNoAsignado.append('opcion', 8)
-        
-          fetch("../api/operacionesLinea.php", {
-                method: "POST",
-                body: formDataNoAsignado,
-            })
-            .then((response) => response.text())
-            .then((data) => {
-                  data= JSON.parse(data)
-
-                  if(data.estatus=='ok'){
-                      console.log('Se ha registrado al trabajador')
-                      mostrarTablaPNA();
-                  }
-              
-                    else{
-                        console.log(data);
-                    }
-            })
-            .catch((error) => {
-              console.log(error);
-        });
-    }
-
-    //Generar tabla con los datos de la tabla de personal no asignado
-    function mostrarTablaPNA(){
-          let formDataNoAsignadoL = new FormData 
-          formDataNoAsignadoL.append('codigoLinea', codigoLinea.value)
-          formDataNoAsignadoL.append('turno', $('#turnoLayout').val())
-          formDataNoAsignadoL.append('opcion', 9)
-          
-            fetch("../api/operacionesLinea.php", {
-                    method: "POST",
-                    body: formDataNoAsignadoL,
-                })
-                .then((response) => response.text())
-                .then((data) => {
-                    
-                    data = JSON.parse(data)
-                    let body = document.getElementById('tablaBodyPersonalNoAsignado');
-
-                    let filasHTML = '';
-                      data.forEach(emp => {
-                        filasHTML += `
-                          <tr>
-                            <td class="px-4 align-middle">
-                              <span class="fw-semibold">${emp.nomina}</span>
-                            </td>
-                            <td class="px-4 align-middle">
-                              <div class="d-flex align-items-center">
-                                <div>
-                                  <div class="fw-medium">${(emp.nombre) ?? ''}</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td class="px-4 align-middle text-center">
-                              <div class="d-flex justify-content-center gap-2">
-                                <button 
-                                  class="btn btn-sm btn-outline-primary d-inline-flex align-items-center"
-                                  onclick="openAsignarEstacion('${emp.nomina}')"">
-                                  <i class="bi bi-gear me-1"></i>Asignar a Estación
-                                </button>
-                                <button 
-                                  class="btn btn-sm btn-outline-danger d-inline-flex align-items-center"
-                                  onclick="confirmarEliminar('${emp.id_registro}')">
-                                   <i class="bi bi-trash me-1"></i>Borrar registro
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        `;
-                      });
-
-                      // Insertamos todas las filas de una vez dentro del tbody
-                      body.innerHTML = filasHTML;
-                })
-                .catch((error) => {
-                  console.log(error);
-            });
     }
 
     //Funcion para generar la tabla de la lista de asistencia
@@ -1172,36 +1023,6 @@
           $("#changeControlInfoTurno").text("NA");
           $("#changeControlInfoComentarios").text("SIN COMENTARIOS");
         }
-    }
-
-    //Eliminnar/finalizar registro de personal disponible
-    function confirmarEliminar(idRegistro){
-      let fromDataEliminar = new FormData();
-      fromDataEliminar.append('opcion', 21);
-      fromDataEliminar.append('idRegistro', idRegistro);
-
-      fetch("../api/operacionesLinea.php", {
-            method: "POST",
-            body: fromDataEliminar,
-        })
-        .then((response) => response.text())
-        .then((data) => {
-            data= JSON.parse(data)
-        
-            if(data.estatus=='ok'){
-                alert(data.mensaje);
-                mostrarTablaPNA();
-              }
-          
-            else{
-              alert(data.mensaje)
-              console.log(data); 
-            }
-        })
-        .catch((error) => {
-          alert('No fue posible eliminar el registro')
-          console.error(error);
-        });
     }
 
     //Consultar historial de layout
@@ -2859,9 +2680,6 @@
       
       // Actualizar indicador de zoom
       updateZoomIndicator();
-
-      //Generar tabla de personal no asignado
-      mostrarTablaPNA();
   
       //Generar listado de personal perteneciente a la linea
       generarTablaAsistencia();
@@ -3057,45 +2875,6 @@
                             .catch((error) => {
                               nombreModalAsignar.placeholder= "Nombre del empleado..."; 
                               nominaAsistencia.disabled = false;
-                              console.log(error);
-                        });
-                  }
-            })
-
-            nominaNoAsignado.addEventListener('change', function(){
-              let nombreNoAsignado = document.getElementById('nombreNoAsignado');
-
-                if(nominaNoAsignado && nominaNoAsignado !='') {
-
-                    let formDataConsultarNombre = new FormData;
-                    formDataConsultarNombre.append('nomina',nominaNoAsignado.value)
-                    formDataConsultarNombre.append('opcion', 7)
-
-                    nominaNoAsignado.disabled = true
-                    nombreNoAsignado.value= ''; 
-                    nombreNoAsignado.placeholder= "Consultando datos del empleado...";  
-
-                        fetch("../api/operacionesLinea.php", {
-                                method: "POST",
-                                body: formDataConsultarNombre,
-                            })
-                            .then((response) => response.text())
-                            .then((data) => {
-                                data= JSON.parse(data)
-                            
-                                if(data.estatus=='ok')
-                                    nombreNoAsignado.value= data.nombre;
-                              
-                              else{
-                                nombreNoAsignado.placeholder= "Nombre del empleado..."; 
-                                console.log(data); 
-                              }
-
-                              nominaNoAsignado.disabled = false
-                            })
-                            .catch((error) => {
-                              nominaNoAsignado.disabled = false
-                               nombreNoAsignado.placeholder= "Nombre del empleado...";  
                               console.log(error);
                         });
                   }
@@ -3402,12 +3181,11 @@
         
                           // Si no es arreglo, lo convertimos en uno
                           //let estacionesA = Array.isArray(idEstacion) ? idEstacion : [idEstacion];
-                          //estacionesA.forEach(id => {getEstacion(id);});
                             getEstacion(null, idPC.value);
                             mostrarTablaPersonal();                            
                         }
 
-                      else  alert(data.mensaje);
+                      else alert(data.mensaje);
 
                   }).catch((error) => {
                       console.log(error);
@@ -3479,32 +3257,18 @@
           document.getElementById('fecharegistrar').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
         })
 
-        //Generar fecha de registro de personal NAD en el formulario
-        document.getElementById('btnMenuRegiswtroNAD').addEventListener('click', function(){
-          document.getElementById('assignmentDatePNA').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
-            document.getElementById('turnoAsignarPersonalDisponible').value =  $('#turnoLayout').val();
-            mostrarTablaPNA();
-        })
-
         $('#btnChipModalRegistrar').click(agregarChipTalla)
         $('#btnEstacionesPC').click(agregarChipEstacion)
         
-        btnAsignarOperador.addEventListener('click', asignarEstaciones);
-        btnGuardarDisponible.addEventListener('click', registrarPNA); 
         btnRegistrarAsistencia.addEventListener('click', registrarAsistencia);
         btnMenuAsignarControlModal.addEventListener('click', function(){changeContent('ventanasModalPC','contAsignacion')});
         btnMenuAsignarControlModal.addEventListener('click', function(){changeContent('ventanasModalPC','contAsignacion')});
         btnInfoRPC.addEventListener('click', function(){changeContent('ventanasModalPC','contInfoEstacion')});
         btnRegistroPc.addEventListener('click', function(){changeContent('ventanasModalPC','contregistroCambioForm')});
-        //btnLiberarPC.addEventListener('click', function(){changeContent('ventanasModalPC', 'contLiberarPC')});
-        btnTablaPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contTablaDisponibles')});
-        btnRegistroPNA.addEventListener('click', function(){changeContent('ventanadModalPersonalNA', 'contRegistroPersonalDisponible')});
-
+        
         btnVolverConsultaPC.addEventListener('click', function (){
-          changeContent('ventanasConsultaPC', 'ventanaTablaPC')
-
+            changeContent('ventanasConsultaPC', 'ventanaTablaPC')
             btnVolverConsultaPC.classList.add("d-none")
-          console.log('clic btn')
         })
 
         btnMenuRegistroAs.addEventListener('click', generarTablaAsistencia);
@@ -3512,7 +3276,6 @@
         fechaHistorial.addEventListener('change', getHistorialLayout);
         turnoHistorial.addEventListener('change', getHistorialLayout);
         btnEvaluacion.addEventListener('click', registrarEvaluacionPC);
-        //btnHistorialLayout.addEventListener('click', getHistorialLayout);
 
         // SELECT → change
         $('#attendanceTable tbody').on('change', 'select', async function (e) {     
@@ -3523,13 +3286,9 @@
                 console.log(actualizado)
               return;
           }
-
-          console.log(actualizado)
-
           
           const estaciones = $(this).data('id_estacion'); //Si se queda informacion en el cache con esta funcion puede no actualizarse los valores de data
           //const estaciones = $(this).attr('data-id_estacion'); //como estos se acutalizan de manera dinamica es mejor usar attr
-
 
           if (estaciones === undefined || estaciones === null || estaciones === '') {
               return;
@@ -3625,32 +3384,34 @@
             });
         });
 
-        btncloseSidebar.addEventListener('click', function () {
-          $('#btncloseSidebar').addClass('d-none')
-          $('#btnfloatingMenu').removeClass('d-none')
+        //INICIO BOTONES FLOTANTES PARA ABRIR Y CERRAR LA BARRA DE HERRAMIENTAS
+            btncloseSidebar.addEventListener('click', function () {
+              $('#btncloseSidebar').addClass('d-none')
+              $('#btnfloatingMenu').removeClass('d-none')
 
-          $('#tools-sidebar').addClass('fade-out')
-          $('#tools-panel').addClass('fade-out')
-          //$('#layout-header').addClass('fade-out')
+              $('#tools-sidebar').addClass('fade-out')
+              $('#tools-panel').addClass('fade-out')
+              //$('#layout-header').addClass('fade-out')
 
-            setTimeout(() => {
-                $('#tools-sidebar').addClass('d-none')
-                $('#tools-panel').addClass('d-none')
-                //$('#layout-header').addClass('d-none')
+                setTimeout(() => {
+                    $('#tools-sidebar').addClass('d-none')
+                    $('#tools-panel').addClass('d-none')
+                    //$('#layout-header').addClass('d-none')
 
-                $('#tools-sidebar').removeClass('fade-out')
-                $('#tools-panel').removeClass('fade-out')
-                // $('#layout-header').removeClass('fade-out')
-            }, 300); 
-        })
+                    $('#tools-sidebar').removeClass('fade-out')
+                    $('#tools-panel').removeClass('fade-out')
+                    // $('#layout-header').removeClass('fade-out')
+                }, 300); 
+            })
 
-        btnfloatingMenu.addEventListener('click', function () {
-          $('#btncloseSidebar').removeClass('d-none')
-          $('#btnfloatingMenu').addClass('d-none')
-          $('#tools-sidebar').removeClass('d-none')
-          $('#tools-panel').removeClass('d-none')
-          //$('#layout-header').removeClass('d-none')
-        })
+            btnfloatingMenu.addEventListener('click', function () {
+              $('#btncloseSidebar').removeClass('d-none')
+              $('#btnfloatingMenu').addClass('d-none')
+              $('#tools-sidebar').removeClass('d-none')
+              $('#tools-panel').removeClass('d-none')
+              //$('#layout-header').removeClass('d-none')
+            })
+        //FIN Botones FLOTANTES PARA ABRIR Y CERRAR LA BARRA DE HERRAMIENTAS
 
         //Evento para cambiar de pagina con el boton actualizar operaciones de la tabla de personal
         $('#tableListadoPersonal').on('click', '.tableBtnUpdateOperaciones', async function () {
@@ -3718,16 +3479,13 @@
 
         //Evento para cambiar de pagina con el boton de detalla pc de la tabla pc
         $('#tablePC').on('click', '.btnDetallePC', async function () {
-          changeContent('ventanasConsultaPC','ventanaDetallePC')
-
               const noControlCambio = this.dataset.idpc;
               await cargarDetallePC(noControlCambio);
 
               btnVolverConsultaPC.classList.remove('d-none');
+              changeContent('ventanasConsultaPC','ventanaDetallePC')
 
-              // ajusta este changeContent a la vista donde muestras el detalle
-              changeContent('ventanasConsultaPC', 'seccionDetallePC');
-              return;
+            return;
         })
 
         //Boton para volver a la tabla del modal de registro de personal
@@ -3834,6 +3592,7 @@
                    getEstacion(estacionId, null);
                    mostrarTablaPersonal();
                 } else {
+                    alert(data.mensaje);
                     console.log(data)
                 }
             })
@@ -3867,6 +3626,7 @@
                   getEstacion(estacionId, null);
                   mostrarTablaPersonal();
                 } else {
+                    alert(data.mensaje);
                     console.log(data)
                 }
             })
