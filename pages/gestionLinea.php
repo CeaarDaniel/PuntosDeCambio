@@ -19,6 +19,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Layout de Líneas - Sistema PCM</title>
   
+  <!-- Favicon-->
+  <link rel="icon" type="image/png" href="../../img/favicon/logoPuntosCambio.png">
+
   <!-- Bootstrap -->
   <link href="../css/bootstrap.min.css" rel="stylesheet">
   
