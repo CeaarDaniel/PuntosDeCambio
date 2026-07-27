@@ -32,7 +32,7 @@
   <script src="../scripts/jquery-3.7.1.min.js"></script>
 
   <!--Custom Css -->
-  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/gestionLinea.css">
 
   <!--Data table -->
   <link href="../DataTables/datatables.min.css" rel="stylesheet">
@@ -106,15 +106,22 @@
     <div id="layout-main" class="layout-main">
       <!--HEADER-->
         <div class="layout-header" id="layout-header">
-
-          <div class="">
-            <h2 class="layout-title">Línea de Producción <?php echo $nombre?>  <br>
-            <!-- <?php setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); echo ucfirst(strftime('%d de %B, %Y')); ?> -->
-            </h2>
-            <select class="form-select m-0 py-0 ps-1" name="turnoLayout" id="turnoLayout" style="max-width:100px;">
-                <option value="1">Turno 1</option>
-                <option value="2">Turno 2</option>
-            </select>
+          <div class="layout-heading">
+            <span class="layout-heading-icon">
+              <i class="bi bi-diagram-3"></i>
+            </span>
+            <div class="layout-heading-copy">
+              <h2 class="layout-title">Línea de Producción <?php echo $nombre?></h2>
+              <div class="shift-control">
+                <label for="turnoLayout">
+                  <i class="bi bi-clock"></i> Turno activo
+                </label>
+                <select class="form-select" name="turnoLayout" id="turnoLayout">
+                    <option value="1">Turno 1</option>
+                    <option value="2">Turno 2</option>
+                </select>
+              </div>
+            </div>
 
             <!-- IDENTIFICADOR DE LA LINEA PARA EXTRAER LOS DATOS VISIBLES -->
               <input type="hidden" id="codigoLinea" value="<?php echo $codigo?>">
@@ -123,14 +130,14 @@
         
           <div class="layout-controls">
             <!-- BOTONES ALEJAR ACERCAR ZOOM-->
-            <div class="btn-group">
-              <div class="zoom-indicator me-3" id="zoomIndicator">100%</div>
+            <div class="zoom-controls">
+              <div class="zoom-indicator" id="zoomIndicator">100%</div>
               <!--ALEJAR-->
-              <button class="btn btn-info btn-sm" id="zoomOutBtn">
+              <button class="btn btn-info btn-sm" id="zoomOutBtn" title="Alejar vista" aria-label="Alejar vista">
                 <i class="bi bi-zoom-out"></i>
               </button>
               <!--ACERCAR-->
-              <button class="btn btn-info btn-sm" id="zoomInBtn">
+              <button class="btn btn-info btn-sm" id="zoomInBtn" title="Acercar vista" aria-label="Acercar vista">
                 <i class="bi bi-zoom-in"></i>
               </button>
             </div>
@@ -174,7 +181,7 @@
   </div>
 
   <!-- Modal alerta/error-->
-  <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+  <div class="modal fade app-modal" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content shadow-lg border-0" style="border-radius: 15px;">
 
@@ -189,6 +196,10 @@
 
         <!-- Body -->
         <div class="modal-body text-center p-2">
+          <div class="modal-line-guide text-start" role="note">
+            <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true"><i class="bi bi-shield-exclamation"></i></span>
+            <div><strong>Revisa la asignación</strong><span>Consulta el motivo antes de intentar nuevamente.</span></div>
+          </div>
           <!-- Mensaje -->
           <p class="text-muted" style="font-size: clamp(14px, 2vw, 18px);">
             No es posible asignar el operador a esta estación ya que no cuenta con registro
@@ -205,14 +216,18 @@
   </div>
 
   <!-- Cargar/Registrar personal -->
-  <div class="modal fade" id="modalRegistrarOperador" tabindex="-1" aria-hidden="true">
+  <div class="modal fade app-modal" id="modalRegistrarOperador" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">REGISTRO DE PERSONAL</h5>
+            <h5 class="modal-title"><i class="bi bi-person-plus"></i>REGISTRO DE PERSONAL</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
+            <div class="modal-line-guide" role="note">
+              <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true"><i class="bi bi-lightbulb"></i></span>
+              <div><strong>Registra al operador</strong><span>Captura su número de reloj y agrega las operaciones liberadas.</span></div>
+            </div>
             <div class="row g-3">
               <!-- Columna izquierda: Datos del empleado -->
               <div class="col-md-6">
@@ -250,7 +265,7 @@
                   <select class="form-control form-control-custom flex-grow-1" id="selectRegistrar" required>
                   </select>
         
-                  <button id="btnChipModalRegistrar" class="btn btn-info mt-2" type="button" style="white-space: nowrap;">
+                  <button id="btnChipModalRegistrar" class="btn btn-primary-custom mt-2" type="button" style="white-space: nowrap;">
                     <i class="bi bi-plus-lg"></i> Agregar
                   </button>
                 </div>
@@ -272,7 +287,7 @@
 
             </div>
             <div class="d-flex justify-content-end mt-2 ">
-              <button type="button bg-success" class="btn btn-primary mx-2" id="btnRegistrarOperador">
+              <button type="button bg-success" class="btn btn-primary-custom mx-2" id="btnRegistrarOperador">
                 <i class="bi bi-check-circle"></i> Guardar
               </button>
             </div>
@@ -282,32 +297,25 @@
   </div>
 
   <!-- Listado de personal -->
-  <div class="modal fade" id="modalListadoPersonal" tabindex="-1" aria-hidden="true">
+  <div class="modal fade app-modal" id="modalListadoPersonal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down modal-xl">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">LISTADO DE PERSONAL</h5>
+            <h5 class="modal-title"><i class="bi bi-people"></i>LISTADO DE PERSONAL</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <div id="ventanasModalPersonal">
-              <!--TABLA LISTADO DE PERSONAL -->
+              <!--VENTANA LISTADO DE PERSONAL -->
                 <div id="ventanaTablaListadoPersonal" class="fade-page show">
                     <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-                      <div class="card-header bg-white border-bottom-0 py-3 px-4">
-                        <h5 class="mb-0 fw-semibold">
-                          <i class="bi bi-people-fill me-2" style="color: #0d6efd;"></i>
-                          Listado de personal
-                        </h5>
-                      </div>
-                      
                         <div class="card-body">
                           <div class="m-1" name="checkBoxContainer">
                               <input type='checkbox' id="checkPadre" class='select-checkbox'>
                               <label for="checkPadre"> <b>SELECCIONAR TODOS</b></label>                
                           </div>
                           <div class="d-grid gap-2 d-md-flex">
-                            <button class="btn btn-outline-success" id="btnCambioTurno">
+                            <button class="btn btn-primary-custom" id="btnCambioTurno">
                               <i class="bi bi-clock"></i> Cambio de turno
                             </button>
                           </div>
@@ -333,103 +341,115 @@
                       </div>
                     </div>
                 </div>
-              <!--FIN TABLA LISTADO DE PERSONAL -->
+              <!--FIN VENTANA LISTADO DE PERSONAL -->
 
-              <!-- FORMULARIO ACTUALIZAR OPERACIONES TRABAJADOR -->
+              <!-- VENTANA ACTUALIZAR OPERACIONES TRABAJADOR -->
                 <div id="ventanaActualizarOperaciones" class="fade-page d-none">
             
-                      <!-- Título del Formulario -->
-                      <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
-                          <i class="bi bi-person-plus-fill text-primary fs-4 me-2"></i>
-                          <h5 class="fw-bold m-0 text-dark">Actualizar registro de operaciones</h5>
-                      </div>
-
                       <!-- INICIO DEL FORMULARIO -->
                       <div class="mx-5 px-5">
-                          <div class="row g-4">
-                              <!-- Columna Izquierda: Datos del empleado -->
-                              <div class="col-md-6">
-                                  <!-- No. Reloj -->
-                                  <div class="mb-1">
-                                      <label for="nominaModalRegistrarUpdate" class="form-label fw-bold text-secondary">
-                                          <i class="bi bi-clock me-1"></i> No. Reloj / ID Empleado <span class="text-danger">*</span>
-                                      </label>
-                                      <div id="nominaModalRegistrarUpdate" class="form-control-plaintext py-2 fw-bold text-dark bg-light rounded-3 px-3 border">
+                          <!-- Título del Formulario -->
+                          <div class="form-section">
+
+                              <h3 class="fw-bold mb-4 pb-2 border-bottom section-title"> 
+                                <i class="bi bi-person-plus-fill fs-4 me-2"></i> Actualizar registro de operaciones
+                              </h3>
+
+                              <div class="row g-4">
+                                  <!-- Columna Izquierda: Datos del empleado -->
+                                  <div class="col-md-6">
+
+                                  <h5 class="section-subtitle mb-3">
+                                      <i class="bi bi-info-circle"></i> Información Básica
+                                  </h5>
+
+                                      <!-- No. Reloj -->
+                                      <div class="mb-1">
+                                          <label for="nominaModalRegistrarUpdate" class="form-label fw-bold text-secondary">
+                                              <i class="bi bi-clock me-1"></i> No. Reloj / ID Empleado <span class="text-danger">*</span>
+                                          </label>
+                                          <div id="nominaModalRegistrarUpdate" class="form-control-plaintext py-2 fw-bold text-dark bg-light rounded-3 px-3 border">
+                                          </div>
+                                      </div>
+
+                                      <!-- Nombre del Empleado -->
+                                      <div class="mb-1">
+                                          <label for="nombreModalRegistrarUpdate" class="form-label fw-bold text-secondary">Nombre Completo</label>
+                                          <input type="text" class="form-control bg-light text-uppercase fw-semibold rounded-3" 
+                                                id="nombreModalRegistrarUpdate"  placeholder="NOMBRE DEL EMPLEADO" readonly>
                                       </div>
                                   </div>
 
-                                  <!-- Nombre del Empleado -->
-                                  <div class="mb-1">
-                                      <label for="nombreModalRegistrarUpdate" class="form-label fw-bold text-secondary">Nombre Completo</label>
-                                      <input type="text" class="form-control bg-secondary-subtle text-uppercase fw-semibold rounded-3" 
-                                            id="nombreModalRegistrarUpdate"  placeholder="NOMBRE DEL EMPLEADO" readonly>
-                                  </div>
-                              </div>
-
-                              <!-- COLUMNA DERECHA IMAGEN DEL EMPLEADO-->
-                              <div class="col-md-6 text-center">
-                                <div style="margin-bottom: 1px; text-align: center;">
-                                  <img id="imgmodalListadoPersonal" src="" alt="Foto del operador" 
-                                        style="width: 200px; height: 200px; border-radius: 10px; object-fit: cover; border: 3px solid #e9ecef; margin-bottom: 1px;">
-                                </div>
-                              </div>
-
-                              <!-- Columna Derecha: Operaciones -->
-                              <div class="col-md-10">
-                                  <label for="selectRegistrarUpdate" class="form-label fw-bold text-secondary">
-                                      <i class="bi bi-cpu me-1"></i>Agregar operaciones liberadas <span class="text-danger">*</span>
-                                  </label>
-                                  <div class="d-flex align-items-start">
-                                      <select class="form-select form-select-lg rounded-3 flex-grow-1 me-3" id="selectRegistrarUpdate">
-                                      </select>
-                                      
-                                      <button id="btnChipModalRegistrarUpdate" class="btn btn-info rounded-3 px-4" type="button" style="white-space: nowrap;">
-                                          <i class="bi bi-plus-lg"></i> Agregar
-                                      </button>
-                                  </div>
-                              </div>
-
-                              <!-- Lista de operaciones liberadas (Chips) -->
-                              <div class="col-12 my-4">
-                                  <label class="form-label fw-bold"><i class="bi bi-tags me-1"></i> Listado de operaciones liberadas</label>
-                                  <div id="operationsListContainerUpdate" class="d-flex flex-wrap gap-2 p-3 bg-light rounded-3 border">
-                                  </div>
-                              </div>
-
-                              <hr>
-
-                            <!--Listado de operaciones asignadas -->
-                              <div class="col-12 mt-3">
-                                  <label class="form-label fw-bold"><i class="bi bi-table me-1"></i> Listado de operaciones asignadas</label>
-                                    <div class="card-body px-0 pb-4 pt-2 border border-1 border-info rounded" 
-                                         id="contenedorAsignacionesListadoPersonal">
-                                      <div class="table-responsive">
-                                        <table id="tableListadoOperacionesTrabajador" class="table table-hover align-middle mb-0" style="min-width: 800px;">
-                                          <thead class="bg-light">
-                                            <tr>
-                                              <th scope="col" class="px-4 py-3 fw-bold">Operación</th>
-                                              <th scope="col" class="px-4 py-3 fw-bold">Fecha de inicio</th>
-                                              <th scope="col" class="px-4 py-3 fw-bold">Comentarios</th>
-                                            </tr>
-                                          </thead>
-                                          <tbody>
-                                          </tbody>
-                                        </table>
-                                      </div>
+                                  <!-- COLUMNA DERECHA IMAGEN DEL EMPLEADO-->
+                                  <div class="col-md-6 text-center">
+                                    <div style="margin-bottom: 1px; text-align: center;">
+                                      <img id="imgmodalListadoPersonal" src="" alt="Foto del operador" 
+                                            style="width: 200px; height: 200px; border-radius: 10px; object-fit: cover; border: 3px solid #e9ecef; margin-bottom: 1px;">
                                     </div>
+                                  </div>
                               </div>
                           </div>
-                          <!-- FIN DEL FORMULARIO -->
+   
+                          <div class="form-section">
+                            <div class="row g-4">
+                                <!-- Columna Derecha: Operaciones -->
+                                <div class="col-md-10">
+                                    <label for="selectRegistrarUpdate" class="section-subtitle">
+                                        <i class="bi bi-cpu me-1"></i>Agregar operaciones liberadas <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="d-flex align-items-start">
+                                        <select class="form-select form-select-lg rounded-3 flex-grow-1 me-3" id="selectRegistrarUpdate">
+                                        </select>
+                                        
+                                        <button id="btnChipModalRegistrarUpdate" class="btn btn-primary-custom px-4" type="button" style="white-space: nowrap;">
+                                            <i class="bi bi-plus-lg"></i> Agregar
+                                        </button>
+                                    </div>
+                                </div>
 
-                          <!-- Footer: Botones de acción -->
-                          <div class="d-flex justify-content-end mt-4 pt-3 border-top">
-                              <button id="btnBackModalPersonal" class="btn btn-success rounded-pill px-4 me-2">
-                                  <i class="bi bi-arrow-left me-1"></i> Volver
-                              </button>
+                                <!-- Lista de operaciones liberadas (Chips) -->
+                                <div class="col-12 my-4">
+                                    <label class="form-label fw-bold"><i class="bi bi-tags me-1"></i> Listado de operaciones liberadas</label>
+                                    <div id="operationsListContainerUpdate" class="d-flex flex-wrap gap-2 p-3 rounded-3 border form-label">
+                                    </div>
+                                </div>
+                            </div>
+                          </div>
+
+                          <div class="form-section">
+                              <div class="row g-4">
+                                  <!--Listado de operaciones asignadas -->
+                                  <div class="col-12 mt-3">
+                                      <label class="section-subtitle fw-bold"><i class="bi bi-table me-1"></i> Listado de operaciones asignadas</label>
+                                        <div class="card-body px-0 pb-4 pt-2" id="contenedorAsignacionesListadoPersonal">
+                                          <div class="table-responsive ">
+                                            <table id="tableListadoOperacionesTrabajador" class="table table-hover align-middle mb-0" style="min-width: 800px;">
+                                              <thead class="bg-light">
+                                                <tr>
+                                                  <th scope="col" class="px-4 py-3 fw-bold">Operación</th>
+                                                  <th scope="col" class="px-4 py-3 fw-bold">Fecha de inicio</th>
+                                                  <th scope="col" class="px-4 py-3 fw-bold">Comentarios</th>
+                                                </tr>
+                                              </thead>
+                                              <tbody>
+                                              </tbody>
+                                            </table>
+                                          </div>
+                                        </div>
+                                  </div>
+                              </div>
                           </div>
                       </div>
+                      <!-- FIN DEL FORMULARIO -->
+
+                      <!-- Footer: Botones de acción -->
+                      <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                          <button id="btnBackModalPersonal" class="btn btn-secondary px-4 me-2">
+                              <i class="bi bi-arrow-left me-1"></i> Volver
+                          </button>
+                      </div>
                 </div>
-              <!-- FIN FORMULARIO ACTUALIZAR OPERACIONES TRABAJADOR -->
+              <!-- FIN VENTANA ACTUALIZAR OPERACIONES TRABAJADOR -->
             </div>
           </div>
         </div>
@@ -437,24 +457,24 @@
   </div>
 
   <!--LISTADO DE OPERACIONES-->
-  <div class="modal fade" id="modalListaOperaciones" tabindex="-1" aria-hidden="true">
+  <div class="modal fade app-modal" id="modalListaOperaciones" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-scrollable modal-xl">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">LISTADO DE OPERACIONES</h5>
+            <h5 class="modal-title"><i class="bi bi-diagram-3"></i>LISTADO DE OPERACIONES</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
+            <div class="modal-line-guide" role="note">
+              <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true"><i class="bi bi-gear-fill"></i></span>
+              <div>
+                 <strong>Operaciones de la línea</strong>
+                <span>Listado de operaciones y personal asignado por proceso</span>
+              </div>
+            </div>
             <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
               <div class="card-header bg-white border-bottom-0 py-4 px-4">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                  <div>
-                    <h5 class="mb-1 fw-bold">
-                      <i class="bi bi-gear-fill me-2 text-primary"></i>
-                      Operaciones de la línea
-                    </h5>
-                    <p class="text-muted small mb-0">Gestión de personal certificado por proceso</p>
-                  </div>
                   <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
                     <i class="bi bi-diagram-3 me-1"></i> <span id="totalAsignadosBadge">0 personas asignadas</span>
                   </span>
@@ -482,14 +502,18 @@
   </div>
 
   <!--Asignar operador a una estacion -->
-  <div class="modal fade" id="modalAsignarOperador" tabindex="-1" aria-hidden="true">
+  <div class="modal fade app-modal" id="modalAsignarOperador" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Asignar operador a una estacion</h5>
+            <h5 class="modal-title"><i class="bi bi-person-check"></i>Asignar operador a una estacion</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
+            <div class="modal-line-guide" role="note">
+              <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true"><i class="bi bi-lightbulb"></i></span>
+              <div><strong>Completa la asignación</strong><span>Selecciona la estación y verifica los datos del operador.</span></div>
+            </div>
             <!-- Fin formulario -->
               <form class="form-body" id="assignmentForm">
                 <!-- Header de la sección -->
@@ -623,7 +647,7 @@
               <button type="button" class="btn btn-secondary mx-2" data-bs-dismiss="modal">
                 <i class="bi bi-x-circle"></i> Cancelar
               </button>
-              <button type="button" class="btn btn-primary mx-2" id="btnAsignarOperador">
+              <button type="button" class="btn btn-primary-custom mx-2" id="btnAsignarOperador">
                 <i class="bi bi-check-circle"></i> Guardar
               </button>
             </div>
@@ -633,7 +657,7 @@
   </div>
 
   <!-- Consultar Puntos de Cambio -->
-  <div class="modal fade" id="changePointsModal" tabindex="-1" aria-labelledby="changePointsModalLabel" aria-hidden="true">
+  <div class="modal fade app-modal" id="changePointsModal" tabindex="-1" aria-labelledby="changePointsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable modal-xl">
       <div class="modal-content">
         <!-- Header del Modal -->
@@ -648,11 +672,11 @@
         <!-- Body del Modal -->
         <div class="modal-body p-4">
             <!--Ventanas consulta de puntos de cambio-->
-              <div id="ventanasConsultaPC">
+              <div id="ventanasConsultaPC" class="pc-query-view">
                   <!-- TABLA LISTADO PUNTOS DE CAMBIO-->
-                  <div id="ventanaTablaPC" class="fade-page show">
+                  <div id="ventanaTablaPC" class="fade-page show pc-list-view">
                         <!-- Barra de herramientas  y filtros -->
-                        <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4 pc-list-toolbar">
                         </div>
 
                         <!-- Tabla de Puntos de Cambio -->
@@ -681,19 +705,13 @@
                   </div>
 
                   <!-- DETALLE DE PC-->
-                  <div id="ventanaDetallePC" class="fade-page d-none">
-                          <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-                              <h4 class="form-title">
-                                <i class="bi bi-clipboard-data"></i>
-                                Reporte de Punto de Cambio
-                              </h4>
-                          </div>
+                  <div id="ventanaDetallePC" class="fade-page d-none pc-detail-view">
 
-                        <section id="seccionDetallePC" class="container-fluid pb-4">
-                          <div class="form-container mx-auto" style="max-width: 1150px;">
-                            
+                        <section id="seccionDetallePC" class="container-fluid pb-4 pc-detail-shell">
+                          <div class="form-container mx-auto pc-detail-preview" style="max-width: 1150px;">
+
                             <!-- HEADER -->
-                            <div class="form-header">
+                            <div class="form-header pc-report-header">
                               <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
                                 <div>
                                   <h4 class="form-title mb-2">
@@ -712,11 +730,11 @@
                               </div>
                             </div>
 
-                            <div class="form-body">
+                            <div class="form-body pc-report-body">
 
                               <!-- RESUMEN RÁPIDO -->
-                              <div class="row g-3 mb-4">
-                                <div class="col-6 col-lg-3">
+                              <div class="row g-3 mb-4 pc-summary-grid">
+                                <div class="col-12 col-sm-6 col-xl-3">
                                   <div class="card h-100">
                                     <div class="card-body">
                                       <div class="text-muted small mb-1">Estaciones</div>
@@ -726,7 +744,7 @@
                                   </div>
                                 </div>
 
-                                <div class="col-6 col-lg-3">
+                                <div class="col-12 col-sm-6 col-xl-3">
                                   <div class="card h-100">
                                     <div class="card-body">
                                       <div class="text-muted small mb-1">Evaluaciones</div>
@@ -736,7 +754,7 @@
                                   </div>
                                 </div>
 
-                                <div class="col-6 col-lg-3">
+                                <div class="col-12 col-sm-6 col-xl-3">
                                   <div class="card h-100">
                                     <div class="card-body">
                                       <div class="text-muted small mb-1">Inicio</div>
@@ -746,7 +764,7 @@
                                   </div>
                                 </div>
 
-                                <div class="col-6 col-lg-3">
+                                <div class="col-12 col-sm-6 col-xl-3">
                                   <div class="card h-100">
                                     <div class="card-body">
                                       <div class="text-muted small mb-1">Fin</div>
@@ -758,8 +776,8 @@
                               </div>
 
                               <!-- INFO GENERAL -->
-                              <div class="row g-3 mb-4">
-                                <div class="col-lg-8">
+                              <div class="row g-3 mb-4 pc-overview-grid">
+                                <div class="col-12 col-xl-8">
                                   <div class="info-card h-100 mb-0">
                                     <div class="info-title">
                                       <i class="bi bi-info-circle"></i>
@@ -808,7 +826,7 @@
                                   </div>
                                 </div>
 
-                                <div class="col-lg-4">
+                                <div class="col-12 col-xl-4">
                                   <div class="card mb-3">
                                     <div class="card-body">
                                       <h5 class="section-title mb-3">
@@ -847,7 +865,7 @@
                               </div>
 
                               <!-- ESTACIONES -->
-                              <div class="form-section">
+                              <div class="form-section pc-content-section">
                                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                                   <h5 class="section-title mb-0">
                                     <i class="bi bi-diagram-3"></i>
@@ -857,7 +875,7 @@
                                 </div>
 
                                 <div class="row g-3">
-                                  <div class="col-md-4">
+                                  <div class="col-12 col-md-6 col-xl-4">
                                     <div class="card h-100">
                                       <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -869,7 +887,7 @@
                                     </div>
                                   </div>
 
-                                  <div class="col-md-4">
+                                  <div class="col-12 col-md-6 col-xl-4">
                                     <div class="card h-100">
                                       <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -881,7 +899,7 @@
                                     </div>
                                   </div>
 
-                                  <div class="col-md-4">
+                                  <div class="col-12 col-md-6 col-xl-4">
                                     <div class="card h-100">
                                       <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -896,7 +914,7 @@
                               </div>
 
                               <!-- EVALUACIONES -->
-                              <div class="form-section">
+                              <div class="form-section pc-content-section">
                                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                                   <h5 class="section-title mb-0">
                                     <i class="bi bi-clipboard2-pulse"></i>
@@ -941,7 +959,7 @@
                                 <div class="row g-3">
 
                                   <!-- DÍA 1 -->
-                                  <div class="col-lg-4">
+                                  <div class="col-12 col-xl-4">
                                     <div class="card h-100">
                                       <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -1015,7 +1033,7 @@
                                   </div>
 
                                   <!-- DÍA 2 -->
-                                  <div class="col-lg-4">
+                                  <div class="col-12 col-xl-4">
                                     <div class="card h-100">
                                       <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -1063,7 +1081,7 @@
                                   </div>
 
                                   <!-- DÍA 3 -->
-                                  <div class="col-lg-4">
+                                  <div class="col-12 col-xl-4">
                                     <div class="card h-100">
                                       <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -1113,7 +1131,7 @@
                               </div>
 
                               <!-- CIERRE -->
-                              <div class="form-section border-0 mb-0 pb-0">
+                              <div class="form-section border-0 mb-0 pb-0 pc-content-section pc-closing-section">
                                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                                   <h5 class="section-title mb-0">
                                     <i class="bi bi-check2-circle"></i>
@@ -1123,7 +1141,7 @@
                                 </div>
 
                                 <div class="row g-3">
-                                  <div class="col-md-4">
+                                  <div class="col-12 col-lg-4">
                                     <div class="info-card h-100 mb-0">
                                       <div class="info-title">
                                         <i class="bi bi-calendar-check"></i>
@@ -1134,7 +1152,7 @@
                                     </div>
                                   </div>
 
-                                  <div class="col-md-8">
+                                  <div class="col-12 col-lg-8">
                                     <div class="info-card h-100 mb-0">
                                       <div class="info-title">
                                         <i class="bi bi-chat-square-text"></i>
@@ -1160,7 +1178,7 @@
         <!-- Footer del Modal -->
         <div class="modal-footer">
           <div class="d-flex flex-wrap gap-2">
-            <button type="button" id="btnVolverConsultaPC" class="btn btn-info btn-sm d-none">
+            <button type="button" id="btnVolverConsultaPC" class="btn btn-secondary btn-sm d-none">
               <i class="bi bi-arrow-left"></i> Volver
             </button>
           </div>
@@ -1172,8 +1190,8 @@
   </div>
 
   <!-- Registro de Asistencia -->
-  <div class="modal fade" id="attendanceModal" tabindex="-1" aria-labelledby="attendanceModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-fullscreen">
+  <div class="modal fade app-modal" id="attendanceModal" tabindex="-1" aria-labelledby="attendanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down modal-xl">
       <div class="modal-content">
         <!-- Header del Modal -->
         <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color), #1a2530); color: white;">
@@ -1281,10 +1299,12 @@
                   </div>
 
                   <!-- BOTON DE REGISTRO DE ASISTENCIA-->
-                  <div class="col-12 col-lg-2 m-0 px-1 d-flex align-items-center justify-content-center">
-                    <button class="btn btn-success py-0 px-2 my-1" id="btnAsistencia">
-                      <i class="bi bi-plus" style="font-size: 1.5rem;"></i> Agregar
-                    </button>
+                  <div class="col-12 col-sm-6 col-md-4 col-lg-2 m-0 px-1">
+                    <div class="d-flex flex-wrap align-items-center" style="height: 100%;">
+                      <button class="btn btn-primary-custom m-1 p-1" id="btnAsistencia">
+                        <i class="bi bi-plus" style="font-size: 1.2rem;"></i> <label>Agregar</label>
+                      </button>
+                    </div>
                   </div>
               </div>  
             </form>
@@ -1372,7 +1392,7 @@
         <!-- Footer del Modal -->
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-             <button class="btn btn-success btn-sm" id="btnRegistrarAsistencia">
+             <button class="btn btn-primary-custom btn-sm" id="btnRegistrarAsistencia">
                   <i class="bi bi-check-lg"></i> Registrar asistencia
               </button>
         </div>
@@ -1381,14 +1401,14 @@
   </div>
 
   <!-- Gestion de punto de Cambio y estacion -->
-  <div class="modal fade" id="changeControlModal" tabindex="-1" aria-labelledby="changeControlModalLabel" aria-hidden="true">
+  <div class="modal fade app-modal" id="changeControlModal" tabindex="-1" aria-labelledby="changeControlModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable modal-lg">
       <div class="modal-content">
         <!-- Header del Modal -->
-        <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color), #1a2530); color: white;">
+        <div class="modal-header py-0 px-2 my-0" style="background: linear-gradient(135deg, var(--primary-color), #1a2530); color: white;">
           <div class="d-flex align-items-center">
-            <i class="bi bi-arrow-repeat me-2" style="font-size: 1.5rem;"></i>
-            <h5 class="modal-title" id="changeControlModalLabel">Control de punto de cambio</h5>
+            <i class="bi bi-arrow-repeat mx-2" style="font-size: 1.5rem;"></i>
+            <h5 class="modal-title ms-1" id="changeControlModalLabel"> Control de punto de cambio</h5>
           </div>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
@@ -1396,12 +1416,11 @@
         <!-- Body del Modal -->
         <div class="modal-body">
             <input type="hidden" id="idEstacionModalPC" value="">
-            <div id="tiempoPC" class="badge bg-warning text-dark etiqueta-advertencia text-end"></div>
+            <div id="tiempoPC" class="mb-2 badge bg-warning text-dark etiqueta-advertencia text-end"></div>
 
             <!--Contenedor de los botones del menu -->
-            <div class="container-fluid py-3">
+            <div class="container-fluid py-0">
               <div class="row g-3 d-flex justify-content-center text-center" id="menuModalPC">
-
                   <div class="col-7 col-sm-6 col-md-4 col-lg-2">
                     <button class="menu-btn info" id="btnMenuAsignarControlModal" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Asignar un trabajador a esta estacion">
                       <i class="bi bi-person-plus"></i>
@@ -1481,28 +1500,28 @@
               </div>
             </div>
             <!--FIN BOTONES MENU -->
-
+  
             <hr>
-
-              <!-- NOMBRE DE LA ESTACION-->
-                <p class="text-center fw-bold fs-5"> 
-                    ESTACIÓN DE <span id="nombreEstacionModalPC"></span> 
-                </p>
-
+            <div class="text-center mt-3 mb-0 py-0 fw-bold">
+              <span id="nombreEstacionModalPC"></span>
+            </div>
             <!--VENTANAS-->
               <div id="ventanasModalPC">
 
-                  <!--VENTANA PARA LA ASIGNACION DE UN TRABAJADOR A UNA ESTACION-->
-                  <div id="contAsignacion" class="fade-page show" style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border-left: 4px solid #000000; margin-bottom: 30px;">
+                <!--VENTANA PARA LA ASIGNACION DE UN TRABAJADOR A UNA ESTACION-->
+                  <div id="contAsignacion" class="fade-page show" style="background: white; border-radius: 10px;">
+                    
                        <!-- Fin formulario -->
                         <form class="form-body" id="assignmentFormPC">
                           <!-- Header de la sección -->
-                          <div class="form-section">
-                            <h3 class="section-title">
-                              <i class="bi bi-person-plus" style="font-size: 1.4rem;"></i>
-                                  Asignar trabajador a una estación
-                            </h3>
-                            <p class="text-muted mb-1">Complete la información para asignar un operador a una estación específica</p>
+                          <div class="modal-line-guide" role="note">
+                            <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true">
+                              <i class="bi bi-person-plus"></i>
+                            </span>
+                            <div>
+                              <strong>Asignar trabajador a una estación</strong>
+                              <span>Complete la información para asignar un operador a una estación específica</span>
+                            </div>
                           </div>
 
                           <!-- Información del Operador -->
@@ -1580,8 +1599,9 @@
                           </div>
                         </form>
                       <!-- Fin formulario -->
+
                       <div class="d-flex justify-content-end mt-2 ">
-                        <button type="button" class="btn btn-primary mx-2" id="btnAsignarOperadorPC">
+                        <button type="button" class="btn btn-primary-custom mx-2" id="btnAsignarOperadorPC">
                           <i class="bi bi-check-circle"></i> Guardar
                         </button>
                       </div>
@@ -1590,21 +1610,23 @@
                 
          
                 <!--REGISTRO EVALUACION Y CIERRE DE PC-->
-                  <div id="contregistroCambioForm" class="fade-page d-none" style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border-left: 4px solid #000000; margin-bottom: 30px;">
+                  <div id="contregistroCambioForm" class="fade-page d-none" style="background: white; border-radius: 10px;">
                       <!-- FORMULARIO REGISTRO DE PC -->
                         <div id="registroPC">
                             <form class="form-body" id="registroCambioForm">
                               <!-- Header de la sección -->
-                              <div class="form-section">
-                                <h3 class="section-title">
-                                  <i class="bi bi-arrow-repeat"></i>Registro de un punto de cambio
-                                </h3>
-                                <p class="text-muted mb-2">Complete la información requerida</p>
+                              <div class="modal-line-guide" role="note">
+                                <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true">
+                                  <i class="bi bi-arrow-repeat"></i>
+                                </span>
+                                <div>
+                                  <strong>Registro de un punto de cambio</strong>
+                                  <span>Complete la información requerida para el registro del PC</span>
+                                </div>
                               </div>
 
                               <!-- Información del Cambio -->
-                              <div class="form-section">
-                                <div class="row">
+                                <div class="row form-section">
                                     <div class="col-md-10 mb-3">
                                       <label for="nominaPC" class="form-label required-field">
                                         <i class="bi bi-clock"></i>Empleado
@@ -1626,7 +1648,7 @@
                                         <select class="form-control form-select rounded-3 flex-grow-1 me-3" id="selectEstacionesPC">
                                           <option value="">Seleccione una opcion</option>
                                         </select>
-                                        <button id="btnEstacionesPC" class="btn btn-info rounded-3 px-2" type="button" style="white-space: nowrap;">
+                                        <button id="btnEstacionesPC" class="btn btn-primary-custom px-2" type="button" style="white-space: nowrap;">
                                             <i class="bi bi-plus-lg"></i>
                                         </button>
                                     </div>
@@ -1635,83 +1657,81 @@
                                   <!-- CHIPS DE ESTACIONES -->
                                   <div class="col-12 my-4">
                                     <label class="form-label" for="listEstacionesPC"><i class="bi bi-tags me-1"></i>Listado estaciones</label>
-                                      <div id="listEstacionesPC" class="d-flex flex-wrap gap-2 p-3 rounded-3 border">
+                                      <div id="listEstacionesPC" class="d-flex flex-wrap gap-2 p-3 rounded-3 border form-label">
                                       </div>
                                   </div>
                                 </div>
 
-                                <div class="row">
-                                  <div class="col-md-6 mb-3">
-                                    <label for="no_controlCambio" class="form-label required-field">
-                                      <i class="bi bi-hash"></i> No. Control de Cambio
-                                    </label>
-                                    <div class="input-group-custom">
-                                      <input type="text" class="form-control form-control-custom" 
-                                            id="no_controlCambio" placeholder="Ej: CAM-001" maxlength="50" readonly>
-                                      <button type="button" class="input-icon"><i class="bi bi-search"></i></button>
+                                <div class="row form-section">
+                                    <div class="col-md-6 mb-3">
+                                      <label for="no_controlCambio" class="form-label required-field">
+                                        <i class="bi bi-hash"></i> No. Control de Cambio
+                                      </label>
+                                      <div class="input-group-custom">
+                                        <input type="text" class="form-control form-control-custom" 
+                                              id="no_controlCambio" placeholder="Ej: CAM-001" maxlength="50" readonly>
+                                        <button type="button" class="input-icon"><i class="bi bi-search"></i></button>
+                                      </div>
                                     </div>
-                                  </div>
 
-                                  <div class="col-md-6 mb-3">
-                                    <label for="tipo_cambio" class="form-label required-field">
-                                      <i class="bi bi-shuffle"></i> Tipo de Cambio
-                                    </label>
+                                    <div class="col-md-6 mb-3">
+                                      <label for="tipo_cambio" class="form-label required-field">
+                                        <i class="bi bi-shuffle"></i> Tipo de Cambio
+                                      </label>
 
-                                    <select type="text" class="form-select" id="tipo_cambio" required>
-                                      <option value="1">Inesperado</option>
-                                      <option value="2">Programado</option>
-                                      <option value="3">Otro</option>
-                                    </select>
-                                  </div>
+                                      <select type="text" class="form-select" id="tipo_cambio" required>
+                                        <option value="1">Inesperado</option>
+                                        <option value="2">Programado</option>
+                                        <option value="3">Otro</option>
+                                      </select>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                      <label for="fechaHora_inicio" class="form-label required-field">
+                                        <i class="bi bi-calendar-event"></i> Fecha y Hora Inicio
+                                      </label>
+                                      <input type="datetime-local" class="form-control form-control-custom" id="fechaHora_inicio" readonly>
+                                    </div>
+
+                                    <!--TURNO PUNTO DE CAMBIO -->
+                                    <div class="col-md-6 mb-3">
+                                        <label for="turnoPuntoCambio" class="form-label required-field">
+                                            <i class="bi bi-clock-history"></i>Turno</label>
+                                            <select id="turnoPuntoCambio" class="form-select" required>
+                                              <option value="" selected>--- Selecciona un turno ---</option>
+                                              <option value="1">Turno 1</option>
+                                              <option value="2">Turno 2</option>
+                                            </select>
+                                    </div>
                                 </div>
 
-                                <div class="row">
-                                  <div class="col-md-6 mb-3">
-                                    <label for="fechaHora_inicio" class="form-label required-field">
-                                      <i class="bi bi-calendar-event"></i> Fecha y Hora Inicio
-                                    </label>
-                                    <input type="datetime-local" class="form-control form-control-custom" id="fechaHora_inicio" readonly>
-                                  </div>
+                                <div class="row form-section">
+                                    <div class="col-12 mb-2">
+                                      <label for="motivo" class="form-label">
+                                        <i class="bi bi-chat-left-text"></i> Descripcion
+                                      </label>
+                                      <textarea class="form-control form-control-custom" id="motivo" rows="3" placeholder="Descripcion del punto de cambio" ></textarea>
+                                    </div>
 
-                                  <!--TURNO PUNTO DE CAMBIO -->
-                                  <div class="col-md-6 mb-3">
-                                      <label for="turnoPuntoCambio" class="form-label required-field">
-                                          <i class="bi bi-clock-history"></i>Turno</label>
-                                          <select id="turnoPuntoCambio" class="form-select" required>
-                                            <option value="" selected>--- Selecciona un turno ---</option>
-                                            <option value="1">Turno 1</option>
-                                            <option value="2">Turno 2</option>
-                                          </select>
-                                  </div>
+                          
+                                    <div class="col-md-6 mb-3">
+                                      <label for="codigolineaPC" class="form-label">
+                                        <i class="bi bi-diagram-3"></i> Línea
+                                      </label>
+                                      <input type="text" class="form-control form-control-custom" id="codigolineaPC" value= <?php echo $nombre?>  readonly>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                      <label for="nombre_estacion" class="form-label"><i class="bi bi-geo-alt"></i> Estación</label>
+                                      <input type="text" class="form-control form-control-custom" id="nombre_estacion" readonly>
+                                      <input type="hidden" id="id_estacion">
+                                    </div>
                                 </div>
-
-                                <div class="mb-3">
-                                  <label for="motivo" class="form-label">
-                                    <i class="bi bi-chat-left-text"></i> Descripcion
-                                  </label>
-                                  <textarea class="form-control form-control-custom" id="motivo" rows="3" placeholder="Descripcion del punto de cambio" ></textarea>
-                                </div>
-
-                                <div class="row">
-                                  <div class="col-md-6 mb-3">
-                                    <label for="codigolineaPC" class="form-label">
-                                      <i class="bi bi-diagram-3"></i> Línea
-                                    </label>
-                                    <input type="text" class="form-control form-control-custom" id="codigolineaPC" value= <?php echo $nombre?>  readonly>
-                                  </div>
-
-                                  <div class="col-md-6 mb-3">
-                                    <label for="nombre_estacion" class="form-label"><i class="bi bi-geo-alt"></i> Estación</label>
-                                    <input type="text" class="form-control form-control-custom" id="nombre_estacion" readonly>
-                                    <input type="hidden" id="id_estacion">
-                                  </div>
-                                </div>
-                              </div>
                             </form>
 
                             <!-- Footer del Modal con Navegación -->
                             <div class="modal-footer">
-                              <button type="button" class="btn btn-success" id="confirmChange">
+                              <button type="button" class="btn btn-primary-custom" id="confirmChange">
                                 <i class="bi bi-check-lg"></i> Confirmar Registro
                               </button>
                             </div>
@@ -1742,42 +1762,42 @@
 
                                           <form class="form-body" id="evaluacionPuntoCambioForm">
                                               <!-- Header principal (similar al registro de cambio) -->
-                                              <div class="form-section">
-                                                  <h3 class="section-title justify-content-center">
-                                                      <i class="bi bi-check2-square"></i> Evaluación del punto de cambio
-                                                  </h3>
-                                                  <p class="text-muted mb-2">Registre los indicadores posteriores al cambio</p>
-                                                
-                                                <div class="row">
-                                                  <!--Dia -->
-                                                  <div class="col-md-6 mb-0">
-                                                      <label for="numeroDia" class="form-label">
-                                                          Día
-                                                          <span id="labelnumeroDia"></span>
-                                                      </label>
-                                                      <input type="hidden" id="numeroDiaEvaluacion">
-                                                  </div>
-
-                                                  <div class="col-md-12 mb-3">
-                                                      <label for="numeroEvaluacion" class="form-label text-uppercase">
-                                                          <i class="bi bi-clock"></i> Verificación:
-                                                          <span id="labelnumeroEvaluacion" class="text-success"></span>
-                                                      </label>
-                                                      <input type="hidden" id="numeroEvaluacion">
-                                                  </div>
+                                              <div class="modal-line-guide" role="note">
+                                                <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true">
+                                                  <i class="bi bi-check2-square"></i>
+                                                </span>
+                                                <div>
+                                                  <strong>Evaluación del punto de cambio</strong>
+                                                  <span>Registre la información correspondiente a la evaluación del punto de cambio</span>
                                                 </div>
                                               </div>
 
-                                              <!-- Sección: Fecha de la evaluación -->
+                                            
                                               <div class="form-section">
-                                                  <div class="row">
-                                                      <div class="col-md-6 mb-3">
-                                                          <label for="fechaEvaluacion" class="form-label required-field">
-                                                              <i class="bi bi-calendar-date"></i> Fecha de evaluación
-                                                          </label>
-                                                          <input type="datetime-local" class="form-control form-control-custom" id="fechaEvaluacion" readonly>
-                                                      </div>
-                                                  </div>
+                                                <!--Dia -->
+                                                <div class="mb-3">
+                                                    <label for="numeroDia" class="form-label">
+                                                        Día
+                                                        <span id="labelnumeroDia"></span>
+                                                    </label>
+                                                    <input type="hidden" id="numeroDiaEvaluacion">
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label for="numeroEvaluacion" class="form-label text-uppercase">
+                                                        <i class="bi bi-clock"></i> Verificación:
+                                                        <span id="labelnumeroEvaluacion" class="text-success"></span>
+                                                    </label>
+                                                    <input type="hidden" id="numeroEvaluacion">
+                                                </div>
+
+                                                <!-- Sección: Fecha de la evaluación -->
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="fechaEvaluacion" class="form-label required-field">
+                                                        <i class="bi bi-calendar-date"></i> Fecha de evaluación
+                                                    </label>
+                                                    <input type="datetime-local" class="form-control form-control-custom" id="fechaEvaluacion" readonly>
+                                                </div>
                                               </div>
 
                                               <!-- Sección: Métricas (OK/NG) -->
@@ -1787,8 +1807,8 @@
                                                           <i class="bi bi-check2-circle"></i> 1. Cumple la operación
                                                       </label>
                                                       <div class="radio-group">
-                                                          <label><input type="radio" name="metrica1" value="1" required> OK</label>
-                                                          <label><input type="radio" name="metrica1" value="0"> NG </label>
+                                                          <label class="form-label"><input type="radio" name="metrica1" value="1" required> OK</label>
+                                                          <label class="form-label"><input type="radio" name="metrica1" value="0"> NG </label>
                                                       </div>
                                                   </div>
                                                   <div class="mb-4">
@@ -1796,8 +1816,8 @@
                                                           <i class="bi bi-brush"></i> 2. Acabado del producto
                                                       </label>
                                                       <div class="radio-group">
-                                                          <label><input type="radio" name="metrica2" value="1" required> OK</label>
-                                                          <label><input type="radio" name="metrica2" value="0"> NG</label>
+                                                          <label class="form-label"><input type="radio" name="metrica2" value="1" required> OK</label>
+                                                          <label class="form-label"><input type="radio" name="metrica2" value="0"> NG</label>
                                                       </div>
                                                   </div>
                                                   <div class="mb-4">
@@ -1805,10 +1825,10 @@
                                                           <i class="bi bi-sliders2"></i> 3. Dificultad de la operación
                                                       </label>
                                                       <div class="radio-group">
-                                                          <label><input type="radio" name="metrica3" value="1" required> OK</label>
-                                                          <label><input type="radio" name="metrica3" value="0"> NG</label>
+                                                          <labe class="form-label"><input type="radio" name="metrica3" value="1" required> OK</label>
+                                                          <label class="form-label"><input type="radio" name="metrica3" value="0"> NG</label>
                                                       </div>
-                                                      <div class="form-help">OK = cumple estándar / sin dificultad; NG = no cumple / dificultad alta.</div>
+                                                      <div class="form-help">OK = Cumple; NG = no cumple.</div>
                                                   </div>
                                               </div>
 
@@ -1822,7 +1842,7 @@
 
                                               <!-- Botones de acción -->
                                               <div class="form-actions">
-                                                  <button type="button" class="btn btn-success" id="btnEvaluacion">
+                                                  <button type="button" class="btn btn-primary-custom" id="btnEvaluacion">
                                                     <i class="bi bi-check-lg"></i> Confirmar Registro
                                                   </button>
                                               </div>
@@ -1940,10 +1960,10 @@
 
                                         <!-- Footer del Modal -->
                                         <div class="modal-footer">
-                                          <button type="button" class="btn btn-confirm-custom" id="btnConfirmClose">
+                                          <button type="button" class="btn btn-primary-custom" id="btnConfirmClose">
                                             <i class="bi bi-check-lg me-2"></i>Cerrar punto de cambio
                                           </button>
-                                          <button type="button" class="btn btn-continue-custom d-none" id="btnConfirmContinue">
+                                          <button type="button" class="btn btn-primary-custom d-none" id="btnConfirmContinue">
                                             <i class="bi bi-arrow-clockwise me-2"></i>Continuar Control
                                           </button>
                                         </div>
@@ -1958,48 +1978,52 @@
 
 
                 <!--Informacion del personal asignado-->
-                  <div id="contInfoEstacion" class="fade-page d-none" style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border-left: 4px solid #000000; margin-bottom: 30px;">
+                  <div id="contInfoEstacion" class="fade-page d-none" style="background: white; border-radius: 10px;">
                       <!-- Header de la sección -->
-                      <div class="form-section">
-                        <h3 class="section-title">
-                          <i class="bi bi-person-badge" style="font-size: 1.4rem;"></i>
-                              Información del trabajador asignado
-                        </h3>
+                      <div class="modal-line-guide" role="note">
+                        <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true">
+                          <i class="bi bi-person-badge"></i>
+                        </span>
+                        <div>
+                          <strong>Información del trabajador</strong>
+                          <span>Datos del trabajador asignado a la estación</span>
+                        </div>
                       </div>
+                      
                       <input type="hidden" id="idTrabajadorAsignado" value="">
                       
-                      <div class="row">
+                      <div class="row form-section">
                           <div class="col-md-12">
                               <!-- Foto del operador -->
                               <div style="margin-bottom: 20px; text-align: center;">
                                   <img id ="imgInfochangeControlModal" src="../img/personal/na.jpg" 
                                       alt="Foto del operador" 
                                       style="width: 120px; height: 120px; border-radius: 10px; object-fit: cover; border: 3px solid #e9ecef; margin-bottom: 10px;">
-                                  <div style="font-weight: 600; color: #495057;">Foto del operador</div>
+                                  <div style="font-weight: 600; color: #495057;">Foto del trabajador</div>
                               </div>
                               
                               <!-- Nómina -->
                               <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
-                                  <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Nómina:</span>
-                                  <span id="changeControlInfoNomina" style="color: #212529; flex: 1;"></span>
+                                  <span style="font-weight: 700; min-width: 200px; margin-right: 15px;">Nómina:</span>
+                                  <span id="changeControlInfoNomina" style="font-weight: 400; color: #212529; flex: 1;"></span>
                               </div>
                               
                               <!-- Nombre -->
                               <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
-                                  <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Nombre:</span>
-                                  <span id="changeControlInfoNombre" style="color: #212529; flex: 1;"></span>
+                                  <span style="font-weight: 700; min-width: 200px; margin-right: 15px;">Nombre:</span>
+                                  <span id="changeControlInfoNombre" style="font-weight: 400; color: #212529; flex: 1;"></span>
                               </div>
                               
                               <!-- Fecha de registro-->
                               <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
-                                  <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Fecha de asignacion:</span>
-                                  <span id="changeControlInfFecha" style="color: #212529; flex: 1;"></span>
+                                  <span style="font-weight: 700; min-width: 200px; margin-right: 15px;">Fecha de asignacion:</span>
+                                  <span id="changeControlInfFecha" style="font-weight: 400; color: #212529; flex: 1;"></span>
                               </div>
 
                               <!-- Turno -->
                               <div style="margin-bottom: 15px; display: flex; align-items: center;">
-                                  <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Turno:</span>
-                                  <span style="color: #212529; flex: 1;">
+                                  <span style="font-weight: 700; min-width: 200px; margin-right: 15px;">Turno:</span>
+                                  <span style="font-weight: 400; color: #212529; flex: 1;">
                                       <span id="changeControlInfoTurno" class="badge bg-primary" style="font-size: 0.85rem; padding: 5px 12px; border-radius: 20px;"></span>
                                   </span>
                               </div>
@@ -2029,9 +2053,9 @@
                           <!-- Comentario -->
                           <div class="col-md-12">  
                               <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
-                                  <span style="font-weight: 600; color: #495057; min-width: 200px; margin-right: 15px;">Comentario:</span>
-                                  <div style="color: #212529; flex: 1;">
-                                      <div style="background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 15px; border-radius: 5px;">
+                                  <span style="font-weight: 700; min-width: 200px; margin-right: 15px;">Comentario:</span>
+                                  <div style="color: #212529; flex: 1; font-weight: 400;">
+                                      <div style=" width:100%; background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 15px; border-radius: 5px;">
                                         <p id="changeControlInfoComentarios"></p>
                                       </div>
                                   </div>
@@ -2040,8 +2064,8 @@
 
                         <!--Boton remover trabajador de estacion -->
                           <div class="d-flex justify-content-end mt-1">
-                            <button class="btn btn-danger mx-1" id="btnRemoverTrabajadorPC">
-                              <b>REMOVER TRABAJADOR</b>
+                            <button class="btn btn-secondary mx-1" id="btnRemoverTrabajadorPC">
+                              Remover trabajador
                             </button>
                             <!--
                               <button class="btn btn-warning mx-1">
@@ -2249,10 +2273,10 @@
                           <button type="button" class="btn btn-close-custom" data-bs-dismiss="modal">
                             <i class="bi bi-x-circle me-2"></i>Cancelar
                           </button>
-                          <button type="button" class="btn btn-confirm-custom" id="btnConfirmClose">
+                          <button type="button" class="btn btn-primary-custom" id="btnConfirmClose">
                             <i class="bi bi-check-lg me-2"></i>Cerrar punto de cambio
                           </button>
-                          <button type="button" class="btn btn-continue-custom d-none" id="btnConfirmContinue">
+                          <button type="button" class="btn btn-primary-custom d-none" id="btnConfirmContinue">
                             <i class="bi bi-arrow-clockwise me-2"></i>Continuar Control
                           </button>
                         </div>
@@ -2267,7 +2291,7 @@
   </div>
 
   <!--Modal para consultar el historial de acomodo del layout -->
-  <div class="modal fade" id="historialLayoutModal" tabindex="-1" aria-labelledby="historialLayoutModalLabel" aria-hidden="true">
+  <div class="modal fade app-modal" id="historialLayoutModal" tabindex="-1" aria-labelledby="historialLayoutModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen">
       <div class="modal-content">
         <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color), #1a2530); color: white;">
@@ -2277,6 +2301,10 @@
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
+          <div class="modal-line-guide" role="note">
+            <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true"><i class="bi bi-info-circle"></i></span>
+            <div><strong>Vista de consulta</strong><span>Selecciona fecha, turno y registro para revisar el acomodo guardado.</span></div>
+          </div>
           <!-- Filtros -->
             <div class="row mb-3">
               <!--Input fecha -->

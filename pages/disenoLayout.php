@@ -32,47 +32,7 @@
   <script src="../scripts/jquery-3.7.1.min.js"></script>
 
   <!--Custom Css -->
-  <link rel="stylesheet" href="../css/layout.css">
-
-  <style>
-    .btn-group .btn {
-      border-radius: 8px;
-      margin: 0 2px;
-      padding: 0.4rem 0.7rem;
-      transition: all 0.2s;
-    }
-
-    .btn {
-      border-radius: 8px;
-      font-weight: 500;
-    }
-
-    .btn-info {
-      background: #e0f2fe;
-      border-color: #bae6fd;
-      color: #0369a1;
-    }
-
-    .btn-info:hover {
-      background: #bae6fd;
-      color: #0c4a6e;
-      transform: translateY(-1px);
-    }
-
-    .btn-success {
-      background: #dcfce7;
-      border-color: #bbf7d0;
-      color: #15803d;
-      transition: all 0.2s;
-    }
-    
-    .btn-success:hover {
-      background: #bbf7d0;
-      border-color: #86efac;
-      color: #14532d;
-      transform: translateY(-1px);
-    }
-  </style>
+  <link rel="stylesheet" href="../css/disenoLayout.css">
 
   <!--Data table -->
   <link href="../DataTables/datatables.min.css" rel="stylesheet">
@@ -173,7 +133,7 @@
   </div>
 
   <!-- Modal alerta/error-->
-  <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+  <div class="modal fade app-modal" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content shadow-lg border-0" style="border-radius: 15px;">
 
@@ -188,6 +148,10 @@
 
         <!-- Body -->
         <div class="modal-body text-center p-2">
+          <div class="modal-line-guide text-start" role="note">
+            <span class="modal-line-guide-icon" aria-hidden="true"><i class="bi bi-shield-exclamation"></i></span>
+            <div><strong>Revisa la asignación</strong><span>Consulta el motivo antes de intentar nuevamente.</span></div>
+          </div>
           <!-- Mensaje -->
           <p class="text-muted" style="font-size: clamp(14px, 2vw, 18px);">
             No es posible asignar el operador a esta estación ya que no cuenta con registro
@@ -204,14 +168,18 @@
   </div>
 
   <!--Agregar una estacion -->
-  <div class="modal fade" id="modalAgregarEstacion" tabindex="-1" aria-hidden="true">
+  <div class="modal fade app-modal" id="modalAgregarEstacion" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Agregar nueva estación</h5>
+          <h5 class="modal-title"><i class="bi bi-plus-square"></i>Agregar nueva estación</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
+          <div class="modal-line-guide" role="note">
+            <span class="modal-line-guide-icon" aria-hidden="true"><i class="bi bi-lightbulb"></i></span>
+            <div><strong>Configura la estación</strong><span>Completa los datos requeridos antes de guardar.</span></div>
+          </div>
           <!-- Fin formulario -->
             <form class="form-body" id="stationForm">
               <!-- Sección: Información de la Estación -->
@@ -299,19 +267,23 @@
   </div>
   
   <!-- Editar datos de la linea-->
-  <div class="modal fade modal-close-control" id="editarLineaModal" tabindex="-1" aria-labelledby="editarLineaModalLabel" aria-hidden="true">
+  <div class="modal fade app-modal modal-close-control" id="editarLineaModal" tabindex="-1" aria-labelledby="editarLineaModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <!-- Header del Modal -->
         <div class="modal-header">
           <div class="d-flex align-items-center">
-            <h5 class="modal-title" id="closeControlModalLabel">Modificar datos de la linea</h5>
+            <h5 class="modal-title" id="closeControlModalLabel"><i class="bi bi-pencil-square"></i>Modificar datos de la linea</h5>
           </div>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         
         <!-- Body del Modal -->
         <div class="modal-body">
+          <div class="modal-line-guide" role="note">
+            <span class="modal-line-guide-icon" aria-hidden="true"><i class="bi bi-info-circle"></i></span>
+            <div><strong>Actualiza la información</strong><span>Verifica los cambios antes de guardar la línea.</span></div>
+          </div>
           <!-- Formulario de registro para agregar la linea-->
             <form class="form-body" id="lineForm">
               <!--  Información Básica -->

@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Puntos de cambio y certificaciones</title>
 
+  <!-- Favicon-->
+  <link rel="icon" type="image/png" href="../img/favicon/logoPuntosCambio.png">
+
   <!-- Bootstrap -->
   <link href="./css/bootstrap.min.css" rel="stylesheet">
   
@@ -28,19 +31,28 @@
       <?php include('navBar.php')?>
     
     <!-- Main Content Area -->
-    <div class="main-content">
-      <div class="top-bar">
-        <h4 id="page-title" class="page-title">Dashboard</h4>
-        <div class="user-info d-none">
-          <span>Usuario: Admin</span>
-          <i class="bi bi-bell ms-3"></i>
+    <main class="main-content">
+      <header class="top-bar">
+        <div class="page-heading">
+          <span class="page-heading-icon">
+            <i class="bi bi-grid-3x3-gap"></i>
+          </span>
+          <div>
+            <span class="page-eyebrow">Panel de operación</span>
+            <h1 id="page-title" class="page-title">Dashboard</h1>
+          </div>
         </div>
-      </div>
+
+        <div class="top-bar-status">
+          <span class="status-dot"></span>
+          <span>CV</span>
+        </div>
+      </header>
       
-      <div id="content-area" class="content-area animacion">
+      <section id="content-area" class="content-area animacion">
         <?php include('./pages/menuLineas.php') ?>
-      </div>
-    </div>
+      </section>
+    </main>
 </div>
 
   <!-- Bootstrap JS -->
