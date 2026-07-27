@@ -32,7 +32,7 @@ $opcion = $_POST['opcion'];
             $conn->beginTransaction();
 
             // Preparar la sentencia con parámetros
-            $sql = "INSERT INTO SPC_ESTACIONES (nombre_estacion, descripcion, requiere_certificacion, codigo_certificacion, posicion_x , posicion_y, codigo_linea) 
+            $sql = "INSERT INTO SPC_ESTACIONES (nombre_estacion, descripcion, requiere_certificacion, id_certificacion, posicion_x , posicion_y, codigo_linea) 
                             OUTPUT INSERTED.id_estacion 
                             VALUES (:nombre_estacion, :descripcion, :requiere_certificacion, :codigo_certificacion, :x, :y, :codigo_linea)";
 
@@ -87,7 +87,7 @@ else
   if($opcion=='5'){
       $codigoLinea = $_POST['codigoLinea'];
       $sql= "SELECT E.id_estacion,  E.nombre_estacion, E.requiere_certificacion AS isCertificate,
-                   E.codigo_certificacion,  E.posicion_x,  E.posicion_y
+                   E.id_certificacion as codigo_certificacion,  E.posicion_x,  E.posicion_y
                 FROM SPC_ESTACIONES E WHERE E.codigo_linea = :codigoLinea";
         $stmt = $conn->prepare($sql);
         $response= array();
@@ -306,7 +306,7 @@ else
                         CASE WHEN PC.nomina IS NULL THEN EP.nomina ELSE PC.nomina END AS nomina, 
                         CASE WHEN PC.nombre IS NULL THEN EP.nombre ELSE PC.nombre END AS nombre,
                         CASE WHEN PC.nomina IS NULL THEN EP.fecha_asignacion ELSE PC.fechaHora_inicio END AS fecha_asignacion,
-                        E.codigo_linea, E.codigo_certificacion, PC.estatusPC, PC.idPC, A.estatus AS asistencia
+                        E.codigo_linea, E.id_certificacion as codigo_certificacion , PC.estatusPC, PC.idPC, A.estatus AS asistencia
                                             FROM SPC_ESTACIONES E 
                     LEFT JOIN (SELECT id_estacion, nomina, nombre, fecha_asignacion from SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL AND turno = :turno) AS EP ON E.id_estacion = EP.id_estacion
                     LEFT JOIN (SELECT idPC, id_estacion, nomina, nombre, estatusPC, fechaHora_inicio from SPC_PUNTOS_CAMBIO where fechaHora_fin IS NULL AND turno = :turno) AS PC on E.id_estacion = PC.id_estacion

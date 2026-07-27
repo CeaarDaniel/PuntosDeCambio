@@ -13,12 +13,14 @@ $opcion = $_POST['opcion'];
 //REGISTRO DE UNA NUEVA LINEA
 if($opcion=='1') {
     $codigoLinea = $_POST['codigoLinea'] ?? null;
-    $encargado = !empty($_POST['encargado']) ? $_POST['encargado'] : NULL;
+    $encargado = !empty($_POST['encargado']) ? $_POST['encargado'] : null;
     $nombreLinea = !empty($_POST['nombreLinea']) ? $_POST['nombreLinea'] : null;
     $descripcion = !empty($_POST['descripcion']) ? $_POST['descripcion'] : null;
+    $imagen = !empty($_FILES['imageLine']) ? $_FILES['imageLine'] : null;
+    $nombreImagen = null;
 
     // Validar que se recibieron todos los datos
-    if (!$codigoLinea || !$encargado) {
+    if (!$codigoLinea) {
         echo json_encode([
             'status' => 'error',
             'mensaje' => 'Faltan datos obligatorios.'
@@ -26,13 +28,80 @@ if($opcion=='1') {
         exit; 
     }
 
+    // Validar formato del código de línea
+    if (!preg_match('/^[A-Za-z0-9-]+$/', $codigoLinea)) {
+        echo json_encode([
+            'status' => 'error',
+            'mensaje' => 'El código de línea solo puede contener letras, números y guion medio (-). No se permiten espacios ni caracteres especiales.'
+        ]);
+        exit;
+    }
 
     try { // Iniciar transacción
         $conn->beginTransaction();
 
+        if($imagen && $imagen['error'] !== UPLOAD_ERR_NO_FILE) {
+            if($imagen['error'] !== UPLOAD_ERR_OK){
+                $conn->rollBack();
+                echo json_encode([
+                    'status' => 'error',
+                    'mensaje' => 'Ocurrió un error al cargar la imagen',
+                ]);
+                exit;
+            }
+
+            // Validar tamaño máximo de 5 MB
+            $nombreTemporal = $imagen['tmp_name'];
+            $tamanio = $imagen['size'];
+            $maxSize = 5 * 1024 * 1024;
+
+            if ($tamanio > $maxSize) {
+                $conn->rollBack();
+                echo json_encode([
+                    'status' => 'error',
+                    'mensaje' => 'La imagen es demasiado grande',
+                ]);
+                exit;
+            } 
+
+            // Validar tipo MIME real
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_file($finfo, $nombreTemporal);
+            finfo_close($finfo);
+            $tiposPermitidos = ['image/jpeg' => 'jpg',
+                                'image/png'  => 'png',
+                                'image/webp' => 'webp',
+                                'image/avif' => 'avif'];
+
+            if (!array_key_exists($mimeType, $tiposPermitidos)) {
+                $conn->rollBack();
+                echo json_encode([
+                    'status' => 'error',
+                    'mensaje' => 'Formato de imagen no permitido.',
+                     'mimeDetectado' => $mimeType
+                ]);
+                exit;
+            }
+
+            // Crear nombre de imagen
+            $extension = $tiposPermitidos[$mimeType];
+
+            //Validar que la imagen se halla subido 
+            if (!move_uploaded_file($nombreTemporal, '../img/lineas/'.$codigoLinea.'.'.$extension)) {
+                $conn->rollBack();
+                echo json_encode([
+                    'status' => 'error',
+                    'mensaje' => 'No se pudo guardar la imagen en el servidor.',
+                ]);
+                exit;
+            }
+
+            $nombreImagen = $codigoLinea.'.'.$extension;
+        }
+
         // Preparar la sentencia con parámetros
-        $sql = "INSERT INTO SPC_LINEAS (codigo_linea, nombre_linea, descripcion, encargado_supervisor) 
-                VALUES (:codigo_linea, :nombre_linea, :descripcion, :encargado_supervisor)";
+        $sql = "INSERT INTO SPC_LINEAS (codigo_linea, nombre_linea, descripcion, encargado_supervisor, imagen) 
+                VALUES (:codigo_linea, :nombre_linea, :descripcion, :encargado_supervisor, :imagen)";
         $stmt = $conn->prepare($sql);
 
         // Ejecutar con los parámetros
@@ -40,7 +109,8 @@ if($opcion=='1') {
             ':codigo_linea' => $codigoLinea,
             ':nombre_linea' => $nombreLinea,
             ':descripcion' => $descripcion,
-            ':encargado_supervisor' => $encargado
+            ':encargado_supervisor' => $encargado,
+            ':imagen' => $nombreImagen
         ]);
 
         // Confirmar la transacción
@@ -487,89 +557,6 @@ else
     echo json_encode($response);
  }
 
-//Guardar/actualizar la posicion de las estaciones en el layout
-else 
-    if($opcion == '6'){
-            $layoutPosition =  json_decode($_POST['layoutPosition'], true);
-            $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
-            $stationsData= !empty($_POST['stationsData']) ? $_POST['stationsData'] : null;
-            $layoutF= !empty($_POST['layoutF']) ? $_POST['layoutF'] : null;
-            $turno= !empty($_POST['turno']) ? $_POST['turno'] : null;
-
-            if (!$layoutPosition || !is_array($layoutPosition) || !$stationsData || !$codigoLinea) {
-                echo json_encode(['error' => 'Datos invalidos']);
-                exit;
-            }
-         
-            $sql = "UPDATE SPC_ESTACIONES SET posicion_x = :x, posicion_y = :y
-                      WHERE id_estacion = :id";
-            $stmt = $conn->prepare($sql);
-
-            $sqlI = "INSERT INTO SPC_HISTORIAL_LAYOUT (codigo_linea, turno, layout) 
-                        VALUES(:codigoLinea, :turno, :stationsData)";
-            $stmtI = $conn->prepare($sqlI);
-
-            $sqlIL = "MERGE SPC_LAYOUTFORMAS AS target
-                        USING (SELECT :codigoLinea AS codigo_linea, :layoutF AS layoutF) AS source
-                        ON target.codigo_linea = source.codigo_linea
-                        WHEN MATCHED THEN
-                            UPDATE SET layoutF = source.layoutF
-                        WHEN NOT MATCHED THEN
-                            INSERT (codigo_linea, layoutF)
-                            VALUES (source.codigo_linea, source.layoutF);";
-            $stmtIL = $conn->prepare($sqlIL);
-
-            $results = [];
-
-            try {
-                //Iniciar transacción
-                $conn->beginTransaction();
-
-                foreach ($layoutPosition as $item) {
-                    if (isset($item['id'], $item['x'], $item['y'])) {
-                            // Validar que x y y sean numéricos
-                            $x = is_numeric($item['x']) ? $item['x'] : 0;
-                            $y = is_numeric($item['y']) ? $item['y'] : 0;
-                            $id = $item['id'];
-
-                            $stmt->execute([
-                                ':x' => $x,
-                                ':y' => $y,
-                                ':id' => $id
-                            ]);
-
-                            //$results[] = ['id' => $id, 'status' => 'ok'];
-                    }
-                }
-
-                 $stmtI->execute([':codigoLinea' => $codigoLinea, 
-                                  ':stationsData' => $stationsData,
-                                  ':turno' => $turno]);
-
-            if(!empty(json_decode($layoutF, true)))
-                $stmtIL->execute([':codigoLinea' => $codigoLinea, ':layoutF' => $layoutF]);
-
-                // Confirmar transacción
-                $conn->commit();
-
-                $results= array('estatus' => 'ok',
-                                'mensaje' => 'se ha guardado el layout');
-
-
-            } catch (PDOException $e) {
-                // Revertir en caso de error
-                $conn->rollBack();
-                echo json_encode( array('estatus' => 'error',
-                                        'error' => $e->getMessage(), 
-                                        'mensaje' => 'Ocurrio un error al realizar la operacion'
-                                        ));
-                exit;
-            } 
-
-        // Devolver resultado
-        echo json_encode($results);
-    }
-
 //Bucscar operador
 else 
     if($opcion== '7'){
@@ -631,7 +618,30 @@ else
         try { // Iniciar transacción
             $conn->beginTransaction();
 
-            // Preparar la sentencia con parámetros
+            //Verificar que no se haya removido ya al trabajador de la estacion
+                $sqlVR = "SELECT TOP 1 id_asignacion from SPC_PERSONAL_ESTACION
+                                WHERE id_estacion = :id_estacion AND nomina = :nomina 
+                                    AND fecha_fin IS NULL AND turno = :turno";
+
+                $stmtVR = $conn->prepare($sqlVR);
+                $stmtVR->execute([
+                                    ':id_estacion' => $idEstacion,
+                                    ':nomina' => $nomina,
+                                    ':turno' => $turno
+                                ]);
+                
+                $idAsignacionActiva  = $stmtVR->fetchColumn();
+                if ($idAsignacionActiva ===false) {
+                    $conn->rollBack();
+                    echo json_encode(array('estatus' => 'error',
+                                            'mensaje' => 'El trabajador ya fue removido de la operacion'
+                                        )
+                                );
+                    exit;
+                }
+            //Fin verificacion
+
+            // Preparar la sentencia con parámetros para remover al trabajador
             $sql = "UPDATE SPC_PERSONAL_ESTACION SET fecha_fin = GETDATE() WHERE id_estacion = :id_estacion 
                         AND nomina = :nomina AND fecha_fin IS NULL AND turno = :turno";
             $stmt = $conn->prepare($sql);
@@ -973,7 +983,7 @@ else
             if($valcerti['certificacion'] == 1){
                     echo json_encode([
                         'estatus' => 'error',
-                        'mensaje' => 'Este trabajador no cuenta con registro de liberación en este proceso'
+                        'mensaje' => 'Este trabajador no cuenta con registro de liberación en alguno de los procesos seleccionados'
                     ]);
                 exit;
             }
@@ -1424,13 +1434,32 @@ else
 //Registro de asistencia
 else 
     if($opcion =='17'){
-           $datosAsistencia =  json_decode($_POST['datosAsistencia'], true);
+           $datosAsistenciaRaw = $_POST['datosAsistencia'] ?? null;
            $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
            $stationsData= !empty($_POST['stationsData']) ? $_POST['stationsData'] : null;
            $turno = !empty($_POST['turno']) ? $_POST['turno'] : null;
            $results = '';
 
-            if (!$datosAsistencia || !is_array($datosAsistencia) || !$codigoLinea || !$turno ) {
+           if ($datosAsistenciaRaw === null || $datosAsistenciaRaw === '') {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'Datos inválidos'
+                ]);
+                exit;
+            }
+
+           $datosAsistencia = json_decode($datosAsistenciaRaw, true);
+
+            // Validar JSON
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'El formato de datosAsistencia no es un JSON válido'
+                ]);
+                exit;
+            }
+
+            if (empty($datosAsistencia) || !is_array($datosAsistencia) || !$codigoLinea || !$turno ) {
                 echo json_encode(['estatus' => 'error', 
                                   'mensaje'=>'Datos inválidos'
                                 ]);
@@ -1439,12 +1468,11 @@ else
 
             // Validar horario según turno
             $hora_actual = new DateTime();
-            $turno = $_POST['turno'] ?? null;
 
                 if ($turno == '1') {
-                    $inicio_turno = new DateTime('today 08:00');
-                    $fin_turno = new DateTime('today 19:59');
-                    if ($hora_actual < $inicio_turno || $hora_actual > $fin_turno) {
+                    $inicio_turno = new DateTime('today 08:00:00');
+                    $fin_turno = new DateTime('today 20:00:00');
+                    if ($hora_actual < $inicio_turno || $hora_actual >= $fin_turno) {
                         echo json_encode([
                             'estatus' => 'error',
                             'mensaje' => 'El registro de asistencia para el Turno 1 solo puede realizarse entre las 8:00 AM y las 7:59 PM.'
@@ -1454,23 +1482,23 @@ else
                 } 
 
                 else 
-                    if ($turno == '2') {               
-                        if ($hora_actual>= new DateTime('today 20:00')) { // Después de las 8 pm
-                            $inicio_turno = new DateTime('today 20:00');
-                            $fin_turno    = new DateTime('tomorrow 07:59');
+                    if ($turno == '2') {
+                        if ($hora_actual>= new DateTime('today 20:00:00')) { // Después de las 8 pm
+                            $inicio_turno = new DateTime('today 20:00:00');
+                            $fin_turno    = new DateTime('tomorrow 08:00:00');
                         } else { // Antes de las 8 pm
-                            $inicio_turno = new DateTime('yesterday 20:00');
-                            $fin_turno    = new DateTime('today 07:59');
+                            $inicio_turno = new DateTime('yesterday 20:00:00');
+                            $fin_turno    = new DateTime('today 08:00:00');
                         } 
 
-                    if ($hora_actual < $inicio_turno || $hora_actual > $fin_turno) {
-                        echo json_encode([
-                            'estatus' => 'error',
-                            'mensaje' => 'El registro de asistencia para el Turno 2 solo puede realizarse entre las 8:00 PM y las 7:59 AM del día siguiente.'
-                        ]);
-                        exit;
-                    }
-                } 
+                        if ($hora_actual < $inicio_turno || $hora_actual >= $fin_turno) {
+                            echo json_encode([
+                                'estatus' => 'error',
+                                'mensaje' => 'El registro de asistencia para el Turno 2 solo puede realizarse entre las 8:00 PM y las 7:59 AM del día siguiente.'
+                            ]);
+                            exit;
+                        }
+                    } 
                 
                 else {
                     echo json_encode([
@@ -1479,6 +1507,32 @@ else
                     ]);
                     exit;
                 }
+
+
+            //Consultar el registro de asistencia de la linea en la tabla de asistencia
+            $sqlVA = "SELECT TOP 1 id_registro FROM SPC_REGISTRO_ASISTENCIA 
+                        WHERE turno = :turno AND fecha_operacion >= :fechaInicio 
+                        AND fecha_operacion < :fechaFin AND codigo_linea = :codigoLinea";
+
+            $stmtVA = $conn->prepare($sqlVA);
+            $stmtVA->execute([':turno' => $turno,
+                             ':fechaInicio' => $inicio_turno->format('Y-m-d H:i:s'),
+                             ':fechaFin'    => $fin_turno->format('Y-m-d H:i:s'),
+                             ':codigoLinea' => $codigoLinea
+                           ]);
+            
+        //Generar lista de asistencia 
+            //Si existe un registro de asistencia mostrar el registro
+            //$asistencia = $stmtVA->fetchAll(PDO::FETCH_ASSOC);
+
+            $asistencia = $stmtVA->fetchColumn();
+            if ($asistencia) {
+                 echo json_encode(array('estatus' => 'error',
+                                        'mensaje' => 'Ya existe un registro de asistencia'
+                                    )
+                              );
+                exit;
+            }
 
         try {
             $conn->beginTransaction();
@@ -1966,26 +2020,64 @@ else
             $conn->beginTransaction();
 
             // VALIDAR SI YA EXISTE ASISTENCIA PARA ESTA NÓMINA EN EL TURNO ACTUAL
-            $sqlValidarAsistencia = "SELECT COUNT(*) AS total FROM SPC_REGISTRO_ASISTENCIA
-                                WHERE nomina = :nomina AND turno = :turno AND fecha_operacion >= :inicio_turno
-                            AND fecha_operacion <= :fin_turno";
+                $sqlValidarAsistencia = "SELECT COUNT(*) AS total FROM SPC_REGISTRO_ASISTENCIA
+                                    WHERE nomina = :nomina AND turno = :turno AND fecha_operacion >= :inicio_turno
+                                AND fecha_operacion <= :fin_turno";
 
-            $stmtValidarAsistencia = $conn->prepare($sqlValidarAsistencia);
-            $stmtValidarAsistencia->execute([
+                $stmtValidarAsistencia = $conn->prepare($sqlValidarAsistencia);
+                $stmtValidarAsistencia->execute([
+                    ':nomina' => $nomina,
+                    ':turno' => $turno,
+                    ':inicio_turno' => $inicio_turno->format('Y-m-d H:i:s'),
+                    ':fin_turno' => $fin_turno->format('Y-m-d H:i:s')
+                ]);
+
+                $existeAsistencia = $stmtValidarAsistencia->fetch(PDO::FETCH_ASSOC);
+
+                if ($existeAsistencia['total'] > 0) {
+                    $conn->rollBack();
+                    echo json_encode([
+                        'estatus' => 'error',
+                        'mensaje' => 'La asistencia de esta persona ya fue registrada en el turno actual'
+                    ]);
+                    exit;
+                }
+
+        //VALIDAR SI LA PERSONA SE ENCUENTRA EN EL TURNO ACTUAL O EN OTRA LINEA 
+            $sqlValidarPersona = "SELECT TOP 1 nomina,
+                                    otroTurno = CASE WHEN turno <> :turno THEN 1 ELSE 0 END,
+                                    otraLinea = CASE WHEN codigo_linea <> :codigo_linea THEN 1 ELSE 0 END,
+                                    eliminado = CASE  WHEN estatus = 2 THEN 1 ELSE 0 END
+                                 FROM SPC_PERSONAL 
+                            WHERE nomina = :nomina AND ( turno <> :turno OR codigo_linea <> :codigo_linea OR estatus = 2)";
+
+            $stmtValidarPersona = $conn->prepare($sqlValidarPersona);
+
+            $stmtValidarPersona->execute([
                 ':nomina' => $nomina,
                 ':turno' => $turno,
-                ':inicio_turno' => $inicio_turno->format('Y-m-d H:i:s'),
-                ':fin_turno' => $fin_turno->format('Y-m-d H:i:s')
+                ':codigo_linea' => $codigoLinea
             ]);
 
-            $existeAsistencia = $stmtValidarAsistencia->fetch(PDO::FETCH_ASSOC);
+            $personaInvalida = $stmtValidarPersona->fetch(PDO::FETCH_ASSOC);
 
-            if ($existeAsistencia['total'] > 0) {
-                $conn->rollBack();
-                echo json_encode([
-                    'estatus' => 'error',
-                    'mensaje' => 'La asistencia de esta persona ya fue registrada en el turno actual'
-                ]);
+            if ($personaInvalida) {
+                    $conn->rollBack();
+
+                    if ($personaInvalida['eliminado'] == 1) {
+                        $mensaje = 'La persona se encuentra eliminada';
+                    } elseif ($personaInvalida['otroTurno'] == 1) {
+                        $mensaje = 'La persona se encuentra registrada en otro turno';
+                    } elseif ($personaInvalida['otraLinea'] == 1) {
+                        $mensaje = 'La persona se encuentra registrada en otra línea';
+                    } else {
+                        $mensaje = 'La persona no es válida para este turno o línea';
+                    }
+
+                    echo json_encode([
+                        'estatus' => 'error',
+                        'mensaje' => $mensaje
+                    ]);
                 exit;
             }
 
@@ -2261,7 +2353,7 @@ else
                                         INNER JOIN SPC_ILU I ON E.id_certificacion = I.idE
                                         INNER JOIN SPC_PERSONAL P ON P.nomina = I.nomina
                             WHERE E.codigo_linea = :codigo_linea AND P.turno = :turno
-                                    AND P.codigo_linea = :codigo_linea AND I.estatus != 1";
+                                    AND P.codigo_linea = :codigo_linea AND I.estatus != 1 AND P.estatus <> 2";
 
             $liberados = $conn->prepare($sqlLiberados);
             $liberados->execute([':codigo_linea' => $codigoLinea,':turno' => $turno]);
@@ -2335,11 +2427,27 @@ if ($opcion == '32') {
     try {
         $conn->beginTransaction();
 
+        //Validar que el trabajador exista y este activo
+        $sqlEmpleado = "SELECT estatus FROM SPC_PERSONAL WHERE nomina = :nomina";
+        $stmtEmpleado = $conn->prepare($sqlEmpleado);
+        $stmtEmpleado->execute([':nomina' => $nomina]);
+        $empleado = $stmtEmpleado->fetch(PDO::FETCH_ASSOC);
+
+        //Verificar que el empleado no este eliminado
+        if (!$empleado || $empleado['estatus'] == 2) {
+            // Ya estaba eliminado, no se hace nada adicional
+            $conn->rollback(); // O rollback, pero como no hubo cambios, commit es válido
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Este trabajador ha sido eliminado'
+            ]);
+            exit;
+        }
+
         // VALIDAR SI EXISTE EL REGISTRO
-        $sqlValidar = "SELECT estatus FROM SPC_ILU WHERE nomina = :nomina AND idE = :idE";
+        $sqlValidar = "SELECT I.estatus FROM SPC_ILU I WHERE I.nomina = :nomina AND I.idE = :idE";
         $stmtValidar = $conn->prepare($sqlValidar);
         $stmtValidar->execute([':nomina' => $nomina, ':idE' => $operacion]);
-
         $existe = $stmtValidar->fetch(PDO::FETCH_ASSOC);
 
         // Si existe
@@ -2411,8 +2519,11 @@ if ($opcion == '33') {
     try {
         $conn->beginTransaction();
 
-        // Verificar si el registro existe y obtener su estatus actual
-        $sqlCheck = "SELECT estatus FROM SPC_ILU WHERE nomina = :nomina AND idE = :idE";
+        //Verificar si el registro existe y obtener su estatus actual
+        $sqlCheck = "SELECT I.estatus, P.estatus as estatusP
+            FROM SPC_ILU I INNER JOIN SPC_PERSONAL P ON I.nomina = P.nomina
+            WHERE I.nomina = :nomina AND I.idE = :idE";
+
         $stmtCheck = $conn->prepare($sqlCheck);
         $stmtCheck->execute([':nomina' => $nomina, ':idE' => $operacion]);
         $registro = $stmtCheck->fetch(PDO::FETCH_ASSOC);
@@ -2423,6 +2534,17 @@ if ($opcion == '33') {
             echo json_encode([
                 'estatus' => 'error',
                 'mensaje' => 'El registro no existe'
+            ]);
+            exit;
+        }
+
+        //Verificar que el empleado no este eliminado
+        if ($registro['estatusP'] == 2) {
+            // Ya estaba eliminado, no se hace nada adicional
+            $conn->commit(); // O rollback, pero como no hubo cambios, commit es válido
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Este trabajador ha sido eliminado'
             ]);
             exit;
         }
@@ -2893,7 +3015,7 @@ if($opcion == '41'){
          $response = [];
          $sql = "SELECT E.id_estacion, E.nombre_estacion FROM SPC_ILU I 
                     INNER JOIN SPC_ESTACIONES E ON E.id_certificacion = I.idE 
-                 WHERE E.codigo_linea = :codigoLinea AND I.nomina = :nomina";
+                 WHERE E.codigo_linea = :codigoLinea AND I.nomina = :nomina AND I.estatus = 0";
 
            $estaciones = $conn->prepare($sql);
            $estaciones->execute([':codigoLinea'=> $codigoLinea, ':nomina' => $nomina]);
@@ -2915,7 +3037,7 @@ if($opcion == '41'){
 
 //Obtener detalle del punto de cambio
 else 
-    if($opcion == '42'){
+if($opcion == '42'){
         $idPC = !empty($_POST['idPC']) ? $_POST['idPC'] : 0;
         
         if (!$idPC) {
