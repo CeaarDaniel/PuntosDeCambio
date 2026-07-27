@@ -39,63 +39,6 @@
 
   <!--Data table -->
   <link href="../DataTables/datatables.min.css" rel="stylesheet">
-  
-  <style>
-        .btn-group .btn {
-          border-radius: 8px;
-          margin: 0 2px;
-          padding: 0.4rem 0.7rem;
-          transition: all 0.2s;
-        }
-
-        .btn {
-          border-radius: 8px;
-          font-weight: 500;
-        }
-
-        .btn-info {
-          background: #e0f2fe;
-          border-color: #bae6fd;
-          color: #0369a1;
-        }
-
-        .btn-info:hover {
-          background: #bae6fd;
-          color: #0c4a6e;
-          transform: translateY(-1px);
-        }
-
-        .btn-success {
-          background: #dcfce7;
-          border-color: #bbf7d0;
-          color: #15803d;
-          transition: all 0.2s;
-        }
-        
-        .btn-success:hover {
-          background: #bbf7d0;
-          border-color: #86efac;
-          color: #14532d;
-          transform: translateY(-1px);
-        }
-
-        #contenedorAlertTableOperacion{
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            gap: 8px;
-            align-items: center;
-        }
-
-        #contenedorAlertTableOperacion .select-operaciones {
-            width: 100%;
-            min-width: 0;
-        }
-
-        #contenedorAlertTableOperacion .alerTableOperaciones {
-            grid-column: 1 / -1;
-            width: 100%;
-        }
-  </style>
 
 </head>  
 <body>
