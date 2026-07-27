@@ -1,4 +1,3 @@
-
   let btnAsignarOperador = document.getElementById('btnAsignarOperador');
   let confirmChange = document.getElementById('confirmChange');
   let btnAsignarOperadorPC = document.getElementById('btnAsignarOperadorPC') //Boton de asignacion desde el modal de gestion pc
@@ -12,6 +11,7 @@
   let seccionDetallePC = document.getElementById('seccionDetallePC');
 
   //BOTONES FLOTANTES
+    let btnToggleToolsSidebar = document.getElementById('btnToggleToolsSidebar')
     let btncloseSidebar = document.getElementById('btncloseSidebar')
     let btnfloatingMenu = document.getElementById('btnfloatingMenu')
   //FIN BOTONES FLOTANTES
@@ -24,6 +24,7 @@
   let btnRegistrarAsistencia = document.getElementById('btnRegistrarAsistencia');
   let btnHistorialLayout = document.getElementById('btnHistorialLayout');
 
+  let btnMenuAsignaciones = document.getElementById('btnMenuAsignaciones')
   //Arreglo para los chips
   let chipsEstaciones = [];
   let chipsEstacionesPC = [];
@@ -80,8 +81,9 @@
     // Sistema de drag & drop optimizado con soporte para modales
     class OptimizedDragSystem {
       init() {
-        $('#workspaceGrid').on('click', '.station', (e) => {
+        $('#workspaceGrid').on('click', '.station', async (e) => {
             const stationId = $(e.currentTarget).data('station-id');
+            await getEstacion(stationId);
             const stationData = stationsData.find(s => s.id == stationId);
             if(stationData) {
                 this.showStationModal(stationData);
@@ -91,9 +93,10 @@
       
       //Actualizar y mostrar el modal de la estacion al abrirlo
       showStationModal(stationData) {
-
         //Validar que la ruta de la imagen exista
         const img = document.getElementById('imgInfochangeControlModal');
+
+        //Limpiar el chip de estaciones para cunado se inicializa o cambia de estación abierta
         chipsEstacionesPC = [];
 
         img.onerror = function() {
@@ -101,21 +104,21 @@
             this.src = '../img/personal/ok.jpg';
         };
 
+        selectEstacionesPC.innerHTML='<option value="">Selecciona una estación...</option>';
+
+        //Agregar los datos de la estación actual al los chips para forzar a que exista por lo menos el registro de la estación actual
         chipsEstacionesPC.push({ label: (stationData.name) ? (stationData.name).toUpperCase() : '', 
                                  value: stationData.id || '' ,
                                  remove : false,
                               });
 
-        selectEstacionesPC.innerHTML='<option value="">Selecciona una estación...</option>';
-
-        //Obtener las estaciones a las que esta asignada la persona actual que no sean un PC
+        //Obtener todas las estaciones a las que esta asignada la persona en la estacion seleccionada que no sean un PC
         if(stationData.nomina && stationData.nomina != null){
           const estacionesFiltradas = stationsData.filter(
               estacion => (String(estacion.nomina) === String(stationData.nomina)  && estacion.idPC == null )
           );
         
-
-        //Agregar los chips excepto el de la estacion actual que ya se agrego
+        //Para registrar el punto de cambio, se agregan las estaciones asignadas del operador actual, excepto la estación actual.
         estacionesFiltradas.forEach(estacion => {
             if(stationData.id != estacion.id){
               chipsEstacionesPC.push({ label: (estacion.name) ? (estacion.name).toUpperCase() : '',
@@ -708,8 +711,6 @@
                   generarTablaAsistencia();
 
                   //Actualizar el layout
-
-                  //actualizarVistaLayout();
                   return getEstaciones();
               }
 
@@ -1168,27 +1169,6 @@
          document.getElementById('turnoasignar').value = $("#turnoLayout").val()
 
           if(turno){
-            /*
-              document.getElementById('workspaceGrid').innerHTML =  `
-                  <!-- Contenedor dinámico que se expandirá con el contenido -->
-                    <div id="dynamicContainer">
-                      <!-- SVG dinámico (se ajustará al contenido) -->
-                      <svg id="workspace-svg">
-                        <defs>
-                          <pattern id="grid" patternUnits="userSpaceOnUse" width="20" height="20">
-                            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#cbd5e1" stroke-width="0.8"/>
-                          </pattern>
-                          <marker id="arrowMarker" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
-                            <polygon points="0 0, 9 5, 0 10" fill="context-stroke" stroke="none" />
-                          </marker>
-                        </defs>
-                        <rect x="0" y="0" width="100%" height="100%" fill="none" />
-                        <g id="shapes-group"></g>
-                      </svg>
-                      <!-- Aquí se insertarán dinámicamente las estaciones (divs) -->
-                    </div>`; 
-            */
-
             $('#dynamicContainer').siblings().remove();
             getEstaciones();
             mostrarTablaOperaciones();
@@ -1256,7 +1236,7 @@
     //FUNCION PARA LOS CHIPS DE ESTACIONES PC
         //Función para agregar una chip
             function agregarChipEstacion() {
-              //Se modifican las cadenas a mayusculas para que sea indistinto valores como Xsd y xSD en la busqueda del valor en el arreglo tallasAlta
+              //Se modifican las cadenas a mayusculas para que sea indistinto valores como Xsd y xSD en la busqueda del valor en el arreglo
               if (!chipsEstacionesPC.some(item => ((item.value).toUpperCase()).trim() === ((selectEstacionesPC.value).toUpperCase()).trim()) ) {
                     if (selectEstacionesPC.value.trim() !== '') {
                       chipsEstacionesPC.push({label: $("#selectEstacionesPC option:selected").text(), 
@@ -1449,10 +1429,10 @@
               const cumple = String(valor) === '1';
 
               return `
-                <div class="col-12">
-                  <div class="border rounded-3 p-2 bg-white text-center h-100">
-                    <div class="small text-muted">${titulo}                    
-                        <span class="fw-semibold ${cumple ? 'text-success' : 'text-danger'}">
+                <div class="col-12 pc-metric-item">
+                  <div class="border rounded-3 p-2 bg-white h-100 pc-metric">
+                    <div class="small text-muted pc-metric-label">${titulo}
+                        <span class="fw-semibold pc-metric-status ${cumple ? 'text-success' : 'text-danger'}">
                           ${cumple ? 'OK' : 'NG'}
                         </span>
                     </div>
@@ -1465,8 +1445,8 @@
               const comentarios = String(ev.comentarios || '').trim() || 'Sin comentarios.';
 
               return `
-                <div class="border rounded-3 p-3 bg-light mb-3">
-                  <div class="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap">
+                <div class="border rounded-3 p-3 bg-light mb-3 pc-evaluation-card">
+                  <div class="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap pc-evaluation-heading">
                     <strong>Evaluación ${escapeHTML(ev.numeroEvaluacion || '-')}</strong>
                     <span class="badge bg-secondary">${formatearFecha(ev.fechaEvaluacion)}</span>
                   </div>
@@ -1477,11 +1457,13 @@
                     ${renderMetrica('Dificultad de la operación ', ev.metrica3)}
                   </div>
 
-                  <div class="small text-muted mb-1">Comentarios</div>
-                  <div class="small">${escapeHTML(comentarios)}</div>
+                  <div class="pc-evaluation-comments">
+                    <div class="small text-muted mb-1">Comentarios</div>
+                    <div class="small">${escapeHTML(comentarios)}</div>
+                  </div>
 
                   ${ev.fechaRegistro ? `
-                    <div class="alert alert-light border rounded-3 mt-3 mb-0">
+                    <div class="alert alert-light border rounded-3 mt-3 mb-0 pc-registration-date">
                       <div class="small text-muted mb-1">Fecha de registro</div>
                       <div class="small fw-semibold">${formatearFecha(ev.fechaRegistro)}</div>
                     </div>
@@ -1494,18 +1476,18 @@
               const cantidad = evaluacionesDia.length;
 
               return `
-                <div class="col-lg-4">
-                  <div class="card h-100">
-                    <div class="card-body">
-                      <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="col-12 col-xl-4">
+                  <div class="card h-100 pc-day-card">
+                    <div class="card-body pc-day-body">
+                      <div class="d-flex justify-content-between align-items-center mb-3 pc-day-header">
                         <h5 class="mb-0">Día ${numeroDia}</h5>
-                        <span class="badge bg-dark">${cantidad} evaluación${cantidad === 1 ? '' : 'es'}</span>
+                        <span class="badge bg-secondary pc-count-badge">${cantidad} evaluación${cantidad === 1 ? '' : 'es'}</span>
                       </div>
 
                       ${cantidad
                   ? evaluacionesDia.map(renderEvaluacion).join('')
                   : `
-                          <div class="alert alert-light border mb-0">
+                          <div class="alert alert-light border mb-0 pc-empty-state">
                             No hay evaluaciones registradas para el día ${numeroDia}.
                           </div>
                         `
@@ -1552,69 +1534,71 @@
               const textoCierre = cierre?.fechaCierre ? 'Registrado' : 'Pendiente';
 
               seccionDetallePC.innerHTML = `
-                <div class="pb-4">
-                  <div class="Smx-auto" style="width:100%;">
-                    <div class="form-body px-0 mx-0">
-                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-                          <div class="d-flex flex-wrap gap-2">
-                            <span class="badge bg-light text-dark">No. Control: ${escapeHTML(pc.no_controlCambio || 'Sin dato')}</span>
-                            <span class="badge ${estatusPC.clase}">${estatusPC.texto}</span>
-                            <span class="badge bg-light text-dark">Tipo: ${tipoCambioTexto}</span>
-                            <span class="badge bg-light text-dark">${turnoTexto}</span>
+                <div class="pc-detail-report">
+                  <div class="mx-auto pc-report-container">
+                    <div class="form-body px-0 mx-0 pc-report-body">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 pc-report-context">
+                          <div>
+                            <span class="pc-section-kicker">Resumen del registro</span>
+                            <p class="pc-report-help mb-0">Información del punto de cambio seleccionado.</p>
+                          </div>
+                          <div class="d-flex flex-wrap gap-2 pc-meta-list" aria-label="Datos principales del punto de cambio">
+                            <span class="badge bg-light text-dark pc-meta-badge">No. Control: ${escapeHTML(pc.no_controlCambio || 'Sin dato')}</span>
+                            <span class="badge ${estatusPC.clase} pc-meta-badge">${estatusPC.texto}</span>
+                            <span class="badge bg-light text-dark pc-meta-badge">Tipo: ${tipoCambioTexto}</span>
+                            <span class="badge bg-light text-dark pc-meta-badge">${turnoTexto}</span>
                           </div>
                         </div>
-                        
-                        <br>
 
-                      <div class="row g-3 mb-4">
-                        <div class="col-6 col-lg-3">
-                          <div class="card h-100">
+                      <div class="row g-3 mb-4 pc-summary-grid">
+                        <div class="col-12 col-sm-6 col-xl-3">
+                          <div class="card h-100 pc-summary-card pc-summary-card-cyan">
                             <div class="card-body">
-                              <div class="text-muted small mb-1">Estaciones</div>
-                              <div class="fs-4 fw-semibold">${estaciones.length}</div>
+                              <div class="pc-summary-heading"><i class="bi bi-diagram-3" aria-hidden="true"></i><span class="text-muted small">Estaciones</span></div>
+                              <div class="fs-4 fw-semibold pc-summary-value">${estaciones.length}</div>
                               <div class="small text-muted">Relacionadas al punto</div>
                             </div>
                           </div>
                         </div>
 
-                        <div class="col-6 col-lg-3">
-                          <div class="card h-100">
+                        <div class="col-12 col-sm-6 col-xl-3">
+                          <div class="card h-100 pc-summary-card pc-summary-card-blue">
                             <div class="card-body">
-                              <div class="text-muted small mb-1">Evaluaciones</div>
-                              <div class="fs-4 fw-semibold">${evaluaciones.length}</div>
+                              <div class="pc-summary-heading"><i class="bi bi-clipboard2-check" aria-hidden="true"></i><span class="text-muted small">Evaluaciones</span></div>
+                              <div class="fs-4 fw-semibold pc-summary-value">${evaluaciones.length}</div>
                               <div class="small text-muted">Registradas</div>
                             </div>
                           </div>
                         </div>
 
-                        <div class="col-6 col-lg-3">
-                          <div class="card h-100">
+                        <div class="col-12 col-sm-6 col-xl-3">
+                          <div class="card h-100 pc-summary-card pc-summary-card-start">
                             <div class="card-body">
-                              <div class="text-muted small mb-1">Inicio</div>
-                              <div class="fw-semibold">${pc.fechaHora_inicio ? formatearFecha(pc.fechaHora_inicio) : 'Sin registro'}</div>
+                              <div class="pc-summary-heading"><i class="bi bi-calendar-event" aria-hidden="true"></i><span class="text-muted small">Inicio</span></div>
+                              <div class="fw-semibold pc-summary-date">${pc.fechaHora_inicio ? formatearFecha(pc.fechaHora_inicio) : 'Sin registro'}</div>
                             </div>
                           </div>
                         </div>
 
-                        <div class="col-6 col-lg-3">
-                          <div class="card h-100">
+                        <div class="col-12 col-sm-6 col-xl-3">
+                          <div class="card h-100 pc-summary-card pc-summary-card-end">
                             <div class="card-body">
-                              <div class="text-muted small mb-1">Fin / cierre</div>
-                              <div class="fw-semibold">${finMostrar ? formatearFecha(finMostrar) : 'Sin registro'}</div>
+                              <div class="pc-summary-heading"><i class="bi bi-calendar-check" aria-hidden="true"></i><span class="text-muted small">Fin / cierre</span></div>
+                              <div class="fw-semibold pc-summary-date">${finMostrar ? formatearFecha(finMostrar) : 'Sin registro'}</div>
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      <div class="row g-3 mb-4">
-                        <div class="col-lg-8">
-                          <div class="info-card h-100 mb-0">
+                      <div class="row g-3 mb-4 pc-overview-grid">
+                        <div class="col-12 col-xl-12">
+                          <div class="info-card h-100 mb-0 pc-info-panel">
                             <div class="info-title">
                               <i class="bi bi-info-circle"></i>
                               Información general
                             </div>
 
-                            <div class="row">
+                            <div class="row g-3">
                               <div class="col-md-6">
                                 <div class="info-item">
                                   <span class="info-label">No. Control</span>
@@ -1656,8 +1640,8 @@
                           </div>
                         </div>
 
-                        <div class="col-lg-4">
-                          <div class="card mb-3">
+                        <div class="col-12 col-xl-12">
+                          <div class="card mb-3 pc-side-card mx-1">
                             <div class="card-body">
                               <h5 class="section-title mb-3">
                                 <i class="bi bi-person-badge"></i>
@@ -1665,8 +1649,7 @@
                               </h5>
 
                               <div class="employee-preview mt-0">
-                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-semibold"
-                                    style="width: 40px; height: 40px;">
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-semibold pc-avatar">
                                   ${escapeHTML(iniciales)}
                                 </div>
                                 <div class="employee-info">
@@ -1677,14 +1660,14 @@
                             </div>
                           </div>
 
-                          <div class="card">
+                          <div class="card pc-side-card mx-1">
                             <div class="card-body">
                               <h5 class="section-title mb-3">
                                 <i class="bi bi-chat-left-text"></i>
                                 Motivo
                               </h5>
 
-                              <div class="alert alert-light border rounded-3 mb-0">
+                              <div class="alert alert-light border rounded-3 mb-0 pc-reason-box">
                                 ${escapeHTML(motivo)}
                               </div>
                             </div>
@@ -1692,27 +1675,30 @@
                         </div>
                       </div>
 
-                      <div class="form-section">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                          <h5 class="section-title mb-0">
-                            <i class="bi bi-diagram-3"></i>
-                            Estaciones relacionadas
-                          </h5>
-                          <span class="badge bg-secondary">${estaciones.length} estación${estaciones.length === 1 ? '' : 'es'}</span>
+                      <div class="form-section pc-content-section">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 pc-section-header">
+                          <div class="pc-section-heading-copy">
+                            <h5 class="section-title mb-1">
+                              <i class="bi bi-diagram-3"></i>
+                              Estaciones relacionadas
+                            </h5>
+                            <p class="pc-section-help mb-0">Ubicaciones vinculadas con este punto de cambio.</p>
+                          </div>
+                          <span class="badge bg-secondary pc-count-badge">${estaciones.length} estación${estaciones.length === 1 ? '' : 'es'}</span>
                         </div>
 
                         <div class="row g-3">
                           ${estaciones.length
                   ? estaciones.map((estacion, index) => `
-                                  <div class="col-md-4">
-                                    <div class="card h-100">
+                                  <div class="col-12 col-md-6 col-xl-4">
+                                    <div class="card h-100 pc-station-card">
                                       <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
                                           <h6 class="mb-0">${escapeHTML(estacion.nombre_estacion || `Estación ${estacion.idE || index + 1}`)}</h6>
                                           <span class="badge bg-light text-dark border">ID ${escapeHTML(estacion.idE || '-')}</span>
                                         </div>
                                         <div class="small text-muted">
-                                          Relación #${index + 1} vinculada al punto de cambio ${escapeHTML(pc.no_controlCambio || '')}.
+                                          Estacion vinculada al punto de cambio ${escapeHTML(pc.no_controlCambio || '')}.
                                         </div>
                                       </div>
                                     </div>
@@ -1720,7 +1706,7 @@
                                 `).join('')
                   : `
                                 <div class="col-12">
-                                  <div class="alert alert-light border mb-0">
+                                  <div class="alert alert-light border mb-0 pc-empty-state">
                                     No hay estaciones registradas para este punto de cambio.
                                   </div>
                                 </div>
@@ -1729,17 +1715,20 @@
                         </div>
                       </div>
 
-                      <div class="form-section">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                          <h5 class="section-title mb-0">
-                            <i class="bi bi-clipboard2-pulse"></i>
-                            Seguimiento de evaluaciones
-                          </h5>
-                          <span class="badge bg-primary">${evaluaciones.length} evaluación${evaluaciones.length === 1 ? '' : 'es'}</span>
+                      <div class="form-section pc-content-section">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 pc-section-header">
+                          <div class="pc-section-heading-copy">
+                            <h5 class="section-title mb-1">
+                              <i class="bi bi-clipboard2-pulse"></i>
+                              Seguimiento de evaluaciones
+                            </h5>
+                            <p class="pc-section-help mb-0">Resultados registrados durante los tres días de seguimiento.</p>
+                          </div>
+                          <span class="badge bg-primary pc-count-badge">${evaluaciones.length} evaluación${evaluaciones.length === 1 ? '' : 'es'}</span>
                         </div>
 
-                        <div class="progress-container rounded-3 p-3 mb-4">
-                          <div class="d-flex align-items-start justify-content-between gap-2">
+                        <div class="progress-container rounded-3 p-3 mb-4 pc-day-progress">
+                          <div class="d-flex align-items-start justify-content-between gap-2 pc-progress-track">
                             ${renderIndicadorDias(evaluacionesPorDia)}
                           </div>
                         </div>
@@ -1751,20 +1740,23 @@
                         </div>
                       </div>
 
-                      <div class="form-section border-0 mb-0 pb-0">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                          <h5 class="section-title mb-0">
-                            <i class="bi bi-check2-circle"></i>
-                            Cierre del Punto de Cambio
-                          </h5>
-                          <span class="badge ${badgeCierre}">${textoCierre}</span>
+                      <div class="form-section border-0 mb-2 pb-1 pc-content-section pc-closing-section">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 pc-section-header">
+                          <div class="pc-section-heading-copy">
+                            <h5 class="section-title mb-1">
+                              <i class="bi bi-check2-circle"></i>
+                              Cierre del Punto de Cambio
+                            </h5>
+                            <p class="pc-section-help mb-0">Fecha y observaciones con las que concluyó el registro.</p>
+                          </div>
+                          <span class="badge ${badgeCierre} pc-count-badge">${textoCierre}</span>
                         </div>
 
                         ${cierre
                   ? `
                               <div class="row g-3">
-                                <div class="col-md-4">
-                                  <div class="info-card h-100 mb-0">
+                                <div class="col-12 col-lg-4">
+                                  <div class="info-card h-100 mb-0 pc-closing-card">
                                     <div class="info-title">
                                       <i class="bi bi-calendar-check"></i>
                                       Fecha de cierre
@@ -1773,8 +1765,8 @@
                                   </div>
                                 </div>
 
-                                <div class="col-md-8">
-                                  <div class="info-card h-100 mb-0">
+                                <div class="col-12 col-lg-8">
+                                  <div class="info-card h-100 mb-0 pc-closing-card">
                                     <div class="info-title">
                                       <i class="bi bi-chat-square-text"></i>
                                       Comentarios de cierre
@@ -1787,7 +1779,7 @@
                               </div>
                             `
                   : `
-                              <div class="alert alert-warning mb-0">
+                              <div class="alert alert-warning mb-0 pc-empty-state">
                                 Este punto de cambio aún no tiene registro de cierre.
                               </div>
                             `
@@ -1802,9 +1794,10 @@
 
             function renderDetallePCError(mensaje) {
               seccionDetallePC.innerHTML = `
-                <div class="container-fluid py-4">
-                  <div class="alert alert-danger mb-0">
-                    ${escapeHTML(mensaje)}
+                <div class="pc-feedback-wrap">
+                  <div class="alert alert-danger mb-0 pc-feedback" role="alert">
+                    <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                    <span>${escapeHTML(mensaje)}</span>
                   </div>
                 </div>
               `;
@@ -1813,8 +1806,11 @@
             async function cargarDetallePC(noControlCambio) {
               try {
                 seccionDetallePC.innerHTML = `
-                  <div class="container-fluid py-4">
-                    <div class="alert alert-info mb-0">Cargando detalle del punto de cambio...</div>
+                  <div class="pc-feedback-wrap">
+                    <div class="alert alert-info mb-0 pc-feedback" role="status" aria-live="polite">
+                      <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                      <span>Cargando detalle del punto de cambio...</span>
+                    </div>
                   </div>
                 `;
 
@@ -2147,6 +2143,7 @@
             lengthMenu: [5, 10, 25, 50],
             responsive: false,
             scrollX: true,
+            scrollY: 320,
             deferRender: false,
             paging: true,
             order: []
@@ -2290,6 +2287,7 @@
                   actualizarVistaLayout();         
                 } else {
                     console.log(data)
+                    mostrarTablaPersonal();
                 }
             })
             .catch(error => {
@@ -2921,6 +2919,10 @@
                           console.log(error);
                     });
                 }
+
+                else {
+                  selectEstacionesPC.innerHTML='<option value="">Selecciona una estación...</option>';
+                }
             }) 
         
         //FIN OBTENER NUMERO DE NOMINA
@@ -2985,7 +2987,7 @@
             })
 
 
-        //REGISTRAR TRABAJADOR AL LISTADO DE PERSONAL EN EL MODAL REGISTRARS 
+        //REGISTRAR TRABAJADOR AL LISTADO DE PERSONAL EN EL MODAL modalRegistrarOperador 
         btnRegistrarOperador.addEventListener('click', function(){
               var formDataAsig = new FormData
               let nomina = document.getElementById('nominaModalRegistrar').value;
@@ -3255,6 +3257,7 @@
         //Detectar cuando se abra el modal de registrar operador
         document.getElementById('btnMenuRegistrar').addEventListener('click', function (){
           document.getElementById('fecharegistrar').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
+          listadoCertificaciones('selectRegistrar');
         })
 
         $('#btnChipModalRegistrar').click(agregarChipTalla)
@@ -3263,6 +3266,7 @@
         btnRegistrarAsistencia.addEventListener('click', registrarAsistencia);
         btnMenuAsignarControlModal.addEventListener('click', function(){changeContent('ventanasModalPC','contAsignacion')});
         btnMenuAsignarControlModal.addEventListener('click', function(){changeContent('ventanasModalPC','contAsignacion')});
+        btnMenuAsignaciones.addEventListener('click', mostrarTablaOperaciones)
         btnInfoRPC.addEventListener('click', function(){changeContent('ventanasModalPC','contInfoEstacion')});
         btnRegistroPc.addEventListener('click', function(){changeContent('ventanasModalPC','contregistroCambioForm')});
         
@@ -3384,34 +3388,42 @@
             });
         });
 
-        //INICIO BOTONES FLOTANTES PARA ABRIR Y CERRAR LA BARRA DE HERRAMIENTAS
+        //INICIO CONTROL PARA EXPANDIR Y COMPRIMIR LA BARRA DE HERRAMIENTAS
+            function setToolsSidebarExpanded(expanded) {
+              const toolsSidebar = document.getElementById('tools-sidebar');
+
+              toolsSidebar.classList.toggle('is-expanded', expanded);
+              btnToggleToolsSidebar.setAttribute('aria-expanded', expanded);
+              btnToggleToolsSidebar.setAttribute('title', expanded ? 'Comprimir herramientas' : 'Expandir herramientas');
+            }
+
+            btnToggleToolsSidebar.addEventListener('click', function () {
+              const toolsSidebar = document.getElementById('tools-sidebar');
+              setToolsSidebarExpanded(!toolsSidebar.classList.contains('is-expanded'));
+            })
+
             btncloseSidebar.addEventListener('click', function () {
-              $('#btncloseSidebar').addClass('d-none')
-              $('#btnfloatingMenu').removeClass('d-none')
+              const toolsSidebar = document.getElementById('tools-sidebar');
+              toolsSidebar.classList.add('sidebar-transition-hidden');
 
-              $('#tools-sidebar').addClass('fade-out')
-              $('#tools-panel').addClass('fade-out')
-              //$('#layout-header').addClass('fade-out')
-
-                setTimeout(() => {
-                    $('#tools-sidebar').addClass('d-none')
-                    $('#tools-panel').addClass('d-none')
-                    //$('#layout-header').addClass('d-none')
-
-                    $('#tools-sidebar').removeClass('fade-out')
-                    $('#tools-panel').removeClass('fade-out')
-                    // $('#layout-header').removeClass('fade-out')
-                }, 300); 
+              setTimeout(() => {
+                toolsSidebar.classList.add('d-none');
+                $('#btnfloatingMenu').removeClass('d-none');
+              }, 320);
             })
 
             btnfloatingMenu.addEventListener('click', function () {
-              $('#btncloseSidebar').removeClass('d-none')
-              $('#btnfloatingMenu').addClass('d-none')
-              $('#tools-sidebar').removeClass('d-none')
-              $('#tools-panel').removeClass('d-none')
-              //$('#layout-header').removeClass('d-none')
+              const toolsSidebar = document.getElementById('tools-sidebar');
+              toolsSidebar.classList.remove('d-none');
+              $('#btnfloatingMenu').addClass('d-none');
+
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  toolsSidebar.classList.remove('sidebar-transition-hidden');
+                });
+              });
             })
-        //FIN Botones FLOTANTES PARA ABRIR Y CERRAR LA BARRA DE HERRAMIENTAS
+        //FIN CONTROL PARA EXPANDIR Y COMPRIMIR LA BARRA DE HERRAMIENTAS
 
         //Evento para cambiar de pagina con el boton actualizar operaciones de la tabla de personal
         $('#tableListadoPersonal').on('click', '.tableBtnUpdateOperaciones', async function () {
@@ -3652,3 +3664,4 @@
 
         applyZoom();
     }); 
+    

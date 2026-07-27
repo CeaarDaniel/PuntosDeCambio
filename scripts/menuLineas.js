@@ -1,14 +1,21 @@
-
 let lineForm = document.getElementById('lineForm');
 let btnGuardarLinea = document.getElementById('btnGuardarLinea');
 
-let lineCode = document.getElementById('lineCode')
-let lineName = document.getElementById('lineName')
+let lineCode = document.getElementById('lineCode');
+let lineName = document.getElementById('lineName');
+let imageLine = document.getElementById('imageLine');
+let selectAreas = document.getElementById('idArea');
+
 let supervisorSearch = document.getElementById('supervisorSearch')
+let nombreSupervisorSearch = document.getElementById('nombreSupervisorSearch');
+let flagEmpleado = true; //Variable para validar que el empleado existe
+
 let lineDescription = document.getElementById('lineDescription')
 
 //Contenedor principal donde se cargan las lineas
 let contenedorLineas = document.getElementById('contenedorLineas');
+
+const regexCodigoLinea = /^[A-Za-z0-9-]+$/;
 
 function openLayout(codigo,nombre){
     const url = "./pages/gestionLinea.php?codigo="+ encodeURIComponent(codigo)+"&nombre="+ encodeURIComponent(nombre);
@@ -19,49 +26,105 @@ function openLayout(codigo,nombre){
     window.open(url, nombreVentana, configuracion);
 }
 
-//  Crear/agregar una nueva linea
+//Listar el tipo de area en el formulario crearLinea
+function mostrarAreas(){
+    let formDataAreas = new FormData();
+    formDataAreas.append('opcion', 2);
+
+    fetch("./api/operacionesMenuLineas.php", {
+        method: "POST",
+        body: formDataAreas,
+    })
+    .then((response) => response.text())
+    .then((data) => {
+        data = JSON.parse(data);
+        selectAreas.innerHTML = '';
+
+        if (data.status !== 'ok') {
+                selectAreas.innerHTML = '<option value="">Selecciona una opción...</option>';
+                console.log(data);
+            return;
+        }
+        
+        data.response.forEach((area) => {
+            const opcion = document.createElement('option');
+            opcion.value = area.idArea;
+            opcion.textContent = area.nombreArea;
+            selectAreas.appendChild(opcion);
+        });
+    }).catch((error) => {
+        selectAreas.innerHTML = '<option value="">Selecciona una opción...</option>';
+        console.error(error);
+    });
+}
+
+//Crear/agregar una nueva linea
 function crearLinea(){
-  if (lineForm.reportValidity()) {
+    //Validar el formulario
+    if (!lineForm.reportValidity()) {
+        return;
+    }
+
+    //Validar el codigoLinea
+    if (!regexCodigoLinea.test(lineCode.value.trim())) {
+        alert('El código de línea solo puede contener letras, números y guion medio (-). No se permiten espacios ni caracteres especiales.');
+        return;
+    }
+
+    //Validar la nomina del empleado
+    if(!flagEmpleado){
+        alert('No se encontro informacion del empleado ingresado');
+        return
+    }
+
         var formData = new FormData;
         let supervisor = (supervisorSearch.value.trim() === "") ? null : supervisorSearch.value;
         let descripcion = (lineDescription.value.trim() === "")  ? null : lineDescription.value;
 
         formData.append("opcion", "1");
-        formData.append("codigoLinea", lineCode.value);
+        formData.append("codigoLinea", lineCode.value.trim());
         formData.append("nombreLinea", lineName.value);
-        formData.append("encargado", supervisor);
-        formData.append("descripcion", descripcion);
+        formData.append("idArea", idArea.value);
 
-        fetch("./api/operacionesLinea.php", {
-                method: "POST",
-                body: formData,
-            })
-            .then((response) => response.text())
-            .then((data) => {
+        (supervisor) ? formData.append("encargado", supervisor) : '';
+        (descripcion) ? formData.append("descripcion", descripcion) : '';
+
+        formData.append("imageLine", imageLine.files[0]);
+
+            fetch("./api/operacionesMenuLineas.php", {
+                    method: "POST",
+                    body: formData,
+                })
+                .then((response) => response.text())
+                .then((data) => {
+                    console.log(data);
+                    data= JSON.parse(data)
                 
-                data= JSON.parse(data)
-            
-                if(data.status=='ok'){
-                    alert(data.mensaje);
+                    if(data.status=='ok'){
+                        alert(data.mensaje);
 
-                    //Limpiar formulario
-                    document.getElementById('lineForm').reset();
-                    console.log(data)
+                        //Limpiar formulario
+                        document.getElementById('lineForm').reset();
+                        console.log(data)
 
-                    //Ocurtar modal
-                    let modalAgregarLinea = bootstrap.Modal.getInstance(document.getElementById('modalAgregarLinea'));
-                    modalAgregarLinea.hide();
-                    
-                    showLines();
-                    //Funcion para actualizar el contenido de la pagina
-                }
+                        //Ocurtar modal
+                        let modalAgregarLinea = bootstrap.Modal.getInstance(document.getElementById('modalAgregarLinea'));
+                        modalAgregarLinea.hide();
+                        
+                        //Funcion para actualizar el contenido de la pagina
+                        showLines();
+                        
+                        nombreSupervisorSearch.classList.remove("text-danger")
+                        nombreSupervisorSearch.textContent= "Nombre del empleado..."; 
+                        lineForm.reset();
+                        flagEmpleado = true;
+                    }
 
-                else alert(data.mensaje)
-            })
-            .catch((error) => {
-               console.log(error);
-        });
-  }
+                    else alert(data.mensaje)
+                })
+                .catch((error) => {
+                console.log(error);
+            });
 }
 
 //Funcion para cargar las lineas
@@ -69,7 +132,7 @@ function showLines(){
    const formData = new FormData;
    formData.append('opcion', 4)
 
-    fetch("./api/operacionesLinea.php", {
+    fetch("./api/operacionesMenuLineas.php", {
                 method: "POST",
                 body: formData,
             })
@@ -106,11 +169,12 @@ function showLines(){
 }
 
 showLines();
+mostrarAreas();
 
 //Event listeners
 btnGuardarLinea.addEventListener('click', crearLinea);
 
- contenedorLineas.addEventListener("click", function (e) {
+contenedorLineas.addEventListener("click", function (e) {
     // Gestión de líneas
     if (e.target.closest(".contColLinea")) {
         e.preventDefault();
@@ -123,5 +187,52 @@ btnGuardarLinea.addEventListener('click', crearLinea);
     }
 });
 
+//OBTENER NOMBRE DEL EMPLEADO
+supervisorSearch.addEventListener('change', function (){
+    if(supervisorSearch && supervisorSearch.value !='') {
+        let formDataConsultarNombre = new FormData();
+        formDataConsultarNombre.append('nomina', supervisorSearch.value)
+        formDataConsultarNombre.append('opcion', 7)
 
+        //nominaModalRegistrar.disabled = true
+        //nombreModalRegistrar.value= ''; 
+        nombreSupervisorSearch.classList.remove("text-danger")
+        nombreSupervisorSearch.textContent= "Consultando datos del empleado...";  
 
+            fetch("./api/operacionesMenuLineas.php", {
+                    method: "POST",
+                    body: formDataConsultarNombre,
+                })
+                .then((response) => response.text())
+                .then((data) => {
+                    console.log(data)
+                    data= JSON.parse(data)
+                    if(data.estatus=='ok'){
+                        nombreSupervisorSearch.textContent= data.nombre;
+                        flagEmpleado = true;
+                     }
+                    
+                    else{
+                        nombreSupervisorSearch.classList.add("text-danger")
+                        nombreSupervisorSearch.textContent= "No se encontró información del empleado";  
+                        console.log(data.error); 
+                        flagEmpleado = false;
+                    }
+
+                    //nominaModalRegistrar.disabled = false;
+                })
+                .catch((error) => {
+                    nombreSupervisorSearch.classList.add("text-danger")
+                    nombreSupervisorSearch.textContent= "Error de conexion..."; 
+                    flagEmpleado = false;
+                    //nominaModalRegistrar.disabled = false;
+                    console.log(error);
+            });
+    }
+
+    else{
+        nombreSupervisorSearch.classList.remove("text-danger")
+        nombreSupervisorSearch.textContent= "Nombre del empleado..."; 
+        flagEmpleado = true;
+    }
+})

@@ -1,6 +1,22 @@
+    const pageTitle = document.getElementById('page-title') //Contenedor del titulo principal
+    const navLinks = document.querySelectorAll('.sidebar-menu a'); //Opciones de la barra de navegavcion
 
-const pageTitle = document.getElementById('page-title') //Contenedor del titulo principal
-const navLinks = document.querySelectorAll('a'); //Opciones de la barra de navegavcion
+    //Funcion para actualizar el active del navBar
+        function actualizarOpcionActiva(seccion) {
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href') || '';
+                const ruta = href.split('/').pop();
+                const estaActivo = ruta === seccion;
+
+                link.classList.toggle('active', estaActivo);
+
+                if (estaActivo) {
+                    link.setAttribute('aria-current', 'page');
+                } else {
+                    link.removeAttribute('aria-current');
+                }
+            });
+        }
 
         //Funcion para la navegacion entre ventanas
         function navegar(pagina, id, pagsus) {
@@ -16,6 +32,7 @@ const navLinks = document.querySelectorAll('a'); //Opciones de la barra de naveg
                         window.scroll(0, 0);
                         contenido.innerHTML = this.responseText;
                          updatePageTitle(pagina);
+                         actualizarOpcionActiva(pagina);
                               
                         // Eliminar el script anterior si existe
                         var oldScript = document.getElementById('jsDinamico');
@@ -126,6 +143,7 @@ const navLinks = document.querySelectorAll('a'); //Opciones de la barra de naveg
         window.addEventListener("DOMContentLoaded", () => {
             //const ruta = location.pathname.slice(1) || "inicio";
             const seccion = obtenerSeccionActual();
+            actualizarOpcionActiva(seccion);
 
              //if(!routes[rolUsuarioSession].includes(seccion)){
              //   modal.show();
@@ -165,24 +183,13 @@ const navLinks = document.querySelectorAll('a'); //Opciones de la barra de naveg
             window.history.back(); 
         }
 
-
-
     //Señalar en el navBarr la opcion dentro de la que se encuntra 
-
-    /*
-      navLinks.forEach(link => {
+    navLinks.forEach(link => {
         link.addEventListener('click', function() {
-          
-          // Remove active class from all links
-          navLinks.forEach(item => {
-            item.classList.remove('active');
-          });
-          
-          // Add active class to clicked link
-          this.classList.add('active');
+            const href = this.getAttribute('href') || '';
+            actualizarOpcionActiva(href.split('/').pop());
         });
-      });
-    */
+    });
 
 
 /*
