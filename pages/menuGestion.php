@@ -1,59 +1,76 @@
     <!-- Sidebar MENU de herramientas -->
-    <div class="tools-sidebar" id="tools-sidebar">
+    <aside class="tools-sidebar" id="tools-sidebar" aria-label="Herramientas de gestión">
+      <div class="tools-sidebar-header">
+        <span class="tools-brand-mark"><i class="bi bi-tools"></i></span>
+        <div class="tools-brand-copy">
+          <strong>SPC</strong>
+          <span>puntos de cambio</span>
+        </div>
+      </div>
+
+      <button type="button" class="tools-sidebar-toggle" id="btnToggleToolsSidebar"
+              aria-expanded="false" aria-controls="tools-sidebar" title="Expandir herramientas">
+        <i class="bi bi-chevron-right icon-expand" id="iconFullscreen"></i>
+        <i class="bi bi-chevron-left icon-collapse"></i>
+        <span class="visually-hidden">Expandir o comprimir herramientas</span>
+      </button>
+
+      <div class="tools-section-label">Acciones</div>
+      <div class="tools-menu">
 
       <!-- REGISTO DE PERSONAL -->
-      <button id="btnMenuRegistrar" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Registrar personal">
-        <span data-bs-toggle="modal" data-bs-target="#modalRegistrarOperador">
-          <i class="bi bi-person-plus"></i>
-          <span>Registrar</span>
+      <button id="btnMenuRegistrar" class="tool-btn" data-tooltip="Registrar personal" aria-label="Registrar personal" data-bs-toggle="modal" data-bs-target="#modalRegistrarOperador">
+        <span class="tool-btn-content">
+          <span class="tool-icon"><i class="bi bi-person-plus"></i></span>
+          <span class="tool-copy"><strong>Registrar</strong><small>Agregar personal</small></span>
         </span>
       </button>
 
       <!-- LISTADO DE PERSONAL -->
-      <button id="btnMenuPersonal" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Listado de personal registrado">
-        <span data-bs-toggle="modal" data-bs-target="#modalListadoPersonal">
-          <i class="bi bi-people"></i>
-          <span>Personal</span>
+      <button id="btnMenuPersonal" class="tool-btn" data-tooltip="Listado de personal" aria-label="Listado de personal" data-bs-toggle="modal" data-bs-target="#modalListadoPersonal">
+        <span class="tool-btn-content">
+          <span class="tool-icon"><i class="bi bi-people"></i></span>
+          <span class="tool-copy"><strong>Personal</strong><small>Consultar registros</small></span>
         </span>
       </button>
 
       <!-- TABLA DE ASIGNACIONES -->
-      <button class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Asignar operador">
-        <span data-bs-toggle="modal" data-bs-target="#modalListaOperaciones">
-          <i class="bi-diagram-3"></i>
-          <span>Asignaciones</span>
+      <button id ="btnMenuAsignaciones" class="tool-btn" data-tooltip="Asignaciones" aria-label="Asignaciones" data-bs-toggle="modal" data-bs-target="#modalListaOperaciones">
+        <span class="tool-btn-content">
+          <span class="tool-icon"><i class="bi bi-diagram-3"></i></span>
+          <span class="tool-copy"><strong>Asignaciones</strong><small>Operaciones y personal</small></span>
         </span>
       </button>
 
       <!-- ASIGNAR OPERADOR -->
-      <button id="btnMenuAsignar" class="tool-btn d-none" data-bs-toggle="tooltip" data-bs-placement="right" title="Asignar operador">
-        <span data-bs-toggle="modal" data-bs-target="#modalAsignarOperador">
-          <i class="bi-clipboard"></i> <!-- bi-clipboard-check -->
-          <span>Asignar</span>
+      <button id="btnMenuAsignar" class="tool-btn d-none" data-tooltip="Asignar operador" aria-label="Asignar operador" data-bs-toggle="modal" data-bs-target="#modalAsignarOperador">
+        <span class="tool-btn-content">
+          <span class="tool-icon"><i class="bi bi-clipboard"></i></span>
+          <span class="tool-copy"><strong>Asignar</strong><small>Operador a estación</small></span>
         </span>
       </button>
 
       <!--CONSULTAR PUNTO DE CAMBIO -->
-        <button id="btnMenuTablaPC" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Punto de cambio">
-          <span data-bs-toggle="modal" data-bs-target="#changePointsModal">
-          <i class="bi bi-arrow-repeat"></i>
-          <span>Cambio</span>
+        <button id="btnMenuTablaPC" class="tool-btn" data-tooltip="Puntos de cambio" aria-label="Puntos de cambio" data-bs-toggle="modal" data-bs-target="#changePointsModal">
+          <span class="tool-btn-content">
+          <span class="tool-icon"><i class="bi bi-arrow-repeat"></i></span>
+          <span class="tool-copy"><strong>Puntos de cambio</strong><small>Consultar PC</small></span>
           </span>
         </button> 
 
       <!--REGISTRO DE ASISTENCIA -->
-      <button id="btnMenuRegistroAs" class="tool-btn" data-bs-toggle="tooltip" data-bs-placement="right" title="Registro de asistencia">
-        <span data-bs-toggle="modal" data-bs-target="#attendanceModal">
-          <i class="bi bi-check2-square"></i>
-          <span>Asistencia</span>
+      <button id="btnMenuRegistroAs" class="tool-btn" data-tooltip="Registro de asistencia" aria-label="Registro de asistencia" data-bs-toggle="modal" data-bs-target="#attendanceModal">
+        <span class="tool-btn-content">
+          <span class="tool-icon"><i class="bi bi-check2-square"></i></span>
+          <span class="tool-copy"><strong>Asistencia</strong><small>Asistencia de personal</small></span>
         </span>
       </button>
 
       <!--BOTON PARA REGISTRA/VER PERSONAL DISPOPNIBLE O NO ASIGNADO A UNA ESTACION -->
-      <button id ='btnMenuRegiswtroNAD' class="tool-btn d-none" data-bs-toggle="tooltip" data-bs-placement="right" title="Ver personal disponible">
-        <span data-bs-toggle="modal" data-bs-target="#modalPersonalDisponible">
-          <i class="bi-person-check"></i>
-          <span>Disponibles</span>
+      <button id ='btnMenuRegiswtroNAD' class="tool-btn d-none" data-tooltip="Personal disponible" aria-label="Personal disponible" data-bs-toggle="modal" data-bs-target="#modalPersonalDisponible">
+        <span class="tool-btn-content">
+          <span class="tool-icon"><i class="bi bi-person-check"></i></span>
+          <span class="tool-copy"><strong>Disponibles</strong><small>Personal sin asignar</small></span>
         </span>
       </button>
 
@@ -71,13 +88,21 @@
             <i class="bi bi-exclamation-triangle-fill" style=""></i>
         </button>
       -->
-    </div>
+      </div>
 
-    <button class="close-sidebar-btn" id="btncloseSidebar">
-        <i class="bi bi-arrows-fullscreen" id="iconFullscreen"></i>
-    </button>
+      <button type="button" class="close-sidebar-btn hide-sidebar-btn" id="btncloseSidebar"
+              title="Ocultar barra de herramientas" aria-label="Ocultar barra de herramientas">
+        <i class="bi bi-eye-slash"></i>
+        <span>Ocultar barra</span>
+      </button>
+
+      <div class="tools-sidebar-footer">
+        <i class="bi bi-info-circle"></i>
+        <span>Selecciona una opción para consultar o registrar información.</span>
+      </div>
+    </aside>
 
     <!-- ICONO FLOTANTE (aparece cuando menú oculto) -->
     <button class="floating-menu-btn d-none" id="btnfloatingMenu">
-        <i class="bi-fullscreen-exit"></i>
+        <i class="bi bi-chevron-right"></i>
     </button>
