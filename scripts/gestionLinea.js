@@ -2986,7 +2986,6 @@
                 }
             })
 
-
         //REGISTRAR TRABAJADOR AL LISTADO DE PERSONAL EN EL MODAL modalRegistrarOperador 
         btnRegistrarOperador.addEventListener('click', function(){
               var formDataAsig = new FormData
@@ -3664,4 +3663,3 @@
 
         applyZoom();
     }); 
-    
