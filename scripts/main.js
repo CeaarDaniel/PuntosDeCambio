@@ -1,12 +1,22 @@
     const pageTitle = document.getElementById('page-title') //Contenedor del titulo principal
     const navLinks = document.querySelectorAll('.sidebar-menu a'); //Opciones de la barra de navegavcion
+    const certificationRoutes = ['certificaciones', 'iluPersonal', 'estacionesCertificaciones'];
+    const dynamicStyles = {
+        certificaciones: './css/certificaciones.css',
+        iluPersonal: './css/iluPersonal.css',
+        estacionesCertificaciones: './css/estacionesCertificaciones.css'
+    };
 
     //Funcion para actualizar el active del navBar
         function actualizarOpcionActiva(seccion) {
+            const seccionNavegacion = certificationRoutes.includes(seccion)
+                ? 'menuCertificaciones'
+                : seccion;
+
             navLinks.forEach(link => {
                 const href = link.getAttribute('href') || '';
                 const ruta = href.split('/').pop();
-                const estaActivo = ruta === seccion;
+                const estaActivo = ruta === seccionNavegacion;
 
                 link.classList.toggle('active', estaActivo);
 
@@ -33,6 +43,18 @@
                         contenido.innerHTML = this.responseText;
                          updatePageTitle(pagina);
                          actualizarOpcionActiva(pagina);
+
+                        // Cargar únicamente el CSS particular de la vista actual.
+                        var oldStyle = document.getElementById('cssDinamico');
+                        if (oldStyle) oldStyle.remove();
+
+                        if (dynamicStyles[pagina]) {
+                            var style = document.createElement('link');
+                            style.id = 'cssDinamico';
+                            style.rel = 'stylesheet';
+                            style.href = dynamicStyles[pagina];
+                            document.head.appendChild(style);
+                        }
                               
                         // Eliminar el script anterior si existe
                         var oldScript = document.getElementById('jsDinamico');
@@ -167,6 +189,9 @@
                     'menuLineas': 'Gestión de Líneas',
                     'puntosCambio': 'Puntos de Cambio',
                     'menuCertificaciones': 'Certificaciones',
+                    'certificaciones': 'Certificaciones',
+                    'iluPersonal': 'Personal',
+                    'estacionesCertificaciones': 'Certificaciones por Estaci\u00f3n',
                     'change-points': 'Puntos de Cambio',
                     'menuReportes': 'Reportes y Estadísticas',
                     'estadisticas' : 'Estadísticas'
@@ -183,6 +208,18 @@
             window.history.back(); 
         }
 
+    //Volver al menu de certificaciones desde cualquiera de sus vistas internas
+    document.addEventListener('click', function (event) {
+        const backButton = event.target.closest('.btn-back-certifications');
+
+        if (!backButton) {
+            return;
+        }
+
+        event.preventDefault();
+        cargarRuta('menuCertificaciones');
+    });
+
     //Señalar en el navBarr la opcion dentro de la que se encuntra 
     navLinks.forEach(link => {
         link.addEventListener('click', function() {
@@ -191,6 +228,77 @@
         });
     });
 
+    //Control de la navegación flotante en pantallas pequeñas
+    const mobileSidebarButton = document.getElementById('btnOpenMobileSidebar');
+    const mobileSidebar = document.getElementById('mainSidebar');
+    const mobileSidebarClose = document.querySelector('.sidebar-mobile-close');
+    const mobileSidebarBackdrop = document.querySelector('.sidebar-mobile-backdrop');
+    const mobileSidebarMedia = window.matchMedia('(max-width: 991.98px)');
+
+    function setMobileSidebar(open, restoreFocus) {
+        if (!mobileSidebarButton || !mobileSidebar) {
+            return;
+        }
+
+        const shouldOpen = mobileSidebarMedia.matches && open;
+
+        document.body.classList.toggle('sidebar-mobile-open', shouldOpen);
+        mobileSidebarButton.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+        mobileSidebar.setAttribute(
+            'aria-hidden',
+            mobileSidebarMedia.matches && !shouldOpen ? 'true' : 'false'
+        );
+
+        if (mobileSidebarMedia.matches && !shouldOpen) {
+            mobileSidebar.setAttribute('inert', '');
+        } else {
+            mobileSidebar.removeAttribute('inert');
+        }
+
+        if (shouldOpen && mobileSidebarClose) {
+            mobileSidebarClose.focus();
+        } else if (restoreFocus && mobileSidebarMedia.matches) {
+            mobileSidebarButton.focus();
+        }
+    }
+
+    if (mobileSidebarButton && mobileSidebar && mobileSidebarClose && mobileSidebarBackdrop) {
+        mobileSidebarButton.addEventListener('click', function () {
+            setMobileSidebar(true, false);
+        });
+
+        mobileSidebarClose.addEventListener('click', function () {
+            setMobileSidebar(false, true);
+        });
+
+        mobileSidebarBackdrop.addEventListener('click', function () {
+            setMobileSidebar(false, true);
+        });
+
+        navLinks.forEach(function (link) {
+            link.addEventListener('click', function () {
+                setMobileSidebar(false, true);
+            });
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && document.body.classList.contains('sidebar-mobile-open')) {
+                setMobileSidebar(false, true);
+            }
+        });
+
+        const syncMobileSidebar = function () {
+            setMobileSidebar(false, false);
+        };
+
+        if (typeof mobileSidebarMedia.addEventListener === 'function') {
+            mobileSidebarMedia.addEventListener('change', syncMobileSidebar);
+        } else {
+            mobileSidebarMedia.addListener(syncMobileSidebar);
+        }
+
+        syncMobileSidebar();
+    }
 
 /*
     --MODULO

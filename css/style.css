@@ -126,7 +126,8 @@ a,
   box-shadow: 8px 0 30px rgba(26, 48, 105, 0.12);
   overflow: visible;
   z-index: 20;
-  transition: width 0.3s ease, min-width 0.3s ease, padding 0.3s ease;
+  transform: translateX(0);
+  transition: width 0.3s ease, min-width 0.3s ease, padding 0.3s ease, transform 0.3s ease;
 }
 
 .sidebar-toggle-input:checked + .sidebar {
@@ -439,6 +440,12 @@ a,
   display: block;
 }
 
+.sidebar-mobile-close,
+.sidebar-mobile-backdrop,
+.top-bar-menu {
+  display: none;
+}
+
 /* Encabezado de página */
 .top-bar {
   position: sticky;
@@ -454,6 +461,13 @@ a,
   box-shadow: 0 5px 22px rgba(39, 66, 143, 0.05);
   backdrop-filter: blur(14px);
   z-index: 15;
+}
+
+.top-bar-start {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .page-heading {
@@ -1213,74 +1227,145 @@ a,
 /* Responsividad */
 @media (max-width: 991.98px) {
   .app-container {
-    flex-direction: column;
+    display: block;
   }
 
-  .sidebar {
+  .main-content {
     width: 100%;
-    min-width: 0;
-    height: auto;
-    min-height: auto;
-    padding: 12px 18px;
-    overflow: visible;
   }
 
-  .sidebar-toggle-input:checked + .sidebar {
-    width: 100%;
-    min-width: 0;
-    padding-right: 18px;
-    padding-left: 18px;
-  }
-
-  .sidebar::before,
-  .sidebar::after,
-  .sidebar-section-label,
-  .sidebar-footer {
+  .sidebar-toggle-input {
     display: none;
   }
 
+  .sidebar,
+  .sidebar-toggle-input:checked + .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(86vw, 290px);
+    min-width: min(86vw, 290px);
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100vh;
+    padding: 22px 16px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    z-index: 1050;
+    transform: translateX(-105%);
+    box-shadow: 18px 0 42px rgba(17, 35, 82, 0.28);
+  }
+
+  body.sidebar-mobile-open .sidebar,
+  body.sidebar-mobile-open .sidebar-toggle-input:checked + .sidebar {
+    transform: translateX(0);
+  }
+
+  .sidebar-mobile-close {
+    position: absolute;
+    top: 18px;
+    right: 16px;
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+    font-size: 1rem;
+    cursor: pointer;
+    z-index: 4;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+
+  .sidebar-mobile-close:hover,
+  .sidebar-mobile-close:focus-visible {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+  }
+
+  .sidebar-mobile-close:focus-visible,
+  .top-bar-menu:focus-visible {
+    outline: 3px solid var(--focus-border);
+    outline-offset: 3px;
+  }
+
+  .sidebar-mobile-backdrop {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    padding: 0;
+    border: 0;
+    visibility: hidden;
+    opacity: 0;
+    background: rgba(17, 24, 39, 0.46);
+    backdrop-filter: blur(2px);
+    cursor: default;
+    pointer-events: none;
+    z-index: 1040;
+    transition: opacity 0.28s ease, visibility 0.28s ease;
+  }
+
+  body.sidebar-mobile-open .sidebar-mobile-backdrop {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   .sidebar-header {
-    min-height: auto;
-    padding: 0 0 10px;
-    margin: 0 0 10px;
+    min-height: 72px;
+    padding: 8px 44px 20px 8px;
+    margin: 0 0 22px;
     justify-content: flex-start;
   }
 
   .brand-mark {
-    width: 40px;
-    height: 40px;
-    flex-basis: 40px;
-    border-radius: 12px;
+    width: 46px;
+    height: 46px;
+    flex-basis: 46px;
+    border-radius: 14px;
+  }
+
+  .sidebar .brand-copy,
+  .sidebar-toggle-input:checked + .sidebar .brand-copy {
+    width: 160px;
+    max-width: 160px;
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .sidebar .sidebar-section-label,
+  .sidebar-toggle-input:checked + .sidebar .sidebar-section-label {
+    display: block;
+    max-height: 24px;
+    margin-bottom: 8px;
+    opacity: 1;
   }
 
   .sidebar-menu {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    scrollbar-width: thin;
+    display: block;
+    padding-top: 0;
+    overflow: visible;
   }
 
   .sidebar-menu li {
-    min-width: 56px;
-    margin: 0;
-    transition: min-width 0.3s ease;
+    min-width: 0;
+    margin: 0 0 8px;
   }
 
-  .sidebar-menu a {
-    min-height: 54px;
-    padding: 7px;
-  }
-
-  .sidebar-toggle-input:checked + .sidebar .sidebar-menu li {
-    min-width: 200px;
-  }
-
+  .sidebar-menu a,
   .sidebar-toggle-input:checked + .sidebar .sidebar-menu a {
-    padding-right: 10px;
-    padding-left: 10px;
+    min-height: 64px;
+    padding: 10px 12px;
+    gap: 12px;
+    justify-content: flex-start;
   }
 
-  .sidebar-toggle-input:not(:checked) + .sidebar .sidebar-menu a::after {
+  .sidebar .sidebar-menu a::after {
     display: none;
   }
 
@@ -1290,18 +1375,55 @@ a,
   }
 
   .nav-icon {
-    width: 36px;
-    height: 36px;
-    flex-basis: 36px;
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .sidebar .nav-copy,
+  .sidebar-toggle-input:checked + .sidebar .nav-copy {
+    width: 165px;
+    max-width: 165px;
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .sidebar .sidebar-footer,
+  .sidebar-toggle-input:checked + .sidebar .sidebar-footer {
+    max-height: 90px;
+    padding: 14px;
+    border-color: rgba(255, 255, 255, 0.1);
+    opacity: 1;
   }
 
   .sidebar-toggle {
-    top: 17px;
-    right: 18px;
+    display: none;
   }
 
   .top-bar {
-    position: relative;
+    position: sticky;
+  }
+
+  .top-bar-menu {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    flex: 0 0 44px;
+    place-items: center;
+    border: 1px solid #dbe7ff;
+    border-radius: 14px;
+    color: var(--primary);
+    background: linear-gradient(145deg, #ffffff, var(--surface-blue));
+    box-shadow: var(--shadow-sm);
+    font-size: 1.35rem;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .top-bar-menu:hover {
+    color: var(--primary-dark);
+    border-color: var(--focus-border);
+    transform: translateY(-1px);
   }
 
   .lines-intro {

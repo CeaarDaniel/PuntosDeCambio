@@ -91,7 +91,8 @@
       </div>
 
       <button type="button" class="close-sidebar-btn hide-sidebar-btn" id="btncloseSidebar"
-              title="Ocultar barra de herramientas" aria-label="Ocultar barra de herramientas">
+              title="Ocultar barra de herramientas" aria-label="Ocultar barra de herramientas"
+              aria-controls="tools-sidebar">
         <i class="bi bi-eye-slash"></i>
         <span>Ocultar barra</span>
       </button>
@@ -102,7 +103,11 @@
       </div>
     </aside>
 
+    <button type="button" class="tools-sidebar-backdrop" id="toolsSidebarBackdrop"
+            tabindex="-1" aria-label="Cerrar menú de herramientas"></button>
+
     <!-- ICONO FLOTANTE (aparece cuando menú oculto) -->
-    <button class="floating-menu-btn d-none" id="btnfloatingMenu">
+    <button type="button" class="floating-menu-btn d-none" id="btnfloatingMenu"
+            aria-label="Mostrar barra de herramientas" aria-controls="tools-sidebar">
         <i class="bi bi-chevron-right"></i>
     </button>
