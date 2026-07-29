@@ -1,3 +1,4 @@
+<!-- MENU REPORTES -->
 <link rel="stylesheet" href="./css/analytics.css">
 
 <div id="reports" class="analytics-view reports-view">
@@ -225,3 +226,4 @@
         </article>
     </section>
 </div>
+<!--Fin menu reportes -->

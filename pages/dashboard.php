@@ -1,3 +1,4 @@
+<!-- Dashboard Section -->
 <link rel="stylesheet" href="./css/analytics.css">
 
 <div id="dashboard" class="analytics-view dashboard-view">
@@ -253,3 +254,4 @@
         </div>
     </section>
 </div>
+<!--Fin dashboard -->
