@@ -50,58 +50,67 @@
     <!-- Área principal -->
     <div id="layout-main" class="layout-main">
       <div class="layout-header" id="layout-header">
-
-        <div class="">
-          <h2 class="layout-title">Línea de Producción <?php echo $nombre?>  <br>
-           <!-- <?php setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); echo ucfirst(strftime('%d de %B, %Y')); ?> -->
-          </h2>
+        <div class="layout-heading">
+          <span class="layout-heading-icon" aria-hidden="true">
+            <i class="bi bi-bounding-box"></i>
+          </span>
+          <div class="layout-heading-copy">
+            <h2 class="layout-title">Línea de Producción <?php echo $nombre?></h2>
+            <span class="layout-subtitle">
+              <i class="bi bi-pencil-square"></i>
+              Diseño y edición del layout
+            </span>
+          </div>
 
           <!-- IDENTIFICADOR DE LA LINEA PARA EXTRAER LOS DATOS VISIBLES -->
-            <input type="hidden" id="codigoLinea" value="<?php echo $codigo?>">
-            <input type="hidden" id="nombreLinea" value="<?php echo $nombre?>">
+          <input type="hidden" id="codigoLinea" value="<?php echo $codigo?>">
+          <input type="hidden" id="nombreLinea" value="<?php echo $nombre?>">
         </div>
-       
+
         <div class="layout-controls">
           <!-- BOTONES ALEJAR ACERCAR ZOOM-->
-          <div class="btn-group">
-            <div class="zoom-indicator me-3" id="zoomIndicator">100%</div>
-
-            <!--ALEJAR-->
-            <button class="btn btn-info btn-sm" id="zoomOutBtn">
+          <div class="zoom-controls" aria-label="Controles de zoom">
+            <div class="zoom-indicator" id="zoomIndicator">100%</div>
+            <button type="button" class="btn btn-info btn-sm" id="zoomOutBtn"
+                    title="Alejar vista" aria-label="Alejar vista">
               <i class="bi bi-zoom-out"></i>
             </button>
-
-            <!--ACERCAR-->
-            <button class="btn btn-info btn-sm" id="zoomInBtn">
+            <button type="button" class="btn btn-info btn-sm" id="zoomInBtn"
+                    title="Acercar vista" aria-label="Acercar vista">
               <i class="bi bi-zoom-in"></i>
             </button>
           </div>
 
-          <!--BOTON GUARDAR LAYOUT -->
-          <button class="btn btn-success btn-sm rounded-3" id="saveLayoutBtn">
-            <i class="bi bi-floppy"></i> Guardar
-          </button>
+          <div class="layout-action-group">
+            <!--BOTON GUARDAR LAYOUT -->
+            <button type="button" class="btn btn-success btn-sm" id="saveLayoutBtn">
+              <i class="bi bi-floppy"></i>
+              <span>Guardar</span>
+            </button>
 
-          <!-- BTN AGREGAR LINEA-->
-          <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalAgregarEstacion">
-            <i class="bi bi-building"></i> 
-            <span data-bs-toggle="tooltip" data-bs-placement="right" title="Crear estaciones">
-              Crear
-            </span>
-          </button>
+            <!-- BTN AGREGAR LINEA-->
+            <button type="button" class="btn btn-primary-soft btn-sm"
+                    data-bs-toggle="modal" data-bs-target="#modalAgregarEstacion"
+                    title="Crear estación">
+              <i class="bi bi-building-add"></i>
+              <span>Crear</span>
+            </button>
 
-          <!-- BTN EDITAR LINEA -->
-          <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#editarLineaModal">
-            <i class="bi bi-pencil"></i>
-            <span data-bs-toggle="tooltip" data-bs-placement="right" title="Editar información de la línea">
-              Editar Línea
-            </span>
-          </button>
+            <!-- BTN EDITAR LINEA -->
+            <button type="button" class="btn btn-primary-soft btn-sm"
+                    data-bs-toggle="modal" data-bs-target="#editarLineaModal"
+                    title="Editar información de la línea">
+              <i class="bi bi-pencil"></i>
+              <span>Editar línea</span>
+            </button>
 
-          <!-- Botón para mostrar modal de error -->
-          <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#errorModal">
-            <i class="bi bi-exclamation-triangle-fill" style=""></i>
-          </button>
+            <!-- Botón para mostrar modal de error -->
+            <button type="button" class="btn btn-danger-soft btn-sm"
+                    data-bs-toggle="modal" data-bs-target="#errorModal"
+                    title="Mostrar información de error" aria-label="Mostrar información de error">
+              <i class="bi bi-exclamation-triangle"></i>
+            </button>
+          </div>
         </div>
       </div>
       
@@ -127,6 +136,18 @@
             <!-- Aquí se insertarán dinámicamente las estaciones (divs) -->
           </div>
         </div>
+      </div>
+
+      <div class="layout-panel-controls" aria-label="Controles de barras laterales">
+        <button type="button" class="close-sidebar-btn" id="btncloseSidebar"
+                title="Ocultar paneles" aria-label="Ocultar barras de diseño">
+          <i class="bi bi-arrows-fullscreen" id="iconFullscreen"></i>
+        </button>
+
+        <button type="button" class="floating-menu-btn d-none" id="btnfloatingMenu"
+                title="Mostrar paneles" aria-label="Mostrar barras de diseño">
+          <i class="bi bi-fullscreen-exit"></i>
+        </button>
       </div>
     </div>
 

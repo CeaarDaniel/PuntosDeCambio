@@ -4,6 +4,7 @@
   //Botones flotantes
   let btncloseSidebar = document.getElementById('btncloseSidebar')
   let btnfloatingMenu = document.getElementById('btnfloatingMenu')
+  let btnToggleAttributesSidebar = document.getElementById('btnToggleAttributesSidebar')
 
   //AREA DE DIBUJO DE LAS ESTACIONES
   let workspaceGrid;
@@ -555,9 +556,9 @@
     function clearSelection() {
       $('#workspaceGrid .selected').removeClass('selected');
       selectedElement = null;
-      //$('.attr-section').hide();
-      //$('#noSelectionMsg').show();
-      //$('.common-attrs').hide();
+      $('.attr-section').removeClass('active-section').hide();
+      $('#noSelectionMsg').show();
+      $('.common-attrs').hide();
       $('.element-list-item').removeClass('selected-in-list');
     }
 
@@ -961,6 +962,30 @@
       //DECLARACION DE EVENTOS
         btnGuardarEstacion.addEventListener('click', agregarEstacion);
 
+        //Expandir y comprimir únicamente la barra derecha de atributos
+          function setAttributesSidebarExpanded(expanded) {
+            const attributesPanel = document.getElementById('tools-panel');
+            if (!attributesPanel || !btnToggleAttributesSidebar) return;
+
+            attributesPanel.classList.toggle('is-expanded', expanded);
+            btnToggleAttributesSidebar.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            btnToggleAttributesSidebar.setAttribute('title', expanded ? 'Comprimir atributos' : 'Expandir atributos');
+
+            const attributesBody = attributesPanel.querySelector('.attributes-sidebar-body');
+            if (attributesBody) {
+              attributesBody.inert = !expanded;
+            }
+          }
+
+          if (btnToggleAttributesSidebar) {
+            btnToggleAttributesSidebar.addEventListener('click', function () {
+              const attributesPanel = document.getElementById('tools-panel');
+              setAttributesSidebarExpanded(!attributesPanel.classList.contains('is-expanded'));
+            });
+          }
+
+          setAttributesSidebarExpanded(true);
+
         //Mostrar y ocultar los botones flotantes
           btncloseSidebar.addEventListener('click', function () {
             $('#btncloseSidebar').addClass('d-none')
@@ -973,6 +998,7 @@
               setTimeout(() => {
                   $('#tools-sidebar').addClass('d-none')
                   $('#tools-panel').addClass('d-none')
+                  $('.layout-container').addClass('panels-hidden')
                   //$('#layout-header').addClass('d-none')
 
                   $('#tools-sidebar').removeClass('fade-out')
@@ -985,6 +1011,7 @@
             $('#btncloseSidebar').removeClass('d-none')
             $('#btnfloatingMenu').addClass('d-none')
 
+            $('.layout-container').removeClass('panels-hidden')
             $('#tools-sidebar').removeClass('d-none')
             $('#tools-panel').removeClass('d-none')
             //$('#layout-header').removeClass('d-none')
