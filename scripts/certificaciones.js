@@ -47,13 +47,13 @@ $(function () {
     function iniciarTabla() {
         tabla = $('#tablaCertificaciones').DataTable({
             processing: false, //atributo para mostrar el mensaje de procesando
-            serverSide: false, //Dejar en false para Filtrar los datos cargado en el datatable
+            serverSide: true, //Dejar en false para Filtrar los datos cargado en el datatable
             searching: true,
-            pageLength: 8,
+            pageLength: 5,
             lengthChange: true,
             lengthMenu: [ 
-                          [8, 10, 15, 50], 
-                          [8, 10, 15, 50]
+                          [5, 10, 15, 50], 
+                          [5, 10, 15, 50]
                         ],
             autoWidth: false,
             deferRender: true,
