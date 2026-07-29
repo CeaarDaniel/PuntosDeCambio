@@ -1,0 +1,67 @@
+@import url("./certificaciones.css");
+
+.station-name {
+    display: block;
+    max-width: 300px;
+    line-height: 1.4;
+}
+
+.requirement-badge.yes {
+    color: #17664f;
+    border-color: #cde9df;
+    background: var(--cert-success-soft);
+}
+
+.requirement-badge.no {
+    color: var(--text-secondary);
+    border-color: var(--border);
+    background: var(--surface-soft);
+}
+
+.certification-badge {
+    color: var(--primary);
+    border-color: var(--focus-border);
+    background: var(--surface-blue);
+}
+
+.certification-badge.pending {
+    color: #925a08;
+    border-color: #f5dfb3;
+    background: var(--cert-warning-soft);
+}
+
+.table-check {
+    width: 1.05rem;
+    height: 1.05rem;
+    border-color: #aeb9c8;
+    cursor: pointer;
+}
+
+.table-check:checked {
+    border-color: var(--primary);
+    background-color: var(--primary);
+}
+
+.empty-line-state {
+    padding: 32px 20px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.empty-line-state i {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--primary);
+    font-size: 2rem;
+}
+
+.form-switch .form-check-input {
+    width: 2.8rem;
+    height: 1.45rem;
+    cursor: pointer;
+}
+
+.form-switch .form-check-input:checked {
+    border-color: var(--primary);
+    background-color: var(--primary);
+}

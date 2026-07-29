@@ -1,0 +1,205 @@
+@import url("./certificaciones.css");
+
+.stats-grid.stats-grid-four {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.person-name {
+    display: block;
+    max-width: 320px;
+    line-height: 1.4;
+}
+
+.person-subtext {
+    display: block;
+    margin-top: 3px;
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+}
+
+.status-badge.available {
+    color: #17664f;
+    border-color: #cde9df;
+    background: var(--cert-success-soft);
+}
+
+.status-badge.assigned,
+.course-badge {
+    color: var(--primary);
+    border-color: var(--focus-border);
+    background: var(--surface-blue);
+}
+
+.status-badge.deleted {
+    color: var(--danger);
+    border-color: #f2cbd1;
+    background: var(--cert-danger-soft);
+}
+
+.status-badge.neutral,
+.turno-badge {
+    color: var(--text-secondary);
+    border-color: var(--border);
+    background: var(--surface-soft);
+}
+
+.course-badge.pending {
+    color: #925a08;
+    border-color: #f5dfb3;
+    background: var(--cert-warning-soft);
+}
+
+.course-list-preview {
+    display: block;
+    max-width: 290px;
+    margin-top: 5px;
+    overflow: hidden;
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.table-check {
+    width: 1.05rem;
+    height: 1.05rem;
+    border-color: #aeb9c8;
+    cursor: pointer;
+}
+
+.table-check:checked {
+    border-color: var(--primary);
+    background-color: var(--primary);
+}
+
+.detail-list {
+    display: grid;
+    gap: 10px;
+}
+
+.detail-course-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 14px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background: linear-gradient(145deg, #ffffff, var(--surface-soft));
+}
+
+.detail-course-item strong,
+.detail-course-item small {
+    display: block;
+}
+
+.detail-course-item strong {
+    color: var(--primary-dark);
+    font-size: 0.8rem;
+}
+
+.detail-course-item small {
+    margin-top: 3px;
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+}
+
+.detail-empty {
+    padding: 24px;
+    color: var(--text-secondary);
+    border: 1px dashed var(--focus-border);
+    border-radius: 13px;
+    background: var(--surface-blue);
+    text-align: center;
+}
+
+.detail-empty i {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--primary);
+    font-size: 1.7rem;
+}
+
+.tabla-cargando {
+    position: relative;
+    opacity: 0.68;
+    pointer-events: none;
+}
+
+.tabla-cargando::after {
+    content: "Cargando personal...";
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    z-index: 3;
+    padding: 7px 11px;
+    color: var(--primary-dark);
+    border: 1px solid var(--focus-border);
+    border-radius: 999px;
+    background: #ffffff;
+    box-shadow: var(--shadow-sm);
+    font-size: 0.7rem;
+    font-weight: 750;
+}
+
+.toolbar-filters-only {
+    justify-content: flex-end;
+}
+
+.datatable-search-row {
+    display: flex;
+    justify-content: flex-start;
+    margin: 0 clamp(15px, 2.4vw, 26px) 16px;
+}
+
+.datatable-search-row .dataTables_filter {
+    width: min(100%, 440px);
+    margin: 0;
+    padding: 0;
+    text-align: left;
+}
+
+.datatable-search-row .dataTables_filter label {
+    width: 100%;
+    color: var(--text-main);
+    font-size: 0.75rem;
+    font-weight: 750;
+}
+
+.datatable-search-row .dataTables_filter input {
+    width: 100% !important;
+    min-height: 43px;
+    display: block;
+    margin: 6px 0 0;
+    padding: 10px 13px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: #ffffff;
+}
+
+.datatable-search-row .dataTables_filter input:focus {
+    border-color: var(--primary-light);
+    outline: 0;
+    box-shadow: 0 0 0 4px rgba(75, 127, 240, 0.12);
+}
+
+.datatable-search-row .dataTables_filter.dt-search-disabled {
+    opacity: 0.65;
+}
+
+@media (max-width: 1199.98px) {
+    .stats-grid.stats-grid-four {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 575.98px) {
+    .stats-grid.stats-grid-four {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-course-item {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}
