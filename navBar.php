@@ -3,7 +3,12 @@
            aria-label="Expandir o comprimir la navegación">
 
     <!-- Barra de navegacion -->
-    <aside class="sidebar" aria-label="Navegación principal">
+    <aside class="sidebar" id="mainSidebar" aria-label="Navegación principal">
+      <button type="button" class="sidebar-mobile-close"
+              aria-label="Cerrar menú de navegación" aria-controls="mainSidebar">
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+      </button>
+
       <div class="sidebar-header">
         <span class="brand-mark">
           <i class="bi bi-diagram-3"></i>
@@ -77,3 +82,6 @@
         <span>Selecciona una opción para comenzar.</span>
       </div>
     </aside>
+
+    <button type="button" class="sidebar-mobile-backdrop" tabindex="-1"
+            aria-label="Cerrar menú de navegación"></button>

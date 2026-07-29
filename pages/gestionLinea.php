@@ -52,26 +52,34 @@
     <div id="layout-main" class="layout-main">
       <!--HEADER-->
         <div class="layout-header" id="layout-header">
-          <div class="layout-heading">
-            <span class="layout-heading-icon">
-              <i class="bi bi-diagram-3"></i>
-            </span>
-            <div class="layout-heading-copy">
-              <h2 class="layout-title">Línea de Producción <?php echo $nombre?></h2>
-              <div class="shift-control">
-                <label for="turnoLayout">
-                  <i class="bi bi-clock"></i> Turno activo
-                </label>
-                <select class="form-select" name="turnoLayout" id="turnoLayout">
-                    <option value="1">Turno 1</option>
-                    <option value="2">Turno 2</option>
-                </select>
-              </div>
-            </div>
+          <div class="layout-header-main">
+            <button type="button" class="tools-mobile-menu-btn" id="btnOpenToolsSidebarMobile"
+                    aria-label="Abrir menú de herramientas" aria-controls="tools-sidebar"
+                    aria-expanded="false">
+              <i class="bi bi-list" aria-hidden="true"></i>
+            </button>
 
-            <!-- IDENTIFICADOR DE LA LINEA PARA EXTRAER LOS DATOS VISIBLES -->
-              <input type="hidden" id="codigoLinea" value="<?php echo $codigo?>">
-              <input type="hidden" id="nombreLinea" value="<?php echo $nombre?>">
+            <div class="layout-heading">
+              <span class="layout-heading-icon">
+                <i class="bi bi-diagram-3"></i>
+              </span>
+              <div class="layout-heading-copy">
+                <h2 class="layout-title">Línea de Producción <?php echo $nombre?></h2>
+                <div class="shift-control">
+                  <label for="turnoLayout">
+                    <i class="bi bi-clock"></i> Turno activo
+                  </label>
+                  <select class="form-select" name="turnoLayout" id="turnoLayout">
+                      <option value="1">Turno 1</option>
+                      <option value="2">Turno 2</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- IDENTIFICADOR DE LA LINEA PARA EXTRAER LOS DATOS VISIBLES -->
+                <input type="hidden" id="codigoLinea" value="<?php echo $codigo?>">
+                <input type="hidden" id="nombreLinea" value="<?php echo $nombre?>">
+            </div>
           </div>
         
           <div class="layout-controls">

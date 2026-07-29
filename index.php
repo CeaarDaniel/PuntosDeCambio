@@ -22,24 +22,34 @@
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="./css/style.css">
+
+  <!-- DataTables -->
+  <link rel="stylesheet" href="./DataTables/datatables.min.css">
 </head>
 <body>
 
 <div class="app-container">
-
     <!-- Barra de navegacion -->
       <?php include('navBar.php')?>
     
     <!-- Main Content Area -->
     <main class="main-content">
       <header class="top-bar">
-        <div class="page-heading">
-          <span class="page-heading-icon">
-            <i class="bi bi-grid-3x3-gap"></i>
-          </span>
-          <div>
-            <span class="page-eyebrow">Panel de operación</span>
-            <h1 id="page-title" class="page-title">Dashboard</h1>
+        <div class="top-bar-start">
+          <button type="button" class="top-bar-menu" id="btnOpenMobileSidebar"
+                  aria-label="Abrir menú de navegación" aria-controls="mainSidebar"
+                  aria-expanded="false">
+            <i class="bi bi-list" aria-hidden="true"></i>
+          </button>
+
+          <div class="page-heading">
+            <span class="page-heading-icon">
+              <i class="bi bi-grid-3x3-gap"></i>
+            </span>
+            <div>
+              <span class="page-eyebrow">Panel de operación</span>
+              <h1 id="page-title" class="page-title">Dashboard</h1>
+            </div>
           </div>
         </div>
 
@@ -57,6 +67,9 @@
 
   <!-- Bootstrap JS -->
   <script src="./scripts/bootstrap.bundle.min.js"></script>
+
+  <!-- DataTables JS -->
+  <script src="./DataTables/datatables.min.js"></script>
 
   <!--Custom js -->
   <script src="./scripts/main.js"></script>

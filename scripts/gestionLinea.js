@@ -14,6 +14,8 @@
     let btnToggleToolsSidebar = document.getElementById('btnToggleToolsSidebar')
     let btncloseSidebar = document.getElementById('btncloseSidebar')
     let btnfloatingMenu = document.getElementById('btnfloatingMenu')
+    let btnOpenToolsSidebarMobile = document.getElementById('btnOpenToolsSidebarMobile')
+    let toolsSidebarBackdrop = document.getElementById('toolsSidebarBackdrop')
   //FIN BOTONES FLOTANTES
 
   let checkPadre = document.getElementById("checkPadre");
@@ -3388,40 +3390,149 @@
         });
 
         //INICIO CONTROL PARA EXPANDIR Y COMPRIMIR LA BARRA DE HERRAMIENTAS
-            function setToolsSidebarExpanded(expanded) {
-              const toolsSidebar = document.getElementById('tools-sidebar');
+            const toolsSidebar = document.getElementById('tools-sidebar');
+            const toolsSidebarMedia = window.matchMedia('(max-width: 991.98px)');
+            const toolsMenuButtons = toolsSidebar.querySelectorAll('.tools-menu .tool-btn');
+            let desktopSidebarHidden = toolsSidebar.classList.contains('d-none');
+            let sidebarTransitionTimer = null;
 
+            function setToolsSidebarExpanded(expanded) {
               toolsSidebar.classList.toggle('is-expanded', expanded);
               btnToggleToolsSidebar.setAttribute('aria-expanded', expanded);
               btnToggleToolsSidebar.setAttribute('title', expanded ? 'Comprimir herramientas' : 'Expandir herramientas');
             }
 
-            btnToggleToolsSidebar.addEventListener('click', function () {
-              const toolsSidebar = document.getElementById('tools-sidebar');
-              setToolsSidebarExpanded(!toolsSidebar.classList.contains('is-expanded'));
-            })
+            function setMobileToolsSidebar(open, restoreFocus) {
+              const shouldOpen = toolsSidebarMedia.matches && open;
 
-            btncloseSidebar.addEventListener('click', function () {
-              const toolsSidebar = document.getElementById('tools-sidebar');
+              if (shouldOpen) {
+                clearTimeout(sidebarTransitionTimer);
+                toolsSidebar.classList.remove('d-none', 'sidebar-transition-hidden');
+              }
+
+              document.body.classList.toggle('tools-sidebar-mobile-open', shouldOpen);
+              btnOpenToolsSidebarMobile.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+              toolsSidebar.setAttribute(
+                'aria-hidden',
+                toolsSidebarMedia.matches && !shouldOpen ? 'true' : 'false'
+              );
+
+              if (toolsSidebarMedia.matches && !shouldOpen) {
+                toolsSidebar.setAttribute('inert', '');
+              } else {
+                toolsSidebar.removeAttribute('inert');
+              }
+
+              if (shouldOpen) {
+                btncloseSidebar.focus();
+              } else if (restoreFocus && toolsSidebarMedia.matches) {
+                btnOpenToolsSidebarMobile.focus();
+              }
+            }
+
+            function hideDesktopToolsSidebar() {
+              desktopSidebarHidden = true;
               toolsSidebar.classList.add('sidebar-transition-hidden');
 
-              setTimeout(() => {
+              clearTimeout(sidebarTransitionTimer);
+              sidebarTransitionTimer = setTimeout(() => {
                 toolsSidebar.classList.add('d-none');
-                $('#btnfloatingMenu').removeClass('d-none');
+                btnfloatingMenu.classList.remove('d-none');
               }, 320);
-            })
+            }
 
-            btnfloatingMenu.addEventListener('click', function () {
-              const toolsSidebar = document.getElementById('tools-sidebar');
+            function showDesktopToolsSidebar() {
+              desktopSidebarHidden = false;
+              clearTimeout(sidebarTransitionTimer);
               toolsSidebar.classList.remove('d-none');
-              $('#btnfloatingMenu').addClass('d-none');
+              btnfloatingMenu.classList.add('d-none');
 
               requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                   toolsSidebar.classList.remove('sidebar-transition-hidden');
                 });
               });
+            }
+
+            btnToggleToolsSidebar.addEventListener('click', function () {
+              setToolsSidebarExpanded(!toolsSidebar.classList.contains('is-expanded'));
             })
+
+            btncloseSidebar.addEventListener('click', function () {
+              if (toolsSidebarMedia.matches) {
+                setMobileToolsSidebar(false, true);
+                return;
+              }
+
+              hideDesktopToolsSidebar();
+            })
+
+            btnfloatingMenu.addEventListener('click', function () {
+              if (toolsSidebarMedia.matches) {
+                setMobileToolsSidebar(true, false);
+                return;
+              }
+
+              showDesktopToolsSidebar();
+            })
+
+            btnOpenToolsSidebarMobile.addEventListener('click', function () {
+              setMobileToolsSidebar(true, false);
+            })
+
+            toolsSidebarBackdrop.addEventListener('click', function () {
+              setMobileToolsSidebar(false, true);
+            })
+
+            toolsMenuButtons.forEach(function (button) {
+              button.addEventListener('click', function () {
+                if (toolsSidebarMedia.matches) {
+                  setMobileToolsSidebar(false, true);
+                }
+              });
+            });
+
+            document.addEventListener('keydown', function (event) {
+              if (
+                event.key === 'Escape' &&
+                document.body.classList.contains('tools-sidebar-mobile-open')
+              ) {
+                setMobileToolsSidebar(false, true);
+              }
+            });
+
+            function syncToolsSidebarMode() {
+              document.body.classList.remove('tools-sidebar-mobile-open');
+              btnOpenToolsSidebarMobile.setAttribute('aria-expanded', 'false');
+
+              if (toolsSidebarMedia.matches) {
+                clearTimeout(sidebarTransitionTimer);
+                toolsSidebar.classList.remove('d-none', 'sidebar-transition-hidden');
+                btnfloatingMenu.classList.add('d-none');
+                toolsSidebar.setAttribute('aria-hidden', 'true');
+                toolsSidebar.setAttribute('inert', '');
+                return;
+              }
+
+              toolsSidebar.removeAttribute('inert');
+              toolsSidebar.setAttribute('aria-hidden', 'false');
+
+              if (desktopSidebarHidden) {
+                toolsSidebar.classList.add('d-none', 'sidebar-transition-hidden');
+                btnfloatingMenu.classList.remove('d-none');
+              } else {
+                toolsSidebar.classList.remove('d-none', 'sidebar-transition-hidden');
+                btnfloatingMenu.classList.add('d-none');
+              }
+            }
+
+            if (typeof toolsSidebarMedia.addEventListener === 'function') {
+              toolsSidebarMedia.addEventListener('change', syncToolsSidebarMode);
+            } else {
+              toolsSidebarMedia.addListener(syncToolsSidebarMode);
+            }
+
+            syncToolsSidebarMode();
         //FIN CONTROL PARA EXPANDIR Y COMPRIMIR LA BARRA DE HERRAMIENTAS
 
         //Evento para cambiar de pagina con el boton actualizar operaciones de la tabla de personal
@@ -3662,4 +3773,4 @@
       }, 500);
 
         applyZoom();
-    }); 
+    });
