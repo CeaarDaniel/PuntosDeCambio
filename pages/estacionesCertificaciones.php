@@ -90,22 +90,6 @@
         </div>
 
         <div class="toolbar">
-            <div class="search-box">
-                <i class="bi bi-search" aria-hidden="true"></i>
-                <input
-                    type="search"
-                    class="form-control"
-                    id="busquedaEstacion"
-                    placeholder="Buscar estación, descripción o certificación"
-                    aria-label="Buscar estaciones"
-                    autocomplete="off"
-                    disabled
-                >
-                <button class="clear-search d-none" type="button" id="btnLimpiarBusqueda" aria-label="Limpiar búsqueda">
-                    <i class="bi bi-x-lg" aria-hidden="true"></i>
-                </button>
-            </div>
-
             <div class="toolbar-actions">
                 <div class="select-box">
                     <i class="bi bi-funnel" aria-hidden="true"></i>

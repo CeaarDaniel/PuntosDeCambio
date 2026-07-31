@@ -4,122 +4,107 @@
         <i class="bi bi-chevron-left" aria-hidden="true"></i>
     </a>
 
-                <section class="hero-panel" aria-labelledby="certificationsPageTitle">
-                    <div class="hero-content">
-                        <div class="hero-heading">
-                            <div>
-                               <span class="section-label">GESTION DE CERTIFICACIONES</span>
-                                <h1 id="certificationsPageTitle">Certificaciones</h1>
-                                <p>Consulta, registra y administra las certificaciones utilizadas en los procesos de producción.</p>
-                            </div>
+    <section class="hero-panel" aria-labelledby="certificationsPageTitle">
+        <div class="hero-content">
+            <div class="hero-heading">
+                <div>
+                    <span class="section-label">GESTION DE CERTIFICACIONES</span>
+                    <h1 id="certificationsPageTitle">Certificaciones</h1>
+                    <p>Consulta, registra y administra las certificaciones utilizadas en los procesos de producción.</p>
+                </div>
 
-                            <button type="button" class="btn btn-primary btn-create" id="btnNuevaCertificacion">
-                                <i class="bi bi-plus-lg" aria-hidden="true"></i>
-                                <span>Nueva certificación</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="hero-decoration hero-decoration-one"></div>
-                    <div class="hero-decoration hero-decoration-two"></div>
-                </section>
+                <button type="button" class="btn btn-primary btn-create" id="btnNuevaCertificacion">
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                    <span>Nueva certificación</span>
+                </button>
+            </div>
+        </div>
+        <div class="hero-decoration hero-decoration-one"></div>
+        <div class="hero-decoration hero-decoration-two"></div>
+    </section>
 
-                <section class="stats-grid" aria-label="Resumen de certificaciones">
-                    <article class="stat-card">
-                        <div class="stat-icon stat-icon-primary">
-                            <i class="bi bi-award" aria-hidden="true"></i>
-                        </div>
-                        <div class="stat-copy">
-                            <span>Total de registros</span>
-                            <strong id="totalCertificaciones">0</strong>
-                            <small>Certificaciones disponibles</small>
-                        </div>
-                    </article>
+    <section class="stats-grid" aria-label="Resumen de certificaciones">
+        <article class="stat-card">
+            <div class="stat-icon stat-icon-primary">
+                <i class="bi bi-award" aria-hidden="true"></i>
+            </div>
+            <div class="stat-copy">
+                <span>Total de registros</span>
+                <strong id="totalCertificaciones">0</strong>
+                <small>Certificaciones disponibles</small>
+            </div>
+        </article>
 
-                    <article class="stat-card">
-                        <div class="stat-icon stat-icon-secondary">
-                            <i class="bi bi-diagram-3" aria-hidden="true"></i>
-                        </div>
-                        <div class="stat-copy">
-                            <span>Tipos de proceso</span>
-                            <strong id="totalProcesos">0</strong>
-                            <small>Categorías registradas</small>
-                        </div>
-                    </article>
+        <article class="stat-card">
+            <div class="stat-icon stat-icon-secondary">
+                <i class="bi bi-diagram-3" aria-hidden="true"></i>
+            </div>
+            <div class="stat-copy">
+                <span>Tipos de proceso</span>
+                <strong id="totalProcesos">0</strong>
+                <small>Categorías registradas</small>
+            </div>
+        </article>
 
-                    <article class="stat-card">
-                        <div class="stat-icon stat-icon-accent">
-                            <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
-                        </div>
-                        <div class="stat-copy">
-                            <span>Con descripción</span>
-                            <strong id="totalConDescripcion">0</strong>
-                            <small>Registros documentados</small>
-                        </div>
-                    </article>
-                </section>
+        <article class="stat-card">
+            <div class="stat-icon stat-icon-accent">
+                <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+            </div>
+            <div class="stat-copy">
+                <span>Con descripción</span>
+                <strong id="totalConDescripcion">0</strong>
+                <small>Registros documentados</small>
+            </div>
+        </article>
+    </section>
 
-                <section class="data-card" aria-labelledby="table-title">
-                    <div class="data-card-header">
-                        <div>
-                            <span class="section-label section-label-dark">Administración</span>
-                            <h2 id="table-title">Listado de certificaciones</h2>
-                            <p>Usa la búsqueda o el filtro para localizar un registro rápidamente.</p>
-                        </div>
-                        <span class="record-count" id="contadorVisible">0 registros</span>
-                    </div>
+    <section class="data-card" aria-labelledby="table-title">
+        <div class="data-card-header">
+            <div>
+                <span class="section-label section-label-dark">Administración</span>
+                <h2 id="table-title">Listado de certificaciones</h2>
+                <p>Usa la búsqueda o el filtro para localizar un registro rápidamente.</p>
+            </div>
+            <span class="record-count" id="contadorVisible">0 registros</span>
+        </div>
 
-                    <div class="toolbar">
-                        <div class="search-box">
-                            <i class="bi bi-search" aria-hidden="true"></i>
-                            <input
-                                type="search"
-                                class="form-control"
-                                id="busquedaCertificacion"
-                                placeholder="Buscar por código, nombre o descripción"
-                                aria-label="Buscar certificaciones"
-                                autocomplete="off"
-                            >
-                            <button class="clear-search d-none" type="button" id="btnLimpiarBusqueda" aria-label="Limpiar búsqueda">
-                                <i class="bi bi-x-lg" aria-hidden="true"></i>
-                            </button>
-                        </div>
+        <div class="toolbar">
+            <div class="toolbar-actions">
+                <div class="select-box">
+                    <i class="bi bi-funnel" aria-hidden="true"></i>
+                    <label for="filtroProceso" class="visually-hidden">Filtrar por proceso</label>
+                    <select class="form-select" id="filtroProceso">
+                        <option value="">Todos los procesos</option>
+                    </select>
+                </div>
 
-                        <div class="toolbar-actions">
-                            <div class="select-box">
-                                <i class="bi bi-funnel" aria-hidden="true"></i>
-                                <label for="filtroProceso" class="visually-hidden">Filtrar por proceso</label>
-                                <select class="form-select" id="filtroProceso">
-                                    <option value="">Todos los procesos</option>
-                                </select>
-                            </div>
+                <button class="btn btn-outline-secondary btn-reset" type="button" id="btnLimpiarFiltros">
+                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                    <span>Restablecer</span>
+                </button>
+            </div>
+        </div>
 
-                            <button class="btn btn-outline-secondary btn-reset" type="button" id="btnLimpiarFiltros">
-                                <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
-                                <span>Restablecer</span>
-                            </button>
-                        </div>
-                    </div>
+        <div class="table-shell px-3 mt-3">
+            <table id="tablaCertificaciones" class="table app-table align-middle w-100">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Certificación</th>
+                        <th>Proceso</th>
+                        <th>Descripción</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </section>
 
-                    <div class="table-shell px-3 mt-3">
-                        <table id="tablaCertificaciones" class="table app-table align-middle w-100">
-                            <thead>
-                                <tr>
-                                    <th>Código</th>
-                                    <th>Certificación</th>
-                                    <th>Proceso</th>
-                                    <th>Descripción</th>
-                                    <th class="text-end">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </section>
-
-                <footer class="app-footer">
-                    <span>SPC Quality · Interfaz demostrativa</span>
-                    <span>Los cambios se conservan únicamente durante la sesión.</span>
-                </footer>
+    <footer class="app-footer">
+        <span>SPC Quality · Interfaz demostrativa</span>
+        <span>Los cambios se conservan únicamente durante la sesión.</span>
+    </footer>
 
     <div class="modal fade" id="modalCertificacion" tabindex="-1" aria-labelledby="modalCertificacionLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">

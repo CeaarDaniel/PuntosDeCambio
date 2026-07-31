@@ -2,13 +2,11 @@ $(function () {
     'use strict';
 
     var API_URL = './api/estaciones_certificaciones.php';
-    var SEARCH_DELAY = 450;
 
     var tabla = null;
     var lineas = [];
     var certificaciones = [];
     var estacionesSeleccionadas = new Set();
-    var temporizadorBusqueda = null;
     var accionPendiente = null;
 
     var modalEditar = new bootstrap.Modal(
@@ -100,8 +98,7 @@ $(function () {
         selects.find('option:not(:first)').remove();
 
         certificaciones.forEach(function (certificacion) {
-            var texto = certificacion.codigo_certificacion + ' · ' +
-                certificacion.nombre_certificacion;
+            var texto = certificacion.nombre_certificacion || 'Sin nombre';
 
             selects.each(function () {
                 $('<option>', {
@@ -114,8 +111,9 @@ $(function () {
 
     function iniciarTabla() {
         tabla = $('#tablaEstaciones').DataTable({
+            data: [],
             processing: false,
-            serverSide: true,
+            serverSide: false,
             searching: true,
             pageLength: 10,
             lengthChange: true,
@@ -128,69 +126,6 @@ $(function () {
             scrollX: true,
             scrollY: '52vh',
             scrollCollapse: true,
-
-            /*
-             * Se controla manualmente la petición para que DataTables
-             * siempre reciba una respuesta, incluso si la API falla.
-             * Esto evita que la tabla permanezca en "Cargando...".
-             */
-            ajax: function (parametros, callback) {
-                parametros.accion = 'listar';
-                parametros.codigo_linea = obtenerCodigoLineaSeleccionado() || '';
-                parametros.estado = $('#filtroEstado').val() || 'todos';
-
-                $.ajax({
-                    url: API_URL,
-                    method: 'GET',
-                    dataType: 'json',
-                    cache: false,
-                    data: parametros
-                })
-                    .done(function (respuesta) {
-                        if (!respuesta || respuesta.success !== true) {
-                            actualizarResumen({});
-
-                            callback(respuestaDataTablesVacia(parametros.draw));
-
-                            mostrarToast(
-                                'No se pudieron cargar las estaciones',
-                                respuesta && respuesta.message
-                                    ? respuesta.message
-                                    : 'La API devolvió una respuesta no válida.',
-                                'error'
-                            );
-                            return;
-                        }
-
-                        actualizarResumen(respuesta.summary || {});
-
-                        callback({
-                            draw: Number(respuesta.draw) || Number(parametros.draw) || 0,
-                            recordsTotal: Number(respuesta.recordsTotal) || 0,
-                            recordsFiltered: Number(respuesta.recordsFiltered) || 0,
-                            data: Array.isArray(respuesta.data) ? respuesta.data : []
-                        });
-                    })
-                    .fail(function (xhr) {
-                        console.error(
-                            'Error al cargar estaciones:',
-                            xhr.status,
-                            xhr.responseText
-                        );
-
-                        actualizarResumen({});
-                        callback(respuestaDataTablesVacia(parametros.draw));
-
-                        mostrarToast(
-                            'Error al cargar las estaciones',
-                            obtenerMensajeError(
-                                xhr,
-                                'No fue posible consultar las estaciones.'
-                            ),
-                            'error'
-                        );
-                    });
-            },
 
             columns: [
                 {
@@ -247,7 +182,7 @@ $(function () {
                     render: function (data, type) {
                         var requiere = Number(data) === 1;
                         if (type !== 'display') {
-                            return requiere ? 1 : 0;
+                            return requiere ? 'Certificada' : 'No certificada';
                         }
                         return requiere
                             ? '<span class="requirement-badge yes"><i class="bi bi-patch-check"></i> Certificada</span>'
@@ -259,11 +194,10 @@ $(function () {
                     name: 'id_certificacion',
                     render: function (data, type, row) {
                         var idCertificacion = Number(row.id_certificacion) || 0;
-                        var codigo = row.codigo_certificacion || '';
                         var nombre = row.nombre_certificacion || '';
 
                         if (type !== 'display') {
-                            return codigo + ' ' + nombre;
+                            return nombre;
                         }
 
                         if (!idCertificacion) {
@@ -274,7 +208,7 @@ $(function () {
                         return '<span class="certification-badge" title="' +
                             escapeAttribute(nombre) + '">' +
                             '<i class="bi bi-patch-check"></i> ' +
-                            escapeHtml(codigo) + '</span>';
+                            escapeHtml(nombre) + '</span>';
                     }
                 },
                 {
@@ -310,9 +244,11 @@ $(function () {
                     '<span>Cargando estaciones...</span></div>',
                 emptyTable: 'Selecciona una línea para consultar sus estaciones.',
                 zeroRecords: 'No se encontraron estaciones con esos criterios.',
+                search: 'Buscar estaciones:',
+                searchPlaceholder: 'Estación, descripción o certificación',
                 info: 'Mostrando _START_–_END_ de _TOTAL_ estaciones',
                 infoEmpty: 'Mostrando 0 estaciones',
-                infoFiltered: '',
+                infoFiltered: '— filtrado de _MAX_ estaciones cargadas',
                 paginate: {
                     first: 'Primera',
                     last: 'Última',
@@ -322,19 +258,110 @@ $(function () {
             },
 
             drawCallback: function () {
-                sincronizarChecksPagina();
-                actualizarContadorVisible();
+                var api = this.api();
+                sincronizarChecksPagina(api);
+                actualizarContadorVisible(api);
             }
         });
+
+        configurarBusquedaDataTable(false);
     }
 
-    function respuestaDataTablesVacia(draw) {
-        return {
-            draw: Number(draw) || 0,
-            recordsTotal: 0,
-            recordsFiltered: 0,
-            data: []
-        };
+    function cargarEstaciones(resetearPagina) {
+        var codigoLinea = obtenerCodigoLineaSeleccionado();
+
+        if (!tabla) {
+            return;
+        }
+
+        limpiarBusquedaDataTable();
+
+        if (!codigoLinea) {
+            tabla.clear().draw();
+            actualizarResumen({});
+            return;
+        }
+
+        $.ajax({
+            url: API_URL,
+            method: 'GET',
+            dataType: 'json',
+            cache: false,
+            data: {
+                accion: 'listar',
+                codigo_linea: codigoLinea,
+                estado: $('#filtroEstado').val() || 'todos'
+            }
+        })
+            .done(function (respuesta) {
+                if (!respuesta || respuesta.success !== true) {
+                    tabla.clear().draw();
+                    actualizarResumen({});
+                    mostrarToast(
+                        'No se pudieron cargar las estaciones',
+                        respuesta && respuesta.message
+                            ? respuesta.message
+                            : 'La API devolvió una respuesta no válida.',
+                        'error'
+                    );
+                    return;
+                }
+
+                actualizarResumen(respuesta.summary || {});
+
+                tabla.clear();
+                tabla.rows.add(
+                    Array.isArray(respuesta.data) ? respuesta.data : []
+                );
+
+                if (resetearPagina) {
+                    tabla.page('first');
+                }
+
+                tabla.draw();
+            })
+            .fail(function (xhr) {
+                console.error(
+                    'Error al cargar estaciones:',
+                    xhr.status,
+                    xhr.responseText
+                );
+
+                tabla.clear().draw();
+                actualizarResumen({});
+                mostrarToast(
+                    'Error al cargar las estaciones',
+                    obtenerMensajeError(
+                        xhr,
+                        'No fue posible consultar las estaciones.'
+                    ),
+                    'error'
+                );
+            })
+            .always(function () {
+                actualizarContadorVisible();
+            });
+    }
+
+    function configurarBusquedaDataTable(habilitado) {
+        var $filtro = $('#tablaEstaciones_filter');
+        var $input = $filtro.find('input');
+
+        $input
+            .attr({
+                placeholder: 'Estación, descripción o certificación',
+                'aria-label': 'Buscar estaciones en la tabla'
+            })
+            .prop('disabled', !habilitado);
+    }
+
+    function limpiarBusquedaDataTable() {
+        if (!tabla) {
+            return;
+        }
+
+        tabla.search('');
+        $('#tablaEstaciones_filter input').val('');
     }
 
     $('#selectLinea').on('change', function () {
@@ -349,8 +376,9 @@ $(function () {
         });
 
         var habilitado = Boolean(codigoLinea);
-        $('#busquedaEstacion, #filtroEstado, #btnLimpiarFiltros')
+        $('#filtroEstado, #btnLimpiarFiltros')
             .prop('disabled', !habilitado);
+        configurarBusquedaDataTable(habilitado);
 
         if (linea) {
             $('#informacionLinea').html(
@@ -367,31 +395,12 @@ $(function () {
             actualizarResumen({});
         }
 
-        tabla.search('');
-        tabla.ajax.reload(null, true);
-    });
-
-    $('#busquedaEstacion').on('input', function () {
-        var valor = this.value;
-        $('#btnLimpiarBusqueda').toggleClass('d-none', valor.length === 0);
-
-        clearTimeout(temporizadorBusqueda);
-        temporizadorBusqueda = setTimeout(function () {
-            tabla.search(valor).draw();
-        }, SEARCH_DELAY);
-    });
-
-    $('#btnLimpiarBusqueda').on('click', function () {
-        clearTimeout(temporizadorBusqueda);
-        $('#busquedaEstacion').val('');
-        $(this).addClass('d-none');
-        tabla.search('').draw();
-        $('#busquedaEstacion').focus();
+        cargarEstaciones(true);
     });
 
     $('#filtroEstado').on('change', function () {
         limpiarSeleccion();
-        tabla.ajax.reload(null, true);
+        cargarEstaciones(true);
     });
 
     $('#btnLimpiarFiltros').on('click', function () {
@@ -399,17 +408,12 @@ $(function () {
     });
 
     function limpiarFiltros(recargar) {
-        clearTimeout(temporizadorBusqueda);
-        $('#busquedaEstacion').val('');
-        $('#btnLimpiarBusqueda').addClass('d-none');
         $('#filtroEstado').val('todos');
+        limpiarBusquedaDataTable();
 
-        if (tabla) {
-            tabla.search('');
-            if (recargar) {
-                limpiarSeleccion();
-                tabla.ajax.reload(null, true);
-            }
+        if (recargar) {
+            limpiarSeleccion();
+            cargarEstaciones(true);
         }
     }
 
@@ -504,7 +508,9 @@ $(function () {
         $('#modalConfirmarMasivoLabel').text('¿Asignar certificación?');
         $('#mensajeConfirmacionMasiva').text(
             'Se asignará "' +
-            (certificacion ? certificacion.nombre_certificacion : 'la certificación seleccionada') +
+            (certificacion && certificacion.nombre_certificacion
+                ? certificacion.nombre_certificacion
+                : 'la certificación seleccionada') +
             '" a ' + estacionesSeleccionadas.size +
             (estacionesSeleccionadas.size === 1 ? ' estación.' : ' estaciones.')
         );
@@ -584,7 +590,7 @@ $(function () {
                 );
 
                 limpiarSeleccion();
-                tabla.ajax.reload(null, false);
+                cargarEstaciones(false);
             })
             .fail(function (xhr) {
                 mostrarToast(
@@ -624,16 +630,17 @@ $(function () {
         return tabla.row($fila).data();
     }
 
-    function sincronizarChecksPagina() {
+    function sincronizarChecksPagina(api) {
         $('#tablaEstaciones tbody .seleccionar-estacion').each(function () {
             this.checked = estacionesSeleccionadas.has(Number(this.value));
         });
-        actualizarCheckCabecera();
+        actualizarCheckCabecera(api);
         actualizarPanelMasivo();
     }
 
-    function actualizarCheckCabecera() {
-        var filas = tabla.rows({ page: 'current' }).data().toArray();
+    function actualizarCheckCabecera(api) {
+        var dataTable = api || tabla;
+        var filas = dataTable.rows({ page: 'current' }).data().toArray();
         var totalPagina = filas.length;
         var seleccionadasPagina = filas.filter(function (fila) {
             return estacionesSeleccionadas.has(Number(fila.id_estacion));
@@ -665,11 +672,12 @@ $(function () {
         animarNumero($('#totalSinCurso'), Number(resumen.sin_curso) || 0);
     }
 
-    function actualizarContadorVisible() {
-        if (!tabla) {
+    function actualizarContadorVisible(api) {
+        var dataTable = api || tabla;
+        if (!dataTable) {
             return;
         }
-        var total = tabla.page.info().recordsDisplay || 0;
+        var total = dataTable.page.info().recordsDisplay || 0;
         $('#contadorVisible').text(
             total + (total === 1 ? ' registro' : ' registros')
         );

@@ -106,6 +106,7 @@
                             <i class="bi bi-clock-history" aria-hidden="true"></i>
                             <label for="filtroTurno" class="visually-hidden">Filtrar por turno</label>
                             <select class="form-select" id="filtroTurno" disabled>
+                                <option value="todos">Todos los turnos</option>
                                 <option value="1" selected>Turno 1</option>
                                 <option value="2">Turno 2</option>
                             </select>
@@ -113,14 +114,11 @@
 
                         <div class="select-box">
                             <i class="bi bi-funnel" aria-hidden="true"></i>
-                            <label for="filtroEstado" class="visually-hidden">Filtrar por estado</label>
+                            <label for="filtroEstado" class="visually-hidden">Filtrar por estado del curso</label>
                             <select class="form-select" id="filtroEstado" disabled>
-                                <option value="todos">Todos los estados</option>
+                                <option value="todos">Todos los estados de curso</option>
                                 <option value="con_curso">Con cursos</option>
                                 <option value="sin_curso">Sin cursos</option>
-                                <option value="disponible">Disponibles</option>
-                                <option value="asignado">Asignados</option>
-                                <option value="eliminado">Eliminados</option>
                             </select>
                         </div>
 
@@ -129,9 +127,20 @@
                             <span>Restablecer</span>
                         </button>
                     </div>
+
+                    <fieldset class="personal-status-filter" id="filtroEstatusPersonal" disabled>
+                        <legend>
+                            <i class="bi bi-person-check" aria-hidden="true"></i>
+                            Estatus del personal
+                        </legend>
+                        <div class="status-check-list" id="listaEstatusPersonal" role="group"
+                             aria-label="Filtrar por estatus del personal">
+                            <span class="status-check-empty">Cargando estatus...</span>
+                        </div>
+                    </fieldset>
                 </div>
 
-                <div class="bulk-panel is-hidden mt-3" id="panelAccionesMasivas">
+                <div class="bulk-panel personal-bulk-panel is-hidden mt-3" id="panelAccionesMasivas">
                     <div class="bulk-selection">
                         <span class="bulk-selection-icon">
                             <i class="bi bi-check2-square" aria-hidden="true"></i>
@@ -142,20 +151,75 @@
                         </div>
                     </div>
 
-                    <div class="bulk-controls">
-                        <select class="form-select" id="certificacionMasiva" aria-label="Curso o certificación para asignar o quitar">
-                            <option value="">Selecciona un curso...</option>
-                        </select>
+                    <div class="bulk-actions-grid">
+                        <section class="bulk-action-card" aria-labelledby="accionCursosTitulo">
+                            <div class="bulk-action-heading">
+                                <i class="bi bi-journal-check" aria-hidden="true"></i>
+                                <div>
+                                    <strong id="accionCursosTitulo">Cursos asignados</strong>
+                                    <small>Asigna o retira una certificación.</small>
+                                </div>
+                            </div>
+                            <div class="bulk-controls">
+                                <select class="form-select" id="certificacionMasiva" aria-label="Curso o certificación para asignar o quitar">
+                                    <option value="">Selecciona un curso...</option>
+                                </select>
 
-                        <button type="button" class="btn btn-bulk-assign" id="btnAsignarMasivo">
-                            <i class="bi bi-patch-check" aria-hidden="true"></i>
-                            Asignar curso
-                        </button>
+                                <button type="button" class="btn btn-bulk-assign" id="btnAsignarMasivo">
+                                    <i class="bi bi-patch-check" aria-hidden="true"></i>
+                                    Asignar curso
+                                </button>
 
-                        <button type="button" class="btn btn-bulk-remove" id="btnQuitarMasivo">
-                            <i class="bi bi-x-circle" aria-hidden="true"></i>
-                            Quitar curso
-                        </button>
+                                <button type="button" class="btn btn-bulk-remove" id="btnQuitarMasivo">
+                                    <i class="bi bi-x-circle" aria-hidden="true"></i>
+                                    Quitar curso
+                                </button>
+                            </div>
+                        </section>
+
+                        <section class="bulk-action-card" aria-labelledby="accionEstatusTitulo">
+                            <div class="bulk-action-heading">
+                                <i class="bi bi-person-gear" aria-hidden="true"></i>
+                                <div>
+                                    <strong id="accionEstatusTitulo">Estatus del personal</strong>
+                                    <small>Actualiza el estado operativo.</small>
+                                </div>
+                            </div>
+                            <div class="bulk-controls">
+                                <select class="form-select" id="estatusPersonalMasivo"
+                                        aria-label="Nuevo estatus del personal">
+                                    <option value="">Selecciona un estatus...</option>
+                                    <option value="0">Disponible</option>
+                                    <option value="2">Eliminado</option>
+                                </select>
+
+                                <button type="button" class="btn btn-bulk-assign" id="btnActualizarEstatusMasivo">
+                                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                                    Actualizar estatus
+                                </button>
+                            </div>
+                        </section>
+
+                        <section class="bulk-action-card" aria-labelledby="accionLineaTitulo">
+                            <div class="bulk-action-heading">
+                                <i class="bi bi-diagram-3" aria-hidden="true"></i>
+                                <div>
+                                    <strong id="accionLineaTitulo">Línea asignada</strong>
+                                    <small>Mueve el personal a otra línea.</small>
+                                </div>
+                            </div>
+                            <div class="bulk-controls">
+                                <select class="form-select" id="lineaPersonalMasiva"
+                                        aria-label="Nueva línea del personal">
+                                    <option value="">Selecciona una línea...</option>
+                                </select>
+
+                                <button type="button" class="btn btn-bulk-assign" id="btnActualizarLineaMasiva">
+                                    <i class="bi bi-arrow-left-right" aria-hidden="true"></i>
+                                    Actualizar línea
+                                </button>
+                            </div>
+                        </section>
                     </div>
                 </div>
 

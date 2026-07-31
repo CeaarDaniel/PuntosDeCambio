@@ -8,6 +8,7 @@ $(function () {
     var tabla = null;
     var lineas = [];
     var certificaciones = [];
+    var estatusPersonal = [];
     var personalSeleccionado = new Set();
     var accionPendiente = null;
 
@@ -61,16 +62,22 @@ $(function () {
                     ? respuesta.data.certificaciones
                     : [];
 
+                estatusPersonal = Array.isArray(respuesta.data.estatus_personal)
+                    ? respuesta.data.estatus_personal
+                    : [];
+
                 if (DEBUG) {
                     console.info('[ILU] Catálogos cargados:', {
                         lineas: lineas.length,
                         certificaciones: certificaciones.length,
+                        estatusPersonal: estatusPersonal.length,
                         data: respuesta.data
                     });
                 }
 
                 llenarLineas();
                 llenarCertificaciones();
+                llenarEstatusPersonal();
                 seleccionarLineaInicialYCargar();
             })
             .fail(function (xhr) {
@@ -86,8 +93,8 @@ $(function () {
     }
 
     function llenarLineas() {
-        var $select = $('#selectLinea');
-        $select.find('option:not(:first)').remove();
+        var $selects = $('#selectLinea, #lineaPersonalMasiva');
+        $selects.find('option:not(:first)').remove();
 
         lineas.forEach(function (linea) {
             var codigoLinea = String(
@@ -99,10 +106,12 @@ $(function () {
                 return;
             }
 
-            $('<option>', {
-                value: codigoLinea,
-                text: linea.nombre_linea || codigoLinea
-            }).appendTo($select);
+            $selects.each(function () {
+                $('<option>', {
+                    value: codigoLinea,
+                    text: linea.nombre_linea || codigoLinea
+                }).appendTo(this);
+            });
         });
     }
 
@@ -155,15 +164,88 @@ $(function () {
                 return;
             }
 
-            var codigo = certificacion.codigo_certificacion || ('ID ' + idE);
             var nombre = certificacion.nombre_certificacion || 'Sin nombre';
-            var tipo = certificacion.tipo_proceso ? ' · ' + certificacion.tipo_proceso : '';
 
             $('<option>', {
                 value: String(idE),
-                text: codigo + ' · ' + nombre + tipo
+                text: nombre
             }).appendTo($select);
         });
+    }
+
+    function llenarEstatusPersonal() {
+        var $lista = $('#listaEstatusPersonal');
+        $lista.empty();
+
+        crearCheckEstatusPersonal(
+            $lista,
+            'todos',
+            'Todos',
+            'Mostrar cualquier estatus del personal',
+            true
+        );
+
+        estatusPersonal.forEach(function (estatus) {
+            var clave = String(
+                estatus.clave == null ? '' : estatus.clave
+            ).trim();
+
+            if (!clave) {
+                return;
+            }
+
+            crearCheckEstatusPersonal(
+                $lista,
+                clave,
+                estatus.nombre || clave,
+                estatus.descripcion || '',
+                false
+            );
+        });
+    }
+
+    function crearCheckEstatusPersonal(
+        $contenedor,
+        clave,
+        nombre,
+        descripcion,
+        seleccionado
+    ) {
+        var $opcion = $('<label>', {
+            class: 'status-check-option',
+            title: descripcion || nombre
+        });
+
+        $('<input>', {
+            type: 'checkbox',
+            class: 'form-check-input filtro-estatus-personal',
+            value: clave,
+            checked: seleccionado
+        }).appendTo($opcion);
+
+        $('<span>').text(nombre).appendTo($opcion);
+        $opcion.appendTo($contenedor);
+    }
+
+    function obtenerNombresCertificaciones(codigosCertificacion) {
+        var codigos = String(codigosCertificacion || '')
+            .split(',')
+            .map(function (codigo) {
+                return codigo.trim();
+            })
+            .filter(Boolean);
+
+        var nombres = codigos.map(function (codigo) {
+            var certificacion = certificaciones.find(function (item) {
+                return String(item.codigo_certificacion || '').trim() === codigo;
+            });
+
+            return certificacion
+                ? (certificacion.nombre_certificacion || 'Sin nombre')
+                : 'Certificación asignada';
+        });
+
+        return Array.from(new Set(nombres)).join(', ');
     }
 
     function iniciarTabla() {
@@ -276,9 +358,12 @@ $(function () {
                     render: function (data, type, row) {
                         var total = Number(row.cursos_asignados) || 0;
                         var detalle = row.cursos_detalle || '';
+                        var nombresCursos = obtenerNombresCertificaciones(detalle);
 
                         if (type !== 'display') {
-                            return String(total) + ' ' + detalle;
+                            return total > 0
+                                ? String(total) + ' ' + (nombresCursos || 'Certificación asignada')
+                                : '0 Sin cursos';
                         }
 
                         if (total <= 0) {
@@ -286,11 +371,13 @@ $(function () {
                                 '<i class="bi bi-exclamation-circle"></i> Sin cursos</span>';
                         }
 
-                        return '<span class="course-badge" title="' + escapeAttribute(detalle) + '">' +
+                        nombresCursos = nombresCursos || 'Certificación asignada';
+
+                        return '<span class="course-badge" title="' + escapeAttribute(nombresCursos) + '">' +
                             '<i class="bi bi-patch-check"></i> ' + total +
                             (total === 1 ? ' curso' : ' cursos') + '</span>' +
-                            '<span class="course-list-preview" title="' + escapeAttribute(detalle) + '">' +
-                            escapeHtml(detalle) + '</span>';
+                            '<span class="course-list-preview" title="' + escapeAttribute(nombresCursos) + '">' +
+                            escapeHtml(nombresCursos) + '</span>';
                     }
                 },
                 {
@@ -375,6 +462,11 @@ $(function () {
             turno: obtenerTurnoSeleccionado(),
             estado: $('#filtroEstado').val() || 'todos'
         };
+
+        var estatusSeleccionados = obtenerEstatusPersonalSeleccionados();
+        if (estatusSeleccionados.length > 0) {
+            datosPeticion.estatus_personal = estatusSeleccionados;
+        }
 
         if (DEBUG) {
             datosPeticion.debug = '1';
@@ -472,6 +564,7 @@ $(function () {
         var habilitado = Boolean(codigoLinea);
         $('#filtroTurno, #filtroEstado, #btnLimpiarFiltros')
             .prop('disabled', !habilitado);
+        $('#filtroEstatusPersonal').prop('disabled', !habilitado);
 
         configurarBusquedaDataTable(habilitado);
 
@@ -498,6 +591,36 @@ $(function () {
         cargarPersonal(true);
     });
 
+    $('#listaEstatusPersonal').on(
+        'change',
+        '.filtro-estatus-personal',
+        function () {
+            var $todos = $(
+                '#listaEstatusPersonal .filtro-estatus-personal[value="todos"]'
+            );
+            var $especificos = $(
+                '#listaEstatusPersonal .filtro-estatus-personal:not([value="todos"])'
+            );
+
+            if (this.value === 'todos') {
+                if (this.checked) {
+                    $especificos.prop('checked', false);
+                } else if ($especificos.filter(':checked').length === 0) {
+                    this.checked = true;
+                }
+            } else {
+                $todos.prop('checked', false);
+
+                if ($especificos.filter(':checked').length === 0) {
+                    $todos.prop('checked', true);
+                }
+            }
+
+            limpiarSeleccion();
+            cargarPersonal(true);
+        }
+    );
+
     $('#btnLimpiarFiltros').on('click', function () {
         limpiarFiltros(true);
     });
@@ -505,6 +628,7 @@ $(function () {
     function limpiarFiltros(recargar) {
         $('#filtroTurno').val('1');
         $('#filtroEstado').val('todos');
+        seleccionarTodosEstatusPersonal();
 
         if (tabla) {
             limpiarBusquedaDataTable();
@@ -553,6 +677,14 @@ $(function () {
         prepararAccionMasiva('quitar');
     });
 
+    $('#btnActualizarEstatusMasivo').on('click', function () {
+        prepararActualizacionEstatusPersonal();
+    });
+
+    $('#btnActualizarLineaMasiva').on('click', function () {
+        prepararActualizacionLineaPersonal();
+    });
+
     function prepararAccionMasiva(accion) {
         var idE = obtenerIdCertificacionSeleccionada();
 
@@ -576,10 +708,11 @@ $(function () {
         });
 
         var nombreCurso = certificacion
-            ? ((certificacion.codigo_certificacion || idE) + ' · ' + certificacion.nombre_certificacion)
-            : ('ID ' + idE);
+            ? (certificacion.nombre_certificacion || 'Sin nombre')
+            : 'la certificación seleccionada';
 
         accionPendiente = {
+            tipo: 'curso',
             accion: accion,
             idE: idE
         };
@@ -603,21 +736,138 @@ $(function () {
         modalConfirmar.show();
     }
 
+    function prepararActualizacionEstatusPersonal() {
+        if (personalSeleccionado.size === 0) {
+            mostrarToast('Sin selección', 'Selecciona al menos una persona.', 'error');
+            return;
+        }
+
+        var nuevoEstatus = String(
+            $('#estatusPersonalMasivo').val() == null
+                ? ''
+                : $('#estatusPersonalMasivo').val()
+        ).trim();
+
+        if (!['0', '2'].includes(nuevoEstatus)) {
+            mostrarToast(
+                'Selecciona un estatus',
+                'Elige Disponible o Eliminado para actualizar al personal.',
+                'error'
+            );
+            $('#estatusPersonalMasivo').focus();
+            return;
+        }
+
+        var nombreEstatus = $('#estatusPersonalMasivo option:selected').text();
+
+        accionPendiente = {
+            tipo: 'estatus_personal',
+            accion: 'actualizar_estatus_personal',
+            nuevo_estatus: nuevoEstatus
+        };
+
+        $('#iconoConfirmacionMasiva').html(
+            '<i class="bi bi-person-check" aria-hidden="true"></i>'
+        );
+        $('#modalConfirmarMasivoLabel').text('¿Actualizar estatus?');
+        $('#mensajeConfirmacionMasiva').text(
+            'Se cambiará el estatus a "' + nombreEstatus + '" para ' +
+            personalSeleccionado.size +
+            (personalSeleccionado.size === 1
+                ? ' persona seleccionada.'
+                : ' personas seleccionadas.')
+        );
+
+        modalConfirmar.show();
+    }
+
+    function prepararActualizacionLineaPersonal() {
+        if (personalSeleccionado.size === 0) {
+            mostrarToast('Sin selección', 'Selecciona al menos una persona.', 'error');
+            return;
+        }
+
+        var codigoLineaDestino = String(
+            $('#lineaPersonalMasiva').val() || ''
+        ).trim();
+
+        if (!codigoLineaDestino) {
+            mostrarToast(
+                'Selecciona una línea',
+                'Elige la nueva línea para el personal seleccionado.',
+                'error'
+            );
+            $('#lineaPersonalMasiva').focus();
+            return;
+        }
+
+        var nombreLinea = $('#lineaPersonalMasiva option:selected').text();
+
+        accionPendiente = {
+            tipo: 'linea_personal',
+            accion: 'actualizar_linea_personal',
+            codigo_linea_destino: codigoLineaDestino
+        };
+
+        $('#iconoConfirmacionMasiva').html(
+            '<i class="bi bi-diagram-3" aria-hidden="true"></i>'
+        );
+        $('#modalConfirmarMasivoLabel').text('¿Actualizar línea?');
+        $('#mensajeConfirmacionMasiva').text(
+            'Se asignará la línea "' + nombreLinea + '" a ' +
+            personalSeleccionado.size +
+            (personalSeleccionado.size === 1
+                ? ' persona seleccionada.'
+                : ' personas seleccionadas.')
+        );
+
+        modalConfirmar.show();
+    }
+
     $('#btnConfirmarMasivo').on('click', function () {
         if (!accionPendiente) {
             return;
         }
 
-        guardarCambiosMasivos(
-            accionPendiente.accion,
-            Array.from(personalSeleccionado),
-            accionPendiente.idE,
-            $('#btnConfirmarMasivo'),
-            function () {
-                modalConfirmar.hide();
-                accionPendiente = null;
-            }
-        );
+        var alCompletar = function () {
+            modalConfirmar.hide();
+            accionPendiente = null;
+        };
+
+        if (accionPendiente.tipo === 'curso') {
+            guardarCambiosMasivos(
+                accionPendiente.accion,
+                Array.from(personalSeleccionado),
+                accionPendiente.idE,
+                $('#btnConfirmarMasivo'),
+                alCompletar
+            );
+            return;
+        }
+
+        if (accionPendiente.tipo === 'estatus_personal') {
+            actualizarPersonalMasivo(
+                accionPendiente.accion,
+                {
+                    nuevo_estatus: accionPendiente.nuevo_estatus
+                },
+                $('#btnConfirmarMasivo'),
+                alCompletar
+            );
+            return;
+        }
+
+        if (accionPendiente.tipo === 'linea_personal') {
+            actualizarPersonalMasivo(
+                accionPendiente.accion,
+                {
+                    codigo_linea_destino:
+                        accionPendiente.codigo_linea_destino
+                },
+                $('#btnConfirmarMasivo'),
+                alCompletar
+            );
+        }
     });
 
     function guardarCambiosMasivos(accion, nominas, idE, $boton, alCompletar) {
@@ -672,6 +922,83 @@ $(function () {
                 mostrarToast(
                     'No se guardaron los cambios',
                     obtenerMensajeError(xhr, 'No fue posible actualizar SPC_ILU.'),
+                    'error'
+                );
+            })
+            .always(function () {
+                cambiarEstadoBoton($boton, false);
+            });
+    }
+
+    function actualizarPersonalMasivo(
+        accion,
+        datosActualizacion,
+        $boton,
+        alCompletar
+    ) {
+        var codigoLinea = obtenerCodigoLineaSeleccionado();
+        var nominas = Array.from(personalSeleccionado);
+
+        if (!codigoLinea || nominas.length === 0) {
+            mostrarToast(
+                'Datos incompletos',
+                'Selecciona una línea y al menos una persona.',
+                'error'
+            );
+            return;
+        }
+
+        var payload = {
+            accion: accion,
+            codigo_linea: codigoLinea,
+            nominas: nominas
+        };
+
+        Object.keys(datosActualizacion).forEach(function (clave) {
+            payload[clave] = datosActualizacion[clave];
+        });
+
+        cambiarEstadoBoton($boton, true, 'Actualizando...');
+
+        $.ajax({
+            url: API_URL,
+            method: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            data: JSON.stringify(payload)
+        })
+            .done(function (respuesta) {
+                if (!respuesta || respuesta.success !== true) {
+                    mostrarToast(
+                        'No se actualizó el personal',
+                        respuesta && respuesta.message
+                            ? respuesta.message
+                            : 'No fue posible actualizar SPC_PERSONAL.',
+                        'error'
+                    );
+                    return;
+                }
+
+                if (typeof alCompletar === 'function') {
+                    alCompletar();
+                }
+
+                mostrarToast(
+                    'Personal actualizado',
+                    respuesta.message,
+                    'success'
+                );
+
+                limpiarSeleccion();
+                cargarPersonal(false);
+            })
+            .fail(function (xhr) {
+                mostrarToast(
+                    'No se actualizó el personal',
+                    obtenerMensajeError(
+                        xhr,
+                        'No fue posible actualizar SPC_PERSONAL.'
+                    ),
                     'error'
                 );
             })
@@ -748,7 +1075,6 @@ $(function () {
 
         cursos.forEach(function (curso) {
             var idE = Number(curso.idE);
-            var codigo = curso.codigo_certificacion || ('ID ' + idE);
             var nombre = curso.nombre_certificacion || 'Sin nombre';
             var fecha = curso.fecha_registro || 'Sin fecha';
             var estatus = curso.estatus || '0';
@@ -758,7 +1084,7 @@ $(function () {
             });
 
             $('<div>').html(
-                '<strong>' + escapeHtml(codigo + ' · ' + nombre) + '</strong>' +
+                '<strong>' + escapeHtml(nombre) + '</strong>' +
                 '<small>Registrado: ' + escapeHtml(fecha) + ' · Estatus: ' + escapeHtml(estatus) + '</small>'
             ).appendTo($item);
 
@@ -808,11 +1134,37 @@ $(function () {
     function obtenerTurnoSeleccionado() {
         var turno = String($('#filtroTurno').val() || '1').trim();
 
-        if (turno !== '1' && turno !== '2') {
+        if (!['todos', '1', '2'].includes(turno)) {
             return '1';
         }
 
         return turno;
+    }
+
+    function obtenerEstatusPersonalSeleccionados() {
+        var $todos = $(
+            '#listaEstatusPersonal .filtro-estatus-personal[value="todos"]'
+        );
+
+        if ($todos.prop('checked')) {
+            return [];
+        }
+
+        return $('#listaEstatusPersonal .filtro-estatus-personal:checked')
+            .map(function () {
+                return String(this.value || '').trim();
+            })
+            .get()
+            .filter(Boolean);
+    }
+
+    function seleccionarTodosEstatusPersonal() {
+        var $checks = $(
+            '#listaEstatusPersonal .filtro-estatus-personal'
+        );
+
+        $checks.prop('checked', false);
+        $checks.filter('[value="todos"]').prop('checked', true);
     }
 
     function configurarBusquedaDataTable(habilitado) {
@@ -990,23 +1342,53 @@ $(function () {
     }
 
     function renderEstatusPersonal(estatus) {
-        if (estatus === '0') {
-            return '<span class="status-badge available"><i class="bi bi-check-circle"></i> Disponible</span>';
-        }
-
-        if (estatus === '1') {
-            return '<span class="status-badge assigned"><i class="bi bi-person-check"></i> Asignado</span>';
-        }
-
-        if (estatus === '2') {
-            return '<span class="status-badge deleted"><i class="bi bi-x-circle"></i> Eliminado</span>';
-        }
-
         if (!estatus) {
             return '<span class="status-badge neutral"><i class="bi bi-dash-circle"></i> Sin estatus</span>';
         }
 
-        return '<span class="status-badge neutral"><i class="bi bi-info-circle"></i> ' + escapeHtml(estatus) + '</span>';
+        var catalogo = estatusPersonal.find(function (item) {
+            return String(item.clave == null ? '' : item.clave).trim() === estatus;
+        });
+
+        var configuraciones = {
+            '0': {
+                clase: 'available',
+                icono: 'bi-check-circle',
+                nombre: 'Disponible'
+            },
+            '1': {
+                clase: 'assigned',
+                icono: 'bi-person-check',
+                nombre: 'Asignado'
+            },
+            '2': {
+                clase: 'deleted',
+                icono: 'bi-x-circle',
+                nombre: 'Eliminado'
+            },
+            '3': {
+                clase: 'assigned-other',
+                icono: 'bi-arrow-left-right',
+                nombre: 'Asignado en otra línea'
+            }
+        };
+
+        var configuracion = configuraciones[estatus] || {
+            clase: 'neutral',
+            icono: 'bi-info-circle',
+            nombre: estatus
+        };
+        var nombre = catalogo && catalogo.nombre
+            ? catalogo.nombre
+            : configuracion.nombre;
+        var descripcion = catalogo && catalogo.descripcion
+            ? catalogo.descripcion
+            : nombre;
+
+        return '<span class="status-badge ' + configuracion.clase +
+            '" title="' + escapeAttribute(descripcion) + '">' +
+            '<i class="bi ' + configuracion.icono + '"></i> ' +
+            escapeHtml(nombre) + '</span>';
     }
 
     function normalizarNomina(valor) {
