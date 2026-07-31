@@ -2,7 +2,6 @@ $(function () {
     'use strict';
 
     const API_URL = './api/certificaciones.php';
-    const SEARCH_DELAY = 450;
 
     const modalCertificacion = new bootstrap.Modal(
         document.getElementById('modalCertificacion')
@@ -20,34 +19,26 @@ $(function () {
     );
 
     const $form = $('#formCertificacion');
-    const $busqueda = $('#busquedaCertificacion');
     const $filtroProceso = $('#filtroProceso');
-    const $btnLimpiarBusqueda = $('#btnLimpiarBusqueda');
     const $btnGuardar = $('#btnGuardarCertificacion');
     const $btnEliminar = $('#btnConfirmarEliminar');
 
     let tabla = null;
-    let temporizadorBusqueda = null;
     let cargandoCatalogos = false;
 
     actualizarTextosModoServidor();
     iniciarTabla();
+    cargarCertificaciones(true);
 
     /**
-     * DataTables trabaja en modo servidor.
-     *
-     * El backend realiza:
-     * - Búsqueda
-     * - Filtro por proceso
-     * - Ordenamiento
-     * - Paginación
-     * - Resúmenes
-     * - Catálogo de procesos
+     * DataTables mantiene en memoria los registros obtenidos del backend.
+     * La búsqueda, el ordenamiento y la paginación se realizan localmente.
      */
     function iniciarTabla() {
         tabla = $('#tablaCertificaciones').DataTable({
-            processing: false, //atributo para mostrar el mensaje de procesando
-            serverSide: true, //Dejar en false para Filtrar los datos cargado en el datatable
+            data: [],
+            processing: false,
+            serverSide: false,
             searching: true,
             pageLength: 5,
             lengthChange: true,
@@ -60,74 +51,6 @@ $(function () {
             scrollX: true,
             scrollY: '52vh',
             scrollCollapse: true,
-
-            ajax: {
-                url: API_URL,
-                type: 'GET',
-                dataType: 'json',
-                cache: false,
-
-                /**
-                 * Agrega el filtro personalizado a los parámetros
-                 * que DataTables ya envía al servidor.
-                 */
-                data: function (parametros) {
-                    parametros.tipo_proceso =
-                        $filtroProceso.val() || '';
-                },
-
-                /**
-                 * La API devuelve:
-                 *
-                 * {
-                 *     success: true,
-                 *     draw: 1,
-                 *     recordsTotal: 20,
-                 *     recordsFiltered: 5,
-                 *     data: [],
-                 *     summary: {},
-                 *     procesos: []
-                 * }
-                 */
-                dataSrc: function (respuesta) {
-                    if (
-                        !respuesta ||
-                        respuesta.success !== true
-                    ) {
-                        mostrarToast(
-                            'No se pudieron cargar los datos',
-                            respuesta?.message ||
-                                'La API devolvió una respuesta no válida.',
-                            'error'
-                        );
-
-                        return [];
-                    }
-
-                    actualizarResumen(
-                        respuesta.summary || {}
-                    );
-
-                    actualizarOpcionesProceso(
-                        respuesta.procesos || []
-                    );
-
-                    return Array.isArray(respuesta.data)
-                        ? respuesta.data
-                        : [];
-                },
-
-                error: function (xhr) {
-                    mostrarToast(
-                        'Error de conexión',
-                        obtenerMensajeError(
-                            xhr,
-                            'No fue posible consultar las certificaciones.'
-                        ),
-                        'error'
-                    );
-                }
-            },
 
             columns: [
                 {
@@ -295,20 +218,20 @@ $(function () {
                 zeroRecords:
                     'No encontramos registros con esos criterios.',
 
+                search:
+                    'Buscar certificaciones:',
+
+                searchPlaceholder:
+                    'Código, nombre, proceso o descripción',
+
                 info:
                     'Mostrando _START_–_END_ de _TOTAL_ registros',
 
                 infoEmpty:
                     'Mostrando 0 registros',
 
-                /*
-                 * DataTables normalmente muestra:
-                 * "(filtrados de X registros)".
-                 *
-                 * Se deja vacío porque el contador superior ya
-                 * informa cuántos registros coinciden.
-                 */
-                infoFiltered: '',
+                infoFiltered:
+                    '— filtrado de _MAX_ registros cargados',
 
                 paginate: {
                     first: 'Primera',
@@ -331,54 +254,88 @@ $(function () {
             },
 
             drawCallback: function () {
-                actualizarContadorVisible();
+                actualizarContadorVisible(this.api());
             }
         });
     }
 
-    /**
-     * Búsqueda procesada por el backend.
-     *
-     * Se espera 450 ms después de que el usuario deja
-     * de escribir para evitar una petición por cada tecla.
-     */
-    $busqueda.on('input', function () {
-        const valor = this.value;
+    function cargarCertificaciones(resetearPagina) {
+        limpiarBusquedaDataTable();
 
-        $btnLimpiarBusqueda.toggleClass(
-            'd-none',
-            valor.length === 0
-        );
+        $.ajax({
+            url: API_URL,
+            method: 'GET',
+            dataType: 'json',
+            cache: false,
+            data: {
+                tipo_proceso: $filtroProceso.val() || ''
+            }
+        })
+            .done(function (respuesta) {
+                if (!respuesta || respuesta.success !== true) {
+                    tabla.clear().draw();
+                    actualizarResumen({});
 
-        clearTimeout(temporizadorBusqueda);
+                    mostrarToast(
+                        'No se pudieron cargar los datos',
+                        respuesta?.message ||
+                            'La API devolvió una respuesta no válida.',
+                        'error'
+                    );
 
-        temporizadorBusqueda = setTimeout(
-            function () {
-                tabla.search(valor).draw();
-            },
-            SEARCH_DELAY
-        );
-    });
+                    return;
+                }
 
-    /**
-     * Limpiar búsqueda.
-     */
-    $btnLimpiarBusqueda.on('click', function () {
-        clearTimeout(temporizadorBusqueda);
+                actualizarResumen(
+                    respuesta.summary || {}
+                );
 
-        $busqueda.val('');
-        $btnLimpiarBusqueda.addClass('d-none');
+                actualizarOpcionesProceso(
+                    respuesta.procesos || []
+                );
 
-        tabla.search('').draw();
+                tabla.clear();
+                tabla.rows.add(
+                    Array.isArray(respuesta.data)
+                        ? respuesta.data
+                        : []
+                );
 
-        $busqueda.focus();
-    });
+                if (resetearPagina) {
+                    tabla.page('first');
+                }
+
+                tabla.draw();
+            })
+            .fail(function (xhr) {
+                tabla.clear().draw();
+                actualizarResumen({});
+
+                mostrarToast(
+                    'Error de conexión',
+                    obtenerMensajeError(
+                        xhr,
+                        'No fue posible consultar las certificaciones.'
+                    ),
+                    'error'
+                );
+            });
+    }
+
+    function limpiarBusquedaDataTable() {
+        if (!tabla) {
+            return;
+        }
+
+        tabla.search('');
+        $('#tablaCertificaciones_filter input').val('');
+    }
 
     /**
      * El proceso seleccionado se añade a la petición GET.
      */
     $filtroProceso.on('change', function () {
-        tabla.ajax.reload(null, true);
+        cargarCertificaciones(true);
     });
 
     /**
@@ -387,14 +344,10 @@ $(function () {
     $('#btnLimpiarFiltros').on(
         'click',
         function () {
-            clearTimeout(temporizadorBusqueda);
-
-            $busqueda.val('');
-            $btnLimpiarBusqueda.addClass('d-none');
             $filtroProceso.val('');
 
-            tabla.search('');
-            tabla.ajax.reload(null, true);
+            limpiarBusquedaDataTable();
+            cargarCertificaciones(true);
         }
     );
 
@@ -579,8 +532,7 @@ $(function () {
                      * En edición conserva la página actual.
                      * En creación regresa a la primera página.
                      */
-                    tabla.ajax.reload(
-                        null,
+                    cargarCertificaciones(
                         idCR ? false : true
                     );
                 })
@@ -660,10 +612,7 @@ $(function () {
                     /*
                      * Conserva la página actual cuando es posible.
                      */
-                    tabla.ajax.reload(
-                        null,
-                        false
-                    );
+                    cargarCertificaciones(false);
                 })
                 .fail(function (xhr) {
                     mostrarToast(
@@ -903,13 +852,15 @@ $(function () {
      * Número total de registros que coinciden
      * con la búsqueda y el filtro actuales.
      */
-    function actualizarContadorVisible() {
-        if (!tabla) {
+    function actualizarContadorVisible(api) {
+        const dataTable = api || tabla;
+
+        if (!dataTable) {
             return;
         }
 
         const informacion =
-            tabla.page.info();
+            dataTable.page.info();
 
         const total =
             informacion.recordsDisplay || 0;
