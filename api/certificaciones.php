@@ -456,127 +456,26 @@ function ejecutarDiagnostico(
 }
 
 /**
- * Devuelve los registros en el formato
- * requerido por DataTables.
- *
- * La búsqueda, el filtro, el ordenamiento
- * y la paginación se ejecutan en SQL Server.
+ * Devuelve todos los registros requeridos por la tabla.
+ * DataTables realiza la búsqueda, el ordenamiento y la paginación
+ * en el navegador.
  */
 function listarCertificaciones(
     PDO $conn
 ): void {
-    $draw = obtenerEntero(
-        $_GET['draw'] ?? 0,
-        0,
-        PHP_INT_MAX,
-        0
-    );
-
-    $start = obtenerEntero(
-        $_GET['start'] ?? 0,
-        0,
-        PHP_INT_MAX,
-        0
-    );
-
-    $length = obtenerEntero(
-        $_GET['length'] ?? 8,
-        1,
-        100,
-        8
-    );
-
-    $busqueda = trim(
-        (string) (
-            $_GET['search']['value'] ?? ''
-        )
-    );
-
     $tipoProceso = trim(
         (string) (
             $_GET['tipo_proceso'] ?? ''
         )
     );
 
-    /*
-     * Lista blanca para evitar que el nombre
-     * de la columna venga directamente del cliente.
-     */
-    $columnasOrdenables = [
-        0 => 'codigo_certificacion',
-        1 => 'nombre_certificacion',
-        2 => 'tipo_proceso',
-        3 => 'descripcion',
-    ];
-
-    $indiceOrden = obtenerEntero(
-        $_GET['order'][0]['column'] ?? 1,
-        0,
-        4,
-        1
-    );
-
-    $columnaOrden =
-        $columnasOrdenables[$indiceOrden]
-        ?? 'nombre_certificacion';
-
-    $direccion = strtolower(
-        (string) (
-            $_GET['order'][0]['dir'] ?? 'asc'
-        )
-    );
-
-    $direccion =
-        $direccion === 'desc'
-            ? 'DESC'
-            : 'ASC';
-
     [
         $whereSql,
         $parametros
     ] = construirFiltros(
-        $busqueda,
         $tipoProceso
     );
 
-    /*
-     * Total general, sin búsqueda ni filtros.
-     */
-    $totalRegistros = (int) $conn
-        ->query(
-            '
-                SELECT COUNT(*)
-                FROM dbo.SPC_CERTIFICACIONES
-            '
-        )
-        ->fetchColumn();
-
-    /*
-     * Total que coincide con los filtros actuales.
-     */
-    $sqlFiltrados = "
-        SELECT COUNT(*)
-        FROM dbo.SPC_CERTIFICACIONES
-        {$whereSql}
-    ";
-
-    $stmtFiltrados =
-        $conn->prepare($sqlFiltrados);
-
-    ejecutarConParametros(
-        $stmtFiltrados,
-        $parametros
-    );
-
-    $totalFiltrados =
-        (int) $stmtFiltrados->fetchColumn();
-
-    /*
-     * OFFSET y FETCH utilizan enteros validados.
-     *
-     * Los datos escritos por el usuario siempre
-     * se envían mediante parámetros preparados.
-     */
     $sqlDatos = "
         SELECT
             idCR,
@@ -587,10 +486,8 @@ function listarCertificaciones(
         FROM dbo.SPC_CERTIFICACIONES
         {$whereSql}
         ORDER BY
-            {$columnaOrden} {$direccion},
+            nombre_certificacion ASC,
             idCR ASC
-        OFFSET {$start} ROWS
-        FETCH NEXT {$length} ROWS ONLY
     ";
 
     $stmtDatos =
@@ -623,18 +520,6 @@ function listarCertificaciones(
             'message' =>
                 'Certificaciones obtenidas correctamente.',
 
-            /*
-             * Propiedades requeridas por
-             * DataTables server-side.
-             */
-            'draw' => $draw,
-
-            'recordsTotal' =>
-                $totalRegistros,
-
-            'recordsFiltered' =>
-                $totalFiltrados,
-
             'data' =>
                 $registros,
 
@@ -662,59 +547,10 @@ function listarCertificaciones(
  * fueron enviados por el frontend.
  */
 function construirFiltros(
-    string $busqueda,
     string $tipoProceso
 ): array {
     $condiciones = [];
     $parametros = [];
-
-    if ($busqueda !== '') {
-        /*
-         * Escapa caracteres especiales de LIKE
-         * para que %, _ y [ se busquen como texto.
-         */
-        $valorBusqueda =
-            '%' .
-            escaparLike($busqueda) .
-            '%';
-
-        $condiciones[] = "
-            (
-                codigo_certificacion
-                    LIKE :busqueda_codigo
-                    ESCAPE '\\'
-
-                OR nombre_certificacion
-                    LIKE :busqueda_nombre
-                    ESCAPE '\\'
-
-                OR tipo_proceso
-                    LIKE :busqueda_proceso
-                    ESCAPE '\\'
-
-                OR descripcion
-                    LIKE :busqueda_descripcion
-                    ESCAPE '\\'
-            )
-        ";
-
-        /*
-         * Se utiliza un parámetro diferente
-         * para cada condición por compatibilidad
-         * con PDO_SQLSRV.
-         */
-        $parametros['busqueda_codigo'] =
-            $valorBusqueda;
-
-        $parametros['busqueda_nombre'] =
-            $valorBusqueda;
-
-        $parametros['busqueda_proceso'] =
-            $valorBusqueda;
-
-        $parametros['busqueda_descripcion'] =
-            $valorBusqueda;
-    }
 
     if ($tipoProceso !== '') {
         $condiciones[] = "
@@ -1106,56 +942,6 @@ function ejecutarConParametros(
     }
 
     $stmt->execute();
-}
-
-/**
- * Escapa caracteres especiales para LIKE.
- *
- * El carácter de escape utilizado es \.
- */
-function escaparLike(
-    string $valor
-): string {
-    return str_replace(
-        [
-            '\\',
-            '%',
-            '_',
-            '['
-        ],
-        [
-            '\\\\',
-            '\%',
-            '\_',
-            '\['
-        ],
-        $valor
-    );
-}
-
-/**
- * Lee un entero dentro de un rango permitido.
- */
-function obtenerEntero(
-    mixed $valor,
-    int $minimo,
-    int $maximo,
-    int $predeterminado
-): int {
-    $entero = filter_var(
-        $valor,
-        FILTER_VALIDATE_INT
-    );
-
-    if (
-        $entero === false ||
-        $entero < $minimo ||
-        $entero > $maximo
-    ) {
-        return $predeterminado;
-    }
-
-    return (int) $entero;
 }
 
 /**

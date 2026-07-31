@@ -78,27 +78,11 @@ try {
  */
 function obtenerCatalogos(PDO $conn): void
 {
-    $sqlLineas = "
-        SELECT
-            codigo_linea,
-            nombre_linea,
-            descripcion,
-            encargado_supervisor,
-            imagen,
-            idArea
-        FROM dbo.SPC_LINEAS
-        ORDER BY nombre_linea ASC, codigo_linea ASC
-    ";
+    $sqlLineas = "SELECT codigo_linea, nombre_linea, descripcion, encargado_supervisor, imagen, idArea
+                    FROM dbo.SPC_LINEAS ORDER BY nombre_linea ASC, codigo_linea ASC";
 
-    $sqlCertificaciones = "
-        SELECT
-            idCR,
-            codigo_certificacion,
-            nombre_certificacion,
-            tipo_proceso
-        FROM dbo.SPC_CERTIFICACIONES
-        ORDER BY nombre_certificacion ASC, codigo_certificacion ASC
-    ";
+    $sqlCertificaciones = "SELECT idCR, codigo_certificacion, nombre_certificacion, tipo_proceso
+                    FROM dbo.SPC_CERTIFICACIONES ORDER BY nombre_certificacion ASC, codigo_certificacion ASC";
 
     $stmtLineas = $conn->query($sqlLineas);
     $lineas = $stmtLineas->fetchAll();
@@ -108,9 +92,7 @@ function obtenerCatalogos(PDO $conn): void
     $certificaciones = $stmtCertificaciones->fetchAll();
     $stmtCertificaciones->closeCursor();
 
-    responder(
-        true,
-        'Catálogos obtenidos correctamente.',
+    responder(true, 'Catálogos obtenidos correctamente.',
         [
             'lineas' => $lineas,
             'certificaciones' => $certificaciones,
@@ -119,28 +101,23 @@ function obtenerCatalogos(PDO $conn): void
 }
 
 /**
- * Devuelve únicamente las estaciones de la línea seleccionada.
- * La búsqueda, filtros, ordenamiento y paginación se ejecutan en SQL Server.
+ * Devuelve todas las estaciones de la línea seleccionada.
+ * DataTables realiza la búsqueda, el ordenamiento y la paginación en el cliente.
  */
 function listarEstaciones(PDO $conn): void
 {
-    $draw = obtenerEntero($_GET['draw'] ?? 0, 0, PHP_INT_MAX, 0);
-    $start = obtenerEntero($_GET['start'] ?? 0, 0, PHP_INT_MAX, 0);
-    $length = obtenerEntero($_GET['length'] ?? 10, 1, 100, 10);
-
     $codigoLineaRaw = $_GET['codigo_linea'] ?? null;
 
     if (
         $codigoLineaRaw === null ||
         (is_string($codigoLineaRaw) && trim($codigoLineaRaw) === '')
     ) {
-        responderDataTablesVacio($draw);
+        responderDataTablesVacio();
     }
 
     $codigoLinea = validarCodigoLinea($codigoLineaRaw);
     validarLineaExiste($conn, $codigoLinea);
 
-    $busqueda = trim((string) ($_GET['search']['value'] ?? ''));
     $estado = trim((string) ($_GET['estado'] ?? 'todos'));
 
     $estadosPermitidos = [
@@ -155,120 +132,33 @@ function listarEstaciones(PDO $conn): void
         $estado = 'todos';
     }
 
-    /* Lista blanca de columnas ordenables. */
-    $columnasOrdenables = [
-        1 => 'e.nombre_estacion',
-        2 => 'e.descripcion',
-        3 => 'e.requiere_certificacion',
-        4 => 'e.id_certificacion',
-    ];
-
-    $indiceOrden = obtenerEntero(
-        $_GET['order'][0]['column'] ?? 1,
-        0,
-        5,
-        1
-    );
-
-    $columnaOrden =
-        $columnasOrdenables[$indiceOrden]
-        ?? 'e.nombre_estacion';
-
-    $direccion = strtolower(
-        (string) ($_GET['order'][0]['dir'] ?? 'asc')
-    );
-
-    $direccion = $direccion === 'desc' ? 'DESC' : 'ASC';
-
     [$whereSql, $parametros] = construirFiltros(
         $codigoLinea,
-        $busqueda,
         $estado
     );
 
-    /* Total general de estaciones de la línea. */
-    $stmtTotal = $conn->prepare(
-        'SELECT COUNT(*)
-         FROM dbo.SPC_ESTACIONES
-         WHERE codigo_linea = :codigo_linea'
-    );
-
-    $stmtTotal->bindValue(
-        ':codigo_linea',
-        $codigoLinea,
-        PDO::PARAM_STR
-    );
-
-    $stmtTotal->execute();
-    $totalRegistros = (int) $stmtTotal->fetchColumn();
-    $stmtTotal->closeCursor();
-
-    /* Total después de búsqueda y filtros. */
-    $sqlFiltrados = "
-        SELECT COUNT(*)
+    $sqlDatos = "SELECT
+            e.id_estacion,
+            e.nombre_estacion,
+            e.descripcion,
+            CAST(
+                ISNULL(e.requiere_certificacion, 0)
+                AS INT
+            ) AS requiere_certificacion,
+            e.id_certificacion,
+            c.codigo_certificacion,
+            c.nombre_certificacion,
+            c.tipo_proceso
         FROM dbo.SPC_ESTACIONES AS e
         LEFT JOIN dbo.SPC_CERTIFICACIONES AS c
             ON c.idCR = e.id_certificacion
         {$whereSql}
-    ";
-
-    $stmtFiltrados = $conn->prepare($sqlFiltrados);
-    ejecutarConParametros($stmtFiltrados, $parametros);
-    $totalFiltrados = (int) $stmtFiltrados->fetchColumn();
-    $stmtFiltrados->closeCursor();
-
-    /*
-     * ROW_NUMBER se usa para mantener compatibilidad con instalaciones
-     * de SQL Server que no admiten OFFSET/FETCH.
-     */
-    $filaInicio = $start;
-    $filaFin = $start + $length;
-
-    $sqlDatos = "
-        WITH estaciones_paginadas AS (
-            SELECT
-                e.id_estacion,
-                e.nombre_estacion,
-                e.descripcion,
-                CAST(
-                    ISNULL(e.requiere_certificacion, 0)
-                    AS INT
-                ) AS requiere_certificacion,
-                e.id_certificacion,
-                c.codigo_certificacion,
-                c.nombre_certificacion,
-                c.tipo_proceso,
-                ROW_NUMBER() OVER (
-                    ORDER BY
-                        {$columnaOrden} {$direccion},
-                        e.id_estacion ASC
-                ) AS numero_fila
-            FROM dbo.SPC_ESTACIONES AS e
-            LEFT JOIN dbo.SPC_CERTIFICACIONES AS c
-                ON c.idCR = e.id_certificacion
-            {$whereSql}
-        )
-        SELECT
-            id_estacion,
-            nombre_estacion,
-            descripcion,
-            requiere_certificacion,
-            id_certificacion,
-            codigo_certificacion,
-            nombre_certificacion,
-            tipo_proceso
-        FROM estaciones_paginadas
-        WHERE numero_fila > :fila_inicio
-          AND numero_fila <= :fila_fin
-        ORDER BY numero_fila ASC
-    ";
-
-    $parametrosDatos = $parametros;
-    $parametrosDatos['fila_inicio'] = $filaInicio;
-    $parametrosDatos['fila_fin'] = $filaFin;
+        ORDER BY
+            e.nombre_estacion ASC,
+            e.id_estacion ASC";
 
     $stmtDatos = $conn->prepare($sqlDatos);
-    ejecutarConParametros($stmtDatos, $parametrosDatos);
+    ejecutarConParametros($stmtDatos, $parametros);
     $registros = $stmtDatos->fetchAll();
     $stmtDatos->closeCursor();
 
@@ -280,9 +170,6 @@ function listarEstaciones(PDO $conn): void
         [
             'success' => true,
             'message' => 'Estaciones obtenidas correctamente.',
-            'draw' => $draw,
-            'recordsTotal' => $totalRegistros,
-            'recordsFiltered' => $totalFiltrados,
             'data' => $registros,
             'summary' => $resumen,
         ],
@@ -295,7 +182,6 @@ function listarEstaciones(PDO $conn): void
 
 function construirFiltros(
     string $codigoLinea,
-    string $busqueda,
     string $estado
 ): array {
     $condiciones = [
@@ -305,28 +191,6 @@ function construirFiltros(
     $parametros = [
         'codigo_linea' => $codigoLinea
     ];
-
-    if ($busqueda !== '') {
-        $valor = '%' . escaparLike($busqueda) . '%';
-
-        $condiciones[] = "
-            (
-                e.nombre_estacion
-                    LIKE :busqueda_nombre ESCAPE '\\'
-                OR e.descripcion
-                    LIKE :busqueda_descripcion ESCAPE '\\'
-                OR c.codigo_certificacion
-                    LIKE :busqueda_codigo ESCAPE '\\'
-                OR c.nombre_certificacion
-                    LIKE :busqueda_certificacion ESCAPE '\\'
-            )
-        ";
-
-        $parametros['busqueda_nombre'] = $valor;
-        $parametros['busqueda_descripcion'] = $valor;
-        $parametros['busqueda_codigo'] = $valor;
-        $parametros['busqueda_certificacion'] = $valor;
-    }
 
     if ($estado === 'con_curso') {
         $condiciones[] = "
@@ -358,8 +222,7 @@ function obtenerResumenLinea(
     PDO $conn,
     string $codigoLinea
 ): array {
-    $sql = "
-        SELECT
+    $sql = " SELECT
             COUNT(*) AS total_estaciones,
             COALESCE(
                 SUM(
@@ -456,15 +319,13 @@ function actualizarEstaciones(PDO $conn, array $data): void
         $parametros['id_certificacion'] =
             $idCertificacion;
 
-        $sql = "
-            UPDATE dbo.SPC_ESTACIONES
+        $sql = "UPDATE dbo.SPC_ESTACIONES
             SET id_certificacion = :id_certificacion
             WHERE codigo_linea = :codigo_linea
               AND id_estacion IN ({$listaIds})
         ";
     } else {
-        $sql = "
-            UPDATE dbo.SPC_ESTACIONES
+        $sql = "UPDATE dbo.SPC_ESTACIONES
             SET id_certificacion = NULL
             WHERE codigo_linea = :codigo_linea
               AND id_estacion IN ({$listaIds})
@@ -668,7 +529,7 @@ function validarIdsEstacion(mixed $ids): array
     return array_values(array_unique($resultado));
 }
 
-function responderDataTablesVacio(int $draw): never
+function responderDataTablesVacio(): never
 {
     http_response_code(200);
 
@@ -676,9 +537,6 @@ function responderDataTablesVacio(int $draw): never
         [
             'success' => true,
             'message' => 'Selecciona una línea.',
-            'draw' => $draw,
-            'recordsTotal' => 0,
-            'recordsFiltered' => 0,
             'data' => [],
             'summary' => [
                 'total_estaciones' => 0,
@@ -710,37 +568,6 @@ function ejecutarConParametros(
     }
 
     $stmt->execute();
-}
-
-function escaparLike(string $valor): string
-{
-    return str_replace(
-        ['\\', '%', '_', '['],
-        ['\\\\', '\\%', '\\_', '\\['],
-        $valor
-    );
-}
-
-function obtenerEntero(
-    mixed $valor,
-    int $minimo,
-    int $maximo,
-    int $predeterminado
-): int {
-    $entero = filter_var(
-        $valor,
-        FILTER_VALIDATE_INT
-    );
-
-    if (
-        $entero === false ||
-        $entero < $minimo ||
-        $entero > $maximo
-    ) {
-        return $predeterminado;
-    }
-
-    return (int) $entero;
 }
 
 function obtenerJson(): array

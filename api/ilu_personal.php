@@ -92,11 +92,7 @@ try {
 
 function obtenerCatalogos(PDO $conn): void
 {
-    $sqlLineas = "
-        SELECT
-            l.codigo_linea,
-            l.nombre_linea,
-            l.descripcion,
+    $sqlLineas = "SELECT l.codigo_linea, l.nombre_linea, l.descripcion,
             (
                 SELECT COUNT(*)
                 FROM dbo.SPC_PERSONAL AS p
@@ -130,19 +126,18 @@ function obtenerCatalogos(PDO $conn): void
                 ELSE 1
             END,
             l.nombre_linea ASC,
-            l.codigo_linea ASC
-    ";
+            l.codigo_linea ASC";
 
-    $sqlCertificaciones = "
-        SELECT
-            idCR AS idE,
-            idCR,
-            codigo_certificacion,
-            nombre_certificacion,
-            tipo_proceso
+    $sqlCertificaciones = " SELECT idCR AS idE, idCR, codigo_certificacion,
+            nombre_certificacion, tipo_proceso
         FROM dbo.SPC_CERTIFICACIONES
-        ORDER BY nombre_certificacion ASC, codigo_certificacion ASC
-    ";
+        ORDER BY nombre_certificacion ASC, codigo_certificacion ASC";
+
+    $sqlEstatusPersonal = " SELECT idEP, LTRIM(RTRIM(CONVERT(NVARCHAR(50), clave))) AS clave,
+            nombre, descripcion
+        FROM dbo.SPC_ESTATUS_PERSONAL
+        WHERE clave IS NOT NULL
+        ORDER BY idEP ASC";
 
     $stmtLineas = $conn->query($sqlLineas);
     $lineas = $stmtLineas->fetchAll(PDO::FETCH_ASSOC);
@@ -152,12 +147,17 @@ function obtenerCatalogos(PDO $conn): void
     $certificaciones = $stmtCertificaciones->fetchAll(PDO::FETCH_ASSOC);
     $stmtCertificaciones->closeCursor();
 
+    $stmtEstatusPersonal = $conn->query($sqlEstatusPersonal);
+    $estatusPersonal = $stmtEstatusPersonal->fetchAll(PDO::FETCH_ASSOC);
+    $stmtEstatusPersonal->closeCursor();
+
     responder(
         true,
         'Catálogos obtenidos correctamente.',
         [
             'lineas' => $lineas,
             'certificaciones' => $certificaciones,
+            'estatus_personal' => $estatusPersonal,
         ]
     );
 }
@@ -191,19 +191,19 @@ function listarPersonal(PDO $conn): void
         : trim((string) ($_GET['search']['value'] ?? ''));
 
     $turno = validarTurno($_GET['turno'] ?? '1');
-    $estado = trim((string) ($_GET['estado'] ?? 'todos'));
+    $estadoCurso = trim((string) ($_GET['estado'] ?? 'todos'));
+    $estatusPersonal = validarFiltroEstatusPersonal(
+        $_GET['estatus_personal'] ?? []
+    );
 
     $estadosPermitidos = [
         'todos',
         'con_curso',
         'sin_curso',
-        'disponible',
-        'asignado',
-        'eliminado',
     ];
 
-    if (!in_array($estado, $estadosPermitidos, true)) {
-        $estado = 'todos';
+    if (!in_array($estadoCurso, $estadosPermitidos, true)) {
+        $estadoCurso = 'todos';
     }
 
     $columnasOrdenables = [
@@ -229,34 +229,39 @@ function listarPersonal(PDO $conn): void
     $direccion = strtolower((string) ($_GET['order'][0]['dir'] ?? 'asc'));
     $direccion = $direccion === 'desc' ? 'DESC' : 'ASC';
 
-    [$whereSql, $parametros] = construirFiltros($codigoLinea, $turno, $busqueda, $estado);
+    [$whereSql, $parametros] = construirFiltros(
+        $codigoLinea,
+        $turno,
+        $busqueda,
+        $estadoCurso,
+        $estatusPersonal
+    );
+
+    [$whereTotal, $parametrosTotal] = construirFiltros(
+        $codigoLinea,
+        $turno,
+        '',
+        'todos',
+        []
+    );
 
     $stmtTotal = $conn->prepare("
         SELECT COUNT(*)
         FROM dbo.SPC_PERSONAL AS p
-        WHERE LTRIM(RTRIM(CONVERT(NVARCHAR(100), p.codigo_linea))) = :codigo_linea
-          AND LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(10), p.turno), ''))) = :turno
+        {$whereTotal}
     ");
-    ejecutarConParametros($stmtTotal, [
-        'codigo_linea' => $codigoLinea,
-        'turno' => $turno,
-    ]);
+    ejecutarConParametros($stmtTotal, $parametrosTotal);
     $totalRegistros = (int) $stmtTotal->fetchColumn();
     $stmtTotal->closeCursor();
 
-    $sqlFiltrados = "
-        SELECT COUNT(*)
-        FROM dbo.SPC_PERSONAL AS p
-        {$whereSql}
-    ";
+    $sqlFiltrados = " SELECT COUNT(*) FROM dbo.SPC_PERSONAL AS p {$whereSql}";
 
     $stmtFiltrados = $conn->prepare($sqlFiltrados);
     ejecutarConParametros($stmtFiltrados, $parametros);
     $totalFiltrados = (int) $stmtFiltrados->fetchColumn();
     $stmtFiltrados->closeCursor();
 
-    $sqlSelectBase = "
-        SELECT
+    $sqlSelectBase = "SELECT
             p.nomina AS nomina,
             p.nombre AS nombre,
             p.codigo_linea AS codigo_linea,
@@ -290,8 +295,7 @@ function listarPersonal(PDO $conn): void
         $filaInicio = $start;
         $filaFin = $start + $length;
 
-        $sqlDatos = "
-            WITH personal_paginado AS (
+        $sqlDatos = "WITH personal_paginado AS (
                 SELECT
                     datos.*,
                     ROW_NUMBER() OVER (
@@ -350,17 +354,26 @@ function listarPersonal(PDO $conn): void
     exit;
 }
 
-function construirFiltros(string $codigoLinea, string $turno, string $busqueda, string $estado): array
-{
+function construirFiltros(
+    string $codigoLinea,
+    string $turno,
+    string $busqueda,
+    string $estadoCurso,
+    array $estatusPersonal
+): array {
     $condiciones = [
-        'LTRIM(RTRIM(CONVERT(NVARCHAR(100), p.codigo_linea))) = :codigo_linea',
-        "LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(10), p.turno), ''))) = :turno"
+        'LTRIM(RTRIM(CONVERT(NVARCHAR(100), p.codigo_linea))) = :codigo_linea'
     ];
 
     $parametros = [
-        'codigo_linea' => $codigoLinea,
-        'turno' => $turno
+        'codigo_linea' => $codigoLinea
     ];
+
+    if ($turno !== 'todos') {
+        $condiciones[] =
+            "LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(10), p.turno), ''))) = :turno";
+        $parametros['turno'] = $turno;
+    }
 
     if ($busqueda !== '') {
         $valor = '%' . escaparLike($busqueda) . '%';
@@ -399,7 +412,7 @@ function construirFiltros(string $codigoLinea, string $turno, string $busqueda, 
         $parametros['busqueda_curso'] = $valor;
     }
 
-    if ($estado === 'con_curso') {
+    if ($estadoCurso === 'con_curso') {
         $condiciones[] = "
             EXISTS (
                 SELECT 1
@@ -407,7 +420,7 @@ function construirFiltros(string $codigoLinea, string $turno, string $busqueda, 
                 WHERE iEstado.nomina = p.nomina
             )
         ";
-    } elseif ($estado === 'sin_curso') {
+    } elseif ($estadoCurso === 'sin_curso') {
         $condiciones[] = "
             NOT EXISTS (
                 SELECT 1
@@ -415,12 +428,27 @@ function construirFiltros(string $codigoLinea, string $turno, string $busqueda, 
                 WHERE iEstado.nomina = p.nomina
             )
         ";
-    } elseif ($estado === 'disponible') {
-        $condiciones[] = "LTRIM(RTRIM(ISNULL(p.estatus, ''))) = '0'";
-    } elseif ($estado === 'asignado') {
-        $condiciones[] = "LTRIM(RTRIM(ISNULL(p.estatus, ''))) = '1'";
-    } elseif ($estado === 'eliminado') {
-        $condiciones[] = "LTRIM(RTRIM(ISNULL(p.estatus, ''))) = '2'";
+    }
+
+    if ($estatusPersonal !== []) {
+        $marcadoresEstatus = [];
+
+        foreach ($estatusPersonal as $indice => $clave) {
+            $nombreParametro = 'estatus_personal_' . $indice;
+            $marcadoresEstatus[] = ':' . $nombreParametro;
+            $parametros[$nombreParametro] = $clave;
+        }
+
+        $condiciones[] = "
+            LTRIM(
+                RTRIM(
+                    ISNULL(
+                        CONVERT(NVARCHAR(50), p.estatus),
+                        ''
+                    )
+                )
+            ) IN (" . implode(', ', $marcadoresEstatus) . ")
+        ";
     }
 
     return [
@@ -437,8 +465,15 @@ function obtenerResumenLinea(PDO $conn, string $codigoLinea, string $turno): arr
      * Por eso primero se calcula el total de cursos por persona en una
      * tabla derivada y después se agregan los resultados.
      */
-    $sql = "
-        SELECT
+    [$whereSql, $parametros] = construirFiltros(
+        $codigoLinea,
+        $turno,
+        '',
+        'todos',
+        []
+    );
+
+    $sql = "SELECT
             COUNT(*) AS total_personal,
             COALESCE(
                 SUM(
@@ -475,15 +510,11 @@ function obtenerResumenLinea(PDO $conn, string $codigoLinea, string $turno): arr
             GROUP BY nomina
         ) AS cursos
             ON cursos.nomina = p.nomina
-        WHERE LTRIM(RTRIM(CONVERT(NVARCHAR(100), p.codigo_linea))) = :codigo_linea
-          AND LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(10), p.turno), ''))) = :turno
+        {$whereSql}
     ";
 
     $stmt = $conn->prepare($sql);
-    ejecutarConParametros($stmt, [
-        'codigo_linea' => $codigoLinea,
-        'turno' => $turno,
-    ]);
+    ejecutarConParametros($stmt, $parametros);
     $fila = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
     $stmt->closeCursor();
 
@@ -498,8 +529,7 @@ function obtenerResumenLinea(PDO $conn, string $codigoLinea, string $turno): arr
 
 function obtenerDiagnosticoFiltro(PDO $conn, string $codigoLinea, string $turno): array
 {
-    $stmt = $conn->prepare("
-        SELECT
+    $stmt = $conn->prepare("SELECT
             COUNT(*) AS total_linea,
             SUM(CASE WHEN LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(10), turno), ''))) = '1' THEN 1 ELSE 0 END) AS total_turno_1,
             SUM(CASE WHEN LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(10), turno), ''))) = '2' THEN 1 ELSE 0 END) AS total_turno_2
@@ -542,8 +572,7 @@ function diagnosticarIlu(PDO $conn): void
         $stmt->closeCursor();
     }
 
-    $stmtTurnos = $conn->query("
-        SELECT
+    $stmtTurnos = $conn->query("SELECT
             LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(10), turno), ''))) AS turno,
             COUNT(*) AS total
         FROM dbo.SPC_PERSONAL
@@ -568,8 +597,7 @@ function obtenerDetalleCursos(PDO $conn): void
     validarLineaExiste($conn, $codigoLinea);
     validarPersonalPerteneceLinea($conn, $codigoLinea, [$nomina]);
 
-    $sql = "
-        SELECT
+    $sql = "SELECT
             i.nomina,
             i.idE,
             CONVERT(VARCHAR(19), i.fecha_registro, 120) AS fecha_registro,
@@ -598,18 +626,54 @@ function procesarCambioIlu(PDO $conn, array $data): void
 {
     $accion = trim((string) ($data['accion'] ?? ''));
 
-    if (!in_array($accion, ['asignar', 'quitar'], true)) {
+    $accionesPermitidas = [
+        'asignar',
+        'quitar',
+        'actualizar_estatus_personal',
+        'actualizar_linea_personal',
+    ];
+
+    if (!in_array($accion, $accionesPermitidas, true)) {
         throw new InvalidArgumentException('La acción solicitada no es válida.');
     }
 
     $codigoLinea = validarCodigoLinea($data['codigo_linea'] ?? null);
-    $idE = validarIdE($data['idE'] ?? null);
     $nominas = validarNominas($data['nominas'] ?? null);
-    $estatus = validarEstatusIlu($data['estatus'] ?? '0');
 
     validarLineaExiste($conn, $codigoLinea);
-    validarCertificacionExiste($conn, $idE);
     validarPersonalPerteneceLinea($conn, $codigoLinea, $nominas);
+
+    if ($accion === 'actualizar_estatus_personal') {
+        $nuevoEstatus = validarEstatusPersonalActualizacion(
+            $data['nuevo_estatus'] ?? null
+        );
+        actualizarEstatusPersonal(
+            $conn,
+            $codigoLinea,
+            $nominas,
+            $nuevoEstatus
+        );
+        return;
+    }
+
+    if ($accion === 'actualizar_linea_personal') {
+        $codigoLineaDestino = validarCodigoLinea(
+            $data['codigo_linea_destino'] ?? null
+        );
+        validarLineaExiste($conn, $codigoLineaDestino);
+        actualizarLineaPersonal(
+            $conn,
+            $codigoLinea,
+            $codigoLineaDestino,
+            $nominas
+        );
+        return;
+    }
+
+    $idE = validarIdE($data['idE'] ?? null);
+    $estatus = validarEstatusIlu($data['estatus'] ?? '0');
+
+    validarCertificacionExiste($conn, $idE);
 
     if ($accion === 'asignar') {
         asignarCurso($conn, $nominas, $idE, $estatus);
@@ -621,15 +685,13 @@ function procesarCambioIlu(PDO $conn, array $data): void
 
 function asignarCurso(PDO $conn, array $nominas, int $idE, string $estatus): void
 {
-    $sqlExiste = "
-        SELECT 1
+    $sqlExiste = "SELECT 1
         FROM dbo.SPC_ILU
         WHERE nomina = :nomina
           AND idE = :idE
     ";
 
-    $sqlInsertar = "
-        INSERT INTO dbo.SPC_ILU (
+    $sqlInsertar = "INSERT INTO dbo.SPC_ILU (
             nomina,
             idE,
             fecha_registro,
@@ -704,8 +766,7 @@ function quitarCurso(PDO $conn, array $nominas, int $idE): void
         $parametros[$nombre] = $nomina;
     }
 
-    $sql = "
-        DELETE FROM dbo.SPC_ILU
+    $sql = "DELETE FROM dbo.SPC_ILU
         WHERE idE = :idE
           AND nomina IN (" . implode(', ', $placeholders) . ")
     ";
@@ -729,6 +790,118 @@ function quitarCurso(PDO $conn, array $nominas, int $idE): void
         true,
         "Curso quitado. Registros eliminados: {$eliminados}.",
         ['eliminados' => $eliminados]
+    );
+}
+
+function actualizarEstatusPersonal(
+    PDO $conn,
+    string $codigoLinea,
+    array $nominas,
+    string $nuevoEstatus
+): void {
+    $placeholders = [];
+    $parametros = [
+        'codigo_linea' => $codigoLinea,
+        'nuevo_estatus' => $nuevoEstatus,
+    ];
+
+    foreach ($nominas as $indice => $nomina) {
+        $nombre = 'nomina_' . $indice;
+        $placeholders[] = ':' . $nombre;
+        $parametros[$nombre] = $nomina;
+    }
+
+    $sql = "UPDATE dbo.SPC_PERSONAL
+        SET estatus = :nuevo_estatus
+        WHERE LTRIM(
+                RTRIM(
+                    CONVERT(NVARCHAR(100), codigo_linea)
+                )
+              ) = :codigo_linea
+          AND nomina IN (" . implode(', ', $placeholders) . ")
+    ";
+
+    $conn->beginTransaction();
+
+    try {
+        $stmt = $conn->prepare($sql);
+        ejecutarConParametros($stmt, $parametros);
+        $actualizados = max(0, (int) $stmt->rowCount());
+        $stmt->closeCursor();
+        $conn->commit();
+    } catch (Throwable $exception) {
+        if ($conn->inTransaction()) {
+            $conn->rollBack();
+        }
+        throw $exception;
+    }
+
+    $nombreEstatus = $nuevoEstatus === '0'
+        ? 'Disponible'
+        : 'Eliminado';
+
+    responder(
+        true,
+        "Estatus actualizado a {$nombreEstatus} para {$actualizados} " .
+            ($actualizados === 1 ? 'persona.' : 'personas.'),
+        [
+            'actualizados' => $actualizados,
+            'nuevo_estatus' => $nuevoEstatus,
+        ]
+    );
+}
+
+function actualizarLineaPersonal(
+    PDO $conn,
+    string $codigoLineaOrigen,
+    string $codigoLineaDestino,
+    array $nominas
+): void {
+    $placeholders = [];
+    $parametros = [
+        'codigo_linea_origen' => $codigoLineaOrigen,
+        'codigo_linea_destino' => $codigoLineaDestino,
+    ];
+
+    foreach ($nominas as $indice => $nomina) {
+        $nombre = 'nomina_' . $indice;
+        $placeholders[] = ':' . $nombre;
+        $parametros[$nombre] = $nomina;
+    }
+
+    $sql = "UPDATE dbo.SPC_PERSONAL
+        SET codigo_linea = :codigo_linea_destino
+        WHERE LTRIM(
+                RTRIM(
+                    CONVERT(NVARCHAR(100), codigo_linea)
+                )
+              ) = :codigo_linea_origen
+          AND nomina IN (" . implode(', ', $placeholders) . ")
+    ";
+
+    $conn->beginTransaction();
+
+    try {
+        $stmt = $conn->prepare($sql);
+        ejecutarConParametros($stmt, $parametros);
+        $actualizados = max(0, (int) $stmt->rowCount());
+        $stmt->closeCursor();
+        $conn->commit();
+    } catch (Throwable $exception) {
+        if ($conn->inTransaction()) {
+            $conn->rollBack();
+        }
+        throw $exception;
+    }
+
+    responder(
+        true,
+        "Línea actualizada para {$actualizados} " .
+            ($actualizados === 1 ? 'persona.' : 'personas.'),
+        [
+            'actualizados' => $actualizados,
+            'codigo_linea' => $codigoLineaDestino,
+        ]
     );
 }
 
@@ -802,11 +975,52 @@ function validarTurno(mixed $valor): string
 
     $turno = trim((string) $valor);
 
-    if ($turno !== '1' && $turno !== '2') {
+    if (!in_array($turno, ['todos', '1', '2'], true)) {
         return '1';
     }
 
     return $turno;
+}
+
+function validarFiltroEstatusPersonal(mixed $valor): array
+{
+    if ($valor === null || $valor === '') {
+        return [];
+    }
+
+    $valores = is_array($valor) ? $valor : [$valor];
+
+    if (count($valores) > 50) {
+        throw new InvalidArgumentException(
+            'Se recibieron demasiados estatus de personal.'
+        );
+    }
+
+    $claves = [];
+
+    foreach ($valores as $clave) {
+        if (is_array($clave) || is_object($clave)) {
+            throw new InvalidArgumentException(
+                'Uno de los estatus de personal no es válido.'
+            );
+        }
+
+        $claveNormalizada = trim((string) $clave);
+
+        if ($claveNormalizada === '' || mb_strlen($claveNormalizada) > 50) {
+            throw new InvalidArgumentException(
+                'Uno de los estatus de personal no es válido.'
+            );
+        }
+
+        if (strtolower($claveNormalizada) === 'todos') {
+            return [];
+        }
+
+        $claves[] = $claveNormalizada;
+    }
+
+    return array_values(array_unique($claves));
 }
 
 function validarCodigoLinea(mixed $valor): string
@@ -871,6 +1085,21 @@ function validarIdE(mixed $valor): int
     }
 
     return (int) $id;
+}
+
+function validarEstatusPersonalActualizacion(mixed $valor): string
+{
+    if (is_array($valor) || is_object($valor)) {
+        throw new InvalidArgumentException('El nuevo estatus del personal no es válido.');
+    }
+
+    $estatus = trim((string) $valor);
+
+    if (!in_array($estatus, ['0', '2'], true)) {
+        throw new InvalidArgumentException('El estatus del personal solo puede ser Disponible o Eliminado.');
+    }
+
+    return $estatus;
 }
 
 function validarEstatusIlu(mixed $valor): string
