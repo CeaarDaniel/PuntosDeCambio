@@ -101,7 +101,7 @@
               <i class="bi bi-arrows-move"></i> Ajustar a cuadrícula
             </button>
             -->
-            <button class="btn btn-success btn-sm rounded-3" id="saveLayoutBtn">
+            <button class="btn btn-success btn-sm rounded-3 d-none" id="saveLayoutBtn">
               <i class="bi bi-floppy"></i> Guardar
             </button>
           </div>
