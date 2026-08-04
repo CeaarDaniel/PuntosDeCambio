@@ -232,7 +232,7 @@
         formDataPosicion.append('layoutF', JSON.stringify(formas)); //FORMAS ELEMENTOS SVG
 
           // console.log("datos", layoutData)
-          fetch("../api/operacionesLinea.php", {
+          fetch("../api/operacionesDiseno.php", {
                 method: "POST",
                 body: formDataPosicion,
             })
@@ -349,7 +349,9 @@
       let linea = (codigoLinea.value.trim() === "")  ? null : codigoLinea.value;
       formDataEstacion.append("opcion", "2");
       formDataEstacion.append("nombreEstacion", nombreEstacion);
-      formDataEstacion.append("descripcion", descripcion);
+      
+      if(descripcion != null && descripcion != '') formDataEstacion.append("descripcion", descripcion);
+
       formDataEstacion.append("requiereC", requiereC);
       //formDataEstacion.append("certificacion", certificacion);
       formDataEstacion.append("linea", linea);
