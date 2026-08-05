@@ -87,7 +87,7 @@ else
   if($opcion=='5'){
       $codigoLinea = $_POST['codigoLinea'];
       $sql= "SELECT E.id_estacion,  E.nombre_estacion, E.requiere_certificacion AS isCertificate,
-                   E.id_certificacion as codigo_certificacion,  E.posicion_x,  E.posicion_y
+                   E.id_certificacion as codigo_certificacion,  E.posicion_x,  E.posicion_y, E.rotate
                 FROM SPC_ESTACIONES E WHERE E.codigo_linea = :codigoLinea";
         $stmt = $conn->prepare($sql);
         $response= array();
@@ -102,7 +102,8 @@ else
                                      'status' => $asistencia,
                                      'certification' => $estacion['codigo_certificacion'], 
                                      'x' => $estacion['posicion_x'],
-                                     'y' => $estacion['posicion_y'] ,
+                                     'y' => $estacion['posicion_y'],
+                                     'rotate' => $estacion['rotate'],
                                      'colorClass' => $coloClass,
                                      'isCertificate' => $estacion['isCertificate']
                                    );

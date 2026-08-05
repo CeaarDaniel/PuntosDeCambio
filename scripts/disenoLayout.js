@@ -74,7 +74,8 @@
           startTop: parseInt(station.style.top) || 0,
           elementWidth: rect.width,
           elementHeight: rect.height,
-          stationId: station.getAttribute('data-station-id')
+          stationId: station.getAttribute('data-station-id'),
+          originalTransform: station.style.transform || ''
         };
         
         document.body.style.cursor = 'grabbing';
@@ -164,9 +165,9 @@
           if (isFinal) {
             this.activeDrag.style.left = `${newX}px`;
             this.activeDrag.style.top = `${newY}px`;
-            this.activeDrag.style.transform = 'none';
+            this.activeDrag.style.transform = this.dragData.originalTransform;
           } else {
-              this.activeDrag.style.transform = `translate(${deltaInternalX}px, ${deltaInternalY}px)`;
+              this.activeDrag.style.transform = `translate(${deltaInternalX}px, ${deltaInternalY}px) ${this.dragData.originalTransform}`.trim();
               //this.activeDrag.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
           }
           
@@ -297,6 +298,7 @@
       station.className = `station ${stationData.colorClass}`;
       station.style.left = `${stationData.x}px`;
       station.style.top = `${stationData.y}px`;
+      station.style.transform = `rotate(${ (stationData.rotate) ? stationData.rotate : 0}deg)`;
       station.setAttribute('data-station-id', stationData.id);
       station.innerHTML = `
         <div class="station-header py-2"></div>

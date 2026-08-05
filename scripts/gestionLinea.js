@@ -276,6 +276,7 @@
       station.className = `station ${stationData.colorClass}`;
       station.style.left = `${stationData.x}px`;
       station.style.top = `${stationData.y}px`;
+      station.style.transform = `rotate(${ (stationData.rotate) ? stationData.rotate : 0}deg)`;
       station.setAttribute('data-station-id', stationData.id);
       station.setAttribute('data-idCertificacion', stationData.certification);
 

@@ -463,7 +463,7 @@ else
                         COALESCE(PC.nomina, EP.nomina) AS nomina,
                         COALESCE(PC.nombre, EP.nombre) AS nombre,
                         COALESCE(PC.fechaHora_inicio, EP.fecha_asignacion) AS fecha_asignacion,
-                        E.codigo_linea, E.id_certificacion as codigo_certificacion, E.posicion_x, E.posicion_y,
+                        E.codigo_linea, E.id_certificacion as codigo_certificacion, E.posicion_x, E.posicion_y, E.rotate,
                         PC.estatusPC, PC.idPC, A.estatus AS asistencia
                     FROM SPC_ESTACIONES E
                         OUTER APPLY (
@@ -542,7 +542,8 @@ else
                                      'status' => $asistencia, //pending: sin asignar, occupied: operador asignado
                                      'certification' => $estacion['codigo_certificacion'], 
                                      'x' => $estacion['posicion_x'],
-                                     'y' => $estacion['posicion_y'] ,
+                                     'y' => $estacion['posicion_y'],
+                                     'rotate' => $estacion['rotate'],
                                      'colorClass' => $coloClass,  //1 asistencia, 3 falta, 2 o 6 punto de cambio
                                      'idPC' => $estacion['idPC'],
                                      'estatusPC' => $estacion['estatusPC'],
