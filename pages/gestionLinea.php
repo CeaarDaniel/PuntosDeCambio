@@ -2348,6 +2348,6 @@
 
   <script src="../DataTables/datatables.min.js"></script>  
   <!--Custmo js -->
-  <script src="../scripts/gestionLinea.js"></script> 
+  <script src="../scripts/gestionLinea.js?v=1.0.2"></script> 
 </body>
 </html>
