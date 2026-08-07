@@ -6,9 +6,12 @@
   let btnAsistencia = document.getElementById('btnAsistencia') //Boton para registrar una asistencia individual
   
   let tableListadoPersonal = document.getElementById('tableListadoPersonal');
-  btnRegistrarOperador = document.getElementById('btnRegistrarOperador') //Boton para registrar personal
-
+  let btnRegistrarOperador = document.getElementById('btnRegistrarOperador') //Boton para registrar personal
+  let btnRegistrarOperadorFile = document.getElementById('btnRegistrarOperadorFile');
   let seccionDetallePC = document.getElementById('seccionDetallePC');
+
+  let btnAgregarPersonalP1 = document.getElementById('btnAgregarPersonalP1');
+  let btnAgregarPersonalP2 = document.getElementById('btnAgregarPersonalP2');
 
   //BOTONES FLOTANTES
     let btnToggleToolsSidebar = document.getElementById('btnToggleToolsSidebar')
@@ -664,6 +667,7 @@
               });            
     }
 
+    //Funcion para el registro de la asistencia
     function registrarAsistencia(){
           let datosAsistencia = [];
           let fromDataAsistencia = new FormData;
@@ -734,6 +738,90 @@
             .catch(error => {
               console.log(error);
             });
+    }
+
+    //Funcion para cargar el archivo del listado del personal
+    function fileInputOperatos(event){
+      event.preventDefault();
+
+      const inputListado = document.getElementById('ListadoPersonal');
+      const archivo = inputListado.files[0];
+      const turno = $('#turnoLayout').val();
+
+      if (!archivo) {
+        alert('Seleccione un archivo de texto con el listado de nóminas.');
+        return;
+      }
+
+      if (archivo.name.split('.').pop().toLowerCase() !== 'txt') {
+        alert('El archivo debe tener extensión .txt.');
+        return;
+      }
+
+      if (!codigoLinea.value || !turno) {
+        alert('No se encontró el código de línea o el turno seleccionado.');
+        return;
+      }
+
+      const formDataListado = new FormData();
+      formDataListado.append('opcion', '43');
+      formDataListado.append('listadoPersonal', archivo);
+      formDataListado.append('codigoLinea', codigoLinea.value);
+      formDataListado.append('turno', turno);
+
+      const contenidoBoton = btnRegistrarOperadorFile.innerHTML;
+      btnRegistrarOperadorFile.disabled = true;
+      btnRegistrarOperadorFile.setAttribute('aria-busy', 'true');
+      btnRegistrarOperadorFile.innerHTML = `
+        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        Cargando...
+      `;
+
+      fetch('../api/operacionesLinea.php', {
+        method: 'POST',
+        body: formDataListado
+      })
+        .then(response => response.json())
+        .then(data => {
+          let mensaje = data.mensaje || 'La carga del archivo ha finalizado.';
+
+          if (Array.isArray(data.noInsertados) && data.noInsertados.length > 0) {
+            const detalleNoInsertados = data.noInsertados
+              .map(registro => `${registro.nomina}: ${registro.motivo}`)
+              .join('\n');
+
+            mensaje += `\n\nRegistros no insertados (${data.noInsertados.length}):\n${detalleNoInsertados}`;
+          }
+
+          if (Array.isArray(data.imagenesNoCargadas) && data.imagenesNoCargadas.length > 0) {
+            const detalleImagenes = data.imagenesNoCargadas
+              .map(registro => `${registro.nomina}: ${registro.motivo}`)
+              .join('\n');
+
+            mensaje += `\n\nEmpleados insertados sin imagen:\n${detalleImagenes}`;
+          }
+
+          alert(mensaje);
+
+          if (data.estatus === 'ok') {
+            inputListado.value = '';
+
+            if (data.cantidadInsertados > 0) {
+              mostrarTablaPersonal();
+            }
+          } else if (data.error) {
+            console.log(data.error);
+          }
+        })
+        .catch(error => {
+          console.log(error);
+          alert('Ocurrió un error al cargar el listado de personal.');
+        })
+        .finally(() => {
+          btnRegistrarOperadorFile.disabled = false;
+          btnRegistrarOperadorFile.removeAttribute('aria-busy');
+          btnRegistrarOperadorFile.innerHTML = contenidoBoton;
+        });
     }
 
     //Abrir modal de asignar personal a una estacion desde la tabla de personal no asignado
@@ -3038,6 +3126,9 @@
                 });                
         })
 
+        //CARGAR LISTADO DE PERSONAL CON ARCHIVO
+        btnRegistrarOperadorFile.addEventListener('click', fileInputOperatos)
+
         //Remover trabajador de la estacion
         btnRemoverTrabajadorPC.addEventListener('click', function(){
           let formDataReniver = new FormData;
@@ -3267,10 +3358,13 @@
         
         btnRegistrarAsistencia.addEventListener('click', registrarAsistencia);
         btnMenuAsignarControlModal.addEventListener('click', function(){changeContent('ventanasModalPC','contAsignacion')});
-        btnMenuAsignarControlModal.addEventListener('click', function(){changeContent('ventanasModalPC','contAsignacion')});
+        //btnMenuAsignarControlModal.addEventListener('click', function(){changeContent('ventanasModalPC','contAsignacion')});
         btnMenuAsignaciones.addEventListener('click', mostrarTablaOperaciones)
         btnInfoRPC.addEventListener('click', function(){changeContent('ventanasModalPC','contInfoEstacion')});
         btnRegistroPc.addEventListener('click', function(){changeContent('ventanasModalPC','contregistroCambioForm')});
+
+        btnAgregarPersonalP1.addEventListener('click', function(){changeContent('ventanasModalAgregarPersonal','agregarPersonalIndividual')});
+        btnAgregarPersonalP2.addEventListener('click', function(){changeContent('ventanasModalAgregarPersonal','agregarListadoPersonal')});
         
         btnVolverConsultaPC.addEventListener('click', function (){
             changeContent('ventanasConsultaPC', 'ventanaTablaPC')

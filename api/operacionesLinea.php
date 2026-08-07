@@ -3108,4 +3108,227 @@ if($opcion == '42'){
             ]);
         }
 }
+
+//Funcion para cargar el listado de personal usando un archivo
+else
+ if($opcion == '43'){
+        $codigoLinea = isset($_POST['codigoLinea']) ? trim($_POST['codigoLinea']) : '';
+        $turno = isset($_POST['turno']) ? trim($_POST['turno']) : '';
+        $archivo = $_FILES['listadoPersonal'] ?? null;
+
+        if ($codigoLinea === '' || $turno === '') {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Faltan el código de línea o el turno.'
+            ]);
+            exit;
+        }
+
+        if (!$archivo || !isset($archivo['error']) || $archivo['error'] !== UPLOAD_ERR_OK) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'No se recibió correctamente el archivo de personal.'
+            ]);
+            exit;
+        }
+
+        $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+
+        if ($extension !== 'txt') {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'El archivo debe tener extensión .txt.'
+            ]);
+            exit;
+        }
+
+        $contenido = file_get_contents($archivo['tmp_name']);
+
+        if ($contenido === false || trim($contenido) === '') {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'El archivo está vacío o no pudo ser leído.'
+            ]);
+            exit;
+        }
+
+        $lineas = preg_split('/\r\n|\r|\n/', $contenido);
+        $nominasValidas = [];
+        $nominasLeidas = [];
+        $noInsertados = [];
+
+        foreach ($lineas as $indice => $linea) {
+            $nomina = trim($linea);
+
+            if ($indice === 0) {
+                $nomina = ltrim($nomina, "\xEF\xBB\xBF");
+            }
+
+            if ($nomina === '') {
+                continue;
+            }
+
+            if (!preg_match('/^\d+$/', $nomina)) {
+                $noInsertados[] = [
+                    'nomina' => $nomina,
+                    'motivo' => 'La nómina debe contener únicamente números'
+                ];
+                continue;
+            }
+
+            if (isset($nominasLeidas[$nomina])) {
+                $noInsertados[] = [
+                    'nomina' => $nomina,
+                    'motivo' => 'La nómina está repetida dentro del archivo'
+                ];
+                continue;
+            }
+
+            $nominasLeidas[$nomina] = true;
+            $nominasValidas[] = $nomina;
+        }
+
+        if (empty($nominasValidas)) {
+            echo json_encode([
+                'estatus' => 'ok',
+                'mensaje' => 'No se encontraron nóminas válidas para insertar.',
+                'cantidadInsertados' => 0,
+                'insertados' => [],
+                'cantidadNoInsertados' => count($noInsertados),
+                'noInsertados' => $noInsertados
+            ]);
+            exit;
+        }
+
+        include('./conexionEmpleado.php');
+
+        $insertados = [];
+        $imagenesNoCargadas = [];
+
+        try {
+            $sqlValidar = "SELECT COUNT(*) AS total FROM SPC_PERSONAL WHERE nomina = :nomina";
+            $stmtValidar = $conn->prepare($sqlValidar);
+
+            $sqlEmpleado = "SELECT nombre, foto FROM empleado_mst WHERE No_Nomina = :nomina";
+            $stmtEmpleado = $connE->prepare($sqlEmpleado);
+
+            $sqlInsertar = "INSERT INTO SPC_PERSONAL (nomina, nombre, estatus, codigo_linea, fecha_registro, turno)
+                            VALUES (:nomina, :nombre, 0, :codigo_linea, GETDATE(), :turno)";
+            $stmtInsertar = $conn->prepare($sqlInsertar);
+
+            foreach ($nominasValidas as $nomina) {
+                $imagenGuardada = false;
+                $detalleImagen = '';
+
+                try {
+                    $stmtEmpleado->execute([':nomina' => $nomina]);
+                    $empleado = $stmtEmpleado->fetch(PDO::FETCH_ASSOC);
+                    $stmtEmpleado->closeCursor();
+
+                    if ($empleado && !empty($empleado['foto'])) {
+                        if (!class_exists('finfo')) {
+                            $detalleImagen = 'La extensión Fileinfo no está disponible en el servidor';
+                        } else {
+                            $finfo = new finfo(FILEINFO_MIME_TYPE);
+                            $tipoMime = $finfo->buffer($empleado['foto']);
+                            $extensiones = [
+                                'image/jpeg' => 'jpg',
+                                'image/jpg' => 'jpg',
+                                'image/png' => 'png',
+                                'image/gif' => 'gif',
+                                'image/bmp' => 'bmp'
+                            ];
+                            $extensionImagen = $extensiones[$tipoMime] ?? null;
+
+                            if ($extensionImagen === null) {
+                                $detalleImagen = 'El formato de la imagen no es compatible';
+                            } else {
+                                $nombreArchivo = $nomina . '.' . $extensionImagen;
+                                $rutaImagen = __DIR__ . '/../img/personal/' . $nombreArchivo;
+                                $imagenGuardada = @file_put_contents($rutaImagen, $empleado['foto']);
+
+                                if ($imagenGuardada === false) {
+                                    $detalleImagen = 'No se pudo escribir la imagen en img/personal';
+                                } else {
+                                    $detalleImagen = 'Imagen guardada correctamente';
+                                }
+                            }
+                        }
+                    } elseif ($empleado) {
+                        $detalleImagen = 'El empleado no tiene una imagen registrada';
+                    } else {
+                        $detalleImagen = 'No se encontró la nómina en el catálogo de empleados';
+                    }
+
+                    $stmtValidar->execute([':nomina' => $nomina]);
+                    $existe = $stmtValidar->fetch(PDO::FETCH_ASSOC);
+                    $stmtValidar->closeCursor();
+
+                    if ($existe && $existe['total'] > 0) {
+                        $noInsertados[] = [
+                            'nomina' => $nomina,
+                            'motivo' => 'La nómina ya está registrada en SPC_PERSONAL'
+                        ];
+                    } elseif (!$empleado || empty($empleado['nombre'])) {
+                        $noInsertados[] = [
+                            'nomina' => $nomina,
+                            'motivo' => 'No se encontró la nómina en el catálogo de empleados'
+                        ];
+                    } else {
+                        $stmtInsertar->execute([
+                            ':nomina' => $nomina,
+                            ':nombre' => $empleado['nombre'],
+                            ':codigo_linea' => $codigoLinea,
+                            ':turno' => $turno
+                        ]);
+
+                        $insertados[] = $nomina;
+
+                        if ($imagenGuardada === false) {
+                            $imagenesNoCargadas[] = [
+                                'nomina' => $nomina,
+                                'motivo' => $detalleImagen
+                            ];
+                        }
+                    }
+                } catch (PDOException $e) {
+                    $noInsertados[] = [
+                        'nomina' => $nomina,
+                        'motivo' => 'Ocurrió un error al procesar el registro'
+                    ];
+                }
+            }
+
+            $respuesta = [
+                'estatus' => 'ok',
+                'mensaje' => 'Carga finalizada. Registros insertados: '.count($insertados).'.',
+                'cantidadInsertados' => count($insertados),
+                'insertados' => $insertados,
+                'cantidadNoInsertados' => count($noInsertados),
+                'noInsertados' => $noInsertados
+            ];
+
+            if (!empty($imagenesNoCargadas)) {
+                $respuesta['imagenesNoCargadas'] = $imagenesNoCargadas;
+            }
+
+            echo json_encode($respuesta);
+        } catch (PDOException $e) {
+            $respuesta = [
+                'estatus' => 'error',
+                'mensaje' => 'Ocurrió un error al procesar el listado de personal.',
+                'error' => $e->getMessage(),
+                'cantidadInsertados' => count($insertados),
+                'insertados' => $insertados,
+                'cantidadNoInsertados' => count($noInsertados),
+                'noInsertados' => $noInsertados
+            ];
+
+            if (!empty($imagenesNoCargadas)) {
+                $respuesta['imagenesNoCargadas'] = $imagenesNoCargadas;
+            }
+
+            echo json_encode($respuesta);
+        }
+}
 ?>

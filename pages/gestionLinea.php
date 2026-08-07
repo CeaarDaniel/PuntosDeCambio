@@ -172,81 +172,123 @@
   <!-- Cargar/Registrar personal -->
   <div class="modal fade app-modal" id="modalRegistrarOperador" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title"><i class="bi bi-person-plus"></i>REGISTRO DE PERSONAL</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="modal-line-guide" role="note">
-              <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true"><i class="bi bi-lightbulb"></i></span>
-              <div><strong>Registra al operador</strong><span>Captura su número de reloj y agrega las operaciones liberadas.</span></div>
-            </div>
-            <div class="row g-3">
-              <!-- Columna izquierda: Datos del empleado -->
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label for="nominaModalRegistrar" class="form-label required-field">
-                    <i class="bi bi-clock"></i> No. Reloj / ID Empleado
-                  </label>
-                  <div class="input-group-custom">
-                    <input type="number" min="0" step="1" class="form-control form-control-custom" 
-                          id="nominaModalRegistrar" placeholder="Ej: EMP-0256" required>
-                    <button type="button" class="input-icon" id="searchEmployee">
-                      <i class="bi bi-search"></i>
-                    </button>
+          <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-plus"></i>REGISTRO DE PERSONAL</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div id="ventanasModalAgregarPersonal">
+                    <div id="agregarPersonalIndividual" class="fade-page show" style="background: white; border-radius: 10px;">
+                        <div class="modal-line-guide" role="note">
+                          <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true"><i class="bi bi-lightbulb"></i></span>
+                            <div>
+                                <strong>Registra al operador</strong>
+                                <span>Captura su número de reloj y agrega las operaciones liberadas.</span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                          <!-- Columna izquierda: Datos del empleado -->
+                          <div class="col-md-6">
+                            <div class="mb-3">
+                              <label for="nominaModalRegistrar" class="form-label required-field">
+                                <i class="bi bi-clock"></i> No. Reloj / ID Empleado
+                              </label>
+                              <div class="input-group-custom">
+                                <input type="number" min="0" step="1" class="form-control form-control-custom" 
+                                      id="nominaModalRegistrar" placeholder="Ej: 11256" required>
+                                <button type="button" class="input-icon">
+                                  <i class="bi bi-search"></i>
+                                </button>
+                              </div>
+                            </div>
+                        
+                            <!-- NOMBRE DEL EMPLEADO -->
+                            <div class="mb-3">
+                              <div class="input-group-custom">
+                                <input type="text" class="py-2 ps-1" id="nombreModalRegistrar" 
+                                        style="all: unset; width:100%;
+                                            background-color: #e0f2fe;
+                                          color: #495057; border-radius: 12px;"
+                                      placeholder="Nombre del empleado" readonly>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Columna derecha: Operaciones disponibles + botón agregar -->
+                          <div class="col-md-6">
+                            <label for="selectRegistrar" class="form-label required-field">
+                              <i class="bi bi-cpu"></i> Operaciones liberadas
+                            </label>
+                            <div class="input-group">
+                              <select class="form-control form-control-custom flex-grow-1" id="selectRegistrar" required>
+                              </select>
+                    
+                              <button id="btnChipModalRegistrar" class="btn btn-primary-custom m-0" type="button" style="white-space: nowrap;">
+                                <i class="bi bi-plus-lg"></i>
+                              </button>
+                            </div>
+                          </div>
+
+                          <!-- Lista de operaciones asignadas (chips) -->
+                          <div class="col-12">
+                            <div id="operationsListContainer" class="d-flex flex-wrap gap-2">
+                            </div>
+                          </div>
+
+                          <!-- Fecha de asignación -->
+                          <div class="col-6 d-none">
+                            <label for="fecharegistrar" class="form-label required-field">
+                              <i class="bi bi-calendar"></i> Fecha de registro
+                            </label>
+                            <input type="datetime-local" class="form-control form-control-custom" id="fecharegistrar" readonly>
+                          </div>
+                        </div>
+
+                        <!--Boton de guardado-->
+                        <div class="d-flex justify-content-end mt-2 ">
+                          <button type="button" class="btn btn-primary-custom mx-2" id="btnRegistrarOperador">
+                            <i class="bi bi-check-circle"></i> Guardar
+                          </button>
+                        </div>
+                    </div>
+
+                  <div id="agregarListadoPersonal" class="fade-page d-none" style="background: white; border-radius: 10px;">
+                      <div class="modal-line-guide" role="note">
+                        <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true"><i class="bi bi-lightbulb"></i></span>
+                        <div>
+                            <strong>Registrar listado de personal</strong>
+                            <span>Sube el archivo con las nóminas correspondientes al personal de la línea</span>
+                        </div>
+                      </div>
+
+                      <div class="row g-3">
+                          <div class="col-12 col-md-8 mb-3">
+                              <label for="ListadoPersonal" class="form-label">
+                                <i class="bi bi-list" aria-hidden="true"></i> Listado de personal
+                              </label>
+
+                              <div class="input-group">
+                                <input type="file" class="form-control form-control-custom" id="ListadoPersonal" accept=".txt,text/plain">
+                                <button type="button" class="btn btn-primary-custom mx-0" id="btnRegistrarOperadorFile">Subir</button>
+                              </div>
+
+                              <div class="form-help">
+                                <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                <span>Ingrese un archivo .txt con una nómina por línea</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="row g-3 d-flex justify-content-center text-center">
+                      <button id="btnAgregarPersonalP1" class="menu-btn p-2 mx-1" style="max-width:40px; max-height:40px;">1</button>
+                      <button id="btnAgregarPersonalP2" class="menu-btn p-2 mx-1" style="max-width:40px; max-height:40px;">2</button>
                   </div>
                 </div>
-            
-                <!-- NOMBRE DEL EMPLEADO -->
-                <div class="mb-3">
-                  <div class="input-group-custom">
-                    <input type="text" class="py-2 ps-1" id="nombreModalRegistrar" 
-                            style="all: unset; width:100%;
-                                background-color: #e0f2fe;
-                              color: #495057; border-radius: 12px;"
-                          placeholder="Nombre del empleado" readonly>
-                  </div>
-                </div>
               </div>
-
-              <!-- Columna derecha: Operaciones disponibles + botón agregar -->
-              <div class="col-md-6">
-                <label for="selectRegistrar" class="form-label required-field">
-                  <i class="bi bi-cpu"></i> Operaciones liberadas
-                </label>
-                <div class="gap-2 align-items-start">
-                  <select class="form-control form-control-custom flex-grow-1" id="selectRegistrar" required>
-                  </select>
-        
-                  <button id="btnChipModalRegistrar" class="btn btn-primary-custom mt-2" type="button" style="white-space: nowrap;">
-                    <i class="bi bi-plus-lg"></i> Agregar
-                  </button>
-                </div>
-              </div>
-
-              <!-- Lista de operaciones asignadas (chips) -->
-              <div class="col-12">
-                <div id="operationsListContainer" class="d-flex flex-wrap gap-2">
-                </div>
-              </div>
-
-              <!-- Fecha de asignación -->
-              <div class="col-6">
-                <label for="fecharegistrar" class="form-label required-field">
-                  <i class="bi bi-calendar"></i> Fecha de registro
-                </label>
-                <input type="datetime-local" class="form-control form-control-custom" id="fecharegistrar" readonly>
-              </div>
-
-            </div>
-            <div class="d-flex justify-content-end mt-2 ">
-              <button type="button bg-success" class="btn btn-primary-custom mx-2" id="btnRegistrarOperador">
-                <i class="bi bi-check-circle"></i> Guardar
-              </button>
-            </div>
           </div>
-        </div>
       </div>
   </div>
 
@@ -527,8 +569,8 @@
                           type="number" 
                           min=0
                           step=1 class="form-control form-control-custom" id="nominaModalAsignar" 
-                          placeholder="Ej: EMP-0256" required>
-                        <button type="button" class="input-icon" id="searchEmployee">
+                          placeholder="Ej: 11256" required>
+                        <button type="button" class="input-icon">
                           <i class="bi bi-search"></i>
                         </button>
                       </div>
@@ -1624,7 +1666,6 @@
                                       <div class="input-group-custom">
                                         <input type="text" class="form-control form-control-custom" 
                                               id="no_controlCambio" placeholder="Ej: CAM-001" maxlength="50" readonly>
-                                        <button type="button" class="input-icon"><i class="bi bi-search"></i></button>
                                       </div>
                                     </div>
 
