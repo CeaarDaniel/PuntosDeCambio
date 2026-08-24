@@ -41,15 +41,7 @@
           <span class="tool-copy"><strong>Asignaciones</strong><small>Operaciones y personal</small></span>
         </span>
       </button>
-
-      <!-- ASIGNAR OPERADOR -->
-      <button id="btnMenuAsignar" class="tool-btn d-none" data-tooltip="Asignar operador" aria-label="Asignar operador" data-bs-toggle="modal" data-bs-target="#modalAsignarOperador">
-        <span class="tool-btn-content">
-          <span class="tool-icon"><i class="bi bi-clipboard"></i></span>
-          <span class="tool-copy"><strong>Asignar</strong><small>Operador a estación</small></span>
-        </span>
-      </button>
-
+      
       <!--CONSULTAR PUNTO DE CAMBIO -->
         <button id="btnMenuTablaPC" class="tool-btn" data-tooltip="Puntos de cambio" aria-label="Puntos de cambio" data-bs-toggle="modal" data-bs-target="#changePointsModal">
           <span class="tool-btn-content">
@@ -97,9 +89,9 @@
         <span>Ocultar barra</span>
       </button>
 
-      <div class="tools-sidebar-footer">
-        <i class="bi bi-info-circle"></i>
-        <span>Selecciona una opción para consultar o registrar información.</span>
+      <div class="tools-sidebar-footer" aria-controls="tools-sidebar" title="Guia de uso">
+        <i class="bi bi-info-circle btn" style="font-size:20px" data-bs-toggle="modal" data-bs-target="#infoAppModal"></i>
+        <span>Selecciona una opción para consultar/registrar datos.</span>
       </div>
     </aside>
 

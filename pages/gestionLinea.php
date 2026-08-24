@@ -137,33 +137,28 @@
   <!-- Modal alerta/error-->
   <div class="modal fade app-modal" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content shadow-lg border-0" style="border-radius: 15px;">
+      <div class="modal-content">
 
         <!-- Header -->
-        <div class="modal-header text-white" style="background: linear-gradient(135deg, #dc3545, #dc3545); border-top-left-radius: 15px; border-top-right-radius: 15px;">
-          <h5 class="modal-title d-flex align-items-center gap-2" id="errorModalLabel" style="font-size: clamp(18px, 2vw, 22px);">
-            <i class="bi bi-exclamation-octagon-fill fs-3"></i>
-            Error en la asignación
+        <div class="modal-header">
+          <h5 class="modal-title" id="errorModalLabel">
+            <i class="bi bi-info-circle" id="errorModalHeaderIcon" aria-hidden="true"></i>
+            <span id="errorModalTitle">Información</span>
           </h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
 
         <!-- Body -->
-        <div class="modal-body text-center p-2">
-          <div class="modal-line-guide text-start" role="note">
-            <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true"><i class="bi bi-shield-exclamation"></i></span>
-            <div><strong>Revisa la asignación</strong><span>Consulta el motivo antes de intentar nuevamente.</span></div>
-          </div>
-          <!-- Mensaje -->
-          <p class="text-muted" style="font-size: clamp(14px, 2vw, 18px);">
-            No es posible asignar el operador a esta estación ya que no cuenta con registro
-            para la capacitación o certificado requerido para el proceso.
-          </p>
-
+        <div class="modal-body text-center p-4">
           <!-- Icono principal -->
-          <div class="my-2">
-            <i class="bi bi-x-circle text-danger" style="font-size: clamp(45px, 6vw, 70px);"></i>
+          <div class="my-3" aria-hidden="true">
+            <i class="bi bi-info-circle text-primary display-1" id="errorModalMainIcon"></i>
           </div>
+
+          <!-- Mensaje -->
+          <p class="text-muted mb-0" id="errorModalMessage" role="status" aria-live="polite">
+            Consulta la información de esta operación.
+          </p>
         </div>
       </div>
     </div>
@@ -202,6 +197,8 @@
                                   <i class="bi bi-search"></i>
                                 </button>
                               </div>
+
+                              <span id="alertAgregarPersonal" class="ms-2 text-danger fw-bold d-none">No se encontró registro del empleado</span>
                             </div>
                         
                             <!-- NOMBRE DEL EMPLEADO -->
@@ -229,6 +226,8 @@
                                 <i class="bi bi-plus-lg"></i>
                               </button>
                             </div>
+
+                            <span id="alertChipsAgregarPersonal" class="mx-1 text-danger fw-bold d-none"></span>
                           </div>
 
                           <!-- Lista de operaciones asignadas (chips) -->
@@ -310,6 +309,8 @@
                               <input type='checkbox' id="checkPadre" class='select-checkbox'>
                               <label for="checkPadre"> <b>SELECCIONAR TODOS</b></label>                
                           </div>
+
+                          <span id="alertCambiarTurno" class="text-danger fw-bold d-none"></span>
                           <div class="d-grid gap-2 d-md-flex">
                             <button class="btn btn-primary-custom" id="btnCambioTurno">
                               <i class="bi bi-clock"></i> Cambio de turno
@@ -401,6 +402,7 @@
                                             <i class="bi bi-plus-lg"></i> Agregar
                                         </button>
                                     </div>
+                                    <span id="alertChipsAgregarOperacion" class="mx-1 text-danger fw-bold"></span>
                                 </div>
 
                                 <!-- Lista de operaciones liberadas (Chips) -->
@@ -491,161 +493,6 @@
                   </table>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-  </div>
-
-  <!--Asignar operador a una estacion -->
-  <div class="modal fade app-modal" id="modalAsignarOperador" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title"><i class="bi bi-person-check"></i>Asignar operador a una estacion</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="modal-line-guide" role="note">
-              <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true"><i class="bi bi-lightbulb"></i></span>
-              <div><strong>Completa la asignación</strong><span>Selecciona la estación y verifica los datos del operador.</span></div>
-            </div>
-            <!-- Fin formulario -->
-              <form class="form-body" id="assignmentForm">
-                <!-- Header de la sección -->
-                <div class="form-section">
-                  <h3 class="section-title">
-                    <i class="bi bi-person-plus"></i>
-                    Asignar Operador a Estación
-                  </h3>
-                  <p class="text-muted mb-4">Complete la información para asignar un operador a una estación específica</p>
-                </div>
-
-                <!-- Información de la Asignación -->
-                <div class="form-section">
-                  <h4 class="section-subtitle">
-                    <i class="bi bi-geo-alt"></i>
-                    Detalles de la Asignación
-                  </h4>
-                  
-                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <label for="stationSelect" class="form-label required-field">
-                        <i class="bi bi-cpu"></i>Estación
-                      </label>
-                      <select class="form-control form-control-custom" id="stationSelect" required>
-                        <option value="">Selecciona una estación...</option>
-                      </select>
-                      <div class="form-help">Selecciona la estación donde se asignará el operador</div>
-                    </div>
-                    
-                    <div class="col-md-6 mb-3">
-                      <label for="assignmentDate" class="form-label required-field">
-                          <i class="bi bi-calendar"></i>
-                          Fecha de Asignación
-                      </label>
-                      <input type="datetime-local" class="form-control form-control-custom" 
-                        id="assignmentDate"  required>
-                      <div class="form-help">Fecha en la que inicia la asignación</div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Información del Operador -->
-                <div class="form-section">
-                  <h4 class="section-subtitle">
-                    <i class="bi bi-person-badge"></i>
-                    Datos del Operador
-                  </h4>
-                  
-                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <label for="nomina" class="form-label required-field">
-                        <i class="bi bi-clock"></i>
-                        No. Reloj / ID Empleado
-                      </label>
-                      <div class="input-group-custom">
-                        <input 
-                          type="number" 
-                          min=0
-                          step=1 class="form-control form-control-custom" id="nominaModalAsignar" 
-                          placeholder="Ej: 11256" required>
-                        <button type="button" class="input-icon">
-                          <i class="bi bi-search"></i>
-                        </button>
-                      </div>
-                      <div class="form-help">Ingresa el número de reloj o ID único del empleado</div>
-                    </div>
-                    
-                    <div class="col-md-6 mb-3">
-                      <label for="nombre" class="form-label required-field">
-                        <i class="bi bi-person"></i>
-                        Nombre del Operador
-                      </label>
-                      <div class="input-group-custom">
-                        <input 
-                          type="text" 
-                          class="form-control form-control-custom" 
-                          id="nombreModalAsignar" 
-                          placeholder="Selecciona o busca un operador"
-                          readonly>
-                        <button type="button" class="input-icon">
-                          <i class="bi bi-people"></i>
-                        </button>
-                      </div>
-                    </div>
-
-                    <!--Listado de estaciones asignadas -->
-                      <div class="col-12 d-none">
-                        <label for="nomina" class="form-label">
-                          <i class="bi bi-list"></i>
-                            Listado de estaciones asignadas
-                        </label>
-                          <div class="form-control" id="listaOperacionesOperador" style="min-height: 100px; resize: vertical; overflow-y: auto;">
-                              <span class="form-help">Lista de operaciones asignadas del trabajador en la linea</span>
-                          </div>
-                      </div>
-                  </div>
-                </div>
-
-                <!-- Configuración Adicional -->
-                <div class="form-section">
-                
-                  <!-- TURNO ASIGNAR -->
-                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <label for="turnoAsignar" class="form-label">
-                        <i class="bi bi-clock-history"></i>
-                        Turno
-                      </label>
-                      <select id="turnoasignar" class="form-control form-control-custom form-select">
-                        <option value="1">Turno 1</option>
-                        <option value="2">Turno 2</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="comentarios" class="form-label">
-                      <i class="bi bi-sticky"></i> Observaciones
-                    </label>
-                    <textarea 
-                      class="form-control form-control-custom" 
-                      id="comentarios" 
-                      rows="3"
-                      placeholder="Notas adicionales sobre esta asignación..."
-                    ></textarea>
-                  </div>
-                </div>
-              </form>
-            <!-- Fin formulario -->
-            <div class="d-flex justify-content-end mt-2 ">
-              <button type="button" class="btn btn-secondary mx-2" data-bs-dismiss="modal">
-                <i class="bi bi-x-circle"></i> Cancelar
-              </button>
-              <button type="button" class="btn btn-primary-custom mx-2" id="btnAsignarOperador">
-                <i class="bi bi-check-circle"></i> Guardar
-              </button>
             </div>
           </div>
         </div>
@@ -1241,14 +1088,15 @@
 
                   <!--NOMINA-->
                   <div class="col-sm-6 col-md-4 col-lg-2 m-0 px-1">
-                    <label for="nominaAsistencia" class="form-label">
-                      <i class="bi bi-clock"></i>Nómina
-                    </label>
-                    <input type="number" min=0 step=1 
-                          class="form-control form-control-custom" 
-                          id="nominaAsistencia" 
-                          placeholder="Ej: EMP-0256" 
-                          required>
+                      <label for="nominaAsistencia" class="form-label">
+                        <i class="bi bi-clock"></i>Nómina
+                      </label>
+                      <input type="number" min=0 step=1 
+                            class="form-control form-control-custom" 
+                            id="nominaAsistencia" 
+                            placeholder="Ej: EMP-0256" 
+                            required>
+                      <span class="ms-1 text-danger fw-bold" id="alertNominaAsistencia"></span>
                   </div>
                  
                   <!-- NOMBRE-->
@@ -1326,7 +1174,6 @@
                         <th>Estacion</th>
                         <th width="300">Asistencia</th>
                         <th>Comentarios</th>
-                        <th width="200" class="text-center">Cambio de turno</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1533,7 +1380,7 @@
                                   <label for="nombreModalPC" class="form-label required-field">
                                     <i class="bi bi-person"></i>Empleado
                                   </label>
-                                  <select id="nominaModalPC" class="form-control form-select">
+                                  <select id="nominaModalPC" class="form-control form-select" required>
                                   </select> 
                                 </div>
 
@@ -1648,6 +1495,8 @@
                                             <i class="bi bi-plus-lg"></i>
                                         </button>
                                     </div>
+
+                                    <span id="alertChipsAgregarEstacionesPC" class="mx-1 text-danger fw-bold d-none"></span>
                                   </div>
 
                                   <!-- CHIPS DE ESTACIONES -->
@@ -1677,6 +1526,8 @@
                                       <select type="text" class="form-select" id="tipo_cambio" required>
                                         <option value="1">Inesperado</option>
                                         <option value="2">Programado</option>
+                                        <option value="4">Después de un largo periodo</option>
+                                        <option value="5">Nuevo/Sin experiencia</option>
                                         <option value="3">Otro</option>
                                       </select>
                                     </div>
@@ -2342,6 +2193,149 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal para mostrar información relacionada al uso de la pagina -->
+   <div class="modal fade app-modal" id="infoAppModal" tabindex="-1" aria-labelledby="infoAppModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-lg-down modal-xl">
+        <div class="modal-content">
+          <!-- Header del Modal -->
+          <div class="modal-header">
+            <h5 class="modal-title" id="infoAppModalLabel">
+              <i class="bi bi-info-circle"></i>
+              Simbología y guía de uso
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+
+          <!-- Body del Modal -->
+          <div class="modal-body py-3">
+            <div class="modal-line-guide mb-3" role="note">
+              <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true">
+                <i class="bi bi-lightbulb"></i>
+              </span>
+              <div>
+                <strong>Identifica rápidamente el estado de cada estación</strong>
+                <span>Usa los colores, franjas y símbolos del layout para saber qué información está disponible y qué acciones puedes realizar.</span>
+              </div>
+            </div>
+
+            <section class="form-section p-3 mb-0" aria-labelledby="stationStatusGuideTitle">
+              <h6 class="section-subtitle mb-2" id="stationStatusGuideTitle">
+                <i class="bi bi-palette"></i> Estados visuales de las estaciones
+              </h6>
+              <p class="text-muted small mb-3">
+                Compara la estación del layout con los siguientes ejemplos para interpretar su estado.
+              </p>
+
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <article class="card h-100 border shadow-sm rounded-4 overflow-hidden">
+                    <div class="card-body p-2 p-lg-3">
+                      <div class="row g-3 align-items-center">
+                        <div class="col-12 col-sm-7">
+                          <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                            <h6 class="mb-0 fw-bold text-dark">
+                              <i class="bi bi-square me-1 text-secondary"></i>Sin información
+                            </h6>
+                            <span class="badge rounded-pill bg-light text-secondary border">Estado inicial</span>
+                          </div>
+                          <p class="text-muted small mb-0">
+                            La estación aparece sin color cuando todavía no tiene personal asignado ni un punto de cambio activo. Selecciónala para consultar o registrar información.
+                          </p>
+                        </div>
+                        <div class="col-12 col-sm-5">
+                          <img src="../img/ayudas/estacion.png" class="img-fluid w-100 rounded-3 border" loading="lazy" alt="Ejemplo de una estación sin información registrada">
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <article class="card h-100 border shadow-sm rounded-4 overflow-hidden">
+                    <div class="card-body p-2 p-lg-3">
+                      <div class="row g-3 align-items-center">
+                        <div class="col-12 col-sm-7 order-2 order-sm-1">
+                          <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                            <h6 class="mb-0 fw-bold text-dark">
+                              <i class="bi bi-award me-1 text-warning"></i>Requiere certificación
+                            </h6>
+                            <span class="badge rounded-pill bg-warning text-dark">Franja amarilla</span>
+                          </div>
+                          <p class="text-muted small mb-0">
+                            La franja amarilla identifica una operación certificada. Antes de asignar personal, verifica que el operador cuente con la certificación requerida.
+                          </p>
+                        </div>
+                        <div class="col-12 col-sm-5 order-1 order-sm-2">
+                          <img src="../img/ayudas/certificada.png" class="img-fluid w-100 rounded-3 border" loading="lazy" alt="Ejemplo de una estación que requiere certificación">
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <article class="card h-100 border shadow-sm rounded-4 overflow-hidden">
+                    <div class="card-body p-2 p-lg-3">
+                      <div class="row g-3 align-items-center">
+                        <div class="col-12 col-sm-7 order-2 order-sm-1">
+                          <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                            <h6 class="mb-0 fw-bold text-dark">
+                              <i class="bi bi-person-check me-1 text-primary"></i>Personal asignado
+                            </h6>
+                            <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary">Color azul</span>
+                          </div>
+                          <p class="text-muted small mb-0">
+                            El color azul indica que la estación ya tiene un trabajador asignado como titular. Selecciónala para consultar sus datos o gestionar la asignación.
+                          </p>
+                        </div>
+                        <div class="col-12 col-sm-5 order-1 order-sm-2">
+                          <img src="../img/ayudas/asignada.png" class="img-fluid w-100 rounded-3 border" loading="lazy" alt="Ejemplo de una estación con personal asignado">
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <article class="card h-100 border shadow-sm rounded-4 overflow-hidden">
+                    <div class="card-body p-2 p-lg-3">
+                      <div class="row g-3 align-items-center">
+                        <div class="col-12 col-sm-7">
+                          <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                            <h6 class="mb-0 fw-bold text-dark">
+                              <i class="bi bi-arrow-repeat me-1 text-success"></i>Punto de cambio activo
+                            </h6>
+                            <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success">Color verde</span>
+                          </div>
+                          <p class="text-muted small mb-0">
+                            El color verde señala que la estación tiene un punto de cambio de mano de obra activo. Selecciónala para revisar el seguimiento, las evaluaciones o el cierre.
+                          </p>
+                        </div>
+                        <div class="col-12 col-sm-5">
+                          <img src="../img/ayudas/pc.png" class="img-fluid w-100 rounded-3 border" loading="lazy" alt="Ejemplo de una estación con un punto de cambio activo">
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+              </div>
+
+              <div class="form-help mt-3">
+                <i class="bi bi-cursor" aria-hidden="true"></i>
+                <span><strong>Consejo:</strong> selecciona una estación del layout para consultar su información y acceder a las acciones disponibles.</span>
+              </div>
+            </section>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="bi bi-x-circle me-1"></i> Cerrar guía
+            </button>
+          </div>
+        </div>
+      </div>
+   </div>
 
   <!-- Bootstrap JS -->
   <script src="../scripts/bootstrap.bundle.min.js"></script>

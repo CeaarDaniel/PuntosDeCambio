@@ -1,4 +1,3 @@
-  let btnAsignarOperador = document.getElementById('btnAsignarOperador');
   let confirmChange = document.getElementById('confirmChange');
   let btnAsignarOperadorPC = document.getElementById('btnAsignarOperadorPC') //Boton de asignacion desde el modal de gestion pc
   let btnConfirmClose = document.getElementById('btnConfirmClose');
@@ -37,15 +36,12 @@
   //AREA DE DIBUJO DE LAS ESTACIONES
   let workspaceGrid;
 
-  //Inputs del modal asignar operador
-  let nominaModalAsignar = document.getElementById('nominaModalAsignar');
   let nominaPC = document.getElementById('nominaPC'); 
  
  //INPUTS DE MODAL REGISTRAR OPERADOR
   let nominaModalRegistrar = document.getElementById('nominaModalRegistrar');
   let selectRegistrar = document.getElementById('selectRegistrar');
   let selectEstacionesPC = document.getElementById('selectEstacionesPC');
-
 
   //Inputs del modal consultar historial
   let fechaHistorial = document.getElementById('fechaHistorial');
@@ -60,9 +56,6 @@
 
   //IDENTIFICADOR DE LA LINEA
   let codigoLinea = document.getElementById('codigoLinea');
-
-  //FORMULARIO PARA EL REGISTRO DE ASIGNACION DE UN OPERADOR
-  let assignmentForm = document.getElementById('assignmentForm');
 
   // Datos para las estaciones
   var stationsData;
@@ -82,6 +75,85 @@
 
   // Estado del workspace
   const workspaceState = {zoomLevel: 0.4};
+
+  //Configurar y mostrar el modal reutilizable de mensajes de estatus
+  function mostrarModalEstatus(
+    tituloHeader = 'Información',
+    clasesIconoHeader = 'bi-info-circle',
+    mensaje = '',
+    clasesIconoPrincipal = 'bi-info-circle text-primary',
+    reabrirModalAnterior = true
+  ) {
+    const modalElement = document.getElementById('errorModal');
+    const tituloElement = document.getElementById('errorModalTitle');
+    const mensajeElement = document.getElementById('errorModalMessage');
+    const iconoHeader = document.getElementById('errorModalHeaderIcon');
+    const iconoPrincipal = document.getElementById('errorModalMainIcon');
+
+    if (!modalElement || !tituloElement || !mensajeElement || !iconoHeader || !iconoPrincipal) {
+      return;
+    }
+
+    const asignarClasesIcono = function(elemento, clasesBase, clasesPersonalizadas) {
+      elemento.className = clasesBase;
+      String(clasesPersonalizadas || '')
+        .split(/\s+/)
+        .filter(Boolean)
+        .forEach(clase => elemento.classList.add(clase));
+    };
+
+    tituloElement.textContent = tituloHeader;
+    mensajeElement.innerHTML = mensaje;
+    asignarClasesIcono(iconoHeader, 'bi', clasesIconoHeader);
+    asignarClasesIcono(iconoPrincipal, 'bi display-1', clasesIconoPrincipal);
+
+    // Si el modal de estatus ya está abierto, solo actualizar su contenido.
+    if (modalElement.classList.contains('show')) {
+      return;
+    }
+
+    const modalVisible = document.querySelector('.modal.show:not(#errorModal)');
+    let modalAnterior = null;
+
+    if (modalVisible) {
+      const instanciaAnterior = bootstrap.Modal.getInstance(modalVisible) ||
+        new bootstrap.Modal(modalVisible);
+
+      if (reabrirModalAnterior) {
+        modalAnterior = {
+          elemento: modalVisible,
+          instancia: instanciaAnterior
+        };
+      }
+
+      modalVisible.addEventListener('hidden.bs.modal', abrirModalEstatus, { once: true });
+      instanciaAnterior.hide();
+    } else {
+      abrirModalEstatus();
+    }
+
+    function abrirModalEstatus() {
+      let modalEstatus = bootstrap.Modal.getInstance(modalElement);
+
+      if (!modalEstatus) {
+        modalEstatus = new bootstrap.Modal(modalElement);
+      }
+
+      modalElement.addEventListener('hidden.bs.modal', function() {
+        if (!modalAnterior || !modalAnterior.elemento.isConnected) {
+          return;
+        }
+
+        const otroModalVisible = document.querySelector('.modal.show');
+
+        if (!otroModalVisible) {
+          modalAnterior.instancia.show();
+        }
+      }, { once: true });
+
+      modalEstatus.show();
+    }
+  }
 
     // Sistema de drag & drop optimizado con soporte para modales
     class OptimizedDragSystem {
@@ -110,6 +182,7 @@
         };
 
         selectEstacionesPC.innerHTML='<option value="">Selecciona una estación...</option>';
+        $('#alertChipsAgregarEstacionesPC').addClass('d-none');
 
         //Agregar los datos de la estación actual al los chips para forzar a que exista por lo menos el registro de la estación actual
         chipsEstacionesPC.push({ label: (stationData.name) ? (stationData.name).toUpperCase() : '', 
@@ -169,7 +242,15 @@
                   opcionActivPC.classList.add("d-none");
           }
 
-          getOperator(stationData.nomina, stationData.id, stationData.idPC || null);
+        if (stationData.idPC || !stationData.nomina) {
+            document.getElementById('btnRemoverTrabajadorPC').disabled = true;
+        } 
+        
+        else {
+            document.getElementById('btnRemoverTrabajadorPC').disabled = false;
+        }
+
+          getOperator(stationData.nomina, stationData.id, stationData.idPC || null)
 
           //Cargar el select del formulario del registro de asignacion
           setLiberados('nominaModalPC', codigoLinea.value, null, stationData.certification)
@@ -231,7 +312,7 @@
             })
             .catch((error) => {
                console.log(error);
-          });
+          }); 
     }
 
     // Configurar controles de zoom y cuadrícula
@@ -386,7 +467,7 @@
                     }
 
                     else { 
-                        alert(data.mensaje);
+                        console.log(data);
                         return false;
                     }
                 }
@@ -395,64 +476,6 @@
                   return false;
                 });
     }
-
-    /* Asignar un operador a una linea
-    function asignarEstaciones(){
-      var formDataAsig = new FormData;
-      let nomina = document.getElementById('nominaModalAsignar').value;
-      let nombre = document.getElementById('nombreModalAsignar').value;
-      let estacion = document.getElementById('stationSelect').value;
-      let fecha  = document.getElementById('assignmentDate').value;
-      let turno = document.getElementById('turnoasignar').value;
-      let comentarios = document.getElementById('comentarios').value;
-      
-      formDataAsig.append("opcion", "3");
-      formDataAsig.append("nomina", nomina);
-      formDataAsig.append("nombre", nombre);
-      formDataAsig.append("estacion", estacion);
-      formDataAsig.append("fecha", fecha);
-      formDataAsig.append("turno", turno);
-      formDataAsig.append("comentarios", comentarios);
-      formDataAsig.append('codigoLinea', codigoLinea.value)
-
-      if(!nombre) {
-        alert("No se encontro registro del empleado ingresado o se perdió la conexión con el servidor.")
-        return;
-      }
-
-      if(assignmentForm.reportValidity()){
-          fetch("../api/operacionesLinea.php", {
-                  method: "POST",
-                  body: formDataAsig,
-              })
-              .then((response) => response.text())
-              .then((data) => {
-                  data= JSON.parse(data)
-                  if(data.estatus=='ok'){
-                      alert(data.mensaje);
-                      //assignmentForm.reset();
-
-                      getEstacion(estacion, null);
-                      $('#nominaModalAsignar').val('');
-                      $('#nombreModalAsignar').val('');
-                      $('#stationSelect').val('');
-                      $('#comentarios').val('');
-                      $('#listaOperacionesOperador').html('<span class="form-help">Lista de operaciones asignadas del trabajador en la linea </span>');
-                    
-                      mostrarTablaOperaciones(); 
-                  }
-
-                else {
-                  alert(data.mensaje)
-                  console.log(data.error)
-                }
-              })
-              .catch((error) => {
-                console.log(error);
-          });
-      }
-    } 
-    */
 
     //Funcion para actualizar el layout y los datos de la estacion en tiempo real
     function actualizarEstacion(stationId, newData){
@@ -505,8 +528,6 @@
         /* Actualizar el arreglo*/ // Buscamos solo el objeto necesario
         let estation = stationsData.find(obj => String(obj.id) === String(stationId));
         //Mostrar el valor real del objeto estation
-        
-        console.log('Antes', JSON.parse(JSON.stringify(estation)));
 
         if (estation) {
            (newData.operator) ? estation.operator = newData.operator : '';
@@ -518,42 +539,25 @@
             estation.estatusPC = (newData.estatusPC) ?? null;
             estation.isCertificate = newData.isCertificate
         } 
-
-       console.log('Despues', JSON.parse(JSON.stringify(estation)));
     } 
 
-    //Mostrar listado de estaciones registradas para colocar en los select
+    //Mostrar listado de estaciones registradas para colocar en los select como el de la asistencia individual
     function listarEstaciones(){
-      const select = document.getElementById('stationSelect');
       const estacionAsistencia = document.getElementById('estacionAsistencia');
-
-      select.innerHTML='';
       estacionAsistencia.innerHTML='';
 
         //Agregar opcion vacia por defecto
-          let none = document.createElement('option');
-          none.value = '';
-          none.textContent =  'Selecciona una estación...';
-          select.appendChild(none)
-
           let noneA = document.createElement('option');
           noneA.value = '';
           noneA.textContent =  'Selecciona una estación...';
           estacionAsistencia.appendChild(noneA)
 
         stationsData.forEach(station => {
-          const option = document.createElement('option');
-          option.value = station.id;   
-          option.textContent = station.name; 
-          select.appendChild(option);
-
           const optionA = document.createElement('option');
           optionA.value = station.id;   
           optionA.textContent = station.name; 
           estacionAsistencia.appendChild(optionA)
         });
-
-        listadoCertificaciones('selectRegistrar');
     }
 
     //Funcion para generar la tabla de la lista de asistencia
@@ -578,8 +582,6 @@
                         return;
                       }
 
-                      datosAsistenciaCheck = data.personal.map(item => Number(item.nomina));
-
                       //Mostrar el formulario de registro para una asistencia individual si ya se ha echo el registro de asistencia
                       if (data.personal.length > 0 && 'id_registro' in data.personal[0]){
                             formAsistencia.classList.remove('d-none'); 
@@ -600,7 +602,7 @@
                         data: data.personal,
                         deferRender: false,
                         paging: true,
-                        pageLength: 10,
+                        pageLength: 50,
                         searching: false,
                         info: false,
                         /*columnDefs: [{ width: "80px", targets: 0 },
@@ -645,19 +647,6 @@
                                       class="form-control form-control-custom"
                                       placeholder="Observaciones..." 
                                       value="${ (row.comentarioAsistencia) ? row.comentarioAsistencia : ''}">`
-                            },
-                            {
-                              data: null,
-                              className: "text-center",
-                              render: (data, type, row) => `
-                                <div class="form-check d-flex justify-content-center">
-                                  <input class="form-check-input"
-                                         data-nomina="${row.nomina}"
-                                        type="checkbox" id="cambio_${row.nomina}">
-                                  <label class="form-check-label mx-1" for="cambio_${row.nomina}"> 
-                                      <i class="bi bi-clock-history"></i> 
-                                  </label>
-                                </div>`
                             }
                           ]
                       });
@@ -693,10 +682,17 @@
               });
           });
 
-        if(asistenciaRegistrada) {
-          alert('Ya se ha registrado la asistencia')
-          return;
-        }
+            if(asistenciaRegistrada) {
+                mostrarModalEstatus(
+                    'Asistencia ya registrada',
+                    'bi-person-check-fill text-warning',
+                    'La asistencia de hoy ya fue registrada. No es necesario registrarla nuevamente.',
+                    'bi-info-circle-fill text-warning',
+                    true
+                );
+
+              return;
+            }
 
           fromDataAsistencia.append('opcion', 17);
           fromDataAsistencia.append('turno', turno);
@@ -711,31 +707,59 @@
           })
             .then(response => response.text())
             .then(data => {
-              console.log(data)
+           
               data = JSON.parse(data)
               if(data.estatus && data.estatus == 'ok'){
-                  alert(data.mensaje);
+                  mostrarModalEstatus(
+                      'Asistencia registrada',
+                      'bi-check-circle-fill text-success',
+                       data.mensaje || 'La asistencia se registró correctamente.',
+                      'bi-check-lg text-success',
+                      true
+                  );
+                  
                   generarTablaAsistencia();
 
-                  //Actualizar el layout
-                  return getEstaciones();
+                  //Actualizar y guardar el layout solo cuando la asistencia se registro correctamente
+                  return getEstaciones().then(() => {
+                    saveLayout(true);
+                  });
               }
 
-              else if (data.estatus && data.estatus == 'error'){
-                  alert(data.mensaje)
-                  return Promise.reject('Error en respuesta');
+              else if(data.estatus && data.estatus == 'error'){
+                  mostrarModalEstatus(
+                      'Error al registrar la asistencia',
+                      'bi-x-octagon-fill text-danger',
+                      data.mensaje || 'No fue posible registrar la asistencia. Inténtalo nuevamente.',
+                      'bi-exclamation-circle-fill text-danger',
+                      true
+                  );
+                  
+                  return;
               }
 
               else {
-                  alert('Ocurrio un error al realizar el registro') 
+                  mostrarModalEstatus(
+                      'Error de conexión',
+                      'bi-cloud-slash-fill text-danger',
+                      'No fue posible recibir los datos del servidor.',
+                      'bi-exclamation-circle-fill text-danger',
+                      true
+                  );
+
                   console.log(data);
-                  return Promise.reject('Error desconocido');
+                  return;
                 }
-            }).then(() =>{ 
-              //Encadeamos una promesa para que se haga el guardado del layout despues de cumplir la primer promesa de registro de asistencia
-                saveLayout(true);
             })
             .catch(error => {
+                mostrarModalEstatus(
+                    'Error de conexión',
+                    'bi-cloud-slash-fill text-danger',
+                    'No fue posible recibir los datos del servidor.',
+                    'bi-exclamation-circle-fill text-danger',
+                    true
+                );
+
               console.log(error);
             });
     }
@@ -749,12 +773,21 @@
       const turno = $('#turnoLayout').val();
 
       if (!archivo) {
-        alert('Seleccione un archivo de texto con el listado de nóminas.');
+        mostrarModalEstatus('Advertencia',
+                            'bi-file-earmark-text-fill text-warning',
+                            'Selecciona un archivo de texto con el listado de nóminas.',
+                            'bi-exclamation-circle-fill text-warning',
+                            true
+                );
         return;
       }
 
       if (archivo.name.split('.').pop().toLowerCase() !== 'txt') {
-        alert('El archivo debe tener extensión .txt.');
+        mostrarModalEstatus('Formato de archivo no válido',
+                            'bi-file-earmark-x-fill text-warning',
+                            'El archivo seleccionado debe tener la extensión .txt.',
+                            'bi-exclamation-triangle-fill text-warning',
+                            true);
         return;
       }
 
@@ -783,66 +816,70 @@
       })
         .then(response => response.json())
         .then(data => {
-          let mensaje = data.mensaje || 'La carga del archivo ha finalizado.';
+          let mensaje = `<b>${data.mensaje}</b> <br>` || '<b>La carga del archivo ha finalizado.</b> <br>';
 
           if (Array.isArray(data.noInsertados) && data.noInsertados.length > 0) {
             const detalleNoInsertados = data.noInsertados
               .map(registro => `${registro.nomina}: ${registro.motivo}`)
-              .join('\n');
+              .join('<br>');
 
-            mensaje += `\n\nRegistros no insertados (${data.noInsertados.length}):\n${detalleNoInsertados}`;
+            mensaje += `<br> <b>Registros no insertados</b> (${data.noInsertados.length}): <br> ${detalleNoInsertados}`;
           }
 
           if (Array.isArray(data.imagenesNoCargadas) && data.imagenesNoCargadas.length > 0) {
             const detalleImagenes = data.imagenesNoCargadas
               .map(registro => `${registro.nomina}: ${registro.motivo}`)
-              .join('\n');
+              .join('<br>');
 
-            mensaje += `\n\nEmpleados insertados sin imagen:\n${detalleImagenes}`;
+            mensaje += `<br> <b>Empleados insertados sin imagen:</b> <br> ${detalleImagenes}`;
           }
 
-          alert(mensaje);
-
           if (data.estatus === 'ok') {
+
+            mostrarModalEstatus(
+                'Carga completada',
+                'bi-file-earmark-check-fill text-success',
+                mensaje,
+                'bi-check-circle-fill text-success',
+                false
+            );
+
             inputListado.value = '';
 
             if (data.cantidadInsertados > 0) {
               mostrarTablaPersonal();
             }
-          } else if (data.error) {
-            console.log(data.error);
+          } 
+          
+        else {
+              mostrarModalEstatus(
+                  'Error al cargar el archivo',
+                  'bi-file-earmark-x-fill text-danger',
+                  data.mensaje || 'No fue posible procesar el archivo.',
+                  'bi-exclamation-octagon-fill text-danger',
+                  true
+              );
+
+              if (data.error) {
+                  console.log(data.error);
+              }
           }
         })
         .catch(error => {
           console.log(error);
-          alert('Ocurrió un error al cargar el listado de personal.');
+          mostrarModalEstatus(
+                'Error al cargar el archivo',
+                'bi-file-earmark-x-fill text-danger',
+                'Ocurrió un error al cargar el listado de personal.',
+                'bi-exclamation-octagon-fill text-danger',
+                true
+            );
         })
         .finally(() => {
           btnRegistrarOperadorFile.disabled = false;
           btnRegistrarOperadorFile.removeAttribute('aria-busy');
           btnRegistrarOperadorFile.innerHTML = contenidoBoton;
         });
-    }
-
-    //Abrir modal de asignar personal a una estacion desde la tabla de personal no asignado
-    function openAsignarEstacion(nomina) {
-      //console.log(nomina)
-      let modalPersonalDisponible = document.getElementById('modalPersonalDisponible');
-      let modalAsignarOperador = document.getElementById('modalAsignarOperador');
-
-      let modalActual = bootstrap.Modal.getInstance(modalPersonalDisponible);
-      (modalActual) ? modalActual.hide() : '';
-
-
-      newModal = new bootstrap.Modal(modalAsignarOperador);
-      newModal.show();   
-      
-      $('#assignmentDate').val((new Date()).toLocaleString('sv-SE').slice(0, 16));
-      $('#stationSelect').val('');
-      $('#turnoasignar').val($('#turnoLayout').val());
-
-      $('#nominaModalAsignar').val(nomina);
-      nominaModalAsignar.dispatchEvent(new Event("change"));
     }
 
     //Funciones para la navegacion entre las pantallas de los modales
@@ -891,7 +928,7 @@
       formDataNoEvaluaciones.append('opcion', 25);
       formDataNoEvaluaciones.append('idPC', idPC)
 
-      fetch("../api/operacionesLinea.php", {
+      return fetch("../api/operacionesLinea.php", {
         method: "POST",
         body: formDataNoEvaluaciones,
       })
@@ -952,12 +989,15 @@
 
             const text = await response.text();
 
-            console.log(text);
-
             const responseData = JSON.parse(text);
 
             if (responseData.error) {
-                alert(responseData.mensaje);
+                 mostrarModalEstatus( 'Error en la operación',
+                                      'bi-x-octagon-fill text-danger',
+                                      'No fue posible completar la operación',
+                                      'bi-exclamation-circle-fill text-danger',
+                                      true);
+                  console.log(responseData.mensaje) 
                 return false;
             }
 
@@ -1016,7 +1056,6 @@
                   document.getElementById('countIncapacidades').textContent = data.resumen.incapacidad
                   document.getElementById('countPDisponibles').textContent = data.resumen.disponibles;
                   document.getElementById('countPAsistencia').textContent = `% ${parseFloat(data.resumen.porcentajeA).toFixed(2)}`;
-                  console.log('Resumen',data)
                 }
               }
           }).catch((error) => {
@@ -1028,8 +1067,14 @@
     //Funcion para cambiar el turno de los trabajadores registrados en la linea
     function cambiarTurno(){
       if(!seleccionadosGlobal || seleccionadosGlobal.length<=0){
-        alert("No a seleccionado informacion para actualizar");
+        document.getElementById('alertCambiarTurno').textContent = 'Selecciona al menos un registro para actualizar.';
+        document.getElementById('alertCambiarTurno').classList.remove('d-none');
         return;
+      }
+
+      else{
+        document.getElementById('alertCambiarTurno').textContent = '';
+        document.getElementById('alertCambiarTurno').classList.add('d-none');
       }
 
       let turno = ($('#turnoLayout').val() == '1') ? '2' : '1';
@@ -1039,33 +1084,46 @@
       fromDataCambioTurno.append('turnoCambio', turno)
       fromDataCambioTurno.append('codigoLinea', codigoLinea.value)
       fromDataCambioTurno.append('turnoActual', $('#turnoLayout').val())
-      saveLayout(true);
+      fromDataCambioTurno.append('changeAll', checkPadre.checked);
 
-        fetch("../api/operacionesLinea.php", {
-              method: "POST",
-              body: fromDataCambioTurno,
-          })
-          .then((response) => response.text())
-          .then((data) => {
-                  data= JSON.parse(data)
-                  if(data.estatus == 'ok'){
-                        //Ocurtar modal
-                        let modalListadoPersonal = bootstrap.Modal.getInstance(document.getElementById('modalListadoPersonal'));
-                        modalListadoPersonal.hide();
-                        alert(data.mensaje)
+        //saveLayout(true);
+          fetch("../api/operacionesLinea.php", {
+                method: "POST",
+                body: fromDataCambioTurno,
+            })
+            .then((response) => response.text())
+            .then((data) => {
+                    data= JSON.parse(data)
+                    if(data.estatus == 'ok'){
+                          //Ocurtar modal
+                          getEstaciones();
+                          mostrarTablaOperaciones();
+                          mostrarTablaPersonal();
+                          seleccionadosGlobal = [];
+                        
+                          mostrarModalEstatus(
+                              'Operación completada',
+                              'bi-check-circle-fill text-success',
+                              `${data.mensaje}`,
+                              'bi-check-lg text-success',
+                              false
+                          );
+                      }
 
-                        getEstaciones();
-                        mostrarTablaOperaciones();
-                        mostrarTablaPersonal();
+                    else{
+                        mostrarModalEstatus(
+                              'No se pudo completar la operación',
+                              'bi-exclamation-octagon-fill text-danger',
+                              `La información enviada no pudo procesarse. O se perdio la conexión con el servidor`,
+                              'bi-exclamation-circle-fill text-danger',
+                              true
+                          );
+                      console.log(data)
                     }
-
-                  else{
-                    alert(data.mensaje);
-                    console.log(data)
-                  }
-            }).catch((error) => {
-              console.log(error);
-        });
+              }).catch((error) => {
+                console.log(error);
+          });
+      
     }
 
     //Funcion para obtener los datos del operador y mostrarlos en la estacion
@@ -1082,8 +1140,6 @@
             })
             .then((response) => response.text())
             .then((data) => {
-
-              console.log(data);
               data= JSON.parse(data)
               if(data.estatus == 'ok'){
                   $("#changeControlInfoNomina").text(data.nomina);
@@ -1095,8 +1151,20 @@
                   if(data.fecha_inicio && idPC){ 
                       let fecha_inicio = new Date(data.fecha_inicio);
                       let ahora = new Date();
-                      let diferencia_ms = ahora - fecha_inicio; // diferencia en milisegundos
-                      let dias = Math.floor(diferencia_ms / (1000 * 60 * 60 * 24));
+
+                          if (parseInt(data.turno) === 2) {
+                            fecha_inicio = new Date(fecha_inicio.getTime() - 8 * 60 * 60 * 1000);
+                            ahora = new Date(ahora.getTime() - 8 * 60 * 60 * 1000);
+                          }
+
+                      //let diferencia_ms = ahora - fecha_inicio; // diferencia en milisegundos
+                      //let dias = Math.floor(diferencia_ms / (1000 * 60 * 60 * 24));
+
+                      let dias = Math.floor( 
+                          (new Date(ahora).setHours(0, 0, 0, 0) - 
+                           new Date(fecha_inicio).setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24) + 1
+                      );
+
                       document.getElementById('tiempoPC').innerHTML = `⚠Tiempo activo del punto de cambio: `+dias+' dias'
                     }
               }
@@ -1151,8 +1219,7 @@
 
     //funcion para obtener los registros del historial del layout por dia
     function getHistorialLayout(){
-      if(!fechaHistorial.value || !turnoHistorial.value  || !codigoLinea.value)
-          return;
+      if(!fechaHistorial.value || !turnoHistorial.value  || !codigoLinea.value) return;
 
       let fromDataHistorial = new FormData();
       fromDataHistorial.append('opcion', 22);
@@ -1198,11 +1265,11 @@
               console.error(error);
               alert('Error de conexión');
         });
-
     }
 
     function registrarEvaluacionPC() {  
-      
+      if (btnEvaluacion.disabled) return;
+
       if (document.getElementById('evaluacionPuntoCambioForm').reportValidity()){
           const formData = new FormData();
           const fechaEvaluacion = document.getElementById('fechaEvaluacion').value;
@@ -1225,6 +1292,14 @@
           formData.append('metrica3', metrica3);
           formData.append('comentarios', comentarios);
           formData.append('idPC', idPC);
+
+          const contenidoBoton = btnEvaluacion.innerHTML;
+          btnEvaluacion.disabled = true;
+          btnEvaluacion.setAttribute('aria-busy', 'true');
+          btnEvaluacion.innerHTML = `
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            Registrando...
+          `;
         
           fetch('../api/operacionesLinea.php', {
             method: 'POST',
@@ -1233,23 +1308,42 @@
           .then(res => res.json())
           .then(data => {
               if(data.estatus == 'ok'){
-                alert(data.mensaje)
-                //Ocurtar modal
-                let modalActual = bootstrap.Modal.getInstance(document.getElementById('changeControlModal'));
-                (modalActual) ? modalActual.hide() : '';
+                  mostrarModalEstatus(
+                      'Operación completada',
+                      'bi-check-circle-fill text-success',
+                      `${data.mensaje}`,
+                      'bi-check-lg text-success',
+                      false
+                  );
+
+                  return getEvaluacion(idPC);
               }
 
               else {
-                  alert("No fue posible hacer el registro de la evaluación")
-                  console.log(data);
+                    mostrarModalEstatus('No se pudo completar la operación',
+                                        'bi-exclamation-octagon-fill text-danger',
+                                        data.mensaje || 'No fue posible hacer el registro de la evaluación',
+                                        'bi-exclamation-circle-fill text-danger',
+                                        true);
+                    console.log(data);
               }
                 
           })
           .catch(err => {
-            
-              console.error(err)
-              alert("Ocurrió un error al hacer el registro")
-          }); 
+                mostrarModalEstatus(
+                                  'No se pudo completar la operación',
+                                  'bi-exclamation-octagon-fill text-danger',
+                                  `La información enviada no pudo procesarse. O se perdio la conexión con el servidor`,
+                                  'bi-exclamation-circle-fill text-danger',
+                                  true
+                                );
+                console.error(err)
+          })
+          .finally(() => {
+              btnEvaluacion.disabled = false;
+              btnEvaluacion.removeAttribute('aria-busy');
+              btnEvaluacion.innerHTML = contenidoBoton;
+          });
       }
     }
 
@@ -1257,7 +1351,6 @@
     function actualizarVistaLayout(){
          let turno = $("#turnoLayout").val()
          seleccionadosGlobal = [];
-         document.getElementById('turnoasignar').value = $("#turnoLayout").val()
 
           if(turno){
             $('#dynamicContainer').siblings().remove();
@@ -1281,7 +1374,7 @@
 
     //Funcion para los chips de agregar personal
         //Función para agregar una chip
-            function agregarChipTalla() {
+            function agregarChipPersonal() {
               //Se modifican las cadenas a mayusculas para que sea indistinto valores como Xsd y xSD en la busqueda del valor en el arreglo tallasAlta
               if (!chipsEstaciones.some(item => ((item.value).toUpperCase()).trim() === ((selectRegistrar.value).toUpperCase()).trim()) ) { //Se usa tallasAlta some ya que el arreglo es un objeto de pares clave valor 
                     if (selectRegistrar.value.trim() !== '') { //Evalua si no esta vacio el input de la talla
@@ -1289,20 +1382,26 @@
                                              value: selectRegistrar.value 
                                           }); //Agregamos el valor del input sin los espacios que se hayan ingresado al final o al inicio (tallaLabel.value).trim()
                       selectRegistrar.value = ''; //Se limpia el input donde se agrega la talla
-                      actualizarTallasAltaChips();
+                      document.getElementById('alertChipsAgregarPersonal').classList.add('d-none')
+                      actualizarChipsPersonal();
+
                   }
               }
-                else alert('Ya existe este registro');
+                else {
+                    document.getElementById('alertChipsAgregarPersonal').textContent = 'Esta operación ya ha sido agregada';
+                    document.getElementById('alertChipsAgregarPersonal').classList.remove('d-none');
+                }
             }
 
             // Función para remover un chip
-            function removerChipTalla(label) {
+            function removerChipPersonal(label) {
                 chipsEstaciones.splice(label, 1);
-                actualizarTallasAltaChips();
+                document.getElementById('alertChipsAgregarPersonal').classList.add('d-none');
+                actualizarChipsPersonal();
             }
 
             // Función para actualizar los chips
-            function actualizarTallasAltaChips() { //Esta funcion actualiza la vista de las tallas despues de agregar o eliminar una talla
+            function actualizarChipsPersonal() { //Esta funcion actualiza la vista de las tallas despues de agregar o eliminar una talla
                 const container = document.getElementById('operationsListContainer');
                 container.innerHTML = chipsEstaciones.map((t, index) => `
                   <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-info bg-opacity-10 text-dark">
@@ -1318,7 +1417,7 @@
                         event.preventDefault();
                         // Remover el chip correspondiente
                         const label = icon.getAttribute("data-index");
-                        removerChipTalla(label);
+                        removerChipPersonal(label);
                     });
                 });
             }
@@ -1336,15 +1435,21 @@
                                           });
 
                       selectEstacionesPC.value = ''; //Se limpia el input donde se agrega la talla
+                      document.getElementById('alertChipsAgregarEstacionesPC').classList.add('d-none')
                       actualizarEstacionChips();
                   }
               }
-                else alert('Ya existe este registro');
+
+              else {
+                    document.getElementById('alertChipsAgregarEstacionesPC').textContent = 'Esta estación ya ha sigo agregada';
+                    document.getElementById('alertChipsAgregarEstacionesPC').classList.remove('d-none');
+                }
             }
 
             // Función para remover un chip
             function removerChipEstacion(label) {
                 chipsEstacionesPC.splice(label, 1);
+                document.getElementById('alertChipsAgregarEstacionesPC').classList.add('d-none')
                 actualizarEstacionChips();
             }
 
@@ -1373,7 +1478,7 @@
 
     //FUNCION PARA LOS CHIPS DE ACTUALIZAR OPERACIONES
           //Agregar chip
-           function agregarChipTallaUpdate(estaciones, nomina = null) {
+           function agregarChipOperacion(estaciones, nomina = null) {
                 //Se modifican las cadenas a mayusculas para que sea indistinto valores como Xsd y xSD
                 if(!estaciones.some(item => ((item.idE).toUpperCase()).trim() === (($('#selectRegistrarUpdate').val()).toUpperCase()).trim())) {
                     if ($('#selectRegistrarUpdate').val().trim() !== '') { //Validar que se haya enviado algo
@@ -1396,7 +1501,8 @@
                                     });
 
                                     $('#selectRegistrarUpdate').val('');
-                                    actualizarTallasAltaChipsUpdate(estaciones, nomina);
+                                    $('#alertChipsAgregarOperacion').addClass('d-none');
+                                    actualizarChipsOperacion(estaciones, nomina);
                                   }
 
                                   else {
@@ -1408,13 +1514,17 @@
                                   alert('Error de conexión');
                               });
                     }
-                } else {
-                    alert('Ya existe este registro');
+                } 
+                
+                else {
+                    $('#alertChipsAgregarOperacion').removeClass('d-none')
+                    $('#alertChipsAgregarOperacion').text('Esta operación ya ha sido agregada')
                 }
             }
 
             // Función para remover un chip en la tabla de listado de presonal
-            function removerChipTallaUpdate(estaciones, index, nomina) {
+            function removerChipOperacion(estaciones, index, nomina) {
+                  $('#alertChipsAgregarOperacion').addClass('d-none')
                   const formData = new FormData();
                   formData.append('opcion', 33);
                   formData.append('nomina', nomina);
@@ -1427,7 +1537,7 @@
                     .then(data => {
                         if(data.estatus === 'ok') {
                             estaciones.splice(index, 1);
-                            actualizarTallasAltaChipsUpdate(estaciones, nomina);
+                            actualizarChipsOperacion(estaciones, nomina);
                         } else {
                             console.log(data)
                         }
@@ -1439,7 +1549,7 @@
             }
 
             // Función para actualizar los chips en la tabla de listao de personal
-            function actualizarTallasAltaChipsUpdate(data, nomina = null) { //Esta funcion actualiza la vista de las tallas despues de agregar o eliminar una talla
+            function actualizarChipsOperacion(data, nomina = null) { //Esta funcion actualiza la vista de las tallas despues de agregar o eliminar una talla
                 const container = document.getElementById('operationsListContainerUpdate');
 
                 //limpeamos el contenedor de los chips
@@ -1458,7 +1568,7 @@
                         event.preventDefault();
                         // Remover el chip correspondiente
                         const index = icon.getAttribute("data-index");
-                        removerChipTallaUpdate(data, index, nomina);
+                        removerChipOperacion(data, index, nomina);
                     });
                 });
             }
@@ -1484,6 +1594,9 @@
             function obtenerTextoTipoCambio(tipo) {
               if (String(tipo) === '2') return 'Programado';
               if (String(tipo) === '1') return 'Inesperado';
+              if (String(tipo) === '3') return 'Otro';
+              if (String(tipo) === '4') return 'Después de un largo periodo';
+              if (String(tipo) === '5') return 'Nuevo/Sin experiencia';
               return 'Sin definir';
             }
 
@@ -1914,16 +2027,13 @@
                   body: formData
                 });
 
-                console.log(response)
+                //console.log(response)
 
                 if (!response.ok) {
                   throw new Error(`Error HTTP ${response.status}`);
                 }
 
                 const respuesta = await response.json();
-
-                console.log('respuesta', respuesta);
-                console.log('id',noControlCambio)
 
                 if (respuesta.estatus !== 'ok') {
                   throw new Error('El servidor no devolvió un resultado válido.');
@@ -1944,6 +2054,7 @@
           formDataPersonal.append('turno', $('#turnoLayout').val())
           formDataPersonal.append('opcion', 29)
           document.getElementById('checkPadre').checked = false
+          seleccionadosGlobal = [];
 
             fetch("../api/operacionesLinea.php", {
                     method: "POST",
@@ -2189,11 +2300,21 @@
                 render: function(data) {
                   let badge = '';
                   if (data == '1') {
-                    badge = '<span class="badge bg-warning bg-opacity-10 text-dark px-3 py-1 rounded-pill">Inesperado</span>';
+                    badge = '<span class="badge bg-dark bg-opacity-10 text-dark px-3 py-1 rounded-pill">Inesperado</span>';
                   } else if (data == '2') {
                     badge = '<span class="badge bg-success bg-opacity-10 text-dark px-3 py-1 rounded-pill">Programado</span>';
-                  } else {
-                    badge = `<span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">${data ?? 'N/A'}</span>`;
+                  }
+                  else if (data == '3') {
+                    badge = '<span class="badge bg-info bg-opacity-10 text-dark px-3 py-1 rounded-pill">Otro</span>';
+                  }
+                  else if (data == '4') {
+                    badge = '<span class="badge bg-warning acity-10 text-dark px-3 py-1 rounded-pill">Después de un largo periodo</span>';
+                  }
+                else if (data == '5') {
+                    badge = '<span class="badge bg-danger bg-opacity-10 text-dark px-3 py-1 rounded-pill">Nuevo/Sin experiencia</span>';
+                  }
+                  else {
+                    badge = `<span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">${'Sin definir'}</span>`;
                   }
                   return badge;
                 }
@@ -2335,7 +2456,6 @@
         .then((response) => response.text())
         .then((data) => {
           data = JSON.parse(data);
-          console.log(data)
           //console.log(data)
           nombreSelect.innerHTML = '<option value="">Selecciona una opción</option>';
 
@@ -2374,7 +2494,15 @@
             .then(data => {
                 if(data.estatus === 'ok') {
                   mostrarTablaPersonal();
-                  alert('Trabajador eliminado')
+      
+                    mostrarModalEstatus(
+                        'Trabajador eliminado',
+                        'bi-person-x-fill text-success',
+                        'El trabajador se eliminó correctamente.',
+                        'bi-check-circle-fill text-success',
+                        true
+                    );
+
                   actualizarVistaLayout();         
                 } else {
                     console.log(data)
@@ -2383,7 +2511,14 @@
             })
             .catch(error => {
                 console.error(error);
-                alert('Error de conexión');
+                mostrarModalEstatus(
+                        'No se pudo completar la operación',
+                        'bi-exclamation-octagon-fill text-danger',
+                        `La información enviada no pudo procesarse. O se perdió la conexión con el servidor`,
+                        'bi-exclamation-circle-fill text-danger',
+                        true
+                );
+
             });
         }
     }
@@ -2471,6 +2606,9 @@
                 }
               }
             ],
+            createdRow: function (row, data) {
+               (data.tabla == 2)  ?  $(row).addClass('bg-success bg-opacity-10') : '';
+            },
 
             pageLength: 10,
             lengthChange: false,
@@ -2504,7 +2642,6 @@
 
       // Seleccionar todos los elementos dentro del SVG (excluyendo el propio <svg>)
       const allElements = document.querySelectorAll('#shapes-group *');
-      console.log("longitus svg"+allElements.length)
       const result = [];
 
       allElements.forEach(el => {
@@ -2527,7 +2664,6 @@
         });
       });
 
-      //console.log(result)
       return result;
     }
 
@@ -2583,8 +2719,6 @@
             // Refrescar la lista de elementos y actualizar bounds (funciones existentes)
             if (typeof refreshElementList === 'function') refreshElementList();
             if (typeof updateContainerAndSVGBounds === 'function') updateContainerAndSVGBounds();
-
-            console.log(`Cargadas ${shapesArray.formas.length} formas. Próximo elementCounter = ${window.elementCounter}`);
       })
       .catch((error) => { 
         console.log(error); 
@@ -2687,13 +2821,14 @@
       svg.setAttribute('viewBox', `${minX} ${minY} ${newWidth} ${newHeight}`);
     }
 
+    //Obtener el listado de certificaciones por linea
     async function listadoCertificaciones(idSelect){
         let formData = new FormData();
         formData.append('opcion', 40)
         formData.append('codigoLinea', codigoLinea.value)
         let select = document.getElementById(idSelect)
 
-            fetch("../api/operacionesLinea.php", {
+         return fetch("../api/operacionesLinea.php", {
                     method: "POST",
                     body: formData,
                 })
@@ -2783,6 +2918,7 @@
         //OBTENER NUMERO DE NOMINA
             nominaModalRegistrar.addEventListener('change', function (){
                 let nombreModalRegistrar = document.getElementById('nombreModalRegistrar');
+
                 if(nominaModalRegistrar && nominaModalRegistrar !='') {
                     let formDataConsultarNombre = new FormData;
                     formDataConsultarNombre.append('nomina',nominaModalRegistrar.value)
@@ -2793,23 +2929,23 @@
                     nombreModalRegistrar.value= ''; 
                     nombreModalRegistrar.placeholder= "Consultando datos del empleado...";  
 
-                    console.log(nombreModalRegistrar.value)
-                    console.log(codigoLinea.value)
-
                         fetch("../api/operacionesLinea.php", {
                                 method: "POST",
                                 body: formDataConsultarNombre,
                             })
                             .then((response) => response.text())
                             .then((data) => {
-                              console.log(data)
+                             // console.log(data)
                                 data= JSON.parse(data)
                                 if(data.estatus=='ok'){
                                     nombreModalRegistrar.value= data.nombre;
+                                    $('#alertAgregarPersonal').addClass('d-none')
                                   }
                               
                               else{
                                   nombreModalRegistrar.placeholder= "Nombre del empleado...";  
+                                  $('#alertAgregarPersonal').removeClass('d-none');
+                                  $('#alertAgregarPersonal').text('Nómina invalida')
                                   console.log(data.error); 
                               }
 
@@ -2818,50 +2954,10 @@
                             .catch((error) => {
                               nombreModalRegistrar.placeholder= "Nombre del empleado..."; 
                               nominaModalRegistrar.disabled = false;
+                              $('#alertAgregarPersonal').addClass('d-none')
                               console.log(error);
                         });
                 }
-            })
-
-            nominaModalAsignar.addEventListener('change', function (){
-                let nombreModalAsignar = document.getElementById('nombreModalAsignar');
-                if(nominaModalAsignar && nominaModalAsignar !='') {
-                    let formDataConsultarNombre = new FormData;
-                    formDataConsultarNombre.append('nomina',nominaModalAsignar.value)
-                    formDataConsultarNombre.append('opcion', 7)
-                    formDataConsultarNombre.append('codigoLinea', codigoLinea.value)
-            
-                    nominaModalAsignar.disabled = true
-                    nombreModalAsignar.value= ''; 
-                    nombreModalAsignar.placeholder= "Consultando datos del empleado...";  
-
-                        fetch("../api/operacionesLinea.php", {
-                                method: "POST",
-                                body: formDataConsultarNombre,
-                            })
-                            .then((response) => response.text())
-                            .then((data) => {
-                              console.log(data)
-                                data= JSON.parse(data)
-                                if(data.estatus=='ok'){
-                                    nombreModalAsignar.value= data.nombre;                              
-                                    $('#listaOperacionesOperador').html(`${(data.estaciones) ? data.estaciones : 'SIN OPERACIONES ASIGNADAS EN LA LINEA'}`)
-                                  }
-                              
-                              else{
-                                  nombreModalAsignar.placeholder= "Nombre del empleado...";  
-                                  $('#listaOperacionesOperador').html(`<span class="form-help">Lista de operaciones asignadas del trabajador en la linea</span>`)
-                                console.log(data.error); 
-                              }
-
-                              nominaModalAsignar.disabled = false;
-                            })
-                            .catch((error) => {
-                              nombreModalAsignar.placeholder= "Nombre del empleado..."; 
-                              nominaModalAsignar.disabled = false;
-                              console.log(error);
-                        });
-                  }
             })
 
             //obtner la ultima fecha de operacion en la estacion actual (antes-> obtener nombre modalPC)
@@ -2932,6 +3028,7 @@
             $('#nominaAsistencia').on('change', function () {
                 let nombreModalAsignar = document.getElementById('nombreAsistencia');
                 let nominaAsistencia = document.getElementById('nominaAsistencia');
+                $('#alertNominaAsistencia').addClass('d-none');
 
                 if(nominaAsistencia && nominaAsistencia !='') {
                     let formDataConsultarNombre = new FormData;
@@ -2956,7 +3053,7 @@
                               
                               else{
                                   nombreModalAsignar.placeholder= "Nombre del empleado...";  
-                                console.log(data.error); 
+                                  console.log(data.error); 
                               }
 
                               nominaAsistencia.disabled = false;
@@ -2971,6 +3068,9 @@
 
           //Cargar el listado de operaciones donde esta liberado el trabajador seleccionado
             nominaPC.addEventListener('change', function(){
+
+              $('#alertChipsAgregarEstacionesPC').addClass('d-none');
+
                 if(nominaPC && nominaPC.value !='') {
                     let formDataEstaciones = new FormData();
                     formDataEstaciones.append('opcion', 41)
@@ -3015,6 +3115,18 @@
                   selectEstacionesPC.innerHTML='<option value="">Selecciona una estación...</option>';
                 }
             }) 
+
+          $('#selectEstacionesPC').on('change', function () {
+              $('#alertChipsAgregarEstacionesPC').addClass('d-none');
+          });
+
+          $('#selectRegistrarUpdate').on('change', function () {
+              $('#alertChipsAgregarOperacion').addClass('d-none');
+          });
+
+          $('#selectRegistrar').on('change', function () {
+              $('#alertChipsAgregarPersonal').addClass('d-none');
+          });
         
         //FIN OBTENER NUMERO DE NOMINA
 
@@ -3039,7 +3151,13 @@
               formDataAsig.append('codigoLinea', codigoLinea.value)
 
                 if(!nombre) { 
-                  alert("No se encontro registro del empleado ingresado o se perdió la conexión con el servidor.")
+                    mostrarModalEstatus(
+                                  'No se pudo completar la operación',
+                                  'bi-exclamation-octagon-fill text-danger',
+                                  `No se encontro registro del empleado ingresado o se perdió la conexión con el servidor`,
+                                  'bi-exclamation-circle-fill text-danger',
+                                  true
+                    );
                   return;
                 }
 
@@ -3052,8 +3170,14 @@
                         .then((data) => {
                             data= JSON.parse(data)
                             if(data.estatus=='ok'){
-                                alert(data.mensaje);
                                 //assignmentFormPC.reset();
+                                  mostrarModalEstatus(
+                                        'Operación completada',
+                                        'bi-check-circle-fill text-success',
+                                        `${data.mensaje}`,
+                                        'bi-check-circle-fill text-success',
+                                        false
+                                  );
 
                                 $('#nominaModalPC').val('');
                                 $('#nombreModalPC').val('');
@@ -3061,13 +3185,17 @@
                                 getEstacion(estacion, null);
                                 mostrarTablaOperaciones();
                                 mostrarTablaPersonal();
-
-                                let modalActual = bootstrap.Modal.getInstance(document.getElementById('changeControlModal'));
-                                (modalActual) ? modalActual.hide() : '';
                             }
 
                           else {
-                            alert(data.mensaje)
+                            mostrarModalEstatus(
+                                      'No se pudo completar la operación',
+                                      'bi-exclamation-octagon-fill text-danger',
+                                      `${data.mensaje}`,
+                                      'bi-exclamation-circle-fill text-danger',
+                                      true
+                            );
+
                             console.log(data.error)
                           }
                         })
@@ -3075,7 +3203,7 @@
                           console.log(error);
                     });
                 }
-            })
+          })
 
         //REGISTRAR TRABAJADOR AL LISTADO DE PERSONAL EN EL MODAL modalRegistrarOperador 
         btnRegistrarOperador.addEventListener('click', function(){
@@ -3093,8 +3221,14 @@
               formDataAsig.append('turno', $('#turnoLayout').val())
               //console.log('Operaciones:'+  JSON.stringify(chipsEstaciones))
 
-                if(!nombre) { 
-                  alert("No se encontro registro del empleado ingresado o se perdió la conexión con el servidor.")
+                if(!nombre){
+                    mostrarModalEstatus(
+                          'No se pudo completar la operación',
+                          'bi-exclamation-octagon-fill text-danger',
+                          `No se encontro registro del empleado ingresado o se perdió la conexión con el servidor`,
+                          'bi-exclamation-circle-fill text-danger',
+                           true
+                    );
                   return;
                 }
 
@@ -3106,24 +3240,37 @@
                     .then((data) => {
                         data= JSON.parse(data)
                         if(data.estatus=='ok'){
-                            alert(data.mensaje);
+                            mostrarModalEstatus(
+                                  'Operación completada',
+                                  'bi-check-circle-fill text-success',
+                                  `${data.mensaje}`,
+                                  'bi-check-circle-fill text-success',
+                                  true
+                            );
                             //assignmentFormPC.reset();
 
                             $('#nominaModalRegistrar').val('');
                             $('#nombreModalRegistrar').val('');
+                            $('#alertChipsAgregarPersonal').addClass('d-none');
                             chipsEstaciones = [];
                             $('#operationsListContainer').html('');
                             mostrarTablaPersonal()
                         }
 
                       else {
-                        alert(data.mensaje)
+                            mostrarModalEstatus(
+                                      'No se pudo completar la operación',
+                                      'bi-exclamation-octagon-fill text-danger',
+                                      `${data.mensaje}`,
+                                      'bi-exclamation-circle-fill text-danger',
+                                      true
+                            );
                         console.log(data.error)
                       }
                     })
                     .catch((error) => {
                       console.log(error);
-                });                
+                });
         })
 
         //CARGAR LISTADO DE PERSONAL CON ARCHIVO
@@ -3144,49 +3291,82 @@
             formDataReniver.append("turno", turno);
 
           if(idPC.value){
-              alert('Debe finalizar el punto de cambio activo');
+              mostrarModalEstatus(
+                  'Punto de cambio activo',
+                  'bi-stopwatch-fill text-warning',
+                  'Debes finalizar el punto de cambio activo antes de remover al trabajador de la operación',
+                  'bi-exclamation-triangle-fill text-warning',
+                  true
+              );
+
               return;
           }
 
           if(nominaTrabajador == '' || nominaTrabajador == null){
-              alert('No hay trabajador asignado a esta estación');
+              mostrarModalEstatus(
+                                  'Trabajador no asignado',
+                                  'bi-stopwatch-fill text-warning',
+                                  'No hay trabajador asignado a esta estación',
+                                  'bi-exclamation-triangle-fill text-warning',
+                                  true
+                                );
               return;
           }
 
-                  fetch("../api/operacionesLinea.php", {
-                        method: "POST",
-                        body: formDataReniver,
-                    })
-                    .then((response) => response.text())
-                    .then((data) => {
-                        data = JSON.parse(data)
-                          if(data.estatus=='ok'){
-                              alert(data.mensaje);  
-                               let modalActual = bootstrap.Modal.getInstance(document.getElementById('changeControlModal'));
-                              (modalActual) ? modalActual.hide() : '';
-                              getEstacion(estacionId, null)
-                              mostrarTablaOperaciones();
-                              mostrarTablaPersonal();
-                            }
+          fetch("../api/operacionesLinea.php", {
+                method: "POST",
+                body: formDataReniver,
+            })
+            .then((response) => response.text())
+            .then((data) => {
+                data = JSON.parse(data)
+                  if(data.estatus=='ok'){
+                      mostrarModalEstatus(
+                          'Operación completada',
+                          'bi-check-circle-fill text-success',
+                          `${data.mensaje}`,
+                          'bi-check-circle-fill text-success',
+                          false
+                      );
 
-                            else 
-                              alert(data.mensaje);
-                    })
-                    .catch((error) => {
-                      console.log(error);
-                    });
+                      getEstacion(estacionId, null)
+                      mostrarTablaOperaciones();
+                      mostrarTablaPersonal();
+                    }
+
+                    else {
+                      mostrarModalEstatus( 
+                                  'No se pudo completar la operación',
+                                  'bi-exclamation-octagon-fill text-danger',
+                                  `${data.mensaje}`,
+                                  'bi-exclamation-circle-fill text-danger',
+                                  true
+                      );
+
+                    }
+            })
+            .catch((error) => {
+              console.log(error);
+            });
         })
 
         //Registrar un punto de cambio
         confirmChange.addEventListener('click', function(){
           let registroCambioForm = document.getElementById('registroCambioForm');
           let formDataPuntoCambio = new FormData;
-          let  idEstacion = document.getElementById('id_estacion').value;
+          let idEstacion = document.getElementById('id_estacion').value;
 
           if(!registroCambioForm.reportValidity()) return;
 
           if(document.getElementById('nominaPC').value == '' || document.getElementById('nominaPC').value == null){
-                alert('No se encontro registro del empleado ingresado o se perdió la conexión con el servidor.');
+                mostrarModalEstatus(
+                    'No se pudo completar la operación',
+                    'bi-exclamation-octagon-fill text-danger',
+                    `No se encontro registro del empleado ingresado o se perdió la conexión con el servidor.`,
+                    'bi-exclamation-circle-fill text-danger',
+                    true
+                );
+
                 return;
           }
 
@@ -3194,7 +3374,13 @@
           let nominaInput = $("#nominaPC").val().trim();
 
           if (nominaInput !== "" && Number(nominaEtiqueta) === Number(nominaInput)) {
-              alert("No se puede crear el punto de cambio ya que el trabajador está asignado a esta estación.");
+              mostrarModalEstatus(
+                'Trabajador ya registrado',
+                'bi-stopwatch-fill text-warning',
+                'No se puede crear el punto de cambio ya que el trabajador está asignado a esta estación.',
+                'bi-exclamation-triangle-fill text-warning',
+                true
+              );
               return;
           }
 
@@ -3215,25 +3401,43 @@
                 })
                 .then((response) => response.text())
                 .then((data) => { 
-                    console.log(data);
+                    //console.log(data);
                     data= JSON.parse(data)  
                     if(data.estatus=='ok'){ 
-                        alert(data.mensaje);
-                        let modalActual = bootstrap.Modal.getInstance(document.getElementById('changeControlModal'));
-                        (modalActual) ? modalActual.hide() : '';
-
+                        mostrarModalEstatus(
+                            'Operación completada',
+                            'bi-check-circle-fill text-success',
+                            `${data.mensaje}`,
+                            'bi-check-circle-fill text-success',
+                            false
+                        );
 
                          // Si no es arreglo, lo convertimos en uno
-                   
                           getEstacion(null, data.idPC);
                           mostrarTablaPersonal();
                           
                           chipsEstacionesPC = [];
                           actualizarEstacionChips();
                     } 
-                    else  alert(data.mensaje);
+
+                    else {
+                          mostrarModalEstatus(
+                              'No se pudo completar la operación',
+                              'bi-exclamation-octagon-fill text-danger',
+                              `${data.mensaje}`,
+                              'bi-exclamation-circle-fill text-danger',
+                              true
+                          );
+                    }
                 })
                 .catch((error) => {
+                  mostrarModalEstatus(
+                      'No se pudo completar la operación',
+                      'bi-exclamation-octagon-fill text-danger',
+                      `La información enviada no pudo procesarse. O se perdió la conexión con el servidor`,
+                      'bi-exclamation-circle-fill text-danger',
+                      true
+                  );
                   console.log(error);
             }); 
         });
@@ -3248,7 +3452,14 @@
             let nombreTrabajador = $("#changeControlInfoNombre").text()
 
             if(!idPC.value){
-                alert('No hay un punto de cambio activo en esta estación');
+                mostrarModalEstatus(
+                  'Sin registro de punto de cambio',
+                  'bi-stopwatch-fill text-warning',
+                  'No hay un punto de cambio activo en esta estación',
+                  'bi-exclamation-triangle-fill text-warning',
+                  true
+                );
+
                 return;
             }
 
@@ -3269,10 +3480,13 @@
                   .then((data) => {
                       data= JSON.parse(data)
                       if(data.estatus=='ok'){
-                          alert(data.mensaje);
-                          let modalActual = bootstrap.Modal.getInstance(document.getElementById('changeControlModal'));
-                          (modalActual) ? modalActual.hide() : '';
-
+                          mostrarModalEstatus(
+                              'Operación completada',
+                              'bi-check-circle-fill text-success',
+                              `${data.mensaje}`,
+                              'bi-check-circle-fill text-success',
+                              false
+                            );
         
                           // Si no es arreglo, lo convertimos en uno
                           //let estacionesA = Array.isArray(idEstacion) ? idEstacion : [idEstacion];
@@ -3280,7 +3494,15 @@
                             mostrarTablaPersonal();                            
                         }
 
-                      else alert(data.mensaje);
+                      else {
+                            mostrarModalEstatus(
+                                    'No se pudo completar la operación',
+                                    'bi-exclamation-octagon-fill text-danger',
+                                    `${data.mensaje}`,
+                                    'bi-exclamation-circle-fill text-danger',
+                                    true
+                            );
+                      }
 
                   }).catch((error) => {
                       console.log(error);
@@ -3308,13 +3530,15 @@
               formDataAsig.append("comentarios", comentarioAsistencia.value); 
               // Verifica si el valor seleccionado no es vacío antes de agregarlo
               let estacionSeleccionada = $('#estacionAsistencia option:selected').val();
+              
               if (estacionSeleccionada && estacionSeleccionada !== '') {
                   formDataAsig.append("nombreEstacion", $('#estacionAsistencia option:selected').text());
               } 
               
-              if(!nombreAsistencia.value.trim()) { 
-                alert("No se encontro registro del empleado ingresado o se perdió la conexión con el servidor.")
-                return;
+              if(nominaAsistencia.value == '' || !nombreAsistencia.value.trim()){
+                  $('#alertNominaAsistencia').text('No se encontro la nómina');
+                  $('#alertNominaAsistencia').removeClass('d-none');
+                  return;
               }
 
                 if(formAsistencia.reportValidity()){
@@ -3325,13 +3549,30 @@
                         .then((response) => response.json())
                         .then((data) => {
                             if(data.estatus=='ok'){
-                                alert(data.mensaje);
+                  
+                                mostrarModalEstatus(
+                                    'Operación completada',
+                                    'bi-check-circle-fill text-success',
+                                    `${data.mensaje}`,
+                                    'bi-check-circle-fill text-success',
+                                    true
+                                );
+
                                 formAsistencia.reset();
                                 generarTablaAsistencia();
+
+                                $('#alertNominaAsistencia').addClass('d-none');
                             }
 
                           else {
-                            alert(data.mensaje)
+                            mostrarModalEstatus(
+                                'No se pudo completar la operación',
+                                'bi-exclamation-octagon-fill text-danger',
+                                `${data.mensaje}`,
+                                'bi-exclamation-circle-fill text-danger',
+                                true
+                            );
+
                             console.log(data.error)
                           }
                         })
@@ -3341,19 +3582,13 @@
                 }
         })
 
-        //Detectar cuando se abra el modal de asignar estacion
-        document.getElementById('btnMenuAsignar').addEventListener('click', function (){
-          document.getElementById('assignmentDate').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
-           document.getElementById('turnoasignar').value =  $('#turnoLayout').val();
-        })
-
         //Detectar cuando se abra el modal de registrar operador
         document.getElementById('btnMenuRegistrar').addEventListener('click', function (){
           document.getElementById('fecharegistrar').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
           listadoCertificaciones('selectRegistrar');
         })
 
-        $('#btnChipModalRegistrar').click(agregarChipTalla)
+        $('#btnChipModalRegistrar').click(agregarChipPersonal)
         $('#btnEstacionesPC').click(agregarChipEstacion)
         
         btnRegistrarAsistencia.addEventListener('click', registrarAsistencia);
@@ -3403,12 +3638,16 @@
 
         });
 
-        // INPUT → Enter
-        $('#attendanceTable tbody').on('keydown', 'input', function (e) {
+        //Guardar las observaciones cuando el usuario termine de editar el campo
+        $('#attendanceTable tbody').on('focusout', 'input[name="observacionesAsistencia"]', function () {
+            updateAsistencia(this, 'observacionesAsistencia');
+        });
+
+        //Permitir que Enter termine la edición y active el mismo guardado
+        $('#attendanceTable tbody').on('keydown', 'input[name="observacionesAsistencia"]', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                updateAsistencia(this, 'observacionesAsistencia');
-                //$(this).blur(); // opcional
+                $(this).blur();
             }
         });
 
@@ -3464,7 +3703,7 @@
             })
             .then(response => response.json())
             .then(data => {
-                console.log(data);
+                //console.log(data);
                 const grid = document.getElementById('historialWorkspaceGrid');
                 grid.innerHTML = ''; // Limpiar
                 if(data.estatus === 'ok') {
@@ -3644,6 +3883,7 @@
 
               document.getElementById('nominaModalRegistrarUpdate').textContent= nomina;
               document.getElementById('nombreModalRegistrarUpdate').value= nombre;
+              $('#alertChipsAgregarOperacion').addClass('d-none');
 
 
               let img = document.getElementById('imgmodalListadoPersonal');
@@ -3654,7 +3894,7 @@
 
               document.getElementById('imgmodalListadoPersonal').src= (nomina) ? `../img/personal/${nomina}.jpg` : `../img/personal/na.jpg`;
 
-              let operaciones = await listadoCertificaciones('selectRegistrarUpdate')
+              listadoCertificaciones('selectRegistrarUpdate')
               getOperaciones(nomina);
 
               //OBTENER LISTA DE OPERACIONES CARGADAS 
@@ -3673,12 +3913,12 @@
                                 data.data = [];
                             }
 
-                            actualizarTallasAltaChipsUpdate(data.data, nomina);
-                            console.log("datos operaciones registradas:",data)
+                            actualizarChipsOperacion(data.data, nomina);
+                            //console.log("datos operaciones registradas:",data)
 
                             //Usamos off para eliminar los eventos previos y evitar que se aniden
                              $('#btnChipModalRegistrarUpdate').off('click').on('click', function () {
-                                agregarChipTallaUpdate(data.data, nomina);
+                                agregarChipOperacion(data.data, nomina);
                             });
                         }
 
@@ -3754,7 +3994,7 @@
                             const diffDias = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
                             if (diffDias > 30) {
-                              $mensaje.removeClass('d-none').text('EL ULTIMO REGISTRO DE OPERACION ES MAYOR A 30 DIAS');
+                              $mensaje.removeClass('d-none').text('EL ULTIMO REGISTRO EN ESTA OPERACIÓN ES MAYOR A 30 DÍAS');
                             }
 
                             else 
@@ -3784,10 +4024,15 @@
           const nomina = $select.val();
           const nombreMostrado = $select.find('option:selected').text();
           const nombre = nombreMostrado.includes('(') ? nombreMostrado.split(' (')[0] : nombreMostrado;
+          const $mensaje = $select.siblings('.alerTableOperaciones');
 
           if (!nomina || nomina === '') {
-            alert('Por favor selecciona un operario válido.');
+             $mensaje.removeClass('d-none').text('POR FAVOR SELECCIONA UN TRABAJADOR');
             return;
+          }
+
+          else{
+            $mensaje.addClass('d-none').text('');
           }
  
           const formData = new FormData();
@@ -3809,13 +4054,24 @@
                    getEstacion(estacionId, null);
                    mostrarTablaPersonal();
                 } else {
-                    alert(data.mensaje);
+                      mostrarModalEstatus('Persona ya asignada',
+                          'bi-person-check-fill text-warning',
+                           data.mensaje,
+                          'bi-exclamation-triangle-fill text-warning',
+                          true
+                      );
+
                     console.log(data)
                 }
             })
             .catch(error => {
                 console.error(error);
-                alert('Error de conexión');
+                mostrarModalEstatus( 'No se pudo completar la operación',
+                        'bi-exclamation-octagon-fill text-danger',
+                        `La información enviada no pudo procesarse. O se perdio la conexión con el servidor`,
+                        'bi-exclamation-circle-fill text-danger',
+                        true
+                        );
             });
         });
 
@@ -3843,13 +4099,26 @@
                   getEstacion(estacionId, null);
                   mostrarTablaPersonal();
                 } else {
-                    alert(data.mensaje);
+                    mostrarModalEstatus(
+                          'No se pudo completar la operación',
+                          'bi-exclamation-octagon-fill text-danger',
+                          `${data.mensaje}`,
+                          'bi-exclamation-circle-fill text-danger',
+                          true
+                    );
+
                     console.log(data)
                 }
             })
             .catch(error => {
                 console.error(error);
-                alert('Error de conexión');
+                mostrarModalEstatus(
+                  'No se pudo completar la operación',
+                  'bi-exclamation-octagon-fill text-danger',
+                  `La información enviada no pudo procesarse. O se perdió la conexión con el servidor`,
+                  'bi-exclamation-circle-fill text-danger',
+                  true
+                );
             });
         });
 

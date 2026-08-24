@@ -434,7 +434,7 @@ else
             //Turno 1
             if($turno == '1'){
                 $inicio = new DateTime('today 08:00');
-                $fin    = new DateTime('today 19:59');
+                $fin    = new DateTime('today 20:00:00');
             }
 
             //Turno 2
@@ -442,12 +442,12 @@ else
                 if ($turno == '2') {
                     if ($ahora >= new DateTime('today 20:00')) { // Después de las 8 pm
                         $inicio = new DateTime('today 20:00');
-                        $fin    = new DateTime('tomorrow 07:59');
+                        $fin    = new DateTime('tomorrow 08:00:00');
                     } 
                     
                     else { // Antes de las 8 pm
                         $inicio = new DateTime('yesterday 20:00');
-                        $fin    = new DateTime('today 07:59');
+                        $fin    = new DateTime('today 08:00:00');
                     } //Despues de la 8 de la noche la fecha de inicio es hoy 8:00 pm fecha de fin mañana 8:00 am
                     //Antes de 8 de la noche la fecha de inicio es ayer 8:00 pm y la fecha de fin hoy 8:00 am 
                 }
@@ -1211,14 +1211,14 @@ if ($opcion == '15') {
             // Validar turno
             if ($turno == '1') {
                 $inicio = new DateTime('today 08:00');
-                $fin    = new DateTime('today 19:59');
+                $fin    = new DateTime('today 20:00:00');
             } else if($turno == '2') {
                 if ($ahora >= new DateTime('today 20:00')) {
                     $inicio = new DateTime('today 20:00');
-                    $fin    = new DateTime('tomorrow 07:59');
+                    $fin    = new DateTime('tomorrow 08:00:00');
                 } else {
                     $inicio = new DateTime('yesterday 20:00');
-                    $fin    = new DateTime('today 07:59');
+                    $fin    = new DateTime('today 08:00:00');
                 }
             } else {
                 echo json_encode([
@@ -1363,16 +1363,16 @@ else
         //Verificar si ya existe un registro de asistencia
             //Turno 1
                 $inicio = new DateTime('today 08:00');
-                $fin    = new DateTime('today 19:59');
+                $fin    = new DateTime('today 20:00:00');
 
             //Turno 2
             if ($turno == '2') {
                 if ($ahora >= new DateTime('today 20:00')) { // Después de las 8 pm
                     $inicio = new DateTime('today 20:00');
-                    $fin    = new DateTime('tomorrow 07:59');
+                    $fin    = new DateTime('tomorrow 08:00:00');
                 } else { // Antes de las 8 pm
                     $inicio = new DateTime('yesterday 20:00');
-                    $fin    = new DateTime('today 07:59');
+                    $fin    = new DateTime('today 08:00:00');
                 } //Despues de la 8 de la noche la fecha de inicio es hoy 8:00 pm fecha de fin mañana 8:00 am
                 //Antes de 8 de la noche la fecha de inicio es ayer 8:00 pm y la fecha de fin hoy 8:00 am 
             }
@@ -1380,7 +1380,7 @@ else
         //Consultar el registro de asistencia de la linea en la tabla de asistencia
             $sqlV = "SELECT id_registro, nomina, nombre, codigo_linea, estatus, id_estacion, turno, nombres_estaciones AS nombre_estacion, comentarioAsistencia
                                 FROM SPC_REGISTRO_ASISTENCIA 
-                                    WHERE turno = :turno AND fecha_operacion >= :fechaInicio AND fecha_operacion <= :fechaFin AND codigo_linea = :codigoLinea";
+                                    WHERE turno = :turno AND fecha_operacion >= :fechaInicio AND fecha_operacion < :fechaFin AND codigo_linea = :codigoLinea";
             $stmtV = $conn->prepare($sqlV);
             $stmtV->execute([':turno' => $turno,
                              ':fechaInicio' => $inicio->format('Y-m-d H:i'),
@@ -1640,53 +1640,131 @@ else
        $turnoActual = !empty($_POST['turnoActual']) ? $_POST['turnoActual'] : null;
        $turnoCambio = !empty($_POST['turnoCambio']) ? $_POST['turnoCambio'] : null;
        $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : null;
-       //$placeholders = [];
+       $changeAll = filter_var($_POST['changeAll'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         if(!$codigoLinea || !is_array($datosAsistenciaCheck) || !$turnoActual || !$turnoCambio) {
                 echo json_encode(['estatus' => 'error', 
                                   'mensaje'=> 'Faltan datos obligatorios']);
                 exit;
         }
+
+        $turnosValidos = ['1', '2'];
+
+        if (!in_array((string)$turnoActual, $turnosValidos, true) ||
+            !in_array((string)$turnoCambio, $turnosValidos, true) ||
+            (string)$turnoActual === (string)$turnoCambio) {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'Los turnos deben ser 1 y 2, y deben ser diferentes.'
+                ]);
+                exit;
+        }
         
-        //foreach ($datosAsistenciaCheck as $indice => $nomina) $placeholders[] = ':nomina'.$indice;        
-        $sql = "UPDATE SPC_PUNTOS_CAMBIO SET turno = :turnoCambio WHERE turno = :turnoActual 
-                    AND codigo_linea = :codigoLinea AND fechaHora_fin IS NULL 
-                    AND nomina IN (". implode(',', $datosAsistenciaCheck).")";
-                //AND nomina IN (" . implode(',', $placeholders) . ")";
+        if(!$changeAll){
+            // Normalizar las nóminas y rechazar cualquier valor que no sea numérico.
+            $nominas = [];
 
-        $sql2 = "UPDATE SPC_PERSONAL SET turno = :turnoCambio WHERE turno = :turnoActual 
-                    AND codigo_linea = :codigoLinea AND estatus != 2 
-                    AND nomina IN (". implode(',', $datosAsistenciaCheck).")";
+            foreach ($datosAsistenciaCheck as $nomina) {
+                if (!is_int($nomina) && !is_string($nomina)) {
+                    echo json_encode([
+                        'estatus' => 'error',
+                        'mensaje' => 'El listado contiene nóminas inválidas.'
+                    ]);
+                    exit;
+                }
 
-        $sql3 = "UPDATE PE SET PE.turno = :turnoCambio from SPC_PERSONAL_ESTACION AS PE
-                        LEFT JOIN SPC_ESTACIONES as E ON PE.id_estacion = E.id_estacion
-                    WHERE PE.turno = :turnoActual AND E.codigo_linea = :codigoLinea AND PE.fecha_fin IS NULL 
-                         AND PE.nomina IN (". implode(',', $datosAsistenciaCheck).")";
+                $nomina = trim((string)$nomina);
+
+                if ($nomina === '' || !preg_match('/^\d+$/', $nomina)) {
+                    echo json_encode([
+                        'estatus' => 'error',
+                        'mensaje' => 'El listado contiene nóminas inválidas.'
+                    ]);
+                    exit;
+                }
+
+                $nominas[] = $nomina;
+            }
+
+            // Evitar parámetros repetidos conservando las nóminas como texto.
+            $nominas = array_values(array_unique($nominas, SORT_STRING));
+
+            if (empty($nominas)) {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'No se recibieron nóminas para actualizar.'
+                ]);
+                exit;
+            }
+
+            // Reservar parámetros para turno y línea dentro del límite de SQL Server.
+            if (count($nominas) > 2000) {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'El listado supera el máximo de 2000 nóminas por operación.'
+                ]);
+                exit;
+            }
+
+            // Crear un placeholder PDO independiente para cada nómina seleccionada.
+            $placeholders = [];
+            $paramsNominas = [];
+
+            foreach ($nominas as $indice => $nomina) {
+                $placeholder = ':nomina' . $indice;
+                $placeholders[] = $placeholder;
+                $paramsNominas[$placeholder] = $nomina;
+            }
+
+            // Solo se integra al SQL el nombre de los placeholders, nunca sus valores.
+            $listaNominas = implode(', ', $placeholders);
+
+            $sql = "UPDATE SPC_PUNTOS_CAMBIO SET turno = :turnoCambio WHERE turno = :turnoActual
+                        AND codigo_linea = :codigoLinea AND fechaHora_fin IS NULL
+                        AND nomina IN ($listaNominas)";
+
+            $sql2 = "UPDATE SPC_PERSONAL SET turno = :turnoCambio WHERE turno = :turnoActual
+                        AND codigo_linea = :codigoLinea AND estatus != 2
+                        AND nomina IN ($listaNominas)";
+
+            $sql3 = "UPDATE PE SET PE.turno = :turnoCambio from SPC_PERSONAL_ESTACION AS PE
+                            LEFT JOIN SPC_ESTACIONES as E ON PE.id_estacion = E.id_estacion
+                        WHERE PE.turno = :turnoActual AND E.codigo_linea = :codigoLinea AND PE.fecha_fin IS NULL
+                            AND PE.nomina IN ($listaNominas)";
+
+            // Combinar los filtros comunes con las nóminas para reutilizarlos en las tres consultas.
+            $params = array_merge([
+                ':turnoCambio' => $turnoCambio,
+                ':turnoActual' => $turnoActual,
+                ':codigoLinea' => $codigoLinea
+            ], $paramsNominas);
+        }
+
+        else if($changeAll){
+            $sql = "UPDATE SPC_PUNTOS_CAMBIO SET turno = CASE turno WHEN 1 THEN 2 WHEN 2 THEN 1 ELSE turno END
+                        WHERE codigo_linea = :codigoLinea AND fechaHora_fin IS NULL AND turno IN (1, 2)";
+
+            $sql2 = "UPDATE SPC_PERSONAL SET turno = CASE turno WHEN 1 THEN 2 WHEN 2 THEN 1 ELSE turno END
+                        WHERE codigo_linea = :codigoLinea AND estatus != 2 AND turno IN (1, 2)";
+
+            $sql3 = "UPDATE PE SET PE.turno = CASE PE.turno WHEN 1 THEN 2 WHEN 2 THEN 1 ELSE PE.turno END
+                        from SPC_PERSONAL_ESTACION AS PE LEFT JOIN SPC_ESTACIONES as E ON PE.id_estacion = E.id_estacion
+                        WHERE E.codigo_linea = :codigoLinea AND PE.fecha_fin IS NULL AND PE.turno IN (1, 2)";
+
+            $params = [':codigoLinea' => $codigoLinea];
+        }
 
         try {
             $conn->beginTransaction();
+
             $stmt = $conn->prepare($sql);
             $stmt2 = $conn->prepare($sql2);
             $stmt3 = $conn->prepare($sql3);
 
-            $stmt->bindParam(':turnoCambio', $turnoCambio);
-            $stmt->bindParam(':turnoActual', $turnoActual);
-            $stmt->bindParam(':codigoLinea', $codigoLinea);
-
-            $stmt2->bindParam(':turnoCambio', $turnoCambio);
-            $stmt2->bindParam(':turnoActual', $turnoActual);
-            $stmt2->bindParam(':codigoLinea', $codigoLinea);
-
-            $stmt3->bindParam(':turnoCambio', $turnoCambio);
-            $stmt3->bindParam(':turnoActual', $turnoActual);
-            $stmt3->bindParam(':codigoLinea', $codigoLinea);
-
-            // Vincular cada valor de nómina
-            //foreach ($datosAsistenciaCheck as $indice => $nomina) $stmt->bindParam(':nomina' . $indice, $datosAsistenciaCheck[$indice]);
-            $stmt->execute();
-            $stmt2->execute();
-            $stmt3->execute();
-
+            // PDO sustituye los placeholders de forma segura en cada sentencia preparada.
+            $stmt->execute($params);
+            $stmt2->execute($params);
+            $stmt3->execute($params);
             $conn->commit();
             $results = array('estatus' => 'ok',
                              'mensaje' => 'Se ha actualizado el registro');
@@ -1927,6 +2005,34 @@ else
         }
 
         try {
+                $conn->beginTransaction();
+
+                // Mantener bloqueada la combinacion mientras se valida e inserta.
+                $sqlValidar = "SELECT TOP (1) 1
+                                FROM SPC_EVALUACIONPC WITH (UPDLOCK, HOLDLOCK)
+                                WHERE idPC = :idPC
+                                  AND numeroDia = :numeroDia
+                                  AND numeroEvaluacion = :numeroEvaluacion";
+
+                $stmtValidar = $conn->prepare($sqlValidar);
+                $stmtValidar->execute([
+                    ':idPC' => $idPC,
+                    ':numeroDia' => $numeroDia,
+                    ':numeroEvaluacion' => $numeroEvaluacion
+                ]);
+
+                $evaluacionExistente = $stmtValidar->fetchColumn();
+                $stmtValidar->closeCursor();
+
+                if ($evaluacionExistente !== false) {
+                    $conn->rollBack();
+                    echo json_encode([
+                        'estatus' => 'error',
+                        'mensaje' => 'Esta evaluación ya fue registrada.'
+                    ]);
+                    exit;
+                }
+
                 $sql = "INSERT INTO SPC_EVALUACIONPC(idPC, fechaEvaluacion, numeroDia, numeroEvaluacion, metrica1, metrica2, metrica3, comentarios)
                             VALUES (:idPC, :fechaEvaluacion, :numeroDia, :numeroEvaluacion, :metrica1, :metrica2, :metrica3, :comentarios)";
 
@@ -1941,14 +2047,20 @@ else
                     ':metrica3' => $metrica3,
                     ':comentarios' => $comentarios
                 ]);
+
+                $conn->commit();
                 
                 echo json_encode([
                         'estatus' => 'ok',
-                        'mensaje' => "Se ha hecho el registro de la evaluacion"
+                        'mensaje' => "Se ha hecho el registro de la evaluación"
                     ]);
 
         } catch (PDOException $e) {
             // Error de conexión o consulta
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+
             echo json_encode([
                 'estatus' => 'error',
                 'mensaje' => $e->getMessage()
@@ -1980,8 +2092,8 @@ else
 
                 if ($turno == '1') {
                     $inicio_turno = new DateTime('today 08:00');
-                    $fin_turno = new DateTime('today 19:59');
-                    if ($hora_actual < $inicio_turno || $hora_actual > $fin_turno) {
+                    $fin_turno = new DateTime('today 20:00:00');
+                    if ($hora_actual < $inicio_turno || $hora_actual >= $fin_turno) {
                         echo json_encode([
                             'estatus' => 'error',
                             'mensaje' => 'El registro de asistencia para el Turno 1 solo puede realizarse entre las 8:00 AM y las 7:59 PM.'
@@ -1994,13 +2106,13 @@ else
                     if ($turno == '2') {
                             if ($hora_actual>= new DateTime('today 20:00')) { // Después de las 8 pm
                                 $inicio_turno = new DateTime('today 20:00');
-                                $fin_turno    = new DateTime('tomorrow 07:59');
+                                $fin_turno    = new DateTime('tomorrow 08:00:00');
                             } else { // Antes de las 8 pm
                                 $inicio_turno = new DateTime('yesterday 20:00');
-                                $fin_turno    = new DateTime('today 07:59');
+                                $fin_turno    = new DateTime('today 08:00:00');
                             }
 
-                            if ($hora_actual < $inicio_turno || $hora_actual > $fin_turno) {
+                            if ($hora_actual < $inicio_turno || $hora_actual >= $fin_turno) {
                                 echo json_encode([
                                     'estatus' => 'error',
                                     'mensaje' => 'El registro de asistencia para el Turno 2 solo puede realizarse entre las 8:00 PM y las 7:59 AM del día siguiente.'
@@ -2017,13 +2129,41 @@ else
                     exit;
                 }
 
+            //Validar nuevamente la nómina en el catálogo general de empleados
+            include('./conexionEmpleado.php');
+
+            try {
+                $sqlEmpleado = "SELECT TOP 1 nombre FROM empleado_mst WHERE No_Nomina = :nomina";
+                $stmtEmpleado = $connE->prepare($sqlEmpleado);
+                $stmtEmpleado->execute([':nomina' => $nomina]);
+                $empleado = $stmtEmpleado->fetch(PDO::FETCH_ASSOC);
+
+                if (!$empleado || empty($empleado['nombre'])) {
+                    echo json_encode([
+                        'estatus' => 'error',
+                        'mensaje' => 'La nómina no existe en el catálogo de empleados.'
+                    ]);
+                    exit;
+                }
+
+                //Usar el nombre del catálogo en lugar del valor recibido desde el frontend
+                $nombre = $empleado['nombre'];
+            } catch (PDOException $e) {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'No fue posible validar la nómina en el catálogo de empleados.',
+                    'error' => $e->getMessage()
+                ]);
+                exit;
+            }
+
         try {
             $conn->beginTransaction();
 
             // VALIDAR SI YA EXISTE ASISTENCIA PARA ESTA NÓMINA EN EL TURNO ACTUAL
                 $sqlValidarAsistencia = "SELECT COUNT(*) AS total FROM SPC_REGISTRO_ASISTENCIA
                                     WHERE nomina = :nomina AND turno = :turno AND fecha_operacion >= :inicio_turno
-                                AND fecha_operacion <= :fin_turno";
+                                AND fecha_operacion < :fin_turno";
 
                 $stmtValidarAsistencia = $conn->prepare($sqlValidarAsistencia);
                 $stmtValidarAsistencia->execute([
@@ -2178,47 +2318,69 @@ else
                     $stmtIlu->execute([':nomina' => $nomina,':idE' => $idE]);
                 }
 
-                include('./conexionEmpleado.php');
+                $detalleImagen = null;
 
-                //Guardar la imagen del trabajador
+                // La imagen es complementaria y no debe cancelar el registro del trabajador.
+                try {
+                    include('./conexionEmpleado.php');
+
                     $sqlCheck = "SELECT No_Nomina as nomina, nombre, foto FROM empleado_mst WHERE No_Nomina = :nomina";
                     $stmtCheck = $connE->prepare($sqlCheck);
                     $stmtCheck->execute([':nomina' => $nomina]);
                     $empleado = $stmtCheck->fetch(PDO::FETCH_ASSOC);
-
-                    $nombre_archivo = ""; // Valor por defecto
+                    $stmtCheck->closeCursor();
 
                     if ($empleado && !empty($empleado['foto'])) {
-                        // Detectar tipo de imagen
-                        $finfo = new finfo(FILEINFO_MIME_TYPE);
-                        $tipo_mime = $finfo->buffer($empleado['foto']);
+                        if (!class_exists('finfo')) {
+                            $detalleImagen = 'La extensión Fileinfo no está disponible en el servidor';
+                        } else {
+                            $finfo = new finfo(FILEINFO_MIME_TYPE);
+                            $tipoMime = $finfo->buffer($empleado['foto']);
+                            $extensiones = [
+                                'image/jpeg' => 'jpg',
+                                'image/jpg' => 'jpg',
+                                'image/png' => 'png',
+                                'image/gif' => 'gif',
+                                'image/bmp' => 'bmp'
+                            ];
+                            $extensionImagen = $extensiones[$tipoMime] ?? null;
 
-                        // Mapear extensión según MIME type
-                        $extensiones = [
-                            'image/jpeg' => 'jpg',
-                            'image/jpg' => 'jpg',
-                            'image/png' => 'png',
-                            'image/gif' => 'gif',
-                            'image/bmp' => 'bmp'
-                        ];
+                            if ($extensionImagen === null) {
+                                $detalleImagen = 'El formato de la imagen no es compatible';
+                            } else {
+                                $nombreArchivo = $nomina . '.' . $extensionImagen;
+                                $rutaImagen = __DIR__ . '/../img/personal/' . $nombreArchivo;
 
-                        $extension = $extensiones[$tipo_mime] ?? 'bin';
-                        $nombre_archivo = $nomina . "." . $extension;
-
-                        $ruta = "../img/personal/" . $nombre_archivo;
-
-                        // Guardar la imagen en el directorio
-                        file_put_contents($ruta, $empleado['foto']);
+                                if (@file_put_contents($rutaImagen, $empleado['foto']) === false) {
+                                    $detalleImagen = 'No se pudo escribir la imagen en img/personal';
+                                }
+                            }
+                        }
+                    } elseif ($empleado) {
+                        $detalleImagen = 'El empleado no tiene una imagen registrada';
+                    } else {
+                        $detalleImagen = 'No se encontró la nómina en el catálogo de empleados';
                     }
-                //Fin guardar la imagen
+                } catch (Throwable $errorImagen) {
+                    $detalleImagen = 'No fue posible consultar o procesar la imagen del empleado';
+                }
 
 
 
                 $conn->commit();
+
+                $mensaje = 'Se ha hecho el registro del trabajador';
+                if ($detalleImagen !== null) {
+                    $mensaje .= '. No se pudo cargar la imagen: ' . $detalleImagen;
+                }
+
                 $results = array('estatus' => 'ok',
-                                'mensaje' => 'Se ha hecho el registro del trabajador');
-        } catch (Exception $e) {
-            $conn->rollBack();
+                                 'mensaje' => $mensaje);
+        } catch (Throwable $e) {
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+
               $results = array('estatus' => 'error',
                                'mensaje' => 'Ocurrió un error al realizar el registro',
                                'error' => $e->getMessage());
@@ -2721,16 +2883,16 @@ else
         //Setear rango de fecha y hora para el resumen
             //Turno 1
                 $inicio = new DateTime('today 08:00');
-                $fin    = new DateTime('today 19:59');
+                $fin    = new DateTime('today 20:00:00');
 
             //Turno 2
             if ($turno == '2') {
                 if ($ahora >= new DateTime('today 20:00')) { // Después de las 8 pm
                     $inicio = new DateTime('today 20:00');
-                    $fin    = new DateTime('tomorrow 07:59');
+                    $fin    = new DateTime('tomorrow 08:00:00');
                 } else { // Antes de las 8 pm
                     $inicio = new DateTime('yesterday 20:00');
-                    $fin    = new DateTime('today 07:59');
+                    $fin    = new DateTime('today 08:00:00');
                 } //Despues de la 8 de la noche la fecha de inicio es hoy 8:00 pm fecha de fin mañana 8:00 am
                 //Antes de 8 de la noche la fecha de inicio es ayer 8:00 pm y la fecha de fin hoy 8:00 am 
             }
@@ -2759,7 +2921,7 @@ else
                             NULLIF(COUNT(estatus), 0) * 100, 2
                             ) AS porcentajeA
                 FROM SPC_REGISTRO_ASISTENCIA
-                    WHERE fecha_operacion > :fechaInicio AND fecha_operacion < :fechaFin 
+                    WHERE fecha_operacion >= :fechaInicio AND fecha_operacion < :fechaFin
                         AND codigo_linea = :codigoLinea";
 
         try {
@@ -2928,11 +3090,11 @@ if($opcion == '39'){
 
     try {
          $response = [];
-         $sqlOperaciones = "SELECT PE.id_estacion, E.nombre_estacion, PE.fecha_asignacion AS fecha_inicio, PE.fecha_fin, PE.comentarios
+         $sqlOperaciones = "SELECT PE.id_estacion, E.nombre_estacion, PE.fecha_asignacion AS fecha_inicio, PE.fecha_fin, PE.comentarios, 1 as tabla
                                 FROM SPC_PERSONAL_ESTACION PE INNER JOIN SPC_ESTACIONES E ON PE.id_estacion = E.id_estacion
                                     WHERE E.codigo_linea = :codigoLinea AND PE.fecha_fin IS NULL AND PE.turno = :turno AND PE.nomina = :nomina
                             UNION
-                            SELECT EPC.idE AS id_estacion, E.nombre_estacion, PC.fechaHora_inicio AS fecha_inicio, PC.fechaHora_fin as fecha_fin, PC.motivo AS comentarios
+                            SELECT EPC.idE AS id_estacion, E.nombre_estacion, PC.fechaHora_inicio AS fecha_inicio, PC.fechaHora_fin as fecha_fin, PC.motivo AS comentarios, 2 AS tabla
                                 FROM SPC_PUNTOS_CAMBIO PC INNER JOIN SPC_ESTACIONES_PC EPC ON PC.idPC = EPC.idPC
                             INNER JOIN SPC_ESTACIONES E ON E.id_estacion = EPC.idE
                             WHERE PC.codigo_linea = :codigoLinea AND PC.fechaHora_fin IS NULL AND PC.turno = :turno AND PC.nomina = :nomina";
@@ -2942,6 +3104,7 @@ if($opcion == '39'){
                                    ":turno" => $turno, 
                                    ":nomina" => $nomina 
                                   ]);
+                                  
             $response = $operaciones->fetchAll(PDO::FETCH_ASSOC);
 
             echo json_encode([
@@ -3267,7 +3430,7 @@ else
                     if ($existe && $existe['total'] > 0) {
                         $noInsertados[] = [
                             'nomina' => $nomina,
-                            'motivo' => 'La nómina ya está registrada en SPC_PERSONAL'
+                            'motivo' => 'La nómina ya está registrada'
                         ];
                     } elseif (!$empleado || empty($empleado['nombre'])) {
                         $noInsertados[] = [

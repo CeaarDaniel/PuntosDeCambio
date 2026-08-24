@@ -4,7 +4,8 @@
     const dynamicStyles = {
         certificaciones: './css/certificaciones.css',
         iluPersonal: './css/iluPersonal.css',
-        estacionesCertificaciones: './css/estacionesCertificaciones.css'
+        estacionesCertificaciones: './css/estacionesCertificaciones.css',
+        anormalidades: './css/anormalidades.css'
     };
 
     //Funcion para actualizar el active del navBar
@@ -194,7 +195,8 @@
                     'estacionesCertificaciones': 'Certificaciones por Estaci\u00f3n',
                     'change-points': 'Puntos de Cambio',
                     'menuReportes': 'Reportes y Estadísticas',
-                    'estadisticas' : 'Estadísticas'
+                    'estadisticas' : 'Estadísticas',
+                    'anormalidades': 'Registro de Anormalidades'
             };
 
             pageTitle.classList.toggle("ocultar-mostrar"); //cambia la opacidad en 1  al cambiar de pagina
