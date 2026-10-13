@@ -167,7 +167,7 @@ else
 //LISTADO DE LINEAS REGISTRADAS
 else 
 if($opcion=="4"){
-    $sql= "SELECT codigo_linea, nombre_linea, imagen from SPC_LINEAS";
+    $sql= "SELECT codigo_linea, nombre_linea, imagen from SPC_LINEAS where activo = 1 ORDER BY idArea";
 
     $registro = $conn->prepare($sql);
     $response= array();

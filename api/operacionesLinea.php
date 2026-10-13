@@ -8,6 +8,118 @@ header('Content-Type: application/json; charset=utf-8');
 
 include('./conexion.php');
 
+/*
+ * Condición SQL que limita una consulta a los puntos de cambio de MANO DE OBRA.
+ * Los PC de maquinaria (y demás tipos 4M) no representan a una persona operando
+ * la estación: no deben afectar el layout, asignaciones, asistencia ni turnos.
+ * idTipo4M NULL se trata como mano de obra (así se registraban antes de existir
+ * la columna). El tipo se identifica por su clave y no por idTIPO, que puede
+ * variar entre bases.
+ */
+function condicionPCManoObra($alias) {
+    return "($alias.idTipo4M IS NULL OR $alias.idTipo4M IN
+                (SELECT T4MO.idTIPO FROM SPC_TIPO_4MPC T4MO WHERE T4MO.clave = 'MO'))";
+}
+
+/* Tipos de PC 3M con el flujo registro → planeación → implementación → evaluación → cierre
+   (opciones 45 a 51): clave de SPC_TIPO_4MPC => nombre usado en los mensajes. */
+const TIPOS_PC_3M = [
+    'MA' => 'maquinaria',
+    'MP' => 'materia prima',
+    'ME' => 'método'
+];
+
+/* Lee la clave 4M enviada (clave4M). Si no es un tipo de PC 3M válido, responde el error y termina. */
+function exigirClave4MPost() {
+    $clave = isset($_POST['clave4M']) ? strtoupper(trim((string) $_POST['clave4M'])) : '';
+
+    if (!array_key_exists($clave, TIPOS_PC_3M)) {
+        echo json_encode([
+            'estatus' => 'error',
+            'mensaje' => 'El tipo de punto de cambio no es válido.'
+        ]);
+        exit;
+    }
+
+    return $clave;
+}
+
+/*
+ * OUTER APPLY que obtiene, para cada estación (alias E), las claves de sus PC 3M abiertos
+ * separadas por coma (por ejemplo "MA,ME"). Se usa en el layout (opciones 5 y 15) para
+ * mostrar un ícono por tipo. No depende del turno, igual que los PC 3M.
+ */
+function sqlPCs3MAbiertos() {
+    $claves = "'" . implode("','", array_keys(TIPOS_PC_3M)) . "'";
+
+    return "OUTER APPLY (
+                SELECT STRING_AGG(LTRIM(RTRIM(T4P.clave)), ',') AS claves
+                FROM SPC_PUNTOS_CAMBIO P3M
+                INNER JOIN SPC_ESTACIONES_PC EPC3M ON EPC3M.idPC = P3M.idPC
+                INNER JOIN SPC_TIPO_4MPC T4P ON T4P.idTIPO = P3M.idTipo4M
+                WHERE EPC3M.idE = E.id_estacion
+                  AND P3M.fechaHora_fin IS NULL
+                  AND T4P.clave IN ($claves)
+            ) AS PC3M";
+}
+
+/* Convierte las claves de PC 3M abiertos ("MA,ME") en arreglo para la respuesta JSON. */
+function clavesPCs3M($claves) {
+    return $claves ? explode(',', $claves) : [];
+}
+
+/*
+ * Implementación (con las opciones de verificación marcadas) y evaluaciones de un PC 3M.
+ * La usan el seguimiento del modal de la estación (opción 46) y el detalle del listado
+ * de puntos de cambio (opción 52).
+ */
+function consultarImplementacionEvaluacionesPC3M($conn, $idPC) {
+    $parametrosPC = [':idPC' => $idPC];
+
+    $stmtImpl = $conn->prepare("SELECT nomina_responsable, nombre_responsable,
+                                       CONVERT(varchar(10), fecha_compromiso, 23) AS fecha_compromiso,
+                                       otro_detalle,
+                                       CONVERT(varchar(16), fecha_registro, 120) AS fecha_registro
+                                FROM SPC_IMPLEMENTACION WHERE idPC = :idPC");
+    $stmtImpl->execute($parametrosPC);
+    $implementacion = $stmtImpl->fetch(PDO::FETCH_ASSOC) ?: null;
+    $stmtImpl->closeCursor();
+
+    if ($implementacion) {
+        $stmtDocs = $conn->prepare("SELECT V.idVerificacion, V.clave, V.nombre
+                                    FROM SPC_IMPLEMENTACION_DOCUMENTOS D
+                                    INNER JOIN SPC_VERIFICACION_DOCUMENTOS V ON V.idVerificacion = D.idVerificacion
+                                    WHERE D.idPC = :idPC
+                                    ORDER BY V.idVerificacion");
+        $stmtDocs->execute($parametrosPC);
+        $implementacion['documentos'] = $stmtDocs->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /* Evaluaciones registradas (una por día, en orden). */
+    $stmtEval = $conn->prepare("SELECT numeroDia, CONVERT(varchar(16), fechaEvaluacion, 120) AS fechaEvaluacion,
+                                       metrica1, metrica2, metrica3, metrica4, metrica5, comentarios
+                                FROM SPC_EVALUACIONPC_3M WHERE idPC = :idPC
+                                ORDER BY numeroDia");
+    $stmtEval->execute($parametrosPC);
+
+    return [
+        'implementacion' => $implementacion,
+        'evaluaciones' => $stmtEval->fetchAll(PDO::FETCH_ASSOC),
+        'evaluaciones_requeridas' => EVALUACIONES_3M_REQUERIDAS
+    ];
+}
+
+/* Clave de "OTRO" en SPC_TIPO_3M: exige detallar el cambio en la planeación. */
+const CLAVE_3M_OTRO = '6';
+
+/* Claves de SPC_VERIFICACION_DOCUMENTOS con reglas propias en la implementación:
+   SIN_PROBLEMA no se combina con otras opciones y OTRO exige detallar el documento. */
+const CLAVE_VERIF_SIN_PROBLEMA = 'SIN_PROBLEMA';
+const CLAVE_VERIF_OTRO = 'OTRO';
+
+/* Evaluaciones (una por día) que requiere un PC 3M antes de poder cerrarse. */
+const EVALUACIONES_3M_REQUERIDAS = 3;
+
 $opcion = $_POST['opcion'];
 
 //REGISTRO DE UNA NUEVA LINEA
@@ -248,13 +360,15 @@ else
                                                     INNER JOIN SPC_ESTACIONES E on PE.id_estacion = E.id_estacion
                                                 WHERE PE.fecha_fin IS NULL AND PE.nomina= :nomina AND E.codigo_linea <> :codigoLinea
                                                     UNION ALL
-                                             SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina3 
+                                             SELECT nomina FROM SPC_PUNTOS_CAMBIO WHERE fechaHora_fin IS NULL AND nomina = :nomina3
                                                     AND codigo_linea <> :codigoLinea3
+                                                    AND " . condicionPCManoObra('SPC_PUNTOS_CAMBIO') . "
                                             ) X
-                                        )THEN 1 ELSE 0 END, 
-                                        PCexist = CASE WHEN EXISTS (SELECT 1 from SPC_PUNTOS_CAMBIO PC 
+                                        )THEN 1 ELSE 0 END,
+                                        PCexist = CASE WHEN EXISTS (SELECT 1 from SPC_PUNTOS_CAMBIO PC
                                                     INNER JOIN SPC_ESTACIONES_PC epc ON epc.idPC = pc.idPC
-                                            WHERE epc.idE = :id_estacion AND pc.fechaHora_fin IS NULL AND pc.turno = :turno) 
+                                            WHERE epc.idE = :id_estacion AND pc.fechaHora_fin IS NULL AND pc.turno = :turno
+                                                AND " . condicionPCManoObra('PC') . ")
                             THEN 1 ELSE 0 END";
             
                 /*Revisar que el trabajador exista o este activo y no este registrado en otro turno*/
@@ -464,7 +578,8 @@ else
                         COALESCE(PC.nombre, EP.nombre) AS nombre,
                         COALESCE(PC.fechaHora_inicio, EP.fecha_asignacion) AS fecha_asignacion,
                         E.codigo_linea, E.id_certificacion as codigo_certificacion, E.posicion_x, E.posicion_y, E.rotate,
-                        PC.estatusPC, PC.idPC, A.estatus AS asistencia
+                        PC.estatusPC, PC.idPC, A.estatus AS asistencia,
+                        PC3M.claves AS pcs3M
                     FROM SPC_ESTACIONES E
                         OUTER APPLY (
                             SELECT TOP (1) PE.nomina, PE.nombre, PE.fecha_asignacion
@@ -476,11 +591,12 @@ else
                         ) AS EP
                         OUTER APPLY (
                             SELECT TOP (1) P.idPC, P.nomina, P.nombre, P.estatusPC, P.fechaHora_inicio
-                                FROM SPC_PUNTOS_CAMBIO P 
+                                FROM SPC_PUNTOS_CAMBIO P
                         INNER JOIN SPC_ESTACIONES_PC EPC ON EPC.idPC = P.idPC
                             WHERE EPC.idE = E.id_estacion
                                 AND P.fechaHora_fin IS NULL
                                 AND P.turno = :turno
+                                AND " . condicionPCManoObra('P') . "
                             ORDER BY P.fechaHora_inicio DESC, P.idPC DESC
                         ) AS PC
                         OUTER APPLY (
@@ -492,6 +608,7 @@ else
                                 AND RA.fecha_operacion < :fecha_fin
                             ORDER BY RA.fecha_operacion DESC, RA.id_registro DESC
                         ) AS A
+                        " . sqlPCs3MAbiertos() . "
                 WHERE E.codigo_linea = :codigoLinea";
 
         $stmt = $conn->prepare($sql);
@@ -547,7 +664,8 @@ else
                                      'colorClass' => $coloClass,  //1 asistencia, 3 falta, 2 o 6 punto de cambio
                                      'idPC' => $estacion['idPC'],
                                      'estatusPC' => $estacion['estatusPC'],
-                                     'isCertificate' => $estacion['isCertificate']
+                                     'isCertificate' => $estacion['isCertificate'],
+                                     'pcs3M' => clavesPCs3M($estacion['pcs3M']) //PC 3M abiertos: ["MA","MP","ME"]
                                    );
             }
         }
@@ -660,6 +778,7 @@ else
                             (SELECT nomina FROM SPC_PERSONAL_ESTACION PE WHERE PE.fecha_fin IS NULL AND PE.nomina = :nomina
                                         UNION ALL
                             SELECT nomina FROM SPC_PUNTOS_CAMBIO PC WHERE fechaHora_fin IS NULL and PC.nomina = :nomina
+                                AND " . condicionPCManoObra('PC') . "
                             ) as Z
                         ) THEN 1 ELSE 0 END";
 
@@ -844,10 +963,11 @@ else
         $sqlCheckPC = "SELECT 
             PCexist = CASE 
                 WHEN EXISTS (
-                    SELECT 1  FROM SPC_PUNTOS_CAMBIO pc INNER JOIN SPC_ESTACIONES_PC epc 
-                        ON epc.idPC = pc.idPC WHERE pc.fechaHora_fin IS NULL AND pc.turno = ? 
+                    SELECT 1  FROM SPC_PUNTOS_CAMBIO pc INNER JOIN SPC_ESTACIONES_PC epc
+                        ON epc.idPC = pc.idPC WHERE pc.fechaHora_fin IS NULL AND pc.turno = ?
                     AND (epc.idE IN ($placeholdersEstaciones))
-                ) THEN 1 ELSE 0 
+                    AND " . condicionPCManoObra('pc') . "
+                ) THEN 1 ELSE 0
             END,
 
             asignado = CASE 
@@ -875,11 +995,12 @@ else
 
                         UNION ALL
 
-                        SELECT nomina 
-                        FROM SPC_PUNTOS_CAMBIO 
-                        WHERE fechaHora_fin IS NULL 
-                        AND nomina = ? 
+                        SELECT nomina
+                        FROM SPC_PUNTOS_CAMBIO
+                        WHERE fechaHora_fin IS NULL
+                        AND nomina = ?
                         AND codigo_linea <> ?
+                        AND " . condicionPCManoObra('SPC_PUNTOS_CAMBIO') . "
                     ) X
                 ) THEN 1 ELSE 0 
             END,
@@ -1025,12 +1146,14 @@ else
             
 
             // Preparar la sentencia con parámetros
+            //idTipo4M: PC de mano de obra (se resuelve por la clave 'MO' del catálogo SPC_TIPO_4MPC)
             $sql = "INSERT INTO SPC_PUNTOS_CAMBIO(no_controlCambio, fechaHora_inicio, motivo, tipo_cambio,
                                                     codigo_linea, estatusPC, turno, nomina,
-                                                    nombre) 
+                                                    nombre, idTipo4M)
                                                     OUTPUT INSERTED.idPC
-                                values ( :no_control, :fechaHora_inicio, :motivo, :tipoCambio, :codigo_linea, 
-                                         '1', :turno, :nomina_operador, :nombre)";
+                                values ( :no_control, :fechaHora_inicio, :motivo, :tipoCambio, :codigo_linea,
+                                         '1', :turno, :nomina_operador, :nombre,
+                                         (SELECT TOP (1) idTIPO FROM SPC_TIPO_4MPC WHERE clave = 'MO'))";
 
             $stmt = $conn->prepare($sql);
 
@@ -1158,6 +1281,7 @@ else
                             (SELECT nomina FROM SPC_PERSONAL_ESTACION PE WHERE PE.fecha_fin IS NULL AND PE.nomina = :nomina
                                         UNION ALL
                             SELECT nomina FROM SPC_PUNTOS_CAMBIO PC WHERE fechaHora_fin IS NULL AND PC.nomina = :nomina
+                                AND " . condicionPCManoObra('PC') . "
                             ) as Z
                         ) THEN 1 ELSE 0 END";
 
@@ -1257,8 +1381,8 @@ if ($opcion == '15') {
                         COALESCE(PC.nomina, EP.nomina) AS nomina,
                         COALESCE(PC.nombre, EP.nombre) AS nombre,
                         COALESCE(PC.fechaHora_inicio, EP.fecha_asignacion) AS fecha_asignacion,
-                        E.codigo_linea, E.id_certificacion AS codigo_certificacion, PC.estatusPC, PC.idPC, 
-                        A.estatus AS asistencia
+                        E.codigo_linea, E.id_certificacion AS codigo_certificacion, PC.estatusPC, PC.idPC,
+                        A.estatus AS asistencia, PC3M.claves AS pcs3M
                     FROM SPC_ESTACIONES E
                 OUTER APPLY ( SELECT TOP (1) PE.nomina, PE.nombre, PE.fecha_asignacion
                     FROM SPC_PERSONAL_ESTACION PE
@@ -1268,6 +1392,7 @@ if ($opcion == '15') {
                 OUTER APPLY (SELECT TOP (1) P.idPC, P.nomina, P.nombre, P.estatusPC, P.fechaHora_inicio
                     FROM SPC_PUNTOS_CAMBIO P INNER JOIN SPC_ESTACIONES_PC EPC ON EPC.idPC = P.idPC
                         WHERE EPC.idE = E.id_estacion AND P.fechaHora_fin IS NULL AND P.turno = :turno
+                            AND " . condicionPCManoObra('P') . "
                     ORDER BY  P.fechaHora_inicio DESC, P.idPC DESC
                 ) AS PC
 
@@ -1276,7 +1401,9 @@ if ($opcion == '15') {
                         AND RA.turno = :turno AND RA.fecha_operacion >= :fecha_inicio
                         AND RA.fecha_operacion < :fecha_fin
                     ORDER BY RA.fecha_operacion DESC, RA.id_registro DESC
-                ) AS A WHERE $whereEstacion ORDER BY E.id_estacion ";
+                ) AS A
+                " . sqlPCs3MAbiertos() . "
+                WHERE $whereEstacion ORDER BY E.id_estacion ";
 
             $stmt = $conn->prepare($sql);
 
@@ -1335,7 +1462,8 @@ if ($opcion == '15') {
                         'idPC'          => $estacion['idPC'],
                         'colorClass'    => $colorClass,
                         'estatusPC'     => $estacion['estatusPC'],
-                        'isCertificate' => $estacion['isCertificate']
+                        'isCertificate' => $estacion['isCertificate'],
+                        'pcs3M'         => clavesPCs3M($estacion['pcs3M']) //PC 3M abiertos: ["MA","MP","ME"]
                     ];
                 }
 
@@ -1404,8 +1532,9 @@ else
                         FROM SPC_PERSONAL p LEFT JOIN (
                                                         SELECT nomina, id_estacion FROM SPC_PERSONAL_ESTACION WHERE fecha_fin IS NULL AND turno = :turno
                                                             UNION
-                                                        SELECT nomina, EPC.idE as id_estacion FROM SPC_PUNTOS_CAMBIO PC INNER JOIN SPC_ESTACIONES_PC EPC ON PC.idPC = EPC.idPC 
+                                                        SELECT nomina, EPC.idE as id_estacion FROM SPC_PUNTOS_CAMBIO PC INNER JOIN SPC_ESTACIONES_PC EPC ON PC.idPC = EPC.idPC
                                                         WHERE fechaHora_fin IS NULL AND turno = :turno AND codigo_linea = :codigoLinea
+                                                            AND " . condicionPCManoObra('PC') . "
                                                       ) x
                             ON x.nomina = p.nomina LEFT JOIN SPC_ESTACIONES e ON e.id_estacion = x.id_estacion
                         WHERE p.codigo_linea = :codigoLinea AND p.turno = :turno and p.estatus NOT IN (2)
@@ -1721,7 +1850,8 @@ else
 
             $sql = "UPDATE SPC_PUNTOS_CAMBIO SET turno = :turnoCambio WHERE turno = :turnoActual
                         AND codigo_linea = :codigoLinea AND fechaHora_fin IS NULL
-                        AND nomina IN ($listaNominas)";
+                        AND nomina IN ($listaNominas)
+                        AND " . condicionPCManoObra('SPC_PUNTOS_CAMBIO');
 
             $sql2 = "UPDATE SPC_PERSONAL SET turno = :turnoCambio WHERE turno = :turnoActual
                         AND codigo_linea = :codigoLinea AND estatus != 2
@@ -1742,7 +1872,8 @@ else
 
         else if($changeAll){
             $sql = "UPDATE SPC_PUNTOS_CAMBIO SET turno = CASE turno WHEN 1 THEN 2 WHEN 2 THEN 1 ELSE turno END
-                        WHERE codigo_linea = :codigoLinea AND fechaHora_fin IS NULL AND turno IN (1, 2)";
+                        WHERE codigo_linea = :codigoLinea AND fechaHora_fin IS NULL AND turno IN (1, 2)
+                        AND " . condicionPCManoObra('SPC_PUNTOS_CAMBIO');
 
             $sql2 = "UPDATE SPC_PERSONAL SET turno = CASE turno WHEN 1 THEN 2 WHEN 2 THEN 1 ELSE turno END
                         WHERE codigo_linea = :codigoLinea AND estatus != 2 AND turno IN (1, 2)";
@@ -1793,7 +1924,8 @@ else
                 SELECT nomina, nombre, FORMAT(fechaHora_inicio, 'yyyy/MM/dd HH:mm') AS fecha_inicio, fechaHora_fin AS fecha_fin, 
                         turno, motivo AS descripcion, 'PUNTO_CAMBIO' AS origen 
                     FROM SPC_PUNTOS_CAMBIO PC LEFT JOIN SPC_ESTACIONES_PC EPC on PC.idPC = EPC.idPC
-                WHERE nomina = :nomina2 AND EPC.idE = :idEstacion2 AND fechaHora_fin IS NULL";
+                WHERE nomina = :nomina2 AND EPC.idE = :idEstacion2 AND fechaHora_fin IS NULL
+                    AND " . condicionPCManoObra('PC');
             
             $stmt = $conn->prepare($sql);
             $stmt->bindParam(':nomina', $nomina);
@@ -2853,9 +2985,10 @@ else
                 $sqlEstaciones = "SELECT TOP 1 fecha_inicio, fecha_fin FROM (
                                         SELECT fecha_asignacion AS fecha_inicio, fecha_fin FROM SPC_PERSONAL_ESTACION WHERE id_estacion = :idE AND nomina = :nomina
                                             UNION ALL
-                                        SELECT fechaHora_inicio AS fecha_inicio, fechaHora_fin AS fecha_fin FROM SPC_PUNTOS_CAMBIO PC 
-                                            INNER JOIN SPC_ESTACIONES_PC EPC ON PC.idPC = EPC.idPC 
-                                        WHERE EPC.idE = :idE AND nomina = :nomina 
+                                        SELECT fechaHora_inicio AS fecha_inicio, fechaHora_fin AS fecha_fin FROM SPC_PUNTOS_CAMBIO PC
+                                            INNER JOIN SPC_ESTACIONES_PC EPC ON PC.idPC = EPC.idPC
+                                        WHERE EPC.idE = :idE AND nomina = :nomina
+                                            AND " . condicionPCManoObra('PC') . "
                                     ) AS registros ORDER BY CASE WHEN fecha_fin IS NULL THEN 1 ELSE 0 END DESC, ISNULL(fecha_fin, fecha_inicio) DESC";
 
                 $stmtE = $conn->prepare($sqlEstaciones);            
@@ -2987,8 +3120,10 @@ else
                 $stmt1->execute([':nomina' => $nomina]);
                     
                 //Cerrar los registros de los puntos de cambio
-                $sql2 = "UPDATE SPC_PUNTOS_CAMBIO SET fechaHora_fin = GETDATE(), estatusPC = 3 
-                            WHERE nomina = :nomina AND fechaHora_fin IS NULL";
+                //Solo PC de mano de obra: un PC de maquinaria no se cierra porque se elimine a su responsable
+                $sql2 = "UPDATE SPC_PUNTOS_CAMBIO SET fechaHora_fin = GETDATE(), estatusPC = 3
+                            WHERE nomina = :nomina AND fechaHora_fin IS NULL
+                            AND " . condicionPCManoObra('SPC_PUNTOS_CAMBIO');
 
                 $stmt2 = $conn->prepare($sql2);
                 $stmt2->execute([':nomina' => $nomina]);
@@ -3030,7 +3165,12 @@ else
 if($opcion == '38'){
     $codigoLinea = !empty($_POST['codigoLinea']) ? $_POST['codigoLinea'] : 0;
     $turno = !empty($_POST['turno']) ? $_POST['turno'] : 0;
-    
+    /* Tipo 4M del listado: MO (mano de obra, valor por defecto) o un tipo 3M (MA, MP, ME). */
+    $clave4M = isset($_POST['clave4M']) ? strtoupper(trim((string) $_POST['clave4M'])) : 'MO';
+    /* Rango opcional (AAAA-MM-DD) sobre la fecha de inicio del PC: se envían ambas fechas o ninguna. */
+    $fechaInicio = isset($_POST['fechaInicio']) ? trim($_POST['fechaInicio']) : '';
+    $fechaFin = isset($_POST['fechaFin']) ? trim($_POST['fechaFin']) : '';
+
     if (!$codigoLinea) {
         echo json_encode([
             'estatus' => 'error',
@@ -3039,18 +3179,61 @@ if($opcion == '38'){
      exit;
     }
 
+    if ($clave4M !== 'MO' && !array_key_exists($clave4M, TIPOS_PC_3M)) {
+        echo json_encode([
+            'estatus' => 'error',
+            'mensaje' => 'El tipo de punto de cambio no es válido.'
+        ]);
+        exit;
+    }
+
+    $fechaEsValida = function ($texto) {
+        $fecha = DateTime::createFromFormat('!Y-m-d', $texto);
+        return $fecha && $fecha->format('Y-m-d') === $texto;
+    };
+
+    if (($fechaInicio !== '' || $fechaFin !== '')
+        && (!$fechaEsValida($fechaInicio) || !$fechaEsValida($fechaFin) || $fechaInicio > $fechaFin)) {
+        echo json_encode([
+            'estatus' => 'error',
+            'mensaje' => 'El rango de fechas no es válido.'
+        ]);
+        exit;
+    }
+
     try {
          $response = [];
+            /* Para los PC 3M, "Motivo" y "Tipo de cambio" salen de su planeación (SPC_PLANEACION). */
             $sqlPC = "SELECT PC.idPC, PC.no_controlCambio, PC.nomina, PC.nombre, PC.motivo,
-                            PC.fechaHora_inicio, PC.fechaHora_fin, PC.tipo_cambio, PC.estatusPC
-                        from SPC_PUNTOS_CAMBIO PC where PC.codigo_linea = :codigoLinea";
+                            PC.fechaHora_inicio, PC.fechaHora_fin, PC.tipo_cambio, PC.estatusPC,
+                            T3.nombre AS tipo_cambio_3m, PL.detalles_cambio
+                        from SPC_PUNTOS_CAMBIO PC
+                        LEFT JOIN SPC_PLANEACION PL ON PL.idPC = PC.idPC
+                        LEFT JOIN SPC_TIPO_3M T3 ON T3.idTIPO3M = PL.idTIPO3M
+                        where PC.codigo_linea = :codigoLinea";
 
             $params[':codigoLinea'] = $codigoLinea;
 
-            // Filtro turno
-            if ($turno != 0) {
-                $sqlPC .= " AND turno = :turno";
-                $params[':turno'] = $turno;
+            if ($clave4M === 'MO') {
+                $sqlPC .= " AND " . condicionPCManoObra('PC');
+
+                // Filtro turno: solo mano de obra (los PC 3M no dependen del turno)
+                if ($turno != 0) {
+                    $sqlPC .= " AND PC.turno = :turno";
+                    $params[':turno'] = $turno;
+                }
+            } else {
+                $sqlPC .= " AND EXISTS (SELECT 1 FROM SPC_TIPO_4MPC T4
+                                        WHERE T4.idTIPO = PC.idTipo4M AND T4.clave = :clave4M)";
+                $params[':clave4M'] = $clave4M;
+            }
+
+            // Filtro por fecha de inicio del PC (la fecha final se incluye completa)
+            if ($fechaInicio !== '') {
+                $sqlPC .= " AND PC.fechaHora_inicio >= :fechaInicio
+                            AND PC.fechaHora_inicio < DATEADD(DAY, 1, CAST(:fechaFin AS date))";
+                $params[':fechaInicio'] = $fechaInicio;
+                $params[':fechaFin'] = $fechaFin;
             }
 
             $sqlPC .=" ORDER BY PC.idPC";
@@ -3097,7 +3280,9 @@ if($opcion == '39'){
                             SELECT EPC.idE AS id_estacion, E.nombre_estacion, PC.fechaHora_inicio AS fecha_inicio, PC.fechaHora_fin as fecha_fin, PC.motivo AS comentarios, 2 AS tabla
                                 FROM SPC_PUNTOS_CAMBIO PC INNER JOIN SPC_ESTACIONES_PC EPC ON PC.idPC = EPC.idPC
                             INNER JOIN SPC_ESTACIONES E ON E.id_estacion = EPC.idE
-                            WHERE PC.codigo_linea = :codigoLinea AND PC.fechaHora_fin IS NULL AND PC.turno = :turno AND PC.nomina = :nomina";
+                            WHERE PC.codigo_linea = :codigoLinea AND PC.fechaHora_fin IS NULL AND PC.turno = :turno AND PC.nomina = :nomina
+                                AND " . condicionPCManoObra('PC') . "
+                            ORDER BY tabla DESC, id_estacion"; //Orden explícito: primero los PC y luego las asignaciones normales
 
             $operaciones = $conn->prepare($sqlOperaciones);
             $operaciones->execute([":codigoLinea" => $codigoLinea, 
@@ -3492,6 +3677,893 @@ else
             }
 
             echo json_encode($respuesta);
+        }
+}
+
+//Obtener el catálogo de tipos de cambio de los PC 3M: maquinaria, materia prima y método (SPC_TIPO_3M)
+else
+ if($opcion == '44'){
+        try {
+            $sql = "SELECT idTIPO3M, clave, nombre, descripcion
+                    FROM SPC_TIPO_3M
+                    ORDER BY TRY_CONVERT(int, clave), clave, idTIPO3M";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+
+            echo json_encode([
+                'estatus' => 'ok',
+                'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)
+            ]);
+        } catch (PDOException $e) {
+            error_log('[operacionesLinea opcion 44] ' . $e->getMessage());
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'No fue posible consultar los tipos de cambio.'
+            ]);
+        }
+}
+
+/* =====================================================================
+   PUNTO DE CAMBIO 3M: MAQUINARIA (MA), MATERIA PRIMA (MP) Y MÉTODO (ME) (opciones 45 a 51)
+   - Cada operación recibe clave4M (ver TIPOS_PC_3M) y solo actúa sobre PC de ese tipo.
+   - Es independiente del PC de mano de obra: puede coexistir con él en la
+     misma estación y no modifica asignaciones ni el estatus del personal.
+   - No depende del turno: solo puede haber uno abierto por estación y tipo.
+   - Flujo: registro (45) -> planeación (47) -> implementación (50)
+            -> evaluación de 3 días (51) -> cierre (48).
+   ===================================================================== */
+
+//Registrar un punto de cambio 3M (primer registro)
+else
+ if($opcion == '45'){
+        $clave4M = exigirClave4MPost();
+        $nombreTipo = TIPOS_PC_3M[$clave4M];
+        $idEstacion = isset($_POST['idEstacion']) ? trim($_POST['idEstacion']) : '';
+        $codigoLinea = isset($_POST['codigoLinea']) ? trim($_POST['codigoLinea']) : '';
+        $turno = isset($_POST['turno']) ? trim($_POST['turno']) : '';
+        $nominaResponsable = isset($_POST['nominaResponsable']) ? trim($_POST['nominaResponsable']) : '';
+
+        if (!ctype_digit($idEstacion) || $codigoLinea === '' || !in_array($turno, ['1', '2'], true)
+            || !ctype_digit($nominaResponsable)) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Faltan datos obligatorios o no son válidos.'
+            ]);
+            exit;
+        }
+
+        try {
+            /* El nombre del responsable se toma del catálogo de empleados, no del formulario. */
+            include('./conexionEmpleado.php');
+            $stmtEmpleado = $connE->prepare("SELECT nombre FROM empleado_mst WHERE No_Nomina = :nomina");
+            $stmtEmpleado->execute([':nomina' => $nominaResponsable]);
+            $nombreResponsable = $stmtEmpleado->fetchColumn();
+            $stmtEmpleado->closeCursor();
+
+            if ($nombreResponsable === false) {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'La nómina del personal responsable no existe en el catálogo de empleados.'
+                ]);
+                exit;
+            }
+
+            /* La estación debe pertenecer a la línea indicada. */
+            $stmtEstacion = $conn->prepare("SELECT COUNT(*) FROM SPC_ESTACIONES
+                                            WHERE id_estacion = :idEstacion AND codigo_linea = :codigoLinea");
+            $stmtEstacion->execute([':idEstacion' => $idEstacion, ':codigoLinea' => $codigoLinea]);
+
+            if ((int) $stmtEstacion->fetchColumn() === 0) {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'La estación no pertenece a la línea seleccionada.'
+                ]);
+                exit;
+            }
+
+            $conn->beginTransaction();
+
+            /* Tipo 4M del PC: se resuelve por su clave en el catálogo. */
+            $stmtTipo = $conn->prepare("SELECT TOP (1) idTIPO FROM SPC_TIPO_4MPC WHERE clave = :clave");
+            $stmtTipo->execute([':clave' => $clave4M]);
+            $idTipo4M = $stmtTipo->fetchColumn();
+
+            if ($idTipo4M === false) {
+                $conn->rollBack();
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'No está configurado el tipo 4M ' . $clave4M . ' (' . $nombreTipo . ') en SPC_TIPO_4MPC.'
+                ]);
+                exit;
+            }
+
+            /* Un solo PC abierto de este tipo por estación, en cualquier turno.
+               UPDLOCK/HOLDLOCK evita que dos registros simultáneos lo dupliquen. */
+            $stmtAbierto = $conn->prepare("SELECT COUNT(*)
+                                           FROM SPC_PUNTOS_CAMBIO PC WITH (UPDLOCK, HOLDLOCK)
+                                           INNER JOIN SPC_ESTACIONES_PC EPC ON EPC.idPC = PC.idPC
+                                           WHERE EPC.idE = :idEstacion AND PC.fechaHora_fin IS NULL
+                                             AND PC.idTipo4M = :idTipo4M");
+            $stmtAbierto->execute([':idEstacion' => $idEstacion, ':idTipo4M' => $idTipo4M]);
+
+            if ((int) $stmtAbierto->fetchColumn() > 0) {
+                $conn->rollBack();
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'Esta estación ya tiene un punto de cambio de ' . $nombreTipo . ' abierto.'
+                ]);
+                exit;
+            }
+
+            /* Mismo consecutivo que los PC de mano de obra (por línea y mes) para no repetir folios. */
+            $sqlNoControl = "SELECT FORMAT(GETDATE(), 'yyyy/MM') + '/' +
+                                    RIGHT(CAST( ISNULL( MAX( CAST( SUBSTRING(
+                                                            no_controlCambio,
+                                                            LEN(no_controlCambio) - CHARINDEX('/', REVERSE(no_controlCambio)) + 2,
+                                                            LEN(no_controlCambio)
+                                                        ) AS INT ) ), 0 ) + 1 AS VARCHAR), 3 ) AS no_control
+                                        FROM SPC_PUNTOS_CAMBIO WITH (UPDLOCK, HOLDLOCK)
+                                 WHERE codigo_linea = :codigoLinea AND fechaHora_inicio >= DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1)
+                                    AND fechaHora_inicio <  DATEADD(MONTH, 1,
+                                         DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1));";
+            $stmtNoControl = $conn->prepare($sqlNoControl);
+            $stmtNoControl->execute([':codigoLinea' => $codigoLinea]);
+            $noControl = $stmtNoControl->fetchColumn();
+
+            if (!$noControl) {
+                $conn->rollBack();
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'No se pudo generar el No. de Control.'
+                ]);
+                exit;
+            }
+
+            /* motivo y tipo_cambio son propios de mano de obra: quedan en NULL. */
+            $stmtPC = $conn->prepare("INSERT INTO SPC_PUNTOS_CAMBIO (no_controlCambio, fechaHora_inicio, codigo_linea,
+                                                                    estatusPC, turno, nomina, nombre, idTipo4M)
+                                      OUTPUT INSERTED.idPC
+                                      VALUES (:noControl, :fechaInicio, :codigoLinea, '1', :turno, :nomina, :nombre, :idTipo4M)");
+            $stmtPC->execute([
+                ':noControl' => $noControl,
+                ':fechaInicio' => date('Y-m-d H:i:s'),
+                ':codigoLinea' => $codigoLinea,
+                ':turno' => $turno,
+                ':nomina' => $nominaResponsable,
+                ':nombre' => $nombreResponsable,
+                ':idTipo4M' => $idTipo4M
+            ]);
+            $idPC = $stmtPC->fetchColumn();
+            $stmtPC->closeCursor();
+
+            /* El PC 3M aplica solo a la estación donde se registra. */
+            $stmtEPC = $conn->prepare("INSERT INTO SPC_ESTACIONES_PC (idPC, idE) VALUES (:idPC, :idE)");
+            $stmtEPC->execute([':idPC' => $idPC, ':idE' => $idEstacion]);
+
+            $conn->commit();
+
+            echo json_encode([
+                'estatus' => 'ok',
+                'mensaje' => 'Punto de cambio de ' . $nombreTipo . ' registrado correctamente.',
+                'idPC' => (int) $idPC,
+                'no_controlCambio' => $noControl
+            ]);
+        } catch (PDOException $e) {
+            if (isset($conn) && $conn->inTransaction()) {
+                $conn->rollBack();
+            }
+
+            error_log('[operacionesLinea opcion 45] ' . $e->getMessage());
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Error al registrar el punto de cambio de ' . $nombreTipo . '.'
+            ]);
+        }
+}
+
+//Consultar el PC 3M abierto (del tipo indicado) de una estación, con planeación, implementación y evaluaciones
+else
+ if($opcion == '46'){
+        $clave4M = exigirClave4MPost();
+        $nombreTipo = TIPOS_PC_3M[$clave4M];
+        $idEstacion = isset($_POST['idEstacion']) ? trim($_POST['idEstacion']) : '';
+
+        if (!ctype_digit($idEstacion)) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'La estación no es válida.'
+            ]);
+            exit;
+        }
+
+        try {
+            $stmt = $conn->prepare("SELECT TOP (1)
+                                        PC.idPC, PC.no_controlCambio,
+                                        CONVERT(varchar(16), PC.fechaHora_inicio, 120) AS fechaHora_inicio,
+                                        PC.turno, PC.nomina, PC.nombre,
+                                        CASE WHEN PL.idPC IS NULL THEN 0 ELSE 1 END AS planeacion_registrada,
+                                        PL.nombre_producto, PL.detalles_cambio, PL.equipo,
+                                        PL.idTIPO3M, T3.clave AS clave_tipo3m, T3.nombre AS tipo_cambio,
+                                        PL.otro_detalle
+                                    FROM SPC_PUNTOS_CAMBIO PC
+                                    INNER JOIN SPC_ESTACIONES_PC EPC ON EPC.idPC = PC.idPC
+                                    INNER JOIN SPC_TIPO_4MPC T4 ON T4.idTIPO = PC.idTipo4M AND T4.clave = :clave4M
+                                    LEFT JOIN SPC_PLANEACION PL ON PL.idPC = PC.idPC
+                                    LEFT JOIN SPC_TIPO_3M T3 ON T3.idTIPO3M = PL.idTIPO3M
+                                    WHERE EPC.idE = :idEstacion AND PC.fechaHora_fin IS NULL
+                                    ORDER BY PC.fechaHora_inicio DESC, PC.idPC DESC");
+            $stmt->execute([':clave4M' => $clave4M, ':idEstacion' => $idEstacion]);
+            $pcMaquinaria = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
+
+            if ($pcMaquinaria) {
+                /* Implementación (con sus documentos) y evaluaciones del PC. */
+                $pcMaquinaria += consultarImplementacionEvaluacionesPC3M($conn, $pcMaquinaria['idPC']);
+            }
+
+            echo json_encode([
+                'estatus' => 'ok',
+                'data' => $pcMaquinaria ?: null
+            ]);
+        } catch (PDOException $e) {
+            error_log('[operacionesLinea opcion 46] ' . $e->getMessage());
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'No fue posible consultar el punto de cambio de ' . $nombreTipo . '.'
+            ]);
+        }
+}
+
+//Registrar la planeación de un PC 3M (una sola vez por PC)
+else
+ if($opcion == '47'){
+        $clave4M = exigirClave4MPost();
+        $nombreTipo = TIPOS_PC_3M[$clave4M];
+        $idPC = isset($_POST['idPC']) ? trim($_POST['idPC']) : '';
+        $nombreProducto = isset($_POST['nombreProducto']) ? trim($_POST['nombreProducto']) : '';
+        $detallesCambio = isset($_POST['detallesCambio']) ? trim($_POST['detallesCambio']) : '';
+        $equipo = isset($_POST['equipo']) ? trim($_POST['equipo']) : '';
+        $idTipo3M = isset($_POST['idTipo3M']) ? trim($_POST['idTipo3M']) : '';
+        $otroDetalle = isset($_POST['otroDetalle']) ? trim($_POST['otroDetalle']) : '';
+
+        /* Longitudes según SPC_PLANEACION. */
+        if (!ctype_digit($idPC) || !ctype_digit($idTipo3M)
+            || $nombreProducto === '' || mb_strlen($nombreProducto) > 200
+            || $detallesCambio === '' || mb_strlen($detallesCambio) > 1000
+            || $equipo === '' || mb_strlen($equipo) > 200
+            || mb_strlen($otroDetalle) > 500) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'La información de la planeación está incompleta o excede la longitud permitida.'
+            ]);
+            exit;
+        }
+
+        try {
+            /* El detalle solo aplica cuando el tipo de cambio es "OTRO" (por clave). */
+            $stmtTipo = $conn->prepare("SELECT clave FROM SPC_TIPO_3M WHERE idTIPO3M = :idTipo3M");
+            $stmtTipo->execute([':idTipo3M' => $idTipo3M]);
+            $claveTipo3M = $stmtTipo->fetchColumn();
+
+            if ($claveTipo3M === false) {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'El tipo de cambio seleccionado no existe.'
+                ]);
+                exit;
+            }
+
+            $esOtro = trim((string) $claveTipo3M) === CLAVE_3M_OTRO;
+
+            if ($esOtro && $otroDetalle === '') {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'Describe el cambio cuando el tipo de cambio es "Otro".'
+                ]);
+                exit;
+            }
+
+            if (!$esOtro) {
+                $otroDetalle = null;
+            }
+
+            $conn->beginTransaction();
+
+            /* El PC debe existir, ser del tipo indicado y seguir abierto. */
+            $stmtPC = $conn->prepare("SELECT COUNT(*)
+                                      FROM SPC_PUNTOS_CAMBIO PC WITH (UPDLOCK, HOLDLOCK)
+                                      INNER JOIN SPC_TIPO_4MPC T4 ON T4.idTIPO = PC.idTipo4M AND T4.clave = :clave4M
+                                      WHERE PC.idPC = :idPC AND PC.fechaHora_fin IS NULL");
+            $stmtPC->execute([':clave4M' => $clave4M, ':idPC' => $idPC]);
+
+            if ((int) $stmtPC->fetchColumn() === 0) {
+                $conn->rollBack();
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'El punto de cambio de ' . $nombreTipo . ' no existe o ya fue cerrado.'
+                ]);
+                exit;
+            }
+
+            /* La PK de SPC_PLANEACION permite una sola planeación por PC. */
+            $stmtExiste = $conn->prepare("SELECT COUNT(*) FROM SPC_PLANEACION WITH (UPDLOCK, HOLDLOCK) WHERE idPC = :idPC");
+            $stmtExiste->execute([':idPC' => $idPC]);
+
+            if ((int) $stmtExiste->fetchColumn() > 0) {
+                $conn->rollBack();
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'La planeación de este punto de cambio ya fue registrada.'
+                ]);
+                exit;
+            }
+
+            $stmtInsert = $conn->prepare("INSERT INTO SPC_PLANEACION (idPC, nombre_producto, detalles_cambio, equipo,
+                                                                     idTIPO3M, otro_detalle)
+                                          VALUES (:idPC, :nombreProducto, :detallesCambio, :equipo, :idTipo3M, :otroDetalle)");
+            $stmtInsert->execute([
+                ':idPC' => $idPC,
+                ':nombreProducto' => $nombreProducto,
+                ':detallesCambio' => $detallesCambio,
+                ':equipo' => $equipo,
+                ':idTipo3M' => $idTipo3M,
+                ':otroDetalle' => $otroDetalle
+            ]);
+
+            $conn->commit();
+
+            echo json_encode([
+                'estatus' => 'ok',
+                'mensaje' => 'Planeación registrada correctamente.'
+            ]);
+        } catch (PDOException $e) {
+            if (isset($conn) && $conn->inTransaction()) {
+                $conn->rollBack();
+            }
+
+            error_log('[operacionesLinea opcion 47] ' . $e->getMessage());
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Error al registrar la planeación.'
+            ]);
+        }
+}
+
+//Cerrar un PC 3M (requiere planeación, implementación y 3 evaluaciones; no modifica al personal)
+else
+ if($opcion == '48'){
+        $clave4M = exigirClave4MPost();
+        $nombreTipo = TIPOS_PC_3M[$clave4M];
+        $idPC = isset($_POST['idPC']) ? trim($_POST['idPC']) : '';
+        $fechaCierreTexto = isset($_POST['fechaCierre']) ? trim($_POST['fechaCierre']) : '';
+        $comentarios = isset($_POST['comentarios']) ? trim($_POST['comentarios']) : '';
+
+        /* La fecha llega del input datetime-local (AAAA-MM-DDTHH:MM). */
+        $fechaCierre = DateTime::createFromFormat('Y-m-d\TH:i', $fechaCierreTexto);
+
+        if (!ctype_digit($idPC) || !$fechaCierre || $fechaCierre->format('Y-m-d\TH:i') !== $fechaCierreTexto
+            || mb_strlen($comentarios) > 1000) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Faltan datos obligatorios o no son válidos.'
+            ]);
+            exit;
+        }
+
+        /* Tolerancia de 5 minutos por diferencias entre el reloj del equipo y el del servidor. */
+        if ($fechaCierre > new DateTime('+5 minutes')) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'La fecha de cierre no puede ser una fecha futura.'
+            ]);
+            exit;
+        }
+
+        try {
+            $conn->beginTransaction();
+
+            /* El PC debe ser del tipo indicado, estar abierto y tener el flujo completo:
+               planeación, implementación y las evaluaciones requeridas. */
+            $stmtPC = $conn->prepare("SELECT CONVERT(varchar(16), PC.fechaHora_inicio, 120) AS fechaHora_inicio,
+                                             CASE WHEN PL.idPC IS NULL THEN 0 ELSE 1 END AS planeacion_registrada,
+                                             CASE WHEN IM.idPC IS NULL THEN 0 ELSE 1 END AS implementacion_registrada,
+                                             (SELECT COUNT(*) FROM SPC_EVALUACIONPC_3M EV WHERE EV.idPC = PC.idPC) AS total_evaluaciones
+                                      FROM SPC_PUNTOS_CAMBIO PC WITH (UPDLOCK, HOLDLOCK)
+                                      INNER JOIN SPC_TIPO_4MPC T4 ON T4.idTIPO = PC.idTipo4M AND T4.clave = :clave4M
+                                      LEFT JOIN SPC_PLANEACION PL ON PL.idPC = PC.idPC
+                                      LEFT JOIN SPC_IMPLEMENTACION IM ON IM.idPC = PC.idPC
+                                      WHERE PC.idPC = :idPC AND PC.fechaHora_fin IS NULL");
+            $stmtPC->execute([':clave4M' => $clave4M, ':idPC' => $idPC]);
+            $pc = $stmtPC->fetch(PDO::FETCH_ASSOC);
+            $stmtPC->closeCursor();
+
+            if (!$pc) {
+                $conn->rollBack();
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'El punto de cambio de ' . $nombreTipo . ' no existe o ya fue cerrado.'
+                ]);
+                exit;
+            }
+
+            if ((int) $pc['planeacion_registrada'] !== 1) {
+                $conn->rollBack();
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'Registra la planeación antes de cerrar el punto de cambio.'
+                ]);
+                exit;
+            }
+
+            if ((int) $pc['implementacion_registrada'] !== 1) {
+                $conn->rollBack();
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'Registra la implementación antes de cerrar el punto de cambio.'
+                ]);
+                exit;
+            }
+
+            if ((int) $pc['total_evaluaciones'] < EVALUACIONES_3M_REQUERIDAS) {
+                $conn->rollBack();
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'Registra las ' . EVALUACIONES_3M_REQUERIDAS . ' evaluaciones antes de cerrar el punto de cambio.'
+                ]);
+                exit;
+            }
+
+            if ($fechaCierre < new DateTime($pc['fechaHora_inicio'])) {
+                $conn->rollBack();
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'La fecha de cierre no puede ser anterior al inicio del punto de cambio.'
+                ]);
+                exit;
+            }
+
+            $fechaCierreSql = $fechaCierre->format('Y-m-d H:i:00');
+
+            $stmtUpdate = $conn->prepare("UPDATE SPC_PUNTOS_CAMBIO
+                                          SET fechaHora_fin = :fechaCierre, estatusPC = '3'
+                                          WHERE idPC = :idPC AND fechaHora_fin IS NULL");
+            $stmtUpdate->execute([':fechaCierre' => $fechaCierreSql, ':idPC' => $idPC]);
+
+            $stmtCierre = $conn->prepare("INSERT INTO SPC_CIERRE_PC (idPC, fechaCierre, comentarios)
+                                          VALUES (:idPC, :fechaCierre, :comentarios)");
+            $stmtCierre->execute([
+                ':idPC' => $idPC,
+                ':fechaCierre' => $fechaCierreSql,
+                ':comentarios' => $comentarios !== '' ? $comentarios : null
+            ]);
+
+            $conn->commit();
+
+            echo json_encode([
+                'estatus' => 'ok',
+                'mensaje' => 'Punto de cambio de ' . $nombreTipo . ' cerrado correctamente.'
+            ]);
+        } catch (PDOException $e) {
+            if (isset($conn) && $conn->inTransaction()) {
+                $conn->rollBack();
+            }
+
+            error_log('[operacionesLinea opcion 48] ' . $e->getMessage());
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Error al cerrar el punto de cambio de ' . $nombreTipo . '.'
+            ]);
+        }
+}
+
+//Catálogo de opciones de "Verificación de documentos" para la implementación (SPC_VERIFICACION_DOCUMENTOS)
+else
+ if($opcion == '49'){
+        try {
+            $stmt = $conn->prepare("SELECT idVerificacion, clave, nombre, descripcion
+                                    FROM SPC_VERIFICACION_DOCUMENTOS
+                                    ORDER BY idVerificacion");
+            $stmt->execute();
+
+            echo json_encode([
+                'estatus' => 'ok',
+                'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)
+            ]);
+        } catch (PDOException $e) {
+            error_log('[operacionesLinea opcion 49] ' . $e->getMessage());
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'No fue posible consultar las opciones de verificación de documentos.'
+            ]);
+        }
+}
+
+//Registrar la implementación de un PC 3M (una sola vez; requiere la planeación)
+else
+ if($opcion == '50'){
+        $clave4M = exigirClave4MPost();
+        $nombreTipo = TIPOS_PC_3M[$clave4M];
+        $idPC = isset($_POST['idPC']) ? trim($_POST['idPC']) : '';
+        $nominaResponsable = isset($_POST['nominaResponsable']) ? trim($_POST['nominaResponsable']) : '';
+        $fechaCompromisoTexto = isset($_POST['fechaCompromiso']) ? trim($_POST['fechaCompromiso']) : '';
+        $otroDetalle = isset($_POST['otroDetalle']) ? trim($_POST['otroDetalle']) : '';
+        $documentosRecibidos = isset($_POST['documentos']) ? json_decode((string) $_POST['documentos'], true) : null;
+
+        /* La fecha llega del input date (AAAA-MM-DD). */
+        $fechaCompromiso = DateTime::createFromFormat('!Y-m-d', $fechaCompromisoTexto);
+
+        if (!ctype_digit($idPC) || !ctype_digit($nominaResponsable)
+            || !$fechaCompromiso || $fechaCompromiso->format('Y-m-d') !== $fechaCompromisoTexto
+            || mb_strlen($otroDetalle) > 500) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Faltan datos obligatorios o no son válidos.'
+            ]);
+            exit;
+        }
+
+        /* Opciones de verificación: lista de ids enteros sin repetir. */
+        $idsDocumentos = [];
+
+        if (is_array($documentosRecibidos)) {
+            foreach ($documentosRecibidos as $idDocumento) {
+                if (!is_scalar($idDocumento) || !ctype_digit((string) $idDocumento)) {
+                    $idsDocumentos = [];
+                    break;
+                }
+
+                $idsDocumentos[] = (int) $idDocumento;
+            }
+        }
+
+        $idsDocumentos = array_values(array_unique($idsDocumentos));
+
+        if (!$idsDocumentos || count($idsDocumentos) > 20) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Selecciona al menos una opción de verificación de documentos.'
+            ]);
+            exit;
+        }
+
+        try {
+            /* Las opciones deben existir en el catálogo; sus claves definen las reglas. */
+            $marcadores = [];
+            $parametrosDocs = [];
+
+            foreach ($idsDocumentos as $i => $idDocumento) {
+                $marcadores[] = ':doc' . $i;
+                $parametrosDocs[':doc' . $i] = $idDocumento;
+            }
+
+            $stmtCatalogo = $conn->prepare("SELECT idVerificacion, clave FROM SPC_VERIFICACION_DOCUMENTOS
+                                            WHERE idVerificacion IN (" . implode(', ', $marcadores) . ")");
+            $stmtCatalogo->execute($parametrosDocs);
+            $clavesDocumentos = array_map('trim', $stmtCatalogo->fetchAll(PDO::FETCH_KEY_PAIR));
+
+            if (count($clavesDocumentos) !== count($idsDocumentos)) {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'Una de las opciones de verificación ya no existe.'
+                ]);
+                exit;
+            }
+
+            if (in_array(CLAVE_VERIF_SIN_PROBLEMA, $clavesDocumentos, true) && count($clavesDocumentos) > 1) {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => '"Sin problema" no puede marcarse junto con otras opciones.'
+                ]);
+                exit;
+            }
+
+            $tieneOtro = in_array(CLAVE_VERIF_OTRO, $clavesDocumentos, true);
+
+            if ($tieneOtro && $otroDetalle === '') {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'Describe el documento cuando se marca la opción "Otro".'
+                ]);
+                exit;
+            }
+
+            if (!$tieneOtro) {
+                $otroDetalle = null;
+            }
+
+            /* El nombre del responsable se toma del catálogo de empleados, no del formulario. */
+            include('./conexionEmpleado.php');
+            $stmtEmpleado = $connE->prepare("SELECT nombre FROM empleado_mst WHERE No_Nomina = :nomina");
+            $stmtEmpleado->execute([':nomina' => $nominaResponsable]);
+            $nombreResponsable = $stmtEmpleado->fetchColumn();
+            $stmtEmpleado->closeCursor();
+
+            if ($nombreResponsable === false) {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'La nómina del responsable no existe en el catálogo de empleados.'
+                ]);
+                exit;
+            }
+
+            $conn->beginTransaction();
+
+            /* El PC debe ser del tipo indicado, estar abierto y tener su planeación. */
+            $stmtPC = $conn->prepare("SELECT CONVERT(varchar(10), PC.fechaHora_inicio, 23) AS fecha_inicio,
+                                             CASE WHEN PL.idPC IS NULL THEN 0 ELSE 1 END AS planeacion_registrada
+                                      FROM SPC_PUNTOS_CAMBIO PC WITH (UPDLOCK, HOLDLOCK)
+                                      INNER JOIN SPC_TIPO_4MPC T4 ON T4.idTIPO = PC.idTipo4M AND T4.clave = :clave4M
+                                      LEFT JOIN SPC_PLANEACION PL ON PL.idPC = PC.idPC
+                                      WHERE PC.idPC = :idPC AND PC.fechaHora_fin IS NULL");
+            $stmtPC->execute([':clave4M' => $clave4M, ':idPC' => $idPC]);
+            $pc = $stmtPC->fetch(PDO::FETCH_ASSOC);
+            $stmtPC->closeCursor();
+
+            if (!$pc) {
+                $conn->rollBack();
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'El punto de cambio de ' . $nombreTipo . ' no existe o ya fue cerrado.'
+                ]);
+                exit;
+            }
+
+            if ((int) $pc['planeacion_registrada'] !== 1) {
+                $conn->rollBack();
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'Registra la planeación antes de la implementación.'
+                ]);
+                exit;
+            }
+
+            if ($fechaCompromisoTexto < $pc['fecha_inicio']) {
+                $conn->rollBack();
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'La fecha compromiso no puede ser anterior al inicio del punto de cambio.'
+                ]);
+                exit;
+            }
+
+            /* La PK de SPC_IMPLEMENTACION permite una sola implementación por PC. */
+            $stmtExiste = $conn->prepare("SELECT COUNT(*) FROM SPC_IMPLEMENTACION WITH (UPDLOCK, HOLDLOCK) WHERE idPC = :idPC");
+            $stmtExiste->execute([':idPC' => $idPC]);
+
+            if ((int) $stmtExiste->fetchColumn() > 0) {
+                $conn->rollBack();
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'La implementación de este punto de cambio ya fue registrada.'
+                ]);
+                exit;
+            }
+
+            $stmtImpl = $conn->prepare("INSERT INTO SPC_IMPLEMENTACION (idPC, nomina_responsable, nombre_responsable,
+                                                                       fecha_compromiso, otro_detalle)
+                                        VALUES (:idPC, :nomina, :nombre, :fechaCompromiso, :otroDetalle)");
+            $stmtImpl->execute([
+                ':idPC' => $idPC,
+                ':nomina' => $nominaResponsable,
+                ':nombre' => $nombreResponsable,
+                ':fechaCompromiso' => $fechaCompromisoTexto,
+                ':otroDetalle' => $otroDetalle
+            ]);
+
+            /* Una fila por cada opción de verificación marcada. */
+            $stmtDoc = $conn->prepare("INSERT INTO SPC_IMPLEMENTACION_DOCUMENTOS (idPC, idVerificacion)
+                                       VALUES (:idPC, :idVerificacion)");
+
+            foreach ($idsDocumentos as $idDocumento) {
+                $stmtDoc->execute([':idPC' => $idPC, ':idVerificacion' => $idDocumento]);
+            }
+
+            $conn->commit();
+
+            echo json_encode([
+                'estatus' => 'ok',
+                'mensaje' => 'Implementación registrada correctamente.'
+            ]);
+        } catch (PDOException $e) {
+            if (isset($conn) && $conn->inTransaction()) {
+                $conn->rollBack();
+            }
+
+            error_log('[operacionesLinea opcion 50] ' . $e->getMessage());
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Error al registrar la implementación.'
+            ]);
+        }
+}
+
+//Registrar la evaluación del día siguiente de un PC 3M (una por día; requiere la implementación)
+else
+ if($opcion == '51'){
+        $clave4M = exigirClave4MPost();
+        $nombreTipo = TIPOS_PC_3M[$clave4M];
+        $idPC = isset($_POST['idPC']) ? trim($_POST['idPC']) : '';
+        $comentarios = isset($_POST['comentarios']) ? trim($_POST['comentarios']) : '';
+        $metricas = [];
+
+        /* Cada métrica es 1 = OK o 0 = NG. */
+        for ($i = 1; $i <= 5; $i++) {
+            $valor = isset($_POST['metrica' . $i]) ? trim($_POST['metrica' . $i]) : '';
+            $metricas[$i] = in_array($valor, ['0', '1'], true) ? (int) $valor : null;
+        }
+
+        if (!ctype_digit($idPC) || in_array(null, $metricas, true) || mb_strlen($comentarios) > 1000) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Evalúa todos los puntos con OK o NG.'
+            ]);
+            exit;
+        }
+
+        try {
+            $conn->beginTransaction();
+
+            /* El PC debe ser del tipo indicado, estar abierto y tener su implementación. */
+            $stmtPC = $conn->prepare("SELECT CASE WHEN IM.idPC IS NULL THEN 0 ELSE 1 END AS implementacion_registrada
+                                      FROM SPC_PUNTOS_CAMBIO PC WITH (UPDLOCK, HOLDLOCK)
+                                      INNER JOIN SPC_TIPO_4MPC T4 ON T4.idTIPO = PC.idTipo4M AND T4.clave = :clave4M
+                                      LEFT JOIN SPC_IMPLEMENTACION IM ON IM.idPC = PC.idPC
+                                      WHERE PC.idPC = :idPC AND PC.fechaHora_fin IS NULL");
+            $stmtPC->execute([':clave4M' => $clave4M, ':idPC' => $idPC]);
+            $pc = $stmtPC->fetch(PDO::FETCH_ASSOC);
+            $stmtPC->closeCursor();
+
+            if (!$pc) {
+                $conn->rollBack();
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'El punto de cambio de ' . $nombreTipo . ' no existe o ya fue cerrado.'
+                ]);
+                exit;
+            }
+
+            if ((int) $pc['implementacion_registrada'] !== 1) {
+                $conn->rollBack();
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'Registra la implementación antes de la evaluación.'
+                ]);
+                exit;
+            }
+
+            /* El día lo calcula el servidor por orden (1, 2 y 3), como en mano de obra. */
+            $stmtTotal = $conn->prepare("SELECT COUNT(*) FROM SPC_EVALUACIONPC_3M WITH (UPDLOCK, HOLDLOCK) WHERE idPC = :idPC");
+            $stmtTotal->execute([':idPC' => $idPC]);
+            $totalEvaluaciones = (int) $stmtTotal->fetchColumn();
+
+            if ($totalEvaluaciones >= EVALUACIONES_3M_REQUERIDAS) {
+                $conn->rollBack();
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'Las ' . EVALUACIONES_3M_REQUERIDAS . ' evaluaciones de este punto de cambio ya fueron registradas.'
+                ]);
+                exit;
+            }
+
+            $numeroDia = $totalEvaluaciones + 1;
+
+            $stmtEval = $conn->prepare("INSERT INTO SPC_EVALUACIONPC_3M (idPC, numeroDia, metrica1, metrica2,
+                                                                        metrica3, metrica4, metrica5, comentarios)
+                                        VALUES (:idPC, :numeroDia, :m1, :m2, :m3, :m4, :m5, :comentarios)");
+            $stmtEval->execute([
+                ':idPC' => $idPC,
+                ':numeroDia' => $numeroDia,
+                ':m1' => $metricas[1],
+                ':m2' => $metricas[2],
+                ':m3' => $metricas[3],
+                ':m4' => $metricas[4],
+                ':m5' => $metricas[5],
+                ':comentarios' => $comentarios !== '' ? $comentarios : null
+            ]);
+
+            $conn->commit();
+
+            echo json_encode([
+                'estatus' => 'ok',
+                'mensaje' => 'Evaluación del día ' . $numeroDia . ' registrada correctamente.'
+            ]);
+        } catch (PDOException $e) {
+            if (isset($conn) && $conn->inTransaction()) {
+                $conn->rollBack();
+            }
+
+            error_log('[operacionesLinea opcion 51] ' . $e->getMessage());
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'Error al registrar la evaluación.'
+            ]);
+        }
+}
+
+//Detalle de un PC 3M (maquinaria, materia prima o método) para el listado de puntos de cambio:
+//registro, estaciones, planeación, implementación, evaluaciones y cierre (solo lectura)
+else
+ if($opcion == '52'){
+        $idPC = isset($_POST['idPC']) ? trim($_POST['idPC']) : '';
+
+        if (!ctype_digit($idPC)) {
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'El punto de cambio no es válido.'
+            ]);
+            exit;
+        }
+
+        try {
+            $parametrosPC = [':idPC' => $idPC];
+            $clavesPC3M = "'" . implode("','", array_keys(TIPOS_PC_3M)) . "'";
+
+            /* Datos del registro; solo responde PC de los tipos 3M (TIPOS_PC_3M). */
+            $stmtPC = $conn->prepare("SELECT PC.idPC, PC.no_controlCambio,
+                                             LTRIM(RTRIM(T4.clave)) AS clave4M, T4.nombre AS tipo4M,
+                                             CONVERT(varchar(16), PC.fechaHora_inicio, 120) AS fechaHora_inicio,
+                                             CONVERT(varchar(16), PC.fechaHora_fin, 120) AS fechaHora_fin,
+                                             PC.turno, PC.estatusPC, PC.nomina, PC.nombre,
+                                             PC.codigo_linea, L.nombre_linea
+                                      FROM SPC_PUNTOS_CAMBIO PC
+                                      INNER JOIN SPC_TIPO_4MPC T4 ON T4.idTIPO = PC.idTipo4M AND T4.clave IN ($clavesPC3M)
+                                      LEFT JOIN SPC_LINEAS L ON L.codigo_linea = PC.codigo_linea
+                                      WHERE PC.idPC = :idPC");
+            $stmtPC->execute($parametrosPC);
+            $pc = $stmtPC->fetch(PDO::FETCH_ASSOC);
+            $stmtPC->closeCursor();
+
+            if (!$pc) {
+                echo json_encode([
+                    'estatus' => 'error',
+                    'mensaje' => 'No se encontró el punto de cambio de maquinaria, materia prima o método.'
+                ]);
+                exit;
+            }
+
+            /* Estación(es) donde aplica el PC */
+            $stmtEstaciones = $conn->prepare("SELECT EPC.idE, E.nombre_estacion
+                                              FROM SPC_ESTACIONES_PC EPC
+                                              LEFT JOIN SPC_ESTACIONES E ON E.id_estacion = EPC.idE
+                                              WHERE EPC.idPC = :idPC
+                                              ORDER BY E.nombre_estacion");
+            $stmtEstaciones->execute($parametrosPC);
+            $estaciones = $stmtEstaciones->fetchAll(PDO::FETCH_ASSOC);
+
+            /* Planeación con el tipo de cambio de SPC_TIPO_3M */
+            $stmtPlaneacion = $conn->prepare("SELECT PL.nombre_producto, PL.detalles_cambio, PL.equipo,
+                                                     PL.idTIPO3M, LTRIM(RTRIM(T3.clave)) AS clave_tipo3m,
+                                                     T3.nombre AS tipo_cambio, PL.otro_detalle
+                                              FROM SPC_PLANEACION PL
+                                              LEFT JOIN SPC_TIPO_3M T3 ON T3.idTIPO3M = PL.idTIPO3M
+                                              WHERE PL.idPC = :idPC");
+            $stmtPlaneacion->execute($parametrosPC);
+            $planeacion = $stmtPlaneacion->fetch(PDO::FETCH_ASSOC) ?: null;
+            $stmtPlaneacion->closeCursor();
+
+            /* Cierre (el más reciente si hubiera más de uno) */
+            $stmtCierre = $conn->prepare("SELECT TOP (1) CONVERT(varchar(16), fechaCierre, 120) AS fechaCierre, comentarios
+                                          FROM SPC_CIERRE_PC WHERE idPC = :idPC
+                                          ORDER BY fechaCierre DESC");
+            $stmtCierre->execute($parametrosPC);
+            $cierre = $stmtCierre->fetch(PDO::FETCH_ASSOC) ?: null;
+            $stmtCierre->closeCursor();
+
+            echo json_encode([
+                'estatus' => 'ok',
+                'data' => [
+                    'pc' => $pc,
+                    'estaciones' => $estaciones,
+                    'planeacion' => $planeacion,
+                    'cierre' => $cierre
+                ] + consultarImplementacionEvaluacionesPC3M($conn, $idPC)
+            ]);
+        } catch (PDOException $e) {
+            error_log('[operacionesLinea opcion 52] ' . $e->getMessage());
+            echo json_encode([
+                'estatus' => 'error',
+                'mensaje' => 'No fue posible consultar el detalle del punto de cambio.'
+            ]);
         }
 }
 ?>
