@@ -1,0 +1,2242 @@
+/* =========================================================
+   Vista de reportes de anormalidades
+   Todos los estilos están limitados a #reportesAnormalidadesView
+   para evitar cambios visuales en otras pantallas de la aplicación.
+   ========================================================= */
+
+#reportesAnormalidadesView {
+  /* Colores semánticos del módulo, derivados de la paleta global. */
+  --ra-critica: var(--danger, #dc3545);
+  --ra-nocritica: var(--accent-cyan, #3cb6ca);
+  --ra-abierta: var(--warning, #d97706);
+  --ra-cerrada: var(--success, #16856b);
+  --ra-sensor: var(--primary-light, #4b7ff0);
+  --ra-limpio: var(--accent-cyan, #3cb6ca);
+  --ra-neutro: #9aa8bf;
+  /* Línea de gran total: tono neutro oscuro para distinguirla de las series. */
+  --ra-total: var(--text-main, #111827);
+
+  /*
+   * Gama de las series del histórico: azules de la paleta y morados que
+   * continúan la misma familia fría, del más claro al más intenso.
+   */
+  --ra-serie-1: var(--primary-light, #4b7ff0);
+  --ra-serie-2: var(--primary-dark, #27428f);
+  --ra-serie-3: #7c5cf0;
+  --ra-serie-4: var(--accent-purple, #5225c5);
+  --ra-serie-5: #9d7bf5;
+  --ra-serie-6: var(--primary, #395ca8);
+  --ra-serie-7: var(--accent-cyan, #3cb6ca);
+
+  display: grid;
+  gap: 20px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding-bottom: 62px;
+  color: var(--text-main);
+}
+
+/* Impide que padding, bordes o contenido dinámico amplíen la vista. */
+#reportesAnormalidadesView,
+#reportesAnormalidadesView *,
+#reportesAnormalidadesView *::before,
+#reportesAnormalidadesView *::after {
+  box-sizing: border-box;
+}
+
+/* ============================ Encabezado ============================ */
+
+#reportesAnormalidadesView .ra-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 24px 26px;
+  border-radius: var(--radius-lg, 22px);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 55%, var(--primary-light) 100%);
+  box-shadow: var(--shadow-md, 0 14px 36px rgba(39, 66, 143, 0.12));
+  color: #ffffff;
+}
+
+#reportesAnormalidadesView .ra-hero-copy {
+  min-width: 0;
+}
+
+#reportesAnormalidadesView .ra-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  margin-bottom: 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--text-on-blue, #c9d7f2);
+}
+
+#reportesAnormalidadesView .ra-hero h2 {
+  margin: 0 0 6px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+#reportesAnormalidadesView .ra-hero p {
+  margin: 0;
+  max-width: 60ch;
+  font-size: 0.95rem;
+  color: var(--text-on-blue, #c9d7f2);
+}
+
+#reportesAnormalidadesView .ra-hero-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md, 16px);
+  background: rgba(255, 255, 255, 0.14);
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+
+#reportesAnormalidadesView .ra-hero-badge strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+#reportesAnormalidadesView .ra-hero-badge small {
+  color: var(--text-on-blue, #c9d7f2);
+}
+
+/* ============================== Filtros ============================== */
+
+#reportesAnormalidadesView .ra-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  align-items: end;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 16px);
+  background: var(--surface, #ffffff);
+  box-shadow: var(--shadow-sm, 0 4px 14px rgba(39, 66, 143, 0.08));
+}
+
+/*
+ * La barra principal permanece debajo del encabezado global cuando alcanza
+ * la parte superior. El alto máximo permite usarla en pantallas pequeñas.
+ */
+#reportesAnormalidadesView .ra-main-filters {
+  position: sticky;
+  top: 104px;
+  z-index: 14;
+  max-height: calc(100vh - 116px);
+  overflow-y: auto;
+  transform-origin: center top;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+#reportesAnormalidadesView .ra-main-filters.is-opening,
+#reportesAnormalidadesView .ra-main-filters.is-closing {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.99);
+}
+
+#reportesAnormalidadesView .ra-filter-toggle-close {
+  width: 36px;
+  height: 36px;
+  margin-left: auto;
+  display: grid;
+  flex: 0 0 36px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  background: #ffffff;
+  cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease,
+    background-color 0.18s ease, transform 0.18s ease;
+}
+
+#reportesAnormalidadesView .ra-filter-toggle-close:hover,
+#reportesAnormalidadesView .ra-filter-toggle-close:focus-visible {
+  color: var(--primary-dark);
+  border-color: var(--primary-light);
+  background: var(--surface-blue, #eef4ff);
+  transform: translateY(-1px);
+}
+
+#reportesAnormalidadesView .ra-filter-floating-trigger {
+  position: fixed;
+  top: 108px;
+  right: clamp(18px, 3vw, 34px);
+  z-index: 14;
+  min-height: 44px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 999px;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary-light));
+  box-shadow: 0 10px 26px rgba(39, 66, 143, 0.28);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease,
+    filter 0.18s ease;
+}
+
+#reportesAnormalidadesView .ra-filter-floating-trigger[hidden] {
+  display: none !important;
+}
+
+#reportesAnormalidadesView .ra-filter-floating-trigger:hover,
+#reportesAnormalidadesView .ra-filter-floating-trigger:focus-visible {
+  color: #ffffff;
+  filter: brightness(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(39, 66, 143, 0.34);
+}
+
+#reportesAnormalidadesView .ra-filter-intro {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  grid-column: 1 / -1;
+}
+
+#reportesAnormalidadesView .ra-filter-icon {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  box-shadow: 0 7px 16px rgba(39, 66, 143, 0.18);
+}
+
+#reportesAnormalidadesView .ra-filter-intro strong {
+  display: block;
+  font-size: 0.98rem;
+}
+
+#reportesAnormalidadesView .ra-filter-intro small {
+  color: var(--text-secondary);
+}
+
+#reportesAnormalidadesView .ra-filter-field label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+#reportesAnormalidadesView .ra-filter-field {
+  min-width: 0;
+  max-width: 100%;
+}
+
+#reportesAnormalidadesView .ra-filter-field .form-control,
+#reportesAnormalidadesView .ra-filter-field .form-select {
+  width: 100%;
+  max-width: 100%;
+  border-radius: var(--radius-sm, 10px);
+  border-color: var(--border);
+  font-size: 0.9rem;
+}
+
+#reportesAnormalidadesView .ra-filter-field .form-control:focus,
+#reportesAnormalidadesView .ra-filter-field .form-select:focus {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 0.2rem var(--focus-border, #c7d8ff);
+}
+
+#reportesAnormalidadesView .ra-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: var(--radius-sm, 10px);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary-light));
+  box-shadow: 0 8px 18px rgba(39, 66, 143, 0.22);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+#reportesAnormalidadesView .ra-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow: 0 11px 22px rgba(39, 66, 143, 0.26);
+}
+
+#reportesAnormalidadesView .ra-btn:active {
+  transform: translateY(0);
+}
+
+#reportesAnormalidadesView .ra-btn-light {
+  color: var(--primary-dark);
+  border: 1px solid var(--border);
+  background: var(--surface-blue, #eef4ff);
+  box-shadow: none;
+}
+
+#reportesAnormalidadesView .ra-btn-light:hover {
+  box-shadow: var(--shadow-sm, 0 4px 14px rgba(39, 66, 143, 0.08));
+}
+
+/* Los dos botones del filtro comparten una sola celda de la rejilla. */
+#reportesAnormalidadesView .ra-filter-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#reportesAnormalidadesView .ra-filter-acciones .ra-btn {
+  flex: 1 1 auto;
+  padding: 0 14px;
+}
+
+/* Selector múltiple compacto para los estatus del reporte detallado. */
+#reportesAnormalidadesView .ra-report-status-field {
+  grid-column: 1 / -1;
+}
+
+#reportesAnormalidadesView .ra-filter-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+#reportesAnormalidadesView .ra-report-status-options,
+#reportesAnormalidadesView .ra-report-status-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#reportesAnormalidadesView .ra-filter-field label.ra-report-status-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  margin: 0;
+  padding: 7px 11px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  background: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease,
+    color 0.18s ease;
+}
+
+#reportesAnormalidadesView .ra-filter-field label.ra-report-status-option:hover {
+  border-color: var(--primary-light);
+  background: var(--surface-blue, #eef4ff);
+}
+
+#reportesAnormalidadesView .ra-filter-field label.ra-report-status-option:has(input:checked) {
+  border-color: var(--primary-light);
+  color: var(--primary-dark);
+  background: var(--surface-blue, #eef4ff);
+}
+
+#reportesAnormalidadesView .ra-report-status-option input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--primary);
+}
+
+#reportesAnormalidadesView .ra-report-filter-actions {
+  align-items: flex-end;
+}
+
+#reportesAnormalidadesView .ra-filter-acciones .ra-btn.ra-report-clear-btn {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  padding: 0;
+  border-radius: 11px;
+  font-size: 1rem;
+}
+
+/* =============================== KPIs =============================== */
+
+#reportesAnormalidadesView .ra-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 14px;
+}
+
+#reportesAnormalidadesView .ra-kpi {
+  --ra-kpi-accent: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--ra-kpi-accent);
+  border-radius: var(--radius-md, 16px);
+  background: linear-gradient(135deg, var(--surface-blue, #eef4ff) 0%, #ffffff 70%);
+  box-shadow: var(--shadow-sm, 0 4px 14px rgba(39, 66, 143, 0.08));
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+#reportesAnormalidadesView .ra-kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md, 0 14px 36px rgba(39, 66, 143, 0.12));
+}
+
+#reportesAnormalidadesView .ra-kpi-critica { --ra-kpi-accent: var(--ra-critica); }
+#reportesAnormalidadesView .ra-kpi-abierta { --ra-kpi-accent: var(--ra-abierta); }
+#reportesAnormalidadesView .ra-kpi-cerrada { --ra-kpi-accent: var(--ra-cerrada); }
+
+#reportesAnormalidadesView .ra-kpi-icon {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  display: grid;
+  place-items: center;
+  font-size: 1.25rem;
+  color: #ffffff;
+  border-radius: 14px;
+  background: var(--ra-kpi-accent);
+  box-shadow: 0 8px 18px rgba(17, 24, 39, 0.14);
+}
+
+#reportesAnormalidadesView .ra-kpi-copy {
+  min-width: 0;
+}
+
+#reportesAnormalidadesView .ra-kpi-copy span {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+#reportesAnormalidadesView .ra-kpi-copy strong {
+  display: block;
+  font-size: 1.55rem;
+  line-height: 1.15;
+  color: var(--text-main);
+}
+
+#reportesAnormalidadesView .ra-kpi-copy small {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+/* ============================= Pestañas ============================= */
+
+#reportesAnormalidadesView .ra-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 16px);
+  background: var(--surface-soft, #f5f7fb);
+}
+
+#reportesAnormalidadesView .ra-tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 200px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: var(--radius-sm, 10px);
+  text-align: left;
+  background: transparent;
+  color: var(--text-secondary);
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+#reportesAnormalidadesView .ra-tab i {
+  font-size: 1.15rem;
+}
+
+#reportesAnormalidadesView .ra-tab strong {
+  display: block;
+  font-size: 0.94rem;
+  line-height: 1.2;
+  color: inherit;
+}
+
+#reportesAnormalidadesView .ra-tab small {
+  font-size: 0.76rem;
+  opacity: 0.85;
+}
+
+#reportesAnormalidadesView .ra-tab:hover {
+  background: rgba(75, 127, 240, 0.1);
+  color: var(--primary-dark);
+}
+
+#reportesAnormalidadesView .ra-tab.is-active {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary-light));
+  box-shadow: 0 10px 22px rgba(39, 66, 143, 0.24);
+}
+
+#reportesAnormalidadesView .ra-tab.is-active small {
+  color: var(--text-on-blue, #c9d7f2);
+}
+
+#reportesAnormalidadesView .ra-panel-group[hidden] {
+  display: none;
+}
+
+#reportesAnormalidadesView .ra-panel-group {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+  animation: raFadeIn 0.28s ease;
+}
+
+@keyframes raFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ====================== Tarjetas / contenedores ====================== */
+
+#reportesAnormalidadesView .ra-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: 18px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+#reportesAnormalidadesView .ra-grid-wide {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 18px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/*
+ * min-width: 0 evita que un contenido ancho (una gráfica o una tabla) estire la
+ * tarjeta: sin esto los elementos de grid y flex crecen hasta el tamaño de su
+ * contenido y el scroll horizontal se traslada a toda la sección.
+ */
+#reportesAnormalidadesView .ra-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 20px 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 16px);
+  background: var(--surface, #ffffff);
+  box-shadow: var(--shadow-sm, 0 4px 14px rgba(39, 66, 143, 0.08));
+}
+
+#reportesAnormalidadesView .ra-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+#reportesAnormalidadesView .ra-card-header > div {
+  min-width: 0;
+  flex: 1 1 220px;
+}
+
+#reportesAnormalidadesView .ra-card-kicker {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--primary-light);
+}
+
+#reportesAnormalidadesView .ra-card-header h3 {
+  margin: 4px 0 3px;
+  font-size: 1.06rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+#reportesAnormalidadesView .ra-card-header p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+#reportesAnormalidadesView .ra-chip {
+  flex: 0 0 auto;
+  max-width: 100%;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--primary-dark);
+  background: var(--surface-blue, #eef4ff);
+  overflow-wrap: anywhere;
+}
+
+/* ================== Sub-pestañas dentro de una tarjeta ================== */
+
+#reportesAnormalidadesView .ra-subtabs {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 4px;
+  padding: 4px;
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-soft, #f5f7fb);
+}
+
+#reportesAnormalidadesView .ra-subtab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 16px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  background: transparent;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#reportesAnormalidadesView .ra-subtab:hover {
+  color: var(--primary-dark);
+  background: rgba(75, 127, 240, 0.1);
+}
+
+#reportesAnormalidadesView .ra-subtab.is-active {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary-light));
+  box-shadow: 0 6px 14px rgba(39, 66, 143, 0.22);
+}
+
+/* ============ Histórico anual: barras por línea o total mensual ============ */
+
+/* En pantallas angostas la gráfica conserva un ancho mínimo legible. */
+/* El desplazamiento queda contenido aquí, sin afectar al resto de la vista. */
+/* La escala vertical ocupa una columna fija; sólo la gráfica tiene scroll. */
+#reportesAnormalidadesView .ra-combo-frame {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: start;
+  min-width: 0;
+  max-width: 100%;
+}
+
+#reportesAnormalidadesView .ra-combo-scale {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+  color: var(--text-secondary);
+  background: var(--background, #ffffff);
+}
+
+#reportesAnormalidadesView .ra-combo-scale:not(:empty) {
+  height: 420px;
+}
+
+#reportesAnormalidadesView .ra-combo-scale-label {
+  position: absolute;
+  right: 8px;
+  transform: translateY(-50%);
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+#reportesAnormalidadesView .ra-combo-wrap {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+/*
+ * El alto se deduce del viewBox y el ancho lo fija el script: usa el 100% del
+ * contenedor cuando la información cabe, o un ancho mayor en píxeles cuando hay
+ * muchas líneas, de modo que el contenedor haga scroll en lugar de comprimir
+ * las barras.
+ */
+#reportesAnormalidadesView .ra-combo {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+#reportesAnormalidadesView .ra-combo-bar {
+  transition: opacity 0.18s ease;
+}
+
+#reportesAnormalidadesView .ra-combo-bar:hover {
+  opacity: 0.78;
+}
+
+#reportesAnormalidadesView .ra-total-line {
+  fill: none;
+  stroke: var(--ra-total);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Relleno tenue bajo la línea de total, sólo en la vista mensual. */
+#reportesAnormalidadesView .ra-total-area {
+  fill: var(--primary-light);
+  opacity: 0.12;
+}
+
+#reportesAnormalidadesView .ra-total-dot {
+  fill: var(--ra-total);
+}
+
+#reportesAnormalidadesView .ra-total-badge {
+  fill: var(--ra-total);
+}
+
+#reportesAnormalidadesView .ra-total-badge-text {
+  fill: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/*
+ * Simbología en columnas: las entradas se leen hacia abajo y continúan en la
+ * siguiente columna. El navegador ajusta cuántas columnas caben según el ancho,
+ * lo que la mantiene compacta aunque haya muchas líneas.
+ */
+/* El selector compuesto gana sobre .ra-legend, que se declara más abajo. */
+#reportesAnormalidadesView .ra-legend.ra-legend-inline {
+  display: block;
+  columns: 210px auto;
+  column-gap: 24px;
+  min-width: 0;
+}
+
+#reportesAnormalidadesView .ra-legend.ra-legend-inline .ra-legend-item {
+  gap: 7px;
+  margin-bottom: 9px;
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+}
+
+#reportesAnormalidadesView .ra-legend.ra-legend-inline .ra-legend-label {
+  flex: 1 1 auto;
+}
+
+#reportesAnormalidadesView .ra-legend-dot.is-total {
+  background: var(--ra-total);
+}
+
+/* ================== Barras agrupadas (crítica / no) ================== */
+
+#reportesAnormalidadesView .ra-groups-wrap {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  padding-bottom: 5px;
+}
+
+#reportesAnormalidadesView .ra-groups-wrap:focus-visible {
+  outline: 2px solid var(--focus-border, #c7d8ff);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm, 10px);
+}
+
+#reportesAnormalidadesView .ra-groups {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  width: max-content;
+  min-width: 100%;
+  height: 250px;
+  padding-top: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+#reportesAnormalidadesView .ra-group {
+  flex: 1 0 92px;
+  min-width: 92px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  height: 100%;
+}
+
+#reportesAnormalidadesView .ra-group-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 100%;
+}
+
+#reportesAnormalidadesView .ra-bar {
+  position: relative;
+  width: 100%;
+  max-width: 26px;
+  height: calc(var(--value, 0) * 1%);
+  min-height: 5px;
+  border-radius: 8px 8px 3px 3px;
+  transition: height 0.45s ease, filter 0.18s ease;
+}
+
+#reportesAnormalidadesView .ra-bar:hover {
+  filter: brightness(1.1);
+}
+
+/*
+ * El degradado se logra con un velo blanco sobre el color de la paleta, así
+ * no se introducen tonos nuevos fuera de las variables definidas.
+ */
+#reportesAnormalidadesView .ra-bar.is-critica {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0)),
+              var(--ra-critica);
+}
+
+#reportesAnormalidadesView .ra-bar.is-nocritica {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0)),
+              var(--ra-nocritica);
+}
+
+#reportesAnormalidadesView .ra-bar-value {
+  position: absolute;
+  top: -19px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+#reportesAnormalidadesView .ra-group-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* ======================= Barras horizontales ======================= */
+
+#reportesAnormalidadesView .ra-hbars {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+#reportesAnormalidadesView .ra-hbars > div {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+#reportesAnormalidadesView .ra-hbar-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  max-width: 100%;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+}
+
+#reportesAnormalidadesView .ra-hbar-head strong {
+  min-width: 0;
+  flex: 1 1 160px;
+  font-weight: 600;
+  color: var(--text-main);
+  overflow-wrap: anywhere;
+}
+
+#reportesAnormalidadesView .ra-hbar-head > span {
+  flex: 0 0 auto;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+#reportesAnormalidadesView .ra-hbar-track {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--surface-soft, #f5f7fb);
+  overflow: hidden;
+}
+
+#reportesAnormalidadesView .ra-hbar-fill {
+  height: 100%;
+  width: calc(var(--value, 0) * 1%);
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary-light), var(--primary-dark));
+  transition: width 0.5s ease;
+}
+
+#reportesAnormalidadesView .ra-hbar-fill.is-critica {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0)),
+              var(--ra-critica);
+}
+
+#reportesAnormalidadesView .ra-hbar-fill.is-nocritica {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0)),
+              var(--ra-nocritica);
+}
+
+#reportesAnormalidadesView .ra-hbar-fill.is-cyan {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0)),
+              var(--accent-cyan);
+}
+
+#reportesAnormalidadesView .ra-hbar-rank {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 8px;
+  border-radius: 7px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: var(--primary);
+}
+
+/* Mantiene legible el consecutivo de los dos TOP sobre su fondo azul. */
+#reportesAnormalidadesView .ra-hbar-head .ra-hbar-rank {
+  color: #ffffff;
+  background: var(--primary-dark);
+}
+
+/* Los pocos niveles de respuesta no necesitan ocupar toda la fila. */
+#reportesAnormalidadesView .ra-card-nivel-respuesta {
+  width: 100%;
+  max-width: 720px;
+}
+
+/* Columnas verticales para diferenciar el nivel de respuesta de los TOP. */
+#reportesAnormalidadesView .ra-level-chart {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
+  align-items: end;
+  gap: 18px;
+  min-height: 270px;
+  padding: 10px 8px 0;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+#reportesAnormalidadesView .ra-level-chart > .ra-hbar-note {
+  align-self: center;
+  grid-column: 1 / -1;
+  text-align: center;
+}
+
+#reportesAnormalidadesView .ra-level-item {
+  display: grid;
+  grid-template-rows: auto 170px auto auto;
+  gap: 7px;
+  min-width: 0;
+  max-width: 100%;
+  text-align: center;
+}
+
+#reportesAnormalidadesView .ra-level-metric {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+#reportesAnormalidadesView .ra-level-metric strong {
+  font-size: 1.05rem;
+  color: var(--text-main);
+}
+
+#reportesAnormalidadesView .ra-level-metric span {
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  background: var(--surface-blue, #eef4ff);
+}
+
+#reportesAnormalidadesView .ra-level-well {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 170px;
+  padding: 0 12px;
+  border-bottom: 2px solid var(--border);
+  border-radius: 10px 10px 0 0;
+  background: repeating-linear-gradient(
+    to top,
+    transparent 0,
+    transparent 41px,
+    rgba(215, 222, 232, 0.55) 42px
+  );
+}
+
+#reportesAnormalidadesView .ra-level-column {
+  width: min(64px, 70%);
+  height: var(--ra-level-height, 0%);
+  min-height: 0;
+  border-radius: 12px 12px 4px 4px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent),
+              var(--ra-level-color, var(--primary));
+  box-shadow: 0 7px 16px rgba(39, 66, 143, 0.15);
+  transition: height 0.45s ease, filter 0.18s ease;
+}
+
+#reportesAnormalidadesView .ra-level-column:hover {
+  filter: brightness(1.08);
+}
+
+#reportesAnormalidadesView .ra-level-name {
+  overflow-wrap: anywhere;
+  font-size: 0.82rem;
+  color: var(--primary-dark);
+}
+
+#reportesAnormalidadesView .ra-level-item > small {
+  font-size: 0.69rem;
+  color: var(--text-secondary);
+}
+
+#reportesAnormalidadesView .ra-hbar-note {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+/* ========================= Dona / pastel ========================= */
+
+#reportesAnormalidadesView .ra-donut-block {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+}
+
+#reportesAnormalidadesView .ra-donut {
+  position: relative;
+  width: 190px;
+  height: 190px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(var(--primary) 0 100%);
+  transition: background 0.5s ease;
+}
+
+#reportesAnormalidadesView .ra-donut::after {
+  content: "";
+  position: absolute;
+  inset: 26px;
+  border-radius: 50%;
+  background: var(--surface, #ffffff);
+  box-shadow: inset 0 2px 10px rgba(17, 24, 39, 0.06);
+}
+
+#reportesAnormalidadesView .ra-donut-center {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  line-height: 1.2;
+}
+
+#reportesAnormalidadesView .ra-donut-center strong {
+  display: block;
+  font-size: 1.7rem;
+  color: var(--text-main);
+}
+
+#reportesAnormalidadesView .ra-donut-center span {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+/* La clasificación 5M usa un pastel sólido; reutiliza el render de las donas. */
+#reportesAnormalidadesView .ra-5m-pie-block {
+  justify-content: flex-start;
+  gap: 34px;
+  padding: 8px 4px 2px;
+}
+
+#reportesAnormalidadesView .ra-pie {
+  width: 220px;
+  height: 220px;
+  border: 5px solid #ffffff;
+  box-shadow: 0 10px 24px rgba(39, 66, 143, 0.14);
+}
+
+#reportesAnormalidadesView .ra-pie::after {
+  display: none;
+}
+
+#reportesAnormalidadesView .ra-5m-pie-legend {
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  flex: 1 1 520px;
+}
+
+#reportesAnormalidadesView .ra-5m-pie-legend .ra-legend-item {
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft, #f5f7fb);
+}
+
+#reportesAnormalidadesView .ra-legend {
+  display: grid;
+  gap: 10px;
+  min-width: 190px;
+}
+
+#reportesAnormalidadesView .ra-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.86rem;
+}
+
+#reportesAnormalidadesView .ra-legend-dot {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  border-radius: 4px;
+  background: var(--ra-neutro);
+}
+
+#reportesAnormalidadesView .ra-legend-label {
+  flex: 1 1 auto;
+  color: var(--text-secondary);
+}
+
+#reportesAnormalidadesView .ra-legend-item strong {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+#reportesAnormalidadesView .ra-legend-item small {
+  min-width: 46px;
+  text-align: right;
+  color: var(--text-secondary);
+}
+
+/* ===================== Gráfica de tendencia (SVG) ===================== */
+
+#reportesAnormalidadesView .ra-trend {
+  width: 100%;
+  height: 230px;
+  overflow: visible;
+}
+
+#reportesAnormalidadesView .ra-trend-grid {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 4 5;
+}
+
+#reportesAnormalidadesView .ra-trend-line {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#reportesAnormalidadesView .ra-trend-label {
+  font-size: 12px;
+  fill: var(--text-secondary);
+}
+
+/* ============================== Tablas ============================== */
+
+#reportesAnormalidadesView .ra-table-wrap {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+#reportesAnormalidadesView table.ra-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.87rem;
+}
+
+#reportesAnormalidadesView table.ra-table thead th {
+  padding: 11px 12px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: var(--surface-soft, #f5f7fb);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+#reportesAnormalidadesView table.ra-table tbody td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+/* Las tablas extensas conservan columnas legibles y desplazan sólo su contenedor. */
+#reportesAnormalidadesView #raTablaEstatusCriticas {
+  min-width: 820px;
+}
+
+#reportesAnormalidadesView #raTablaFrecuentes {
+  min-width: 650px;
+}
+
+#reportesAnormalidadesView #raTablaDetalleContramedidas {
+  min-width: 920px;
+}
+
+#reportesAnormalidadesView #raTablaReporte {
+  min-width: 1080px;
+}
+
+#reportesAnormalidadesView table.ra-table tbody tr:hover td {
+  background: var(--surface-blue, #eef4ff);
+}
+
+#reportesAnormalidadesView .ra-cell-strong {
+  font-weight: 600;
+  color: var(--primary-dark);
+}
+
+#reportesAnormalidadesView .ra-cell-note {
+  display: block;
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+}
+
+/* Ajustes de DataTables dentro de la vista. */
+#reportesAnormalidadesView .dataTables_wrapper {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+#reportesAnormalidadesView .dataTables_wrapper .dataTables_filter,
+#reportesAnormalidadesView .dataTables_wrapper .dataTables_info,
+#reportesAnormalidadesView .dataTables_wrapper .dataTables_paginate {
+  max-width: 100%;
+}
+
+#reportesAnormalidadesView .dataTables_wrapper .dataTables_filter input,
+#reportesAnormalidadesView .dataTables_wrapper .dataTables_length select {
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 10px);
+  padding: 5px 10px;
+}
+
+#reportesAnormalidadesView .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+  border-radius: 8px;
+  background: var(--primary) !important;
+  color: #ffffff !important;
+}
+
+/* ============================== Badges ============================== */
+
+#reportesAnormalidadesView .ra-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  background: var(--surface-soft, #f5f7fb);
+}
+
+#reportesAnormalidadesView .ra-badge.is-critica {
+  color: #a01725;
+  background: rgba(220, 53, 69, 0.12);
+}
+
+#reportesAnormalidadesView .ra-badge.is-nocritica {
+  color: #14707d;
+  background: rgba(60, 182, 202, 0.16);
+}
+
+#reportesAnormalidadesView .ra-badge.is-cerrada {
+  color: #0f6b56;
+  background: rgba(22, 133, 107, 0.14);
+}
+
+#reportesAnormalidadesView .ra-badge.is-abierta {
+  color: #9a5300;
+  background: rgba(217, 119, 6, 0.14);
+}
+
+#reportesAnormalidadesView .ra-badge.is-sensor {
+  color: var(--primary-dark);
+  background: rgba(75, 127, 240, 0.14);
+}
+
+#reportesAnormalidadesView .ra-badge.is-limpio {
+  color: #14707d;
+  background: rgba(60, 182, 202, 0.16);
+}
+
+/* ========================= Lista de hallazgos ========================= */
+
+#reportesAnormalidadesView .ra-insight-list {
+  display: grid;
+  gap: 12px;
+}
+
+#reportesAnormalidadesView .ra-insight {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 14px;
+  border-radius: var(--radius-sm, 10px);
+  background: var(--surface-soft, #f5f7fb);
+}
+
+#reportesAnormalidadesView .ra-insight-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: #ffffff;
+  background: var(--primary);
+}
+
+#reportesAnormalidadesView .ra-insight.is-warning .ra-insight-icon { background: var(--ra-abierta); }
+#reportesAnormalidadesView .ra-insight.is-danger .ra-insight-icon { background: var(--ra-critica); }
+#reportesAnormalidadesView .ra-insight.is-success .ra-insight-icon { background: var(--ra-cerrada); }
+
+#reportesAnormalidadesView .ra-insight strong {
+  display: block;
+  font-size: 0.9rem;
+}
+
+#reportesAnormalidadesView .ra-insight small {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* ==================== Acciones dentro de las tablas ==================== */
+
+#reportesAnormalidadesView .ra-action {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 9px;
+  font-size: 0.95rem;
+  color: #ffffff;
+  background: var(--primary);
+  transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+#reportesAnormalidadesView .ra-action:hover {
+  transform: translateY(-1px);
+  background: var(--primary-dark);
+  box-shadow: 0 6px 14px rgba(39, 66, 143, 0.24);
+}
+
+#reportesAnormalidadesView .ra-action:focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 2px;
+}
+
+/* ========================= Modal de detalle ========================= */
+
+#reportesAnormalidadesView .modal-content {
+  min-width: 0;
+  max-width: 100%;
+  border: 0;
+  border-radius: var(--radius-md, 16px);
+  box-shadow: var(--shadow-md, 0 14px 36px rgba(39, 66, 143, 0.12));
+}
+
+/*
+ * El .modal-header global usa fondo azul oscuro con texto blanco. Aquí se
+ * sustituye por un encabezado claro, siguiendo el mismo criterio que
+ * #modalAgregarLinea en css/style.css, y se ajusta el color del texto para
+ * que conserve contraste suficiente.
+ */
+#reportesAnormalidadesView .modal-header {
+  align-items: flex-start;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(90deg, var(--surface-blue, #eef4ff) 0%, var(--surface-soft, #f5f7fb) 62%);
+}
+
+#reportesAnormalidadesView .modal-header > div,
+#reportesAnormalidadesView .modal-body {
+  min-width: 0;
+  max-width: 100%;
+}
+
+#reportesAnormalidadesView .modal-header .modal-title {
+  color: var(--text-main);
+  overflow-wrap: anywhere;
+}
+
+#reportesAnormalidadesView .modal-header .ra-card-kicker {
+  color: var(--primary);
+}
+
+/* El botón de cierre global se invierte para fondos oscuros: se restaura. */
+#reportesAnormalidadesView .modal-header .btn-close {
+  filter: none;
+  opacity: 0.65;
+}
+
+#reportesAnormalidadesView .modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+#reportesAnormalidadesView .modal-footer {
+  border-top: 1px solid var(--border);
+}
+
+#reportesAnormalidadesView .ra-modal-registro {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm, 10px);
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--primary-dark);
+  background: var(--surface-blue, #eef4ff);
+}
+
+/* ================ Reporte individual de una anormalidad ================ */
+
+#reportesAnormalidadesView .ra-report-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+#reportesAnormalidadesView .ra-report-modal-title small {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--text-secondary);
+}
+
+#reportesAnormalidadesView .ra-report-modal-title h5 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+#reportesAnormalidadesView .ra-report-loading,
+#reportesAnormalidadesView .ra-report-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 120px;
+  padding: 24px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md, 16px);
+  text-align: center;
+  color: var(--text-secondary);
+  background: var(--surface-soft, #f5f7fb);
+}
+
+#reportesAnormalidadesView .ra-report-loading.is-error {
+  color: #a01725;
+  border-color: rgba(220, 53, 69, 0.35);
+  background: rgba(220, 53, 69, 0.07);
+}
+
+#reportesAnormalidadesView .ra-report-detail-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+  padding: 6px;
+  overflow-x: auto;
+  max-width: 100%;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 16px);
+  background: var(--surface-soft, #f5f7fb);
+}
+
+#reportesAnormalidadesView .ra-report-detail-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 220px;
+  padding: 11px 14px;
+  border: 0;
+  border-radius: 12px;
+  text-align: left;
+  color: var(--text-secondary);
+  background: transparent;
+  transition: color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+#reportesAnormalidadesView .ra-report-detail-tab > i {
+  font-size: 1.15rem;
+}
+
+#reportesAnormalidadesView .ra-report-detail-tab strong,
+#reportesAnormalidadesView .ra-report-detail-tab small {
+  display: block;
+}
+
+#reportesAnormalidadesView .ra-report-detail-tab small {
+  font-size: 0.75rem;
+}
+
+#reportesAnormalidadesView .ra-report-detail-tab.active {
+  color: var(--primary-dark);
+  background: #ffffff;
+  box-shadow: 0 5px 14px rgba(39, 66, 143, 0.1);
+}
+
+#reportesAnormalidadesView .ra-report-detail-tab.active::after {
+  position: absolute;
+  right: 14px;
+  bottom: 0;
+  left: 14px;
+  height: 3px;
+  border-radius: 999px 999px 0 0;
+  content: "";
+  background: linear-gradient(90deg, var(--primary), var(--accent-cyan, #3cb6ca));
+}
+
+#reportesAnormalidadesView .ra-report-tab-count {
+  display: grid;
+  place-items: center;
+  min-width: 25px;
+  height: 25px;
+  margin-left: auto;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: var(--primary);
+}
+
+#reportesAnormalidadesView .ra-report-detail-content {
+  padding-top: 16px;
+}
+
+#reportesAnormalidadesView .ra-report-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  border-radius: var(--radius-md, 16px);
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary-light));
+}
+
+#reportesAnormalidadesView .ra-report-summary small,
+#reportesAnormalidadesView .ra-report-summary strong {
+  display: block;
+}
+
+#reportesAnormalidadesView .ra-report-summary small {
+  color: var(--text-on-blue, #c9d7f2);
+}
+
+#reportesAnormalidadesView .ra-report-summary strong {
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+#reportesAnormalidadesView .ra-report-summary > span {
+  min-width: 0;
+  max-width: 100%;
+}
+
+#reportesAnormalidadesView .ra-report-summary-status {
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(4px);
+}
+
+/* Guía compacta para identificar rápidamente qué etapas tienen información. */
+#reportesAnormalidadesView .ra-report-flow-guide {
+  display: flex;
+  gap: 0;
+  padding: 14px 12px 12px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  max-width: 100%;
+  overscroll-behavior-inline: contain;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 16px);
+  background: linear-gradient(180deg, #ffffff, var(--surface-soft, #f5f7fb));
+  scrollbar-width: thin;
+}
+
+#reportesAnormalidadesView .ra-report-flow-step {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-width: 118px;
+  flex: 1 0 118px;
+  text-align: center;
+  color: #8a94a6;
+}
+
+#reportesAnormalidadesView .ra-report-flow-step:not(:last-child)::after {
+  position: absolute;
+  top: 18px;
+  left: calc(50% + 22px);
+  width: calc(100% - 44px);
+  height: 2px;
+  content: "";
+  background: #dce2eb;
+}
+
+#reportesAnormalidadesView .ra-report-flow-step.is-complete:not(:last-child)::after {
+  background: linear-gradient(90deg, var(--primary-light), var(--accent-cyan, #3cb6ca));
+}
+
+#reportesAnormalidadesView .ra-report-flow-step > span {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 2px solid #dce2eb;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+#reportesAnormalidadesView .ra-report-flow-step.is-complete {
+  color: var(--primary-dark);
+}
+
+#reportesAnormalidadesView .ra-report-flow-step.is-complete > span {
+  border-color: var(--primary-light);
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--primary), var(--accent-cyan, #3cb6ca));
+  box-shadow: 0 4px 10px rgba(57, 92, 168, 0.2);
+}
+
+#reportesAnormalidadesView .ra-report-flow-step small {
+  max-width: 110px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+#reportesAnormalidadesView .ra-report-flow {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+#reportesAnormalidadesView .ra-report-stage {
+  --ra-stage-color: var(--primary);
+  --ra-stage-soft: rgba(57, 92, 168, 0.08);
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--ra-stage-color);
+  border-radius: var(--radius-md, 16px);
+  background: linear-gradient(115deg, var(--ra-stage-soft), #ffffff 22%);
+  box-shadow: 0 6px 18px rgba(39, 66, 143, 0.055);
+}
+
+#reportesAnormalidadesView .ra-report-stage.is-stage-1 {
+  --ra-stage-color: var(--accent-orange, #e67e22);
+  --ra-stage-soft: rgba(230, 126, 34, 0.08);
+}
+
+#reportesAnormalidadesView .ra-report-stage.is-stage-2 {
+  --ra-stage-color: var(--primary-light);
+  --ra-stage-soft: rgba(75, 127, 240, 0.08);
+}
+
+#reportesAnormalidadesView .ra-report-stage.is-stage-3 {
+  --ra-stage-color: var(--accent-purple, #5225c5);
+  --ra-stage-soft: rgba(82, 37, 197, 0.07);
+}
+
+#reportesAnormalidadesView .ra-report-stage.is-stage-4 {
+  --ra-stage-color: var(--accent-cyan, #3cb6ca);
+  --ra-stage-soft: rgba(60, 182, 202, 0.08);
+}
+
+#reportesAnormalidadesView .ra-report-stage.is-stage-5 {
+  --ra-stage-color: #16856b;
+  --ra-stage-soft: rgba(22, 133, 107, 0.08);
+}
+
+#reportesAnormalidadesView .ra-report-stage-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 11px;
+  padding-bottom: 12px;
+  margin-bottom: 13px;
+  border-bottom: 1px solid var(--border);
+}
+
+#reportesAnormalidadesView .ra-report-stage-header > div {
+  min-width: 0;
+  flex: 1 1 240px;
+}
+
+#reportesAnormalidadesView .ra-report-stage-number {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 11px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: var(--ra-stage-color);
+  box-shadow: 0 4px 10px rgba(39, 66, 143, 0.18);
+}
+
+#reportesAnormalidadesView .ra-report-stage-kicker {
+  display: block;
+  margin-bottom: 1px;
+  font-size: 0.67rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ra-stage-color);
+}
+
+#reportesAnormalidadesView .ra-report-stage-header h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+#reportesAnormalidadesView .ra-report-stage-header small {
+  color: var(--text-secondary);
+}
+
+#reportesAnormalidadesView .ra-report-field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+  gap: 10px;
+}
+
+#reportesAnormalidadesView .ra-report-field {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(215, 222, 232, 0.72);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+#reportesAnormalidadesView .ra-report-field.is-wide {
+  grid-column: 1 / -1;
+}
+
+#reportesAnormalidadesView .ra-report-field > span {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: var(--text-secondary);
+}
+
+#reportesAnormalidadesView .ra-report-field > strong {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+#reportesAnormalidadesView .ra-report-field.is-note,
+#reportesAnormalidadesView .ra-report-field.is-cause,
+#reportesAnormalidadesView .ra-report-field.is-action {
+  border-left: 4px solid var(--primary-light);
+  background: rgba(75, 127, 240, 0.06);
+}
+
+#reportesAnormalidadesView .ra-report-field.is-cause {
+  border-left-color: var(--accent-orange, #e67e22);
+  background: rgba(230, 126, 34, 0.07);
+}
+
+#reportesAnormalidadesView .ra-report-field.is-action {
+  border-left-color: #16856b;
+  background: rgba(22, 133, 107, 0.07);
+}
+
+#reportesAnormalidadesView .ra-report-field.is-result {
+  align-content: center;
+}
+
+#reportesAnormalidadesView .ra-report-subgrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+#reportesAnormalidadesView .ra-report-subsection {
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+#reportesAnormalidadesView .ra-report-subsection h5 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  color: var(--primary-dark);
+}
+
+#reportesAnormalidadesView .ra-report-subsection h5::before {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  content: "";
+  background: var(--ra-stage-color, var(--primary-light));
+}
+
+#reportesAnormalidadesView .ra-report-result {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #14705f;
+  background: rgba(121, 214, 197, 0.2);
+}
+
+#reportesAnormalidadesView .ra-report-result.is-ok {
+  color: #0f6b56;
+  background: rgba(22, 133, 107, 0.14);
+}
+
+#reportesAnormalidadesView .ra-report-result.is-ng {
+  color: #a01725;
+  background: rgba(255, 139, 154, 0.2);
+}
+
+#reportesAnormalidadesView .ra-report-result.is-pending {
+  color: #7a5600;
+  background: rgba(230, 126, 34, 0.14);
+}
+
+#reportesAnormalidadesView .ra-report-mini-table {
+  width: 100%;
+  min-width: 520px;
+  margin-top: 10px;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+#reportesAnormalidadesView .ra-report-mini-table th,
+#reportesAnormalidadesView .ra-report-mini-table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+#reportesAnormalidadesView .ra-report-mini-table th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: var(--primary-dark);
+  background: var(--surface-blue, #eef4ff);
+}
+
+#reportesAnormalidadesView .ra-report-mini-table tbody tr:hover {
+  background: rgba(75, 127, 240, 0.045);
+}
+
+#reportesAnormalidadesView .ra-report-signature {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  height: 120px;
+  margin-top: 10px;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 4px var(--surface-soft, #f5f7fb);
+}
+
+#reportesAnormalidadesView .ra-report-field.is-signature {
+  position: relative;
+  border-left: 4px solid #16856b;
+  background: rgba(22, 133, 107, 0.055);
+}
+
+#reportesAnormalidadesView .ra-report-recurrence-item {
+  min-width: 0;
+  max-width: 100%;
+  padding: 14px;
+  border-left: 4px solid var(--accent-cyan, #3cb6ca);
+  border-radius: 12px;
+  background: linear-gradient(120deg, rgba(60, 182, 202, 0.1), #ffffff 35%);
+  box-shadow: 0 5px 14px rgba(39, 66, 143, 0.05);
+}
+
+#reportesAnormalidadesView .ra-report-recurrence-item + .ra-report-recurrence-item {
+  margin-top: 12px;
+}
+
+#reportesAnormalidadesView .ra-report-recurrence-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 11px;
+}
+
+#reportesAnormalidadesView .ra-report-recurrence-title h5 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 0.92rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+#reportesAnormalidadesView .ra-report-recurrence-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border-radius: 8px;
+  color: #ffffff;
+  background: var(--accent-cyan, #3cb6ca);
+}
+
+/* =================== Estado de sección en desarrollo =================== */
+
+#reportesAnormalidadesView .ra-placeholder {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 46px 20px;
+  text-align: center;
+}
+
+#reportesAnormalidadesView .ra-placeholder-icon {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  margin-bottom: 6px;
+  font-size: 1.7rem;
+  color: var(--primary-light);
+  border-radius: 50%;
+  background: var(--surface-blue, #eef4ff);
+}
+
+#reportesAnormalidadesView .ra-placeholder h3 {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 700;
+}
+
+#reportesAnormalidadesView .ra-placeholder p {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* ============================ Responsivo ============================ */
+
+@media (max-width: 1199.98px) {
+  #reportesAnormalidadesView .ra-grid-wide {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767.98px) {
+  #reportesAnormalidadesView .ra-main-filters {
+    top: 92px;
+    max-height: calc(100vh - 104px);
+  }
+
+  #reportesAnormalidadesView .ra-filter-floating-trigger {
+    top: 94px;
+    right: 14px;
+  }
+
+  #reportesAnormalidadesView .ra-hero {
+    padding: 20px;
+  }
+
+  #reportesAnormalidadesView .ra-hero h2 {
+    font-size: 1.32rem;
+  }
+
+  #reportesAnormalidadesView .ra-card {
+    padding: 17px 15px;
+  }
+
+  #reportesAnormalidadesView .ra-grid-2,
+  #reportesAnormalidadesView .ra-grid-wide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #reportesAnormalidadesView .ra-card-header > div {
+    flex-basis: 100%;
+  }
+
+  #reportesAnormalidadesView .ra-chip {
+    flex: 0 1 auto;
+  }
+
+  #reportesAnormalidadesView .ra-combo-frame {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  #reportesAnormalidadesView .ra-combo-scale-label {
+    right: 6px;
+    font-size: 11px;
+  }
+
+  #reportesAnormalidadesView .ra-tab {
+    flex: 1 1 100%;
+  }
+
+  #reportesAnormalidadesView .ra-groups {
+    height: 200px;
+    gap: 7px;
+  }
+
+  #reportesAnormalidadesView .ra-group {
+    flex-basis: 76px;
+    min-width: 76px;
+  }
+
+  #reportesAnormalidadesView .ra-group-label {
+    font-size: 0.68rem;
+  }
+
+  #reportesAnormalidadesView .ra-donut {
+    width: 160px;
+    height: 160px;
+  }
+
+  #reportesAnormalidadesView .ra-5m-pie-block {
+    justify-content: center;
+  }
+
+  #reportesAnormalidadesView .ra-5m-pie-legend {
+    width: 100%;
+    grid-template-columns: 1fr;
+    flex-basis: 100%;
+  }
+
+  #reportesAnormalidadesView .ra-level-chart {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 90px), 1fr));
+    gap: 10px;
+    min-height: 235px;
+    padding-inline: 0;
+  }
+
+  #reportesAnormalidadesView .ra-level-item {
+    grid-template-rows: auto 140px auto auto;
+  }
+
+  #reportesAnormalidadesView .ra-level-well {
+    height: 140px;
+    padding-inline: 6px;
+  }
+
+  #reportesAnormalidadesView .ra-level-metric {
+    flex-wrap: wrap;
+    gap: 3px 6px;
+  }
+
+  #reportesAnormalidadesView .dataTables_wrapper .dataTables_filter,
+  #reportesAnormalidadesView .dataTables_wrapper .dataTables_info,
+  #reportesAnormalidadesView .dataTables_wrapper .dataTables_paginate {
+    float: none !important;
+    width: 100%;
+    text-align: left !important;
+  }
+
+  #reportesAnormalidadesView .dataTables_wrapper .dataTables_filter label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+  }
+
+  #reportesAnormalidadesView .dataTables_wrapper .dataTables_filter input {
+    width: min(100%, 260px);
+    margin-left: 0;
+  }
+
+  #reportesAnormalidadesView .dataTables_wrapper .dataTables_paginate {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2px;
+    padding-top: 8px;
+  }
+
+  #reportesAnormalidadesView .dataTables_wrapper .dataTables_paginate .paginate_button {
+    margin-left: 0;
+  }
+
+  #reportesAnormalidadesView .ra-report-detail-tab {
+    min-width: 190px;
+  }
+
+  #reportesAnormalidadesView .ra-report-subgrid {
+    grid-template-columns: 1fr;
+  }
+
+  #reportesAnormalidadesView .ra-report-stage {
+    padding: 13px;
+  }
+
+  #reportesAnormalidadesView .ra-report-stage-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  #reportesAnormalidadesView .ra-report-stage-header > div {
+    min-width: 0;
+    flex: 1 1 calc(100% - 48px);
+  }
+
+  #reportesAnormalidadesView .ra-report-stage-header > .ra-badge {
+    max-width: 100%;
+    margin-left: 45px !important;
+  }
+
+  #reportesAnormalidadesView .ra-report-field-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  #reportesAnormalidadesView {
+    gap: 14px;
+  }
+
+  #reportesAnormalidadesView .ra-card {
+    padding: 15px 12px;
+  }
+
+  #reportesAnormalidadesView .ra-filter-floating-trigger {
+    width: 44px;
+    padding: 0;
+  }
+
+  #reportesAnormalidadesView .ra-filter-floating-trigger span {
+    display: none;
+  }
+
+  #reportesAnormalidadesView .ra-filter-acciones .ra-btn {
+    flex-basis: 100%;
+  }
+
+  #reportesAnormalidadesView .ra-hbar-head strong {
+    flex-basis: calc(100% - 48px);
+  }
+
+  #reportesAnormalidadesView .ra-level-chart {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 78px), 1fr));
+    gap: 7px;
+  }
+
+  #reportesAnormalidadesView .ra-level-metric strong {
+    width: 100%;
+  }
+
+  #reportesAnormalidadesView .ra-report-stage-header > .ra-badge {
+    margin-left: 0 !important;
+  }
+
+  #reportesAnormalidadesView .ra-report-detail-tab {
+    min-width: min(190px, calc(100vw - 72px));
+  }
+}

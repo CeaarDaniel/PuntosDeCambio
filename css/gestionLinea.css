@@ -273,6 +273,39 @@
       border-radius: 50%;
       border: 2px solid white;
     }
+
+    /* Íconos de los PC 3M abiertos (maquinaria, materia prima, método), dentro del header.
+       El header solo crece en las estaciones que tienen PC 3M abiertos (clase con-pc3m,
+       la agrega el JS); las demás conservan su header delgado. */
+    .station-header.con-pc3m {
+      max-height: none;
+      padding: 4px 6px !important; /* !important para superar el py-2 de Bootstrap */
+      overflow: visible;
+    }
+
+    .station-pc3m {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .station-pc3m-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      line-height: 1;
+      text-shadow: none;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .station-pc3m-MA { color: var(--warning); }
+    .station-pc3m-MP { color: var(--success); }
+    .station-pc3m-ME { color: var(--primary); }
     
     .status-occupied {
       background-color: var(--success-color);
@@ -324,6 +357,13 @@
         display: none;
       }
       
+      /* En la estación chica (140px) tres íconos de 40px chocarían con el punto de asistencia */
+      .station-pc3m-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 18px;
+      }
+
       .station {
         width: 140px;
         height: 140px;
@@ -1574,6 +1614,37 @@ body {
   box-shadow: var(--shadow-md);
 }
 
+/* Botón del menú de la estación cuando ya hay un PC abierto de ese tipo
+   (mano de obra, maquinaria, materia prima o método). La etiqueta "Abierto"
+   acompaña al color para que el aviso no dependa solo de él. */
+.menu-btn.pc-abierto {
+  position: relative;
+  border-color: var(--warning);
+  background: #fff7e8;
+}
+
+.menu-btn.pc-abierto i {
+  color: var(--warning);
+}
+
+.menu-btn.pc-abierto:hover {
+  border-color: var(--warning);
+  background: #ffefd2;
+}
+
+.menu-btn.pc-abierto::after {
+  content: "Abierto";
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--warning);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
 .etiqueta-advertencia {
   border-radius: 10px;
 }
@@ -2532,6 +2603,68 @@ body {
 
 .app-modal .modal-line-guide div > span {
   font-size: 0.78rem;
+}
+
+/* Datos dentro del texto de una guía (tipo de PC, día de evaluación): sin esto,
+   la regla anterior los convierte en bloque y parte el texto en varias líneas. */
+.app-modal .modal-line-guide .guia-inline {
+  display: inline;
+  font-size: inherit;
+}
+
+/* Resumen del PC 3M abierto (maquinaria, materia prima o método) */
+.app-modal .pc3m-resumen {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+}
+
+.app-modal .pc3m-resumen-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.app-modal .pc3m-resumen-titulo i {
+  color: var(--primary);
+}
+
+.app-modal .pc3m-resumen-datos {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.app-modal .pc3m-resumen-datos small {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.app-modal .pc3m-resumen-datos strong {
+  display: block;
+  color: var(--text-main);
+  font-size: 0.86rem;
+  overflow-wrap: anywhere;
+}
+
+/* La guía de cada pestaña del PC 3M queda separada de las pestañas */
+.app-modal #pcMaqTabsContent .modal-line-guide {
+  margin-top: 14px;
+}
+
+@media (max-width: 576px) {
+  .app-modal .pc3m-resumen-datos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .app-modal .form-section {

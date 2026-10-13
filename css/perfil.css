@@ -1,0 +1,218 @@
+/* Mi perfil: cambio de contraseña (pages/perfil.php).
+   Adaptado de la vista de perfil de la aplicación de defectos; usa solo la paleta de css/style.css.
+   Dos columnas (resumen + formulario) para que todo quepa en pantalla sin scroll;
+   debajo de 992px se apila en una sola columna. */
+
+/* ---------- Encabezado (reutiliza .lines-intro de css/style.css) ---------- */
+/* Menos margen que en Líneas para que el formulario quepa sin scroll. */
+#perfilView .lines-intro {
+    max-width: 1040px;
+    margin: 0 auto 16px;
+}
+
+/* Usuario en sesión dentro del recuadro de la derecha; los textos largos se recortan. */
+.perfil-intro-usuario {
+    min-width: 0;
+}
+
+.perfil-intro-usuario span {
+    min-width: 0;
+    display: grid;
+    line-height: 1.3;
+}
+
+.perfil-intro-usuario strong,
+.perfil-intro-usuario small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.perfil-intro-usuario strong {
+    font-size: 0.86rem;
+}
+
+.perfil-intro-usuario small {
+    font-size: 0.76rem;
+    font-weight: 500;
+}
+
+.perfil-layout {
+    display: grid;
+    grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+    width: 100%;
+    max-width: 1040px;
+    margin: 0 auto;
+}
+
+/* ---------- Columna izquierda ---------- */
+.perfil-resumen {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+/* Requisitos de la nueva contraseña; se marcan en verde al cumplirse. */
+.perfil-requisitos-caja {
+    padding: 16px 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: linear-gradient(180deg, var(--surface-blue), var(--surface));
+}
+
+.perfil-requisitos-caja h3 {
+    margin: 0 0 10px;
+    color: var(--primary-dark);
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.perfil-requisitos {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    color: var(--text-secondary);
+    font-size: 0.86rem;
+    list-style: none;
+}
+
+.perfil-requisitos li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.2s ease;
+}
+
+.perfil-requisitos i {
+    color: var(--border);
+    transition: color 0.2s ease;
+}
+
+.perfil-requisitos li.cumplida,
+.perfil-requisitos li.cumplida i {
+    color: var(--success);
+}
+
+/* ---------- Columna derecha: formulario ---------- */
+.perfil-card {
+    min-width: 0;
+    padding: clamp(20px, 2.6vw, 30px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-md);
+}
+
+/* Aviso del resultado (éxito o error) arriba del formulario. */
+.perfil-mensaje {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+}
+
+.perfil-mensaje.d-none {
+    display: none;
+}
+
+.perfil-mensaje i {
+    margin-top: 2px;
+}
+
+.perfil-campo {
+    margin-bottom: 14px;
+}
+
+/* Campos obligatorios. */
+.perfil-card .form-label {
+    margin-bottom: 6px;
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.perfil-card .form-label.required::after {
+    content: " *";
+    color: var(--danger);
+}
+
+.perfil-password-group .input-group-text {
+    min-width: 46px;
+    justify-content: center;
+    color: var(--text-secondary);
+    border-color: var(--border);
+    background: var(--surface-soft);
+}
+
+.perfil-ver-contrasena {
+    width: 48px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    color: var(--text-secondary);
+    background: var(--surface);
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.perfil-ver-contrasena:hover,
+.perfil-ver-contrasena:focus {
+    color: var(--primary-dark);
+    border-color: var(--focus-border);
+    background: var(--surface-blue);
+}
+
+.perfil-password-group:has(.form-control.is-invalid) .input-group-text {
+    border-color: var(--danger);
+}
+
+.perfil-acciones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 6px;
+}
+
+.perfil-acciones .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+}
+
+/* Tablet: una sola columna; los requisitos se reparten en dos columnas para ocupar menos alto. */
+@media (max-width: 991.98px) {
+    .perfil-layout {
+        grid-template-columns: 1fr;
+        max-width: 680px;
+        gap: 14px;
+    }
+
+    .perfil-requisitos {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px 16px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .perfil-card {
+        padding: 20px 16px;
+    }
+
+    .perfil-requisitos {
+        grid-template-columns: 1fr;
+    }
+
+    .perfil-acciones {
+        flex-direction: column-reverse;
+    }
+
+    .perfil-acciones .btn {
+        width: 100%;
+    }
+}
