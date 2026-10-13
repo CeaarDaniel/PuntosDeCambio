@@ -1,5 +1,33 @@
-<!-- MENU REPORTES -->
+<!-- MENU REPORTES
+     Reportes de asistencia y de puntos de cambio con datos reales.
+     Datos: api/operacionesReportes.php · Lógica: scripts/menuReportes.js
+     Estilos: css/analytics.css (compartido con el dashboard; no se modifica desde aquí). -->
 <link rel="stylesheet" href="./css/analytics.css">
+
+<style>
+    /* Distribución en chips: cada estatus/tipo con su cantidad y % juntos, para que no se
+       confunda a qué renglón pertenece cada valor. Solo aplica a esta página. */
+    #reports .reporte-distribucion {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    #reports .reporte-distribucion > div {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--surface-soft);
+    }
+
+    #reports .reporte-distribucion small {
+        font-weight: 500;
+        color: var(--text-secondary);
+    }
+</style>
 
 <div id="reports" class="analytics-view reports-view">
     <section class="analytics-hero" aria-labelledby="reportsHeading">
@@ -8,222 +36,286 @@
                 <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
                 Centro de reportes
             </span>
-            <h2 id="reportsHeading">Indicadores para la toma de decisiones</h2>
-            <p>Explora tendencias de asistencia, puntos de cambio y certificaciones mediante información simulada.</p>
-        </div>
-
-        <div class="analytics-update">
-            <span class="analytics-status-dot" aria-hidden="true"></span>
-            <span>
-                <small>Modo borrador</small>
-                <strong>Sin conexión a backend</strong>
-            </span>
+            <h2 id="reportsHeading">Reportes de asistencia y puntos de cambio</h2>
+            <p>Consulta la asistencia registrada y los puntos de cambio por periodo, línea y tipo.</p>
         </div>
     </section>
 
-    <form id="reportsFilters" class="analytics-filters analytics-filters-wide" aria-label="Filtros de reportes">
-        <div class="analytics-filter-intro">
-            <span class="analytics-filter-icon">
-                <i class="bi bi-sliders" aria-hidden="true"></i>
-            </span>
-            <span>
-                <strong>Configurar reporte</strong>
-                <small>Selecciona el alcance de la vista previa.</small>
-            </span>
-        </div>
-
-        <div class="analytics-filter-field">
-            <label for="reportDateFrom">Desde</label>
-            <input type="date" id="reportDateFrom" class="form-control" value="2026-07-01">
-        </div>
-
-        <div class="analytics-filter-field">
-            <label for="reportDateTo">Hasta</label>
-            <input type="date" id="reportDateTo" class="form-control" value="2026-07-27">
-        </div>
-
-        <div class="analytics-filter-field">
-            <label for="reportLine">Línea</label>
-            <select id="reportLine" class="form-select">
-                <option value="all">Todas</option>
-                <option value="A01">Línea A01</option>
-                <option value="A02">Línea A02</option>
-                <option value="B01">Línea B01</option>
-                <option value="B02">Línea B02</option>
-            </select>
-        </div>
-
-        <div class="analytics-filter-field">
-            <label for="reportShift">Turno</label>
-            <select id="reportShift" class="form-select">
-                <option value="all">Todos</option>
-                <option value="1">Turno 1</option>
-                <option value="2">Turno 2</option>
-                <option value="3">Turno 3</option>
-            </select>
-        </div>
-
-        <button type="submit" class="analytics-btn analytics-btn-primary">
-            <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-            Actualizar
-        </button>
-    </form>
-
-    <section class="analytics-report-types" aria-label="Tipos de reporte">
-        <button type="button" class="analytics-report-type is-active" data-report-type="attendance" aria-pressed="true">
+    <!-- Pestañas: el auto-fit acomoda 2 columnas en pantalla grande y 1 en celular -->
+    <section class="analytics-report-types" role="tablist" aria-label="Tipo de reporte"
+             style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+        <button type="button" class="analytics-report-type is-active" role="tab" id="reportTabAsistencia"
+                data-report-tab="reportPanelAsistencia" aria-controls="reportPanelAsistencia" aria-selected="true">
             <span><i class="bi bi-person-check" aria-hidden="true"></i></span>
             <span>
                 <strong>Asistencia</strong>
                 <small>Presencia y ausentismo</small>
             </span>
         </button>
-        <button type="button" class="analytics-report-type" data-report-type="changes" aria-pressed="false">
+        <button type="button" class="analytics-report-type" role="tab" id="reportTabPC"
+                data-report-tab="reportPanelPC" aria-controls="reportPanelPC" aria-selected="false">
             <span><i class="bi bi-arrow-left-right" aria-hidden="true"></i></span>
             <span>
                 <strong>Puntos de cambio</strong>
                 <small>Registro y cumplimiento</small>
             </span>
         </button>
-        <button type="button" class="analytics-report-type" data-report-type="certifications" aria-pressed="false">
-            <span><i class="bi bi-award" aria-hidden="true"></i></span>
-            <span>
-                <strong>Certificaciones</strong>
-                <small>Cobertura por personal</small>
-            </span>
-        </button>
-        <button type="button" class="analytics-report-type" data-report-type="expirations" aria-pressed="false">
-            <span><i class="bi bi-calendar2-x" aria-hidden="true"></i></span>
-            <span>
-                <strong>Vencimientos</strong>
-                <small>Riesgos próximos</small>
-            </span>
-        </button>
     </section>
 
-    <section class="analytics-kpi-grid analytics-kpi-grid-reports" aria-label="Resumen del reporte seleccionado">
-        <article class="analytics-kpi analytics-kpi-primary">
-            <div class="analytics-kpi-icon">
-                <i id="reportKpiIcon1" class="bi bi-person-check" aria-hidden="true"></i>
-            </div>
-            <div class="analytics-kpi-copy">
-                <span id="reportKpiLabel1">Asistencia promedio</span>
-                <strong id="reportKpiValue1">96.4%</strong>
-                <small id="reportKpiNote1">Meta: 95%</small>
-            </div>
-        </article>
-
-        <article class="analytics-kpi analytics-kpi-cyan">
-            <div class="analytics-kpi-icon">
-                <i id="reportKpiIcon2" class="bi bi-people" aria-hidden="true"></i>
-            </div>
-            <div class="analytics-kpi-copy">
-                <span id="reportKpiLabel2">Personal programado</span>
-                <strong id="reportKpiValue2">186</strong>
-                <small id="reportKpiNote2">4 líneas incluidas</small>
-            </div>
-        </article>
-
-        <article class="analytics-kpi analytics-kpi-warning">
-            <div class="analytics-kpi-icon">
-                <i id="reportKpiIcon3" class="bi bi-person-x" aria-hidden="true"></i>
-            </div>
-            <div class="analytics-kpi-copy">
-                <span id="reportKpiLabel3">Ausencias</span>
-                <strong id="reportKpiValue3">7</strong>
-                <small id="reportKpiNote3">3 justificadas</small>
-            </div>
-        </article>
-
-        <article class="analytics-kpi analytics-kpi-success">
-            <div class="analytics-kpi-icon">
-                <i id="reportKpiIcon4" class="bi bi-graph-up-arrow" aria-hidden="true"></i>
-            </div>
-            <div class="analytics-kpi-copy">
-                <span id="reportKpiLabel4">Variación</span>
-                <strong id="reportKpiValue4">+1.8%</strong>
-                <small id="reportKpiNote4">Contra el periodo anterior</small>
-            </div>
-        </article>
-    </section>
-
-    <section class="analytics-layout analytics-layout-main">
-        <article class="analytics-panel">
-            <header class="analytics-panel-header">
-                <div>
-                    <span class="analytics-panel-kicker" id="reportChartKicker">Comportamiento diario</span>
-                    <h3 id="reportChartTitle">Tendencia de asistencia</h3>
-                    <p id="reportChartDescription">Porcentaje promedio registrado durante el periodo.</p>
-                </div>
-                <span class="analytics-badge" id="reportScopeBadge">Todas las líneas</span>
-            </header>
-
-            <div id="reportTrendChart" class="analytics-column-chart" role="img"
-                 aria-label="Gráfica del reporte seleccionado">
-                <div class="analytics-chart-grid" aria-hidden="true">
-                    <span>100</span>
-                    <span>75</span>
-                    <span>50</span>
-                    <span>25</span>
-                    <span>0</span>
-                </div>
-                <div class="analytics-columns"></div>
-            </div>
-        </article>
-
-        <article class="analytics-panel">
-            <header class="analytics-panel-header">
-                <div>
-                    <span class="analytics-panel-kicker">Distribución</span>
-                    <h3 id="reportDistributionTitle">Estado de asistencia</h3>
-                    <p id="reportDistributionDescription">Composición del registro seleccionado.</p>
-                </div>
-            </header>
-
-            <div class="analytics-donut-block">
-                <div id="reportDistributionGauge" class="analytics-donut" style="--percentage: 96;"
-                     role="img" aria-label="96 por ciento de cumplimiento">
-                    <div>
-                        <strong id="reportGaugeValue">96%</strong>
-                        <span id="reportGaugeLabel">Cumplimiento</span>
-                    </div>
-                </div>
-                <div id="reportDistributionLegend" class="analytics-legend"></div>
-            </div>
-        </article>
-    </section>
-
-    <section class="analytics-layout analytics-layout-secondary">
-        <article class="analytics-panel analytics-table-panel">
-            <header class="analytics-panel-header">
-                <div>
-                    <span class="analytics-panel-kicker">Detalle simulado</span>
-                    <h3 id="reportTableTitle">Resumen de asistencia por línea</h3>
-                    <p id="reportTableDescription">Vista previa de los datos que contendría el reporte.</p>
-                </div>
-                <span class="analytics-badge analytics-badge-success">
-                    <i class="bi bi-eye" aria-hidden="true"></i>
-                    Vista previa
+    <!-- ================================================================
+         PESTAÑA 1: ASISTENCIA (SPC_REGISTRO_ASISTENCIA)
+         ================================================================ -->
+    <div id="reportPanelAsistencia" role="tabpanel" aria-labelledby="reportTabAsistencia">
+        <form id="formReporteAsistencia" class="analytics-filters analytics-filters-wide" aria-label="Filtros del reporte de asistencia">
+            <div class="analytics-filter-intro">
+                <span class="analytics-filter-icon">
+                    <i class="bi bi-sliders" aria-hidden="true"></i>
                 </span>
-            </header>
-
-            <div class="analytics-table-wrap">
-                <table class="analytics-table">
-                    <thead id="reportTableHead"></thead>
-                    <tbody id="reportTableBody"></tbody>
-                </table>
+                <span>
+                    <strong>Configurar reporte</strong>
+                    <small>Periodo, línea y turno de la asistencia.</small>
+                </span>
             </div>
-        </article>
 
-        <article class="analytics-panel">
-            <header class="analytics-panel-header">
-                <div>
-                    <span class="analytics-panel-kicker">Lectura rápida</span>
-                    <h3>Hallazgos del periodo</h3>
-                    <p>Observaciones generadas a partir de los datos de muestra.</p>
+            <div class="analytics-filter-field">
+                <label for="asistenciaDesde">Desde</label>
+                <input type="date" id="asistenciaDesde" class="form-control" required>
+            </div>
+
+            <div class="analytics-filter-field">
+                <label for="asistenciaHasta">Hasta</label>
+                <input type="date" id="asistenciaHasta" class="form-control" required>
+            </div>
+
+            <div class="analytics-filter-field">
+                <label for="asistenciaLinea">Línea</label>
+                <select id="asistenciaLinea" class="form-select">
+                    <option value="">Todas</option>
+                </select>
+            </div>
+
+            <div class="analytics-filter-field">
+                <label for="asistenciaTurno">Turno</label>
+                <select id="asistenciaTurno" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="1">Turno 1</option>
+                    <option value="2">Turno 2</option>
+                </select>
+            </div>
+
+            <button type="submit" class="analytics-btn analytics-btn-primary">
+                <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                Actualizar
+            </button>
+        </form>
+
+        <section class="analytics-kpi-grid analytics-kpi-grid-reports" aria-label="Resumen de asistencia">
+            <article class="analytics-kpi analytics-kpi-success">
+                <div class="analytics-kpi-icon"><i class="bi bi-person-check" aria-hidden="true"></i></div>
+                <div class="analytics-kpi-copy">
+                    <span>% de asistencia</span>
+                    <strong id="asisKpiPorcentaje">--</strong>
+                    <small>Asistencia y tiempo extra</small>
                 </div>
-            </header>
-            <div id="reportInsights" class="analytics-insight-list"></div>
-        </article>
-    </section>
+            </article>
+
+            <article class="analytics-kpi analytics-kpi-primary">
+                <div class="analytics-kpi-icon"><i class="bi bi-journal-check" aria-hidden="true"></i></div>
+                <div class="analytics-kpi-copy">
+                    <span>Registros</span>
+                    <strong id="asisKpiRegistros">--</strong>
+                    <small id="asisKpiPersonas">-- personas</small>
+                </div>
+            </article>
+
+            <article class="analytics-kpi analytics-kpi-warning">
+                <div class="analytics-kpi-icon"><i class="bi bi-person-x" aria-hidden="true"></i></div>
+                <div class="analytics-kpi-copy">
+                    <span>Faltas injustificadas</span>
+                    <strong id="asisKpiFaltas">--</strong>
+                    <small>En el periodo</small>
+                </div>
+            </article>
+
+            <article class="analytics-kpi analytics-kpi-cyan">
+                <div class="analytics-kpi-icon"><i class="bi bi-calendar-x" aria-hidden="true"></i></div>
+                <div class="analytics-kpi-copy">
+                    <span>Otras ausencias</span>
+                    <strong id="asisKpiOtras">--</strong>
+                    <small>Permisos, vacaciones, incapacidad, etc.</small>
+                </div>
+            </article>
+        </section>
+
+        <section class="analytics-layout">
+            <article class="analytics-panel">
+                <header class="analytics-panel-header">
+                    <div>
+                        <span class="analytics-panel-kicker">Distribución</span>
+                        <h3>Registros por estatus</h3>
+                        <p>Cantidad y porcentaje de cada estatus de asistencia en el periodo.</p>
+                    </div>
+                </header>
+                <div id="asistenciaPorEstatus" class="analytics-legend reporte-distribucion"></div>
+            </article>
+
+            <article class="analytics-panel analytics-table-panel">
+                <header class="analytics-panel-header">
+                    <div>
+                        <span class="analytics-panel-kicker">Detalle</span>
+                        <h3>Registros de asistencia</h3>
+                        <p id="asistenciaAviso">Registros del periodo, del más reciente al más antiguo.</p>
+                    </div>
+                    <span class="analytics-badge" id="asistenciaConteo">0 registros</span>
+                </header>
+
+                <div class="analytics-table-wrap">
+                    <table id="tablaReporteAsistencia" class="analytics-table display" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Línea</th>
+                                <th>Turno</th>
+                                <th>Nómina</th>
+                                <th>Nombre</th>
+                                <th>Estación(es)</th>
+                                <th>Estatus</th>
+                                <th>Comentario</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+    </div>
+
+    <!-- ================================================================
+         PESTAÑA 2: PUNTOS DE CAMBIO (SPC_PUNTOS_CAMBIO y su flujo)
+         ================================================================ -->
+    <div id="reportPanelPC" role="tabpanel" aria-labelledby="reportTabPC" hidden>
+        <form id="formReportePC" class="analytics-filters analytics-filters-wide" aria-label="Filtros del reporte de puntos de cambio">
+            <div class="analytics-filter-intro">
+                <span class="analytics-filter-icon">
+                    <i class="bi bi-sliders" aria-hidden="true"></i>
+                </span>
+                <span>
+                    <strong>Configurar reporte</strong>
+                    <small>Periodo (fecha de inicio), línea y tipo de PC.</small>
+                </span>
+            </div>
+
+            <div class="analytics-filter-field">
+                <label for="pcDesde">Desde</label>
+                <input type="date" id="pcDesde" class="form-control" required>
+            </div>
+
+            <div class="analytics-filter-field">
+                <label for="pcHasta">Hasta</label>
+                <input type="date" id="pcHasta" class="form-control" required>
+            </div>
+
+            <div class="analytics-filter-field">
+                <label for="pcLinea">Línea</label>
+                <select id="pcLinea" class="form-select">
+                    <option value="">Todas</option>
+                </select>
+            </div>
+
+            <div class="analytics-filter-field">
+                <label for="pcTipo">Tipo de punto de cambio</label>
+                <select id="pcTipo" class="form-select">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+
+            <button type="submit" class="analytics-btn analytics-btn-primary">
+                <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                Actualizar
+            </button>
+        </form>
+
+        <section class="analytics-kpi-grid analytics-kpi-grid-reports" aria-label="Resumen de puntos de cambio">
+            <article class="analytics-kpi analytics-kpi-primary">
+                <div class="analytics-kpi-icon"><i class="bi bi-arrow-left-right" aria-hidden="true"></i></div>
+                <div class="analytics-kpi-copy">
+                    <span>Puntos de cambio</span>
+                    <strong id="pcKpiTotal">--</strong>
+                    <small>Iniciados en el periodo</small>
+                </div>
+            </article>
+
+            <article class="analytics-kpi analytics-kpi-warning">
+                <div class="analytics-kpi-icon"><i class="bi bi-hourglass-split" aria-hidden="true"></i></div>
+                <div class="analytics-kpi-copy">
+                    <span>Activos</span>
+                    <strong id="pcKpiActivos">--</strong>
+                    <small>Sin cierre</small>
+                </div>
+            </article>
+
+            <article class="analytics-kpi analytics-kpi-success">
+                <div class="analytics-kpi-icon"><i class="bi bi-check2-circle" aria-hidden="true"></i></div>
+                <div class="analytics-kpi-copy">
+                    <span>Finalizados</span>
+                    <strong id="pcKpiFinalizados">--</strong>
+                    <small>Con cierre registrado</small>
+                </div>
+            </article>
+
+            <article class="analytics-kpi analytics-kpi-cyan">
+                <div class="analytics-kpi-icon"><i class="bi bi-x-circle" aria-hidden="true"></i></div>
+                <div class="analytics-kpi-copy">
+                    <span>Cancelados</span>
+                    <strong id="pcKpiCancelados">--</strong>
+                    <small>En el periodo</small>
+                </div>
+            </article>
+        </section>
+
+        <section class="analytics-layout">
+            <article class="analytics-panel">
+                <header class="analytics-panel-header">
+                    <div>
+                        <span class="analytics-panel-kicker">Distribución</span>
+                        <h3>Puntos de cambio por tipo (4M)</h3>
+                        <p>Todos los tipos del periodo y la línea, sin importar el tipo seleccionado.</p>
+                    </div>
+                </header>
+                <div id="pcPorTipo" class="analytics-legend reporte-distribucion"></div>
+            </article>
+
+            <article class="analytics-panel analytics-table-panel">
+                <header class="analytics-panel-header">
+                    <div>
+                        <span class="analytics-panel-kicker">Detalle</span>
+                        <h3>Listado de puntos de cambio</h3>
+                        <p id="pcAviso">Puntos de cambio del periodo, del más reciente al más antiguo.</p>
+                    </div>
+                    <span class="analytics-badge" id="pcConteo">0 registros</span>
+                </header>
+
+                <div class="analytics-table-wrap">
+                    <table id="tablaReportePC" class="analytics-table display" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th>No. control</th>
+                                <th>Tipo</th>
+                                <th>Línea</th>
+                                <th>Nómina</th>
+                                <th>Nombre</th>
+                                <th>Motivo / detalles</th>
+                                <th>Inicio</th>
+                                <th>Fin</th>
+                                <th>Tipo de cambio</th>
+                                <th>Estatus</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+    </div>
 </div>
 <!--Fin menu reportes -->

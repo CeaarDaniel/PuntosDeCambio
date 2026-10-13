@@ -35,7 +35,7 @@
   <script src="../scripts/jquery-3.7.1.min.js"></script>
 
   <!--Custom Css -->
-  <link rel="stylesheet" href="../css/gestionLinea.css">
+  <link rel="stylesheet" href="../css/gestionLinea.css?v=1.1.6">
 
   <!--Data table -->
   <link href="../DataTables/datatables.min.css" rel="stylesheet">
@@ -518,8 +518,37 @@
               <div id="ventanasConsultaPC" class="pc-query-view">
                   <!-- TABLA LISTADO PUNTOS DE CAMBIO-->
                   <div id="ventanaTablaPC" class="fade-page show pc-list-view">
-                        <!-- Barra de herramientas  y filtros -->
-                        <div class="d-flex justify-content-between align-items-center mb-4 pc-list-toolbar">
+                        <!-- Barra de herramientas  y filtros
+                             Tipo de PC (4M, siempre hay uno seleccionado; no existe "Todos") y rango de fechas
+                             sobre la fecha de inicio del PC (por defecto el mes actual). Al cambiar se consulta de nuevo. -->
+                        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4 pc-list-toolbar">
+                          <div>
+                            <span class="form-label fw-semibold d-block mb-1">Tipo de punto de cambio</span>
+                            <div class="btn-group flex-wrap" role="group" aria-label="Tipo de punto de cambio">
+                              <input type="radio" class="btn-check" name="filtroTipoPC" id="filtroTipoPC_MO" value="MO" autocomplete="off" checked>
+                              <label class="btn btn-outline-primary" for="filtroTipoPC_MO"><i class="bi bi-person-gear me-1"></i>Mano de obra</label>
+
+                              <input type="radio" class="btn-check" name="filtroTipoPC" id="filtroTipoPC_MA" value="MA" autocomplete="off">
+                              <label class="btn btn-outline-primary" for="filtroTipoPC_MA"><i class="bi bi-gear-fill me-1"></i>Maquinaria</label>
+
+                              <input type="radio" class="btn-check" name="filtroTipoPC" id="filtroTipoPC_MP" value="MP" autocomplete="off">
+                              <label class="btn btn-outline-primary" for="filtroTipoPC_MP"><i class="bi bi-box-seam me-1"></i>Materia prima</label>
+
+                              <input type="radio" class="btn-check" name="filtroTipoPC" id="filtroTipoPC_ME" value="ME" autocomplete="off">
+                              <label class="btn btn-outline-primary" for="filtroTipoPC_ME"><i class="bi bi-diagram-3 me-1"></i>Método</label>
+                            </div>
+                          </div>
+
+                          <div class="d-flex flex-wrap gap-2">
+                            <div>
+                              <label for="filtroPCDesde" class="form-label fw-semibold mb-1">Desde</label>
+                              <input type="date" class="form-control" id="filtroPCDesde">
+                            </div>
+                            <div>
+                              <label for="filtroPCHasta" class="form-label fw-semibold mb-1">Hasta</label>
+                              <input type="date" class="form-control" id="filtroPCHasta">
+                            </div>
+                          </div>
                         </div>
 
                         <!-- Tabla de Puntos de Cambio -->
@@ -1279,28 +1308,28 @@
                     </button>
                   </div>
 
-                <!--
+                
                   <div class="col-7 col-sm-6 col-md-4 col-lg-2">
-                    <button class="menu-btn" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de maquinaria">
+                    <button class="menu-btn" id="btnRegistroMaquinaria" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de maquinaria">
                       <i class="bi bi-gear-fill"></i>
                       <span>MAQUINARIA</span>
                     </button>
                   </div>
 
                   <div class="col-7 col-sm-6 col-md-4 col-lg-2">
-                    <button class="menu-btn" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de materia prima">
+                    <button class="menu-btn" id="btnRegistroMateriaPrima" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de materia prima">
                       <i class="bi bi-box-seam"></i>
                       <span>MATERIA PRIMA</span>
                     </button>
                   </div>
 
                   <div class="col-7 col-sm-6 col-md-4 col-lg-2">
-                    <button class="menu-btn" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de metodo">
+                    <button class="menu-btn" id="btnRegistroMetodo" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Cambio de metodo">
                       <i class="bi bi-diagram-3"></i>
                       <span>MÉTODO</span>
                     </button>
                   </div> 
-                -->
+                
 
                   <div class="col-7 col-sm-6 col-md-4 col-lg-2">
                     <button class="menu-btn" id="btnInfoRPC" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Informacion del trabajador asignado">
@@ -1564,7 +1593,7 @@
                                       <label for="codigolineaPC" class="form-label">
                                         <i class="bi bi-diagram-3"></i> Línea
                                       </label>
-                                      <input type="text" class="form-control form-control-custom" id="codigolineaPC" value= <?php echo $nombre?>  readonly>
+                                      <input type="text" class="form-control form-control-custom" id="codigolineaPC" value="<?php echo htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8'); ?>" readonly>
                                     </div>
 
                                     <div class="col-md-6 mb-3">
@@ -1821,6 +1850,416 @@
                       <!-- FIN TAB DE EVALUACION Y CIERRE DE PC-->
                   </div>
                 <!--FIN REGISTRO EVALUACION Y CIERRE DE PC-->
+
+
+                <!--PUNTO DE CAMBIO 3M: MAQUINARIA (MA), MATERIA PRIMA (MP) Y MÉTODO (ME)
+                    Una sola sección para los tres tipos: los botones MAQUINARIA, MATERIA PRIMA y MÉTODO
+                    indican el tipo (TIPOS_PC_3M en gestionLinea.js) y cambian los textos marcados con
+                    .texto-tipo-pc3m y el ícono .icono-tipo-pc3m. Los ids conservan el sufijo "Maq"
+                    de la primera versión y no interfieren con el formulario de mano de obra.
+                    Al abrir la estación se consulta si tiene un PC abierto de ese tipo (opción 46):
+                    - Sin PC abierto: se muestra el registro inicial (opción 45).
+                    - Con PC abierto: se muestra el seguimiento con las pestañas Planeación (47),
+                      Implementación (50), Evaluación (51) y Cierre (48). -->
+
+                  <div id="contregistroMaquinaria" class="fade-page d-none" style="background: white; border-radius: 10px;">
+
+                    <!-- Estado mientras se consulta el PC de maquinaria de la estación -->
+                    <div id="estadoPCMaq" class="text-center text-muted py-4 d-none" role="status" aria-live="polite">
+                      <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                      Consultando punto de cambio de <span class="texto-tipo-pc3m">maquinaria</span>...
+                    </div>
+
+                    <!-- ===== 1. REGISTRO INICIAL DEL PC DE MAQUINARIA ===== -->
+                    <div id="registroPCMaq">
+                      <form class="form-body" id="registroCambioMaqForm">
+                        <!-- Tipo 4M del PC (MA o MP): lo actualiza aplicarTipoPC3M(); el servidor lo resuelve por clave -->
+                        <input type="hidden" id="claveTipo4MMaq" value="MA">
+
+                        <!-- Header de la sección -->
+                        <div class="modal-line-guide" role="note">
+                          <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true">
+                            <i class="bi bi-gear-fill icono-tipo-pc3m"></i>
+                          </span>
+                          <div>
+                            <strong>Registro de un punto de cambio de <span class="texto-tipo-pc3m guia-inline">maquinaria</span></strong>
+                            <span>Registra al responsable; después podrás capturar la planeación y el cierre.</span>
+                          </div>
+                        </div>
+
+                        <!-- Personal responsable: se valida que la nómina exista en el catálogo de empleados -->
+                          <div class="row form-section">
+                              <div class="col-md-5 mb-3">
+                                <label for="nominaResponsableMaq" class="form-label required-field">
+                                  <i class="bi bi-person-badge"></i> Personal responsable
+                                </label>
+                                <div class="input-group-custom">
+                                  <input type="number" min="0" step="1" class="form-control form-control-custom"
+                                        id="nominaResponsableMaq" placeholder="Ej: 11256" required>
+                                  <button type="button" class="input-icon" tabindex="-1" aria-hidden="true">
+                                    <i class="bi bi-search"></i>
+                                  </button>
+                                </div>
+                                <div class="form-help">Ingresa el número de nómina del responsable</div>
+                                <span id="alertResponsableMaq" class="ms-2 text-danger fw-bold d-none">Nómina inválida</span>
+                              </div>
+
+                              <div class="col-md-7 mb-3">
+                                <label for="nombreResponsableMaq" class="form-label">
+                                  <i class="bi bi-person"></i> Nombre
+                                </label>
+                                <input type="text" class="form-control form-control-custom" id="nombreResponsableMaq"
+                                       placeholder="Nombre del responsable" readonly>
+                              </div>
+                          </div>
+
+                          <div class="row form-section">
+                              <div class="col-md-6 mb-3">
+                                <label for="no_controlCambioMaq" class="form-label required-field">
+                                  <i class="bi bi-hash"></i> No. Control de Cambio
+                                </label>
+                                <div class="input-group-custom">
+                                  <input type="text" class="form-control form-control-custom"
+                                        id="no_controlCambioMaq" placeholder="Ej: CAM-001" maxlength="50" readonly>
+                                </div>
+                                <div class="form-help">El número definitivo se asigna al registrar</div>
+                              </div>
+
+                              <div class="col-md-6 mb-3">
+                                <label for="fechaHora_inicioMaq" class="form-label required-field">
+                                  <i class="bi bi-calendar-event"></i> Fecha y Hora Inicio
+                                </label>
+                                <input type="datetime-local" class="form-control form-control-custom" id="fechaHora_inicioMaq" readonly>
+                              </div>
+
+                              <!--TURNO PUNTO DE CAMBIO -->
+                              <div class="col-md-6 mb-3">
+                                  <label for="turnoPuntoCambioMaq" class="form-label required-field">
+                                      <i class="bi bi-clock-history"></i>Turno</label>
+                                      <select id="turnoPuntoCambioMaq" class="form-select" required>
+                                        <option value="" selected>--- Selecciona un turno ---</option>
+                                        <option value="1">Turno 1</option>
+                                        <option value="2">Turno 2</option>
+                                      </select>
+                              </div>
+                          </div>
+
+                          <div class="row form-section">
+                              <div class="col-md-6 mb-3">
+                                <label for="codigolineaMaq" class="form-label">
+                                  <i class="bi bi-diagram-3"></i> Línea
+                                </label>
+                                <input type="text" class="form-control form-control-custom" id="codigolineaMaq"
+                                       value="<?php echo htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8'); ?>" readonly>
+                              </div>
+
+                              <div class="col-md-6 mb-3">
+                                <label for="nombre_estacionMaq" class="form-label"><i class="bi bi-geo-alt"></i> Estación</label>
+                                <input type="text" class="form-control form-control-custom" id="nombre_estacionMaq" readonly>
+                                <input type="hidden" id="id_estacionMaq">
+                              </div>
+                          </div>
+                      </form>
+
+                      <!-- Footer con la acción principal -->
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-primary-custom" id="confirmChangeMaq">
+                          <i class="bi bi-check-lg"></i> Registrar punto de cambio
+                        </button>
+                      </div>
+                    </div>
+                    <!-- ===== FIN REGISTRO INICIAL ===== -->
+
+                    <!-- ===== 2. SEGUIMIENTO DEL PC DE MAQUINARIA ABIERTO ===== -->
+                    <div id="seguimientoPCMaq" class="d-none">
+                      <!-- Resumen del PC abierto: datos en cuadrícula (4 columnas; 2 en celular) -->
+                      <div class="pc3m-resumen">
+                        <div class="pc3m-resumen-titulo">
+                          <i class="bi bi-gear-fill icono-tipo-pc3m" aria-hidden="true"></i>
+                          <span>Punto de cambio de <span class="texto-tipo-pc3m">maquinaria</span> abierto</span>
+                        </div>
+                        <div class="pc3m-resumen-datos">
+                          <div><small>No. control</small><strong id="folioPCMaq"></strong></div>
+                          <div><small>Responsable</small><strong id="responsablePCMaq"></strong></div>
+                          <div><small>Inicio</small><strong id="inicioPCMaq"></strong></div>
+                          <div><small>Turno</small><strong id="turnoPCMaq"></strong></div>
+                        </div>
+                      </div>
+
+                      <!-- MENU DE PESTAÑAS (tabs) -->
+                      <ul class="nav nav-tabs" id="pcMaqTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                          <button class="nav-link active" id="planeacionMaq-tab" data-bs-toggle="tab" data-bs-target="#planeacionMaq"
+                                  type="button" role="tab" aria-controls="planeacionMaq" aria-selected="true">
+                            <i class="bi bi-clipboard-check"></i> Planeación
+                          </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                          <button class="nav-link" id="implementacionMaq-tab" data-bs-toggle="tab" data-bs-target="#implementacionMaq"
+                                  type="button" role="tab" aria-controls="implementacionMaq" aria-selected="false">
+                            <i class="bi bi-tools"></i> Implementación
+                          </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                          <button class="nav-link" id="evaluacionMaq-tab" data-bs-toggle="tab" data-bs-target="#evaluacionMaq"
+                                  type="button" role="tab" aria-controls="evaluacionMaq" aria-selected="false">
+                            <i class="bi bi-bar-chart-steps"></i> Evaluación
+                          </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                          <button class="nav-link" id="cierreMaq-tab" data-bs-toggle="tab" data-bs-target="#cierreMaq"
+                                  type="button" role="tab" aria-controls="cierreMaq" aria-selected="false">
+                            <i class="bi bi-check2-all"></i> Cierre
+                          </button>
+                        </li>
+                      </ul>
+
+                      <div class="tab-content" id="pcMaqTabsContent">
+
+                        <!-- PLANEACIÓN (SPC_PLANEACION): se registra una sola vez por PC -->
+                        <div class="tab-pane fade show active" id="planeacionMaq" role="tabpanel" aria-labelledby="planeacionMaq-tab">
+                          <div class="modal-line-guide" role="note">
+                            <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true">
+                              <i class="bi bi-clipboard-check"></i>
+                            </span>
+                            <div>
+                              <strong>Registro de planeación del PC</strong>
+                              <span>Describe el producto o material, el cambio que se hará, el equipo y el tipo de cambio. Se registra una sola vez.</span>
+                            </div>
+                          </div>
+
+                          <form class="form-body" id="planeacionMaqForm">
+
+                            <div class="row form-section">
+                              <div class="col-12 mb-3">
+                                <label for="nombreProductoMaq" class="form-label required-field">
+                                  <i class="bi bi-box"></i> Nombre del producto / Nombre del material
+                                </label>
+                                <input type="text" class="form-control form-control-custom" id="nombreProductoMaq"
+                                       maxlength="200" placeholder="Producto o material involucrado" required>
+                              </div>
+
+                              <div class="col-12 mb-3">
+                                <label for="detallesCambioMaq" class="form-label required-field">
+                                  <i class="bi bi-card-text"></i> Detalles del cambio
+                                </label>
+                                <textarea class="form-control form-control-custom" id="detallesCambioMaq" rows="3"
+                                          maxlength="1000" placeholder="Describe el cambio que se realizará" required></textarea>
+                              </div>
+
+                              <div class="col-12 mb-3">
+                                <label for="equipoMaq" class="form-label required-field">
+                                  <i class="bi bi-gear"></i> Equipo
+                                </label>
+                                <input type="text" class="form-control form-control-custom" id="equipoMaq"
+                                       maxlength="200" placeholder="Máquina o equipo" required>
+                              </div>
+
+                              <div class="col-md-6 mb-3">
+                                <label for="tipo_cambioMaq" class="form-label required-field">
+                                  <i class="bi bi-shuffle"></i> Tipo de Cambio
+                                </label>
+                                <!-- Opciones del catálogo SPC_TIPO_3M (opción 44); se cargan al abrir la página -->
+                                <select class="form-select" id="tipo_cambioMaq" required>
+                                  <option value="">Cargando tipos de cambio...</option>
+                                </select>
+                              </div>
+
+                              <!-- Solo se muestra (y es obligatorio) cuando el tipo de cambio es "OTRO" -->
+                              <div class="col-12 mb-3 d-none" id="contMotivoMaq">
+                                <label for="motivoMaq" class="form-label required-field">
+                                  <i class="bi bi-chat-left-text"></i> Especifica el tipo de cambio
+                                </label>
+                                <textarea class="form-control form-control-custom" id="motivoMaq" rows="2"
+                                          maxlength="500" placeholder="Describe qué tipo de cambio se realizará"></textarea>
+                              </div>
+                            </div>
+                          </form>
+
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-primary-custom" id="btnRegistrarPlaneacionMaq">
+                              <i class="bi bi-check-lg"></i> Registrar planeación
+                            </button>
+                          </div>
+                        </div>
+                        <!-- FIN PLANEACIÓN -->
+
+                        <!-- IMPLEMENTACIÓN (SPC_IMPLEMENTACION): requiere la planeación; se registra una sola vez -->
+                        <div class="tab-pane fade" id="implementacionMaq" role="tabpanel" aria-labelledby="implementacionMaq-tab">
+                          <div class="modal-line-guide" role="note">
+                            <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true">
+                              <i class="bi bi-tools"></i>
+                            </span>
+                            <div>
+                              <strong>Registro de implementación del PC</strong>
+                              <span>Marca los documentos que se deben revisar o actualizar, el responsable y la fecha compromiso. Se registra una sola vez.</span>
+                            </div>
+                          </div>
+
+                          <div class="alert alert-warning d-none" id="avisoImplMaq" role="note">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Registra la planeación para poder capturar la implementación.
+                          </div>
+
+                          <form class="form-body" id="implementacionMaqForm">
+
+                            <div class="row form-section">
+                              <!-- Opciones del catálogo SPC_VERIFICACION_DOCUMENTOS (opción 49): se marcan las que apliquen -->
+                              <div class="col-12 mb-3">
+                                <span class="form-label required-field d-block">
+                                  <i class="bi bi-file-earmark-check"></i> Verificación de documentos
+                                </span>
+                                <div id="verificacionDocsMaq" class="d-flex flex-wrap gap-3 p-3 rounded-3 border" role="group"
+                                     aria-label="Verificación de documentos">
+                                  <span class="text-muted">Cargando opciones...</span>
+                                </div>
+                                <div class="form-help">"Sin problema" no puede marcarse junto con otras opciones.</div>
+                              </div>
+
+                              <!-- Solo se muestra (y es obligatorio) cuando se marca "Otro" -->
+                              <div class="col-12 mb-3 d-none" id="contOtroDocMaq">
+                                <label for="otroDocMaq" class="form-label required-field">
+                                  <i class="bi bi-chat-left-text"></i> Especifica el documento
+                                </label>
+                                <textarea class="form-control form-control-custom" id="otroDocMaq" rows="2"
+                                          maxlength="500" placeholder="Describe qué otro documento se requiere"></textarea>
+                              </div>
+
+                              <!-- Responsable: se valida que la nómina exista en el catálogo de empleados -->
+                              <div class="col-md-5 mb-3">
+                                <label for="nominaImplMaq" class="form-label required-field">
+                                  <i class="bi bi-person-badge"></i> Responsable
+                                </label>
+                                <div class="input-group-custom">
+                                  <input type="number" min="0" step="1" class="form-control form-control-custom"
+                                         id="nominaImplMaq" placeholder="Ej: 11256" required>
+                                  <button type="button" class="input-icon" tabindex="-1" aria-hidden="true">
+                                    <i class="bi bi-search"></i>
+                                  </button>
+                                </div>
+                                <span id="alertImplMaq" class="ms-2 text-danger fw-bold d-none">Nómina inválida</span>
+                              </div>
+
+                              <div class="col-md-7 mb-3">
+                                <label for="nombreImplMaq" class="form-label">
+                                  <i class="bi bi-person"></i> Nombre
+                                </label>
+                                <input type="text" class="form-control form-control-custom" id="nombreImplMaq"
+                                       placeholder="Nombre del responsable" readonly>
+                              </div>
+
+                              <div class="col-md-5 mb-3">
+                                <label for="fechaCompromisoMaq" class="form-label required-field">
+                                  <i class="bi bi-calendar-check"></i> Fecha compromiso
+                                </label>
+                                <input type="date" class="form-control form-control-custom" id="fechaCompromisoMaq" required>
+                              </div>
+                            </div>
+                          </form>
+
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-primary-custom" id="btnRegistrarImplMaq">
+                              <i class="bi bi-check-lg"></i> Registrar implementación
+                            </button>
+                          </div>
+                        </div>
+                        <!-- FIN IMPLEMENTACIÓN -->
+
+                        <!-- EVALUACIÓN (SPC_EVALUACIONPC_3M): una por día, días 1 a 3; requiere la implementación -->
+                        <div class="tab-pane fade" id="evaluacionMaq" role="tabpanel" aria-labelledby="evaluacionMaq-tab">
+                          <div class="modal-line-guide" role="note">
+                            <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true">
+                              <i class="bi bi-bar-chart-steps"></i>
+                            </span>
+                            <div>
+                              <strong>Registro de evaluación del PC · Día <span class="guia-inline" id="diaEvalMaq">1</span> de 3</strong>
+                              <span>Evalúa cada punto como OK o NG. Se registra una evaluación por día durante 3 días.</span>
+                            </div>
+                          </div>
+
+                          <div class="alert alert-warning d-none" id="avisoEvalMaq" role="note">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Registra la implementación para poder evaluar el punto de cambio.
+                          </div>
+
+                          <!-- Evaluaciones ya registradas -->
+                          <div id="listaEvalMaq"></div>
+
+                          <!-- Mensaje cuando las 3 evaluaciones están completas -->
+                          <div class="alert alert-success d-none" id="evalCompletaMaq" role="status">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Evaluación completa: se registraron los 3 días. Ya puedes cerrar el punto de cambio.
+                          </div>
+
+                          <form class="form-body" id="evaluacionMaqForm">
+
+                            <!-- Puntos a evaluar (OK / NG): se generan desde METRICAS_EVAL_MAQ en el JS -->
+                            <div id="metricasEvalMaq" class="row form-section"></div>
+
+                            <div class="mt-2">
+                              <label for="comentariosEvalMaq" class="form-label fw-bold">
+                                <i class="bi bi-chat-text me-2"></i>Comentarios
+                              </label>
+                              <textarea class="form-control form-control-custom" id="comentariosEvalMaq" rows="2" maxlength="1000"
+                                        placeholder="Observaciones de la evaluación..."></textarea>
+                            </div>
+                          </form>
+
+                          <div class="modal-footer" id="footerEvalMaq">
+                            <button type="button" class="btn btn-primary-custom" id="btnRegistrarEvalMaq">
+                              <i class="bi bi-check-lg"></i> Registrar evaluación
+                            </button>
+                          </div>
+                        </div>
+                        <!-- FIN EVALUACIÓN -->
+
+                        <!-- CIERRE DEL PC 3M: requiere planeación, implementación y las 3 evaluaciones -->
+                        <div class="tab-pane fade" id="cierreMaq" role="tabpanel" aria-labelledby="cierreMaq-tab">
+                          <div class="modal-line-guide" role="note">
+                            <span class="modal-line-guide-icon d-flex justify-content-center" aria-hidden="true">
+                              <i class="bi bi-unlock"></i>
+                            </span>
+                            <div>
+                              <strong>Cierre del PC</strong>
+                              <span>Se habilita cuando la planeación, la implementación y las 3 evaluaciones están registradas.</span>
+                            </div>
+                          </div>
+
+                          <div class="alert alert-warning d-none" id="avisoCierreMaq" role="note">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <span id="textoAvisoCierreMaq">Completa el flujo para poder cerrar este punto de cambio.</span>
+                          </div>
+
+                          <form class="form-body" id="cierreMaqForm">
+
+                            <div class="row">
+                              <div class="col-md-6">
+                                <label for="fechaCierreMaq" class="form-label fw-bold">Fecha de Cierre</label>
+                                <input type="datetime-local" class="form-control form-control-custom" id="fechaCierreMaq" readonly>
+                              </div>
+                            </div>
+
+                            <div class="mt-4">
+                              <label for="comentariosCierreMaq" class="form-label fw-bold">
+                                <i class="bi bi-chat-text me-2"></i>Comentarios
+                              </label>
+                              <textarea class="form-control form-control-custom" id="comentariosCierreMaq" rows="3" maxlength="1000"
+                                        placeholder="Observaciones sobre el cierre del punto de cambio..."></textarea>
+                            </div>
+                          </form>
+
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-primary-custom" id="btnCerrarPCMaq">
+                              <i class="bi bi-check-lg me-2"></i>Cerrar punto de cambio
+                            </button>
+                          </div>
+                        </div>
+                        <!-- FIN CIERRE -->
+                      </div>
+                    </div>
+                    <!-- ===== FIN SEGUIMIENTO ===== -->
+                  </div>
+                <!--FIN REGISTRO DE PC DE MAQUINARIA-->
 
 
                 <!--Informacion del personal asignado-->
@@ -2342,6 +2781,6 @@
 
   <script src="../DataTables/datatables.min.js"></script>  
   <!--Custmo js -->
-  <script src="../scripts/gestionLinea.js?v=1.0.2"></script> 
+  <script src="../scripts/gestionLinea.js?v=1.1.7"></script>
 </body>
 </html>
