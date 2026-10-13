@@ -2027,7 +2027,7 @@ try {
 
             $consulta = $conn->prepare(
                 "INSERT INTO SA_analisis_revision_QA
-                    (id_anormalidad, [resultado confirmación], cantidad, resultado, momento)
+                    (id_anormalidad, resultado_confirmacion, cantidad, resultado, momento)
                  OUTPUT INSERTED.idRegistro, INSERTED.momento
                  VALUES
                     (:idAnormalidadPiezas, :confirmacionPiezas, :cantidadPiezas,
@@ -2354,7 +2354,7 @@ try {
                     (
                         SELECT TOP (1)
                             QA.idRegistro,
-                            QA.[resultado confirmación] AS confirmacion,
+                            QA.resultado_confirmacion AS confirmacion,
                             QA.cantidad,
                             QA.resultado
                         FROM SA_analisis_revision_QA QA
@@ -2367,7 +2367,7 @@ try {
                     (
                         SELECT TOP (1)
                             QA.idRegistro,
-                            QA.[resultado confirmación] AS confirmacion,
+                            QA.resultado_confirmacion AS confirmacion,
                             QA.cantidad,
                             QA.resultado
                         FROM SA_analisis_revision_QA QA

@@ -2280,7 +2280,7 @@ try {
                     "SELECT
                         MR.CLAVE AS clave_momento,
                         MR.NOMBRE AS momento,
-                        QA.[resultado confirmación] AS confirmacion,
+                        QA.resultado_confirmacion AS confirmacion,
                         QA.cantidad,
                         QA.resultado
                      FROM SA_analisis_revision_QA AS QA
