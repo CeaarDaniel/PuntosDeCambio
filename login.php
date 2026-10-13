@@ -1,3 +1,12 @@
+<?php
+  require_once('./api/sesion.php');
+
+  /* Con una sesión abierta no tiene caso volver a pedir credenciales. */
+  if (haySesion()) {
+      header('Location: index.php');
+      exit;
+  }
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

@@ -28,7 +28,22 @@
       <div class="sidebar-section-label">Operación</div>
 
       <ul class="sidebar-menu">
+        <!-- Mi perfil: no requiere permisos, solo sesión (pages/perfil.php) -->
         <li>
+          <a href="#/perfil" data-tooltip="Mi perfil" aria-label="Mi perfil">
+            <span class="nav-icon">
+              <i class="bi bi-person-circle"></i>
+            </span>
+            <span class="nav-copy">
+              <strong>Mi perfil</strong>
+              <small>Cambiar contraseña</small>
+            </span>
+          </a>
+        </li>
+
+        <!-- Dashboard oculto temporalmente mientras se termina; para mostrarlo, quitar d-none
+             y regresar 'dashboard' como sección inicial en scripts/main.js (obtenerSeccionActual). -->
+        <li class="d-none">
           <a href="#/dashboard" data-tooltip="Dashboard" aria-label="Dashboard">
             <span class="nav-icon">
               <i class="bi bi-speedometer2"></i>
@@ -48,6 +63,30 @@
             <span class="nav-copy">
               <strong>Líneas</strong>
               <small>Gestión y seguimiento</small>
+            </span>
+          </a>
+        </li>
+
+        <li>
+          <a href="#/anormalidades" data-tooltip="Registro de anormalidades" aria-label="Registro de anormalidades">
+            <span class="nav-icon">
+              <i class="bi bi-exclamation-triangle"></i>
+            </span>
+            <span class="nav-copy">
+              <strong>Anormalidades</strong>
+              <small>Registro de anormalidades</small>
+            </span>
+          </a>
+        </li>
+
+        <li>
+          <a href="#/reportesAnormalidades" data-tooltip="Reportes de anormalidades" aria-label="Reportes de anormalidades">
+            <span class="nav-icon">
+              <i class="bi bi-clipboard-data"></i>
+            </span>
+            <span class="nav-copy">
+              <strong>Reportes de anormalidades</strong>
+              <small>Indicadores y seguimiento</small>
             </span>
           </a>
         </li>
