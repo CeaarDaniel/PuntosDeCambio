@@ -43,6 +43,10 @@
   let selectRegistrar = document.getElementById('selectRegistrar');
   let selectEstacionesPC = document.getElementById('selectEstacionesPC');
 
+  //Inputs del formulario de PC de maquinaria
+  let nominaResponsableMaq = document.getElementById('nominaResponsableMaq');
+  let nombreResponsableMaq = document.getElementById('nombreResponsableMaq');
+
   //Inputs del modal consultar historial
   let fechaHistorial = document.getElementById('fechaHistorial');
   let turnoHistorial = document.getElementById('turnoHistorial');
@@ -51,6 +55,9 @@
       //Modal de registro de PC
         let btnInfoRPC = document.getElementById('btnInfoRPC');
         let btnRegistroPc = document.getElementById('btnRegistroPc');
+        let btnRegistroMaquinaria = document.getElementById('btnRegistroMaquinaria');
+        let btnRegistroMateriaPrima = document.getElementById('btnRegistroMateriaPrima');
+        let btnRegistroMetodo = document.getElementById('btnRegistroMetodo');
         let btnMenuAsignarControlModal = document.getElementById('btnMenuAsignarControlModal');
   //Fin botones menu modal
 
@@ -170,6 +177,9 @@
       
       //Actualizar y mostrar el modal de la estacion al abrirlo
       showStationModal(stationData) {
+        //Botones del menú con un PC abierto en esta estación (se muestran en otro color)
+        actualizarBotonesPCAbiertos(stationData);
+
         //Validar que la ruta de la imagen exista
         const img = document.getElementById('imgInfochangeControlModal');
 
@@ -208,6 +218,9 @@
       }
 
         actualizarEstacionChips();
+
+        //PC de maquinaria: muestra el registro o el seguimiento según tenga un PC abierto
+          cargarPCMaquinaria(stationData.id, stationData.name);
 
         document.getElementById('imgInfochangeControlModal').src= (stationData.nomina) ? `../img/personal/${stationData.nomina}.jpg` : `../img/personal/na.jpg`;
         document.getElementById('nombreEstacionModalPC').textContent = (stationData.name) ? (stationData.name).toUpperCase() : '';
@@ -364,7 +377,10 @@
       station.setAttribute('data-station-id', stationData.id);
       station.setAttribute('data-idCertificacion', stationData.certification);
 
-      station.innerHTML = `<div class="station-header py-2"></div>
+      //Íconos de PC 3M abiertos: van dentro del header, que crece solo si hay alguno (clase con-pc3m)
+      const iconosPC3M = htmlIconosPC3M(stationData.pcs3M);
+
+      station.innerHTML = `<div class="station-header py-2${iconosPC3M ? ' con-pc3m' : ''}">${iconosPC3M}</div>
                             <div class="station-content">
                               <div class="station-name text-break"> ${stationData.name} </div>
                             </div>
@@ -454,8 +470,9 @@
                                     'status' : estacion.status,
                                     'idPC' : estacion.idPC,
                                     'estatusPC': estacion.estatusPC,
-                                    'isCertificate' : estacion.isCertificate
-                                  })    
+                                    'isCertificate' : estacion.isCertificate,
+                                    'pcs3M' : estacion.pcs3M
+                                  })
                             });
                       }
 
@@ -520,7 +537,16 @@
                   station.querySelector('.station-header').style.color = "";
                   station.querySelector('.station-header').style.textShadow = "";
                 }
-        } 
+
+              //Íconos de PC 3M abiertos (dentro del header): se reemplazan para que aparezcan o
+              //desaparezcan al registrar/cerrar; el header vuelve a su altura normal si no queda ninguno
+              if (Array.isArray(newData.pcs3M)) {
+                  const header = station.querySelector('.station-header');
+                  const iconosPC3M = htmlIconosPC3M(newData.pcs3M);
+                  header.innerHTML = iconosPC3M;
+                  header.classList.toggle('con-pc3m', iconosPC3M !== '');
+              }
+        }
 
         else 
           console.warn(`No se encontró la estación ${stationId}`);
@@ -538,8 +564,15 @@
             estation.idPC = (newData.idPC) ?? null;
             estation.estatusPC = (newData.estatusPC) ?? null;
             estation.isCertificate = newData.isCertificate
-        } 
-    } 
+            if (Array.isArray(newData.pcs3M)) estation.pcs3M = newData.pcs3M;
+
+            //Si es la estación abierta en el modal, actualiza el color de los botones de PC
+            //(al registrar o cerrar un PC de cualquier tipo sin cerrar el modal)
+            if (String(document.getElementById('idEstacionModalPC').value) === String(stationId)) {
+                actualizarBotonesPCAbiertos(estation);
+            }
+        }
+    }
 
     //Mostrar listado de estaciones registradas para colocar en los select como el de la asistencia individual
     function listarEstaciones(){
@@ -2045,6 +2078,270 @@
                 renderDetallePCError(error.message || 'No fue posible cargar el detalle.');
               }
             }
+
+            //Detalle de un PC 3M (maquinaria, materia prima o método), opción 52: registro, planeación,
+            //implementación, evaluaciones (una por día) y cierre. Usa las mismas clases que el de mano de obra.
+            function renderDetallePC3M(datos) {
+              const pc = datos.pc || {};
+              const estaciones = Array.isArray(datos.estaciones) ? datos.estaciones : [];
+              const planeacion = datos.planeacion || null;
+              const implementacion = datos.implementacion || null;
+              const documentos = implementacion && Array.isArray(implementacion.documentos) ? implementacion.documentos : [];
+              const evaluaciones = Array.isArray(datos.evaluaciones) ? datos.evaluaciones : [];
+              const requeridas = Number(datos.evaluaciones_requeridas) || 3;
+              const cierre = datos.cierre || null;
+
+              const estatusPC = obtenerEstatusPC(pc.estatusPC);
+              const tipo = TIPOS_PC_3M[String(pc.clave4M || '').trim()] || null;
+              const nombreTipo = tipo ? tipo.nombre : String(pc.tipo4M || '').toLowerCase();
+              const turnoTexto = pc.turno ? `Turno ${escapeHTML(pc.turno)}` : 'Sin turno';
+              const nombre = String(pc.nombre || '').trim() || 'Sin nombre registrado';
+              const nomina = String(pc.nomina || '').trim() || 'Sin nómina';
+              const finMostrar = cierre?.fechaCierre || pc.fechaHora_fin || '';
+              const estacionesTexto = estaciones.map(e => e.nombre_estacion || `Estación ${e.idE}`).join(', ');
+
+              //Fecha sin hora (AAAA-MM-DD) a DD/MM/AAAA sin pasar por Date, para no desfasar el día por zona horaria
+              const fechaCorta = (texto) => {
+                const partes = String(texto || '').split('-');
+                return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : 'Sin registro';
+              };
+
+              const dato = (etiqueta, valor) => `
+                <div class="info-item">
+                  <span class="info-label">${etiqueta}</span>
+                  <span class="info-value">${escapeHTML(String(valor ?? '').trim() || 'Sin registro')}</span>
+                </div>`;
+
+              //Igual que dato(), para valores que ya vienen como HTML seguro (fechas de formatearFecha)
+              const datoHTML = (etiqueta, html) => `
+                <div class="info-item">
+                  <span class="info-label">${etiqueta}</span>
+                  <span class="info-value">${html || 'Sin registro'}</span>
+                </div>`;
+
+              const encabezadoSeccion = (icono, titulo, ayuda, claseBadge, textoBadge) => `
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 pc-section-header">
+                  <div class="pc-section-heading-copy">
+                    <h5 class="section-title mb-1"><i class="bi ${icono}"></i> ${titulo}</h5>
+                    <p class="pc-section-help mb-0">${ayuda}</p>
+                  </div>
+                  <span class="badge ${claseBadge} pc-count-badge">${textoBadge}</span>
+                </div>`;
+
+              const sinRegistro = (texto, clase = 'alert-light border') =>
+                `<div class="alert ${clase} mb-0 pc-empty-state">${texto}</div>`;
+
+              const tarjetaResumen = (claseColor, icono, titulo, valorHTML, nota) => `
+                <div class="col-12 col-sm-6 col-xl-3">
+                  <div class="card h-100 pc-summary-card ${claseColor}">
+                    <div class="card-body">
+                      <div class="pc-summary-heading"><i class="bi ${icono}" aria-hidden="true"></i><span class="text-muted small">${titulo}</span></div>
+                      ${valorHTML}
+                      ${nota ? `<div class="small text-muted">${nota}</div>` : ''}
+                    </div>
+                  </div>
+                </div>`;
+
+              //Un bloque por día con sus 5 puntos OK / NG (METRICAS_EVAL_MAQ)
+              const bloquesEvaluacion = Array.from({ length: requeridas }, (_, indiceDia) => {
+                const dia = indiceDia + 1;
+                const evaluacion = evaluaciones.find(e => Number(e.numeroDia) === dia);
+
+                return `
+                  <div class="col-12 col-lg-4">
+                    <div class="card h-100 pc-station-card">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2 gap-2">
+                          <h6 class="mb-0">Día ${dia}</h6>
+                          <span class="badge ${evaluacion ? 'bg-success' : 'bg-secondary'}">${evaluacion ? formatearFecha(evaluacion.fechaEvaluacion) : 'Pendiente'}</span>
+                        </div>
+                        ${evaluacion
+                          ? `<div class="row g-2">${METRICAS_EVAL_MAQ.map((titulo, indice) => renderMetrica(titulo, evaluacion['metrica' + (indice + 1)])).join('')}</div>
+                             ${evaluacion.comentarios ? `<div class="small text-muted mt-2">${escapeHTML(evaluacion.comentarios)}</div>` : ''}`
+                          : '<div class="small text-muted">Sin evaluación registrada.</div>'}
+                      </div>
+                    </div>
+                  </div>`;
+              }).join('');
+
+              seccionDetallePC.innerHTML = `
+                <div class="pc-detail-report">
+                  <div class="mx-auto pc-report-container">
+                    <div class="form-body px-0 mx-0 pc-report-body">
+                      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 pc-report-context">
+                        <div>
+                          <span class="pc-section-kicker">Punto de cambio de ${escapeHTML(nombreTipo)}</span>
+                          <p class="pc-report-help mb-0">Información registrada en su flujo: planeación, implementación, evaluación y cierre.</p>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 pc-meta-list" aria-label="Datos principales del punto de cambio">
+                          <span class="badge bg-light text-dark pc-meta-badge">No. Control: ${escapeHTML(pc.no_controlCambio || 'Sin dato')}</span>
+                          <span class="badge ${estatusPC.clase} pc-meta-badge">${estatusPC.texto}</span>
+                          <span class="badge bg-light text-dark pc-meta-badge">Tipo: ${escapeHTML(pc.tipo4M || nombreTipo)}</span>
+                          <span class="badge bg-light text-dark pc-meta-badge">${turnoTexto}</span>
+                        </div>
+                      </div>
+
+                      <div class="row g-3 mb-4 pc-summary-grid">
+                        ${tarjetaResumen('pc-summary-card-cyan', 'bi-file-earmark-check', 'Documentos',
+                          `<div class="fs-4 fw-semibold pc-summary-value">${documentos.length}</div>`, 'Marcados en la implementación')}
+                        ${tarjetaResumen('pc-summary-card-blue', 'bi-clipboard2-check', 'Evaluaciones',
+                          `<div class="fs-4 fw-semibold pc-summary-value">${evaluaciones.length} de ${requeridas}</div>`, 'Una por día')}
+                        ${tarjetaResumen('pc-summary-card-start', 'bi-calendar-event', 'Inicio',
+                          `<div class="fw-semibold pc-summary-date">${pc.fechaHora_inicio ? formatearFecha(pc.fechaHora_inicio) : 'Sin registro'}</div>`, '')}
+                        ${tarjetaResumen('pc-summary-card-end', 'bi-calendar-check', 'Fin / cierre',
+                          `<div class="fw-semibold pc-summary-date">${finMostrar ? formatearFecha(finMostrar) : 'Sin registro'}</div>`, '')}
+                      </div>
+
+                      <div class="row g-3 mb-4 pc-overview-grid">
+                        <div class="col-12">
+                          <div class="info-card h-100 mb-0 pc-info-panel">
+                            <div class="info-title"><i class="bi bi-info-circle"></i> Información general</div>
+                            <div class="row g-3">
+                              <div class="col-md-6">
+                                ${dato('No. Control', pc.no_controlCambio)}
+                                ${dato('Tipo de punto de cambio', pc.tipo4M || nombreTipo)}
+                                ${dato('Línea', pc.nombre_linea || pc.codigo_linea)}
+                                ${dato(estaciones.length === 1 ? 'Estación' : 'Estaciones', estacionesTexto)}
+                              </div>
+                              <div class="col-md-6">
+                                ${datoHTML('Fecha / hora inicio', pc.fechaHora_inicio ? formatearFecha(pc.fechaHora_inicio) : '')}
+                                ${datoHTML('Fecha / hora fin', pc.fechaHora_fin ? formatearFecha(pc.fechaHora_fin) : '')}
+                                ${datoHTML('Turno de registro', turnoTexto)}
+                                ${datoHTML('Estatus', escapeHTML(estatusPC.texto))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="col-12">
+                          <div class="card pc-side-card mx-1">
+                            <div class="card-body">
+                              <h5 class="section-title mb-3"><i class="bi bi-person-badge"></i> Personal responsable</h5>
+                              <div class="employee-preview mt-0">
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-semibold pc-avatar">
+                                  ${escapeHTML(obtenerIniciales(nombre))}
+                                </div>
+                                <div class="employee-info">
+                                  <p class="employee-name mb-0">${escapeHTML(nombre)}</p>
+                                  <p class="employee-role mb-0">Nómina ${escapeHTML(nomina)}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="form-section pc-content-section">
+                        ${encabezadoSeccion('bi-clipboard-check', 'Planeación', 'Producto o material, cambio a realizar, equipo y tipo de cambio.',
+                          planeacion ? 'bg-success' : 'bg-secondary', planeacion ? 'Registrada' : 'Pendiente')}
+                        ${planeacion
+                          ? `<div class="row g-3">
+                               <div class="col-md-6">
+                                 ${dato('Producto / material', planeacion.nombre_producto)}
+                                 ${dato('Equipo', planeacion.equipo)}
+                                 ${dato('Tipo de cambio', planeacion.tipo_cambio)}
+                                 ${planeacion.otro_detalle ? dato('Especificación del tipo de cambio', planeacion.otro_detalle) : ''}
+                               </div>
+                               <div class="col-md-6">
+                                 <span class="info-label d-block mb-1">Detalles del cambio</span>
+                                 <div class="alert alert-light border rounded-3 mb-0 pc-reason-box">${escapeHTML(planeacion.detalles_cambio || 'Sin detalles registrados.')}</div>
+                               </div>
+                             </div>`
+                          : sinRegistro('Este punto de cambio no tiene planeación registrada.')}
+                      </div>
+
+                      <div class="form-section pc-content-section">
+                        ${encabezadoSeccion('bi-tools', 'Implementación', 'Verificación de documentos, responsable y fecha compromiso.',
+                          implementacion ? 'bg-success' : 'bg-secondary', implementacion ? 'Registrada' : 'Pendiente')}
+                        ${implementacion
+                          ? `<div class="row g-3">
+                               <div class="col-md-6">
+                                 <span class="info-label d-block mb-2">Verificación de documentos</span>
+                                 <div class="d-flex flex-wrap gap-2">
+                                   ${documentos.length
+                                     ? documentos.map(documento => `<span class="badge bg-light text-dark border px-3 py-2">${escapeHTML(documento.nombre)}</span>`).join('')
+                                     : '<span class="text-muted small">Sin documentos marcados.</span>'}
+                                 </div>
+                                 ${implementacion.otro_detalle ? `<div class="mt-3">${dato('Otro documento', implementacion.otro_detalle)}</div>` : ''}
+                               </div>
+                               <div class="col-md-6">
+                                 ${dato('Responsable', `${implementacion.nombre_responsable || ''} (${implementacion.nomina_responsable || ''})`)}
+                                 ${dato('Fecha compromiso', fechaCorta(implementacion.fecha_compromiso))}
+                                 ${datoHTML('Fecha de registro', implementacion.fecha_registro ? formatearFecha(implementacion.fecha_registro) : '')}
+                               </div>
+                             </div>`
+                          : sinRegistro('Este punto de cambio no tiene implementación registrada.')}
+                      </div>
+
+                      <div class="form-section pc-content-section">
+                        ${encabezadoSeccion('bi-clipboard2-pulse', 'Seguimiento de evaluaciones', 'Resultado OK / NG de cada punto, una evaluación por día.',
+                          'bg-primary', `${evaluaciones.length} de ${requeridas}`)}
+                        <div class="row g-3">${bloquesEvaluacion}</div>
+                      </div>
+
+                      <div class="form-section border-0 mb-2 pb-1 pc-content-section pc-closing-section">
+                        ${encabezadoSeccion('bi-check2-circle', 'Cierre del Punto de Cambio', 'Fecha y observaciones con las que concluyó el registro.',
+                          cierre ? 'bg-success' : 'bg-secondary', cierre ? 'Registrado' : 'Pendiente')}
+                        ${cierre
+                          ? `<div class="row g-3">
+                               <div class="col-12 col-lg-4">
+                                 <div class="info-card h-100 mb-0 pc-closing-card">
+                                   <div class="info-title"><i class="bi bi-calendar-check"></i> Fecha de cierre</div>
+                                   <div class="fw-semibold">${formatearFecha(cierre.fechaCierre)}</div>
+                                 </div>
+                               </div>
+                               <div class="col-12 col-lg-8">
+                                 <div class="info-card h-100 mb-0 pc-closing-card">
+                                   <div class="info-title"><i class="bi bi-chat-square-text"></i> Comentarios de cierre</div>
+                                   <div class="text-muted">${escapeHTML(String(cierre.comentarios || '').trim() || 'Sin comentarios de cierre.')}</div>
+                                 </div>
+                               </div>
+                             </div>`
+                          : sinRegistro('Este punto de cambio aún no tiene registro de cierre.', 'alert-warning')}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }
+
+            //Carga el detalle de un PC 3M (opción 52) en la misma ventana de detalle del listado
+            async function cargarDetallePC3M(idPC) {
+              try {
+                seccionDetallePC.innerHTML = `
+                  <div class="pc-feedback-wrap">
+                    <div class="alert alert-info mb-0 pc-feedback" role="status" aria-live="polite">
+                      <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                      <span>Cargando detalle del punto de cambio...</span>
+                    </div>
+                  </div>
+                `;
+
+                const formData = new FormData();
+                formData.append('opcion', 52);
+                formData.append('idPC', idPC);
+
+                const response = await fetch('../api/operacionesLinea.php', {
+                  method: 'POST',
+                  body: formData
+                });
+
+                if (!response.ok) {
+                  throw new Error(`Error HTTP ${response.status}`);
+                }
+
+                const respuesta = await response.json();
+
+                if (respuesta.estatus !== 'ok') {
+                  throw new Error(respuesta.mensaje || 'El servidor no devolvió un resultado válido.');
+                }
+
+                renderDetallePC3M(respuesta.data);
+              } catch (error) {
+                console.error(error);
+                renderDetallePCError(error.message || 'No fue posible cargar el detalle.');
+              }
+            }
     //FIN Funciones para renderizar el detalle del PC
 
     //Funcion para cargar el listado de personal
@@ -2232,11 +2529,41 @@
         });
     }
 
+    //Coloca el rango de fechas del listado de PC en el mes actual (primer y último día)
+    function inicializarFiltrosFechaPC() {
+      const hoy = new Date();
+      document.getElementById('filtroPCDesde').value = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toLocaleDateString('sv-SE');
+      document.getElementById('filtroPCHasta').value = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).toLocaleDateString('sv-SE');
+    }
+
+    let tokenListadoPC = 0; //Descarta respuestas atrasadas si se cambian los filtros rápidamente
+
+    //Listado de puntos de cambio (changePointsModal) filtrado por tipo 4M y rango de fechas de inicio
     function mostrarTablaPC(){
+      const campoDesde = document.getElementById('filtroPCDesde');
+      const campoHasta = document.getElementById('filtroPCHasta');
+
+      //Si falta alguna fecha se vuelve al mes actual
+      if (!campoDesde.value || !campoHasta.value) {
+        inicializarFiltrosFechaPC();
+      }
+
+      //El rango debe ser válido: se avisa junto al campo en vez de consultar
+      campoHasta.setCustomValidity(campoDesde.value > campoHasta.value ? 'La fecha "Hasta" debe ser igual o posterior a "Desde".' : '');
+      if (!campoHasta.reportValidity()) return;
+
+      //Siempre hay un tipo seleccionado (no existe "Todos"); por defecto mano de obra
+      const filtroTipo = document.querySelector('input[name="filtroTipoPC"]:checked');
+      const tipoConsulta = filtroTipo ? filtroTipo.value : 'MO';
+      const tokenActual = ++tokenListadoPC;
+
       let formData= new FormData();
       formData.append('codigoLinea', codigoLinea.value);
       formData.append('opcion', 38);
       formData.append('turno', $('#turnoLayout').val());
+      formData.append('clave4M', tipoConsulta);
+      formData.append('fechaInicio', campoDesde.value);
+      formData.append('fechaFin', campoHasta.value);
 
       fetch("../api/operacionesLinea.php", {
         method: "POST",
@@ -2244,8 +2571,15 @@
       })
         .then((response) => response.text())
         .then((data) => {
+          if (tokenActual !== tokenListadoPC) return;
 
           data = JSON.parse(data);
+
+          if (data.estatus !== 'ok') {
+            console.log(data);
+            return;
+          }
+
           const response = data.data;
 
           // Inicializar DataTable listado de puntos de cambio
@@ -2271,11 +2605,12 @@
                   return `<span class="fw-semibold">${data ?? ''}</span>`;
                 }
               },
-              { 
+              {
                 data: 'motivo',
                 className: 'px-4 py-3',
-                render: function(data) {
-                  return `<span class="text-wrap">${data ?? ''}</span>`;
+                //En los PC 3M el motivo son los detalles del cambio registrados en la planeación
+                render: function(data, tipo, fila) {
+                  return `<span class="text-wrap">${escapeHTML(data ?? fila.detalles_cambio ?? '')}</span>`;
                 }
               },
               {
@@ -2294,11 +2629,19 @@
                   return formatearFecha(data);
                 }
               },
-              { 
+              {
                 data: 'tipo_cambio',
                 className: 'px-4 py-3',
-                render: function(data) {
+                render: function(data, tipo, fila) {
                   let badge = '';
+
+                  //PC 3M: tipo de cambio de su planeación (SPC_TIPO_3M)
+                  if (tipoConsulta !== 'MO') {
+                    return fila.tipo_cambio_3m
+                      ? `<span class="badge bg-primary bg-opacity-10 text-dark px-3 py-1 rounded-pill">${escapeHTML(fila.tipo_cambio_3m)}</span>`
+                      : '<span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 rounded-pill">Sin planeación</span>';
+                  }
+
                   if (data == '1') {
                     badge = '<span class="badge bg-dark bg-opacity-10 text-dark px-3 py-1 rounded-pill">Inesperado</span>';
                   } else if (data == '2') {
@@ -2340,9 +2683,12 @@
                 data: null,
                 className: 'px-4 py-3',
                 render: function(data, row) {
+                  //Los PC 3M tienen su propio detalle (planeación, implementación, evaluación, cierre)
+                  const claseDetalle = tipoConsulta === 'MO' ? 'btnDetallePC' : 'btnDetallePC3M';
+
                   return `
                     <button type="button"
-                            class="btn btn-info btn-sm btnDetallePC"
+                            class="btn btn-info btn-sm ${claseDetalle}"
                             data-idpc="${data.idPC}"
                             title="Ver detalle">
                       <i class="bi bi-eye"></i>
@@ -2475,6 +2821,589 @@
         .catch((error) => {
            nombreSelect.innerHTML = '<option value="">Selecciona una opción</option>';
           console.error(error);
+        });
+    }
+
+    //PC de maquinaria: la descripción solo aplica cuando el tipo de cambio es "OTRO".
+    //Se identifica por la clave del catálogo SPC_TIPO_3M y no por su id, que puede variar entre bases.
+    const CLAVE_TIPO3M_OTRO = '6';
+
+    function actualizarDescripcionMaq() {
+      const opcion = document.getElementById('tipo_cambioMaq').selectedOptions[0];
+      const descripcion = document.getElementById('motivoMaq');
+      const esOtro = Boolean(opcion && String(opcion.dataset.clave || '').trim() === CLAVE_TIPO3M_OTRO);
+
+      document.getElementById('contMotivoMaq').classList.toggle('d-none', !esOtro);
+      descripcion.required = esOtro;
+
+      //Al dejar de ser "OTRO" se limpia para no enviar una descripción que ya no aplica
+      if (!esOtro) descripcion.value = '';
+    }
+
+    //Cargar el catálogo de tipos de cambio del PC de maquinaria (SPC_TIPO_3M, opción 44).
+    //Se consulta una sola vez al abrir la página porque el catálogo no cambia durante el uso.
+    function cargarTiposCambioMaq() {
+      const selectTipo = document.getElementById('tipo_cambioMaq');
+      let formDataTipos = new FormData();
+      formDataTipos.append('opcion', 44);
+
+      fetch("../api/operacionesLinea.php", {
+        method: "POST",
+        body: formDataTipos,
+      })
+        .then((response) => response.text())
+        .then((data) => {
+          data = JSON.parse(data);
+
+          if (data.estatus !== 'ok') {
+            selectTipo.innerHTML = '<option value="">No fue posible cargar los tipos de cambio</option>';
+            console.log(data);
+            return;
+          }
+
+          selectTipo.innerHTML = '<option value="">Selecciona un tipo de cambio...</option>';
+
+          data.data.forEach((tipo) => {
+            const opcion = document.createElement('option');
+            opcion.value = tipo.idTIPO3M;
+            opcion.textContent = tipo.nombre;
+            opcion.dataset.clave = tipo.clave;
+            selectTipo.appendChild(opcion);
+          });
+        })
+        .catch((error) => {
+          selectTipo.innerHTML = '<option value="">No fue posible cargar los tipos de cambio</option>';
+          console.error(error);
+        });
+    }
+
+    /* =====================================================================
+       PUNTO DE CAMBIO 3M: MAQUINARIA, MATERIA PRIMA Y MÉTODO (opciones 45 a 51 de operacionesLinea.php)
+       Una sola sección (#contregistroMaquinaria) sirve para los dos tipos; tipo4MActual indica
+       cuál se muestra y se envía al servidor como clave4M.
+       Vistas dentro de la sección:
+       - registroPCMaq: primer registro, cuando la estación no tiene un PC abierto de ese tipo.
+       - seguimientoPCMaq: pestañas Planeación, Implementación, Evaluación y Cierre del PC abierto.
+       ===================================================================== */
+
+    /* Tipos que usan esta sección (clave de SPC_TIPO_4MPC).
+       backendListo: false mientras operacionesLinea.php no acepte ese tipo; la sección se
+       muestra solo para revisión visual y no consulta ni guarda nada en el servidor. */
+    const TIPOS_PC_3M = {
+      MA: { nombre: 'maquinaria', icono: 'bi-gear-fill', idBoton: 'btnRegistroMaquinaria', backendListo: true },
+      MP: { nombre: 'materia prima', icono: 'bi-box-seam', idBoton: 'btnRegistroMateriaPrima', backendListo: true },
+      ME: { nombre: 'método', icono: 'bi-diagram-3', idBoton: 'btnRegistroMetodo', backendListo: true }
+    };
+
+    //Íconos de los PC 3M abiertos de una estación del layout (claves: ["MA","MP","ME"]).
+    //Se muestran en el orden de TIPOS_PC_3M; sin PC 3M abiertos no se agrega nada.
+    function htmlIconosPC3M(claves) {
+      const abiertos = Array.isArray(claves) ? claves.map(clave => String(clave).trim().toUpperCase()) : [];
+      const iconos = Object.keys(TIPOS_PC_3M)
+        .filter(clave => abiertos.indexOf(clave) !== -1)
+        .map(clave => {
+          const descripcion = 'PC de ' + TIPOS_PC_3M[clave].nombre + ' abierto';
+          return `<span class="station-pc3m-icon station-pc3m-${clave}" role="img" aria-label="${descripcion}" title="${descripcion}">` +
+                 `<i class="bi ${TIPOS_PC_3M[clave].icono}" aria-hidden="true"></i></span>`;
+        })
+        .join('');
+
+      return iconos ? `<div class="station-pc3m">${iconos}</div>` : '';
+    }
+
+    //Resalta en el menú del modal los botones con un PC abierto en la estación:
+    //mano de obra (idPC del turno que muestra el layout) y PC 3M (pcs3M, en cualquier turno)
+    function actualizarBotonesPCAbiertos(estacion) {
+      const pcs3M = (estacion && Array.isArray(estacion.pcs3M)) ? estacion.pcs3M : [];
+
+      marcarBotonPCAbierto(document.getElementById('btnRegistroPc'), Boolean(estacion && estacion.idPC));
+
+      Object.keys(TIPOS_PC_3M).forEach(clave => {
+        marcarBotonPCAbierto(document.getElementById(TIPOS_PC_3M[clave].idBoton), pcs3M.indexOf(clave) !== -1);
+      });
+    }
+
+    function marcarBotonPCAbierto(boton, abierto) {
+      if (!boton) return;
+
+      boton.classList.toggle('pc-abierto', abierto);
+      //Para lectores de pantalla, ya que el aviso visual es el color y la etiqueta "Abierto" (CSS)
+      boton.setAttribute('aria-label', boton.textContent.trim() + (abierto ? ' (punto de cambio abierto)' : ''));
+    }
+
+    let tipo4MActual = 'MA';                         //Tipo de PC 3M que muestra la sección
+    let idPCMaqActual = null;                        //PC abierto (del tipo actual) de la estación mostrada
+    let estacionPCMaq = { id: null, nombre: '' };    //Estación consultada (para recargar tras guardar)
+    let tokenConsultaPCMaq = 0;                      //Descarta respuestas de una estación o tipo anterior
+
+    //Cambia el tipo de PC 3M de la sección: textos, ícono y clave enviada al servidor
+    function aplicarTipoPC3M(clave) {
+      const tipo = TIPOS_PC_3M[clave];
+      tipo4MActual = clave;
+      document.getElementById('claveTipo4MMaq').value = clave;
+
+      document.querySelectorAll('#contregistroMaquinaria .texto-tipo-pc3m').forEach(texto => {
+        texto.textContent = tipo.nombre;
+      });
+
+      document.querySelectorAll('#contregistroMaquinaria .icono-tipo-pc3m').forEach(icono => {
+        Object.values(TIPOS_PC_3M).forEach(otroTipo => icono.classList.remove(otroTipo.icono));
+        icono.classList.add(tipo.icono);
+      });
+    }
+
+    //Botones MAQUINARIA / MATERIA PRIMA: misma sección, se cambia el tipo y se consulta su PC abierto
+    function abrirSeccionPC3M(clave) {
+      aplicarTipoPC3M(clave);
+      changeContent('ventanasModalPC', 'contregistroMaquinaria');
+      cargarPCMaquinaria(estacionPCMaq.id, estacionPCMaq.nombre);
+    }
+
+    function mostrarVistaPCMaq(vista) {
+      document.getElementById('estadoPCMaq').classList.toggle('d-none', vista !== 'cargando');
+      document.getElementById('registroPCMaq').classList.toggle('d-none', vista !== 'registro');
+      document.getElementById('seguimientoPCMaq').classList.toggle('d-none', vista !== 'seguimiento');
+    }
+
+    //Limpia el primer registro y lo llena con los datos de la estación
+    function prepararRegistroPCMaq(idEstacion, nombreEstacion) {
+      document.getElementById('registroCambioMaqForm').reset();
+      nombreResponsableMaq.placeholder = 'Nombre del responsable';
+      $('#alertResponsableMaq').addClass('d-none');
+
+      document.getElementById('fechaHora_inicioMaq').value = (new Date()).toLocaleString('sv-SE').slice(0, 16);
+      document.getElementById('id_estacionMaq').value = idEstacion;
+      document.getElementById('nombre_estacionMaq').value = nombreEstacion || '';
+      document.getElementById('turnoPuntoCambioMaq').value = $('#turnoLayout').val();
+
+      //Folio de referencia: el definitivo lo asigna el servidor al registrar
+      document.getElementById('no_controlCambioMaq').value = '';
+      getNoControl().then(resultado => { document.getElementById('no_controlCambioMaq').value = resultado; });
+    }
+
+    //Valida que una nómina exista en el catálogo de empleados (opción 7) y muestra el nombre.
+    //Al editar la nómina se borra el nombre validado, así no se confirma con el de otra persona.
+    function configurarValidacionNomina(campoNomina, campoNombre, selectorAlerta) {
+      campoNomina.addEventListener('input', function(){
+        campoNombre.value = '';
+        $(selectorAlerta).addClass('d-none');
+      });
+
+      campoNomina.addEventListener('change', function(){
+        if (campoNomina.value.trim() === '') return;
+
+        let formDataNomina = new FormData();
+        formDataNomina.append('opcion', 7);
+        formDataNomina.append('nomina', campoNomina.value.trim());
+        formDataNomina.append('codigoLinea', codigoLinea.value);
+
+        campoNomina.disabled = true;
+        campoNombre.value = '';
+        campoNombre.placeholder = 'Consultando datos del empleado...';
+
+        fetch("../api/operacionesLinea.php", {
+          method: "POST",
+          body: formDataNomina,
+        })
+          .then((response) => response.text())
+          .then((data) => {
+            data = JSON.parse(data);
+
+            if (data.estatus == 'ok') {
+              campoNombre.value = data.nombre;
+              $(selectorAlerta).addClass('d-none');
+            }
+
+            else {
+              campoNombre.placeholder = 'Nombre del responsable';
+              $(selectorAlerta).text('Nómina inválida').removeClass('d-none');
+            }
+          })
+          .catch((error) => {
+            campoNombre.placeholder = 'Nombre del responsable';
+            $(selectorAlerta).text('No fue posible validar la nómina').removeClass('d-none');
+            console.log(error);
+          })
+          .finally(() => {
+            campoNomina.disabled = false;
+          });
+      });
+    }
+
+    //Claves de SPC_VERIFICACION_DOCUMENTOS con reglas propias (las mismas que valida el servidor)
+    const CLAVE_VERIF_SIN_PROBLEMA = 'SIN_PROBLEMA';
+    const CLAVE_VERIF_OTRO = 'OTRO';
+
+    //Carga las opciones de "Verificación de documentos" (opción 49) como casillas de selección múltiple
+    function cargarVerificacionDocsMaq() {
+      const contenedor = document.getElementById('verificacionDocsMaq');
+      let formDataVerificacion = new FormData();
+      formDataVerificacion.append('opcion', 49);
+
+      fetch("../api/operacionesLinea.php", {
+        method: "POST",
+        body: formDataVerificacion,
+      })
+        .then((response) => response.text())
+        .then((data) => {
+          data = JSON.parse(data);
+
+          if (data.estatus !== 'ok') {
+            throw new Error(data.mensaje || 'Respuesta inválida del servidor.');
+          }
+
+          contenedor.innerHTML = '';
+
+          data.data.forEach((opcion) => {
+            const envoltura = document.createElement('div');
+            const entrada = document.createElement('input');
+            const etiqueta = document.createElement('label');
+
+            envoltura.className = 'form-check';
+            entrada.className = 'form-check-input';
+            entrada.type = 'checkbox';
+            entrada.name = 'verificacionDocMaq';
+            entrada.id = 'verificacionDocMaq' + opcion.idVerificacion;
+            entrada.value = opcion.idVerificacion;
+            entrada.dataset.clave = String(opcion.clave || '').trim();
+            etiqueta.className = 'form-check-label';
+            etiqueta.htmlFor = entrada.id;
+            etiqueta.textContent = opcion.nombre;
+
+            envoltura.appendChild(entrada);
+            envoltura.appendChild(etiqueta);
+            contenedor.appendChild(envoltura);
+          });
+        })
+        .catch((error) => {
+          contenedor.innerHTML = '<span class="text-danger">No fue posible cargar las opciones de verificación.</span>';
+          console.error(error);
+        });
+    }
+
+    //"Sin problema" es exclusiva y "Otro" exige especificar el documento
+    function actualizarVerificacionDocsMaq(entradaCambiada) {
+      const entradas = Array.from(document.querySelectorAll('#verificacionDocsMaq input[name="verificacionDocMaq"]'));
+
+      if (entradaCambiada && entradaCambiada.checked) {
+        const esSinProblema = entradaCambiada.dataset.clave === CLAVE_VERIF_SIN_PROBLEMA;
+
+        //Al marcar "Sin problema" se desmarcan las demás; al marcar otra, se desmarca "Sin problema"
+        entradas.forEach(entrada => {
+          if (entrada !== entradaCambiada &&
+              (esSinProblema || entrada.dataset.clave === CLAVE_VERIF_SIN_PROBLEMA)) {
+            entrada.checked = false;
+          }
+        });
+      }
+
+      const otroMarcado = entradas.some(entrada => entrada.checked && entrada.dataset.clave === CLAVE_VERIF_OTRO);
+      const detalle = document.getElementById('otroDocMaq');
+
+      document.getElementById('contOtroDocMaq').classList.toggle('d-none', !otroMarcado);
+      detalle.required = otroMarcado;
+
+      if (!otroMarcado) detalle.value = '';
+    }
+
+    //Puntos que se evalúan en el PC de maquinaria (metrica1 a metrica5 de SPC_EVALUACIONPC_3M)
+    const METRICAS_EVAL_MAQ = [
+      'Manejo / estado de uso',
+      'Inspección previa de la operación',
+      'Estado de operación del equipo',
+      'Dificultad de la operación',
+      'Acabado del producto'
+    ];
+
+    //Genera las preguntas OK / NG de la evaluación (1 = OK, 0 = NG, igual que mano de obra)
+    function renderMetricasEvalMaq() {
+      document.getElementById('metricasEvalMaq').innerHTML = METRICAS_EVAL_MAQ.map((titulo, indice) => {
+        const nombre = 'metricaMaq' + (indice + 1);
+
+        return `
+          <div class="col-md-6 mb-3">
+            <span class="form-label required-field d-block">${titulo}</span>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="${nombre}" id="${nombre}OK" value="1" required>
+              <label class="form-check-label" for="${nombre}OK">OK</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="${nombre}" id="${nombre}NG" value="0">
+              <label class="form-check-label" for="${nombre}NG">NG</label>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    //Muestra las evaluaciones ya registradas con el resultado de cada punto
+    function renderListaEvalMaq(evaluaciones) {
+      const contenedor = document.getElementById('listaEvalMaq');
+
+      contenedor.innerHTML = evaluaciones.map(evaluacion => {
+        const metricas = METRICAS_EVAL_MAQ.map((titulo, indice) => {
+          const ok = String(evaluacion['metrica' + (indice + 1)]) === '1';
+          return `<span class="badge ${ok ? 'bg-success' : 'bg-danger'} me-1 mb-1">${titulo}: ${ok ? 'OK' : 'NG'}</span>`;
+        }).join('');
+
+        const comentarios = evaluacion.comentarios
+          ? `<div class="small text-muted mt-1">${escapeHTML(evaluacion.comentarios)}</div>`
+          : '';
+
+        return `
+          <div class="border rounded-3 p-2 mb-2 bg-white">
+            <div class="fw-semibold mb-1">Día ${escapeHTML(evaluacion.numeroDia)} · ${escapeHTML(evaluacion.fechaEvaluacion)}</div>
+            <div class="d-flex flex-wrap">${metricas}</div>
+            ${comentarios}
+          </div>`;
+      }).join('');
+    }
+
+    //Llena el seguimiento: resumen, planeación, implementación, evaluación y cierre
+    function mostrarSeguimientoPCMaq(pc) {
+      idPCMaqActual = pc.idPC;
+
+      document.getElementById('folioPCMaq').textContent = pc.no_controlCambio || '';
+      document.getElementById('responsablePCMaq').textContent = (pc.nombre || '') + ' (' + (pc.nomina || '') + ')';
+      document.getElementById('inicioPCMaq').textContent = pc.fechaHora_inicio || '';
+      document.getElementById('turnoPCMaq').textContent = pc.turno || '';
+
+      const planeacionRegistrada = String(pc.planeacion_registrada) === '1';
+      const formPlaneacion = document.getElementById('planeacionMaqForm');
+      const selectTipo = document.getElementById('tipo_cambioMaq');
+      const btnPlaneacion = document.getElementById('btnRegistrarPlaneacionMaq');
+
+      formPlaneacion.reset();
+
+      if (planeacionRegistrada) {
+        document.getElementById('nombreProductoMaq').value = pc.nombre_producto || '';
+        document.getElementById('detallesCambioMaq').value = pc.detalles_cambio || '';
+        document.getElementById('equipoMaq').value = pc.equipo || '';
+        selectTipo.value = String(pc.idTIPO3M || '');
+
+        //Si el catálogo aún no se cargó, se agrega la opción registrada para poder mostrarla
+        if (selectTipo.value !== String(pc.idTIPO3M)) {
+          const opcion = new Option(pc.tipo_cambio || 'Tipo registrado', pc.idTIPO3M, true, true);
+          opcion.dataset.clave = pc.clave_tipo3m || '';
+          selectTipo.appendChild(opcion);
+        }
+      }
+
+      actualizarDescripcionMaq(); //Muestra "Especifica el tipo de cambio" solo cuando es OTRO
+
+      if (planeacionRegistrada) {
+        document.getElementById('motivoMaq').value = pc.otro_detalle || '';
+      }
+
+      //Una vez registrada, la planeación queda de solo lectura
+      formPlaneacion.querySelectorAll('input, textarea, select').forEach(campo => { campo.disabled = planeacionRegistrada; });
+      btnPlaneacion.disabled = planeacionRegistrada;
+      btnPlaneacion.innerHTML = planeacionRegistrada
+        ? '<i class="bi bi-lock"></i> Planeación registrada'
+        : '<i class="bi bi-check-lg"></i> Registrar planeación';
+
+      //IMPLEMENTACIÓN: requiere la planeación; una vez registrada queda de solo lectura
+      const implementacion = pc.implementacion || null;
+      const implementacionRegistrada = Boolean(implementacion);
+      const formImpl = document.getElementById('implementacionMaqForm');
+      const btnImpl = document.getElementById('btnRegistrarImplMaq');
+
+      formImpl.reset();
+      $('#alertImplMaq').addClass('d-none');
+      document.getElementById('nombreImplMaq').placeholder = 'Nombre del responsable';
+      //La fecha compromiso no puede ser anterior al inicio del PC (el servidor también lo valida)
+      document.getElementById('fechaCompromisoMaq').min = String(pc.fechaHora_inicio || '').slice(0, 10);
+
+      if (implementacionRegistrada) {
+        const idsMarcados = (implementacion.documentos || []).map(documento => String(documento.idVerificacion));
+
+        document.querySelectorAll('#verificacionDocsMaq input[name="verificacionDocMaq"]').forEach(entrada => {
+          entrada.checked = idsMarcados.indexOf(entrada.value) !== -1;
+        });
+        document.getElementById('nominaImplMaq').value = implementacion.nomina_responsable || '';
+        document.getElementById('nombreImplMaq').value = implementacion.nombre_responsable || '';
+        document.getElementById('fechaCompromisoMaq').value = implementacion.fecha_compromiso || '';
+      }
+
+      actualizarVerificacionDocsMaq(); //Muestra "Especifica el documento" solo cuando se marcó OTRO
+
+      if (implementacionRegistrada) {
+        document.getElementById('otroDocMaq').value = implementacion.otro_detalle || '';
+      }
+
+      formImpl.querySelectorAll('input, textarea').forEach(campo => {
+        campo.disabled = implementacionRegistrada || !planeacionRegistrada;
+      });
+      btnImpl.disabled = implementacionRegistrada || !planeacionRegistrada;
+      btnImpl.innerHTML = implementacionRegistrada
+        ? '<i class="bi bi-lock"></i> Implementación registrada'
+        : '<i class="bi bi-check-lg"></i> Registrar implementación';
+      document.getElementById('avisoImplMaq').classList.toggle('d-none', planeacionRegistrada);
+
+      //EVALUACIÓN: una por día (1 a 3) en orden; requiere la implementación
+      const evaluaciones = pc.evaluaciones || [];
+      const evaluacionesRequeridas = Number(pc.evaluaciones_requeridas) || 3;
+      const evaluacionCompleta = evaluaciones.length >= evaluacionesRequeridas;
+      const formEval = document.getElementById('evaluacionMaqForm');
+
+      formEval.reset();
+      renderListaEvalMaq(evaluaciones);
+      document.getElementById('diaEvalMaq').textContent = Math.min(evaluaciones.length + 1, evaluacionesRequeridas);
+      document.getElementById('avisoEvalMaq').classList.toggle('d-none', implementacionRegistrada);
+      document.getElementById('evalCompletaMaq').classList.toggle('d-none', !evaluacionCompleta);
+      formEval.classList.toggle('d-none', evaluacionCompleta);
+      document.getElementById('footerEvalMaq').classList.toggle('d-none', evaluacionCompleta);
+      formEval.querySelectorAll('input, textarea').forEach(campo => { campo.disabled = !implementacionRegistrada; });
+      document.getElementById('btnRegistrarEvalMaq').disabled = !implementacionRegistrada;
+
+      //CIERRE: requiere planeación, implementación y las evaluaciones completas
+      const pendientes = [];
+      if (!planeacionRegistrada) pendientes.push('la planeación');
+      if (!implementacionRegistrada) pendientes.push('la implementación');
+      if (!evaluacionCompleta) pendientes.push('las ' + evaluacionesRequeridas + ' evaluaciones');
+      const puedeCerrar = pendientes.length === 0;
+      const textoPendientes = pendientes.length > 1
+        ? pendientes.slice(0, -1).join(', ') + ' y ' + pendientes[pendientes.length - 1]
+        : (pendientes[0] || '');
+
+      document.getElementById('cierreMaqForm').reset();
+      document.getElementById('fechaCierreMaq').value = (new Date()).toLocaleString('sv-SE').slice(0, 16).replace(' ', 'T');
+      document.getElementById('comentariosCierreMaq').disabled = !puedeCerrar;
+      document.getElementById('btnCerrarPCMaq').disabled = !puedeCerrar;
+      document.getElementById('textoAvisoCierreMaq').textContent = 'Para cerrar este punto de cambio falta registrar ' + textoPendientes + '.';
+      document.getElementById('avisoCierreMaq').classList.toggle('d-none', puedeCerrar);
+
+      //Se abre la primera pestaña pendiente del flujo
+      const pestanaActiva = !planeacionRegistrada ? 'planeacionMaq-tab'
+        : !implementacionRegistrada ? 'implementacionMaq-tab'
+        : !evaluacionCompleta ? 'evaluacionMaq-tab'
+        : 'cierreMaq-tab';
+      bootstrap.Tab.getOrCreateInstance(document.getElementById(pestanaActiva)).show();
+
+      mostrarVistaPCMaq('seguimiento');
+    }
+
+    //Consulta si la estación tiene un PC abierto del tipo actual (opción 46) y muestra la vista que corresponde
+    function cargarPCMaquinaria(idEstacion, nombreEstacion) {
+      const tokenActual = ++tokenConsultaPCMaq;
+      idPCMaqActual = null;
+      estacionPCMaq = { id: idEstacion, nombre: nombreEstacion || '' };
+
+      //Tipo sin backend todavía: se muestra el registro solo para revisión visual, sin consultar
+      if (!TIPOS_PC_3M[tipo4MActual].backendListo) {
+        prepararRegistroPCMaq(idEstacion, nombreEstacion);
+        mostrarVistaPCMaq('registro');
+        return Promise.resolve();
+      }
+
+      mostrarVistaPCMaq('cargando');
+
+      let formDataPCMaq = new FormData();
+      formDataPCMaq.append('opcion', 46);
+      formDataPCMaq.append('idEstacion', idEstacion);
+      formDataPCMaq.append('clave4M', tipo4MActual);
+
+      return fetch("../api/operacionesLinea.php", {
+        method: "POST",
+        body: formDataPCMaq,
+      })
+        .then((response) => response.text())
+        .then((data) => {
+          if (tokenActual !== tokenConsultaPCMaq) return;
+
+          data = JSON.parse(data);
+
+          if (data.estatus !== 'ok') {
+            throw new Error(data.mensaje || 'Respuesta inválida del servidor.');
+          }
+
+          if (data.data) {
+            mostrarSeguimientoPCMaq(data.data);
+          } else {
+            prepararRegistroPCMaq(idEstacion, nombreEstacion);
+            mostrarVistaPCMaq('registro');
+          }
+        })
+        .catch((error) => {
+          if (tokenActual !== tokenConsultaPCMaq) return;
+
+          //Si no se pudo consultar se muestra el registro; el servidor impide duplicar un PC abierto
+          console.error(error);
+          prepararRegistroPCMaq(idEstacion, nombreEstacion);
+          mostrarVistaPCMaq('registro');
+        });
+    }
+
+    //Envía una operación del PC 3M (del tipo actual) y muestra el resultado en el modal de estatus.
+    //Al terminar con éxito recarga la vista de la estación (registro o seguimiento).
+    function enviarOperacionPCMaq(boton, textoProceso, formData) {
+      //Tipo sin backend todavía: no se envía nada al servidor
+      if (!TIPOS_PC_3M[tipo4MActual].backendListo) {
+        mostrarModalEstatus(
+          'Registro no disponible',
+          'bi-info-circle-fill text-primary',
+          'El registro de puntos de cambio de ' + TIPOS_PC_3M[tipo4MActual].nombre + ' todavía no está disponible.',
+          'bi-info-circle-fill text-primary',
+          true
+        );
+        return Promise.resolve();
+      }
+
+      //El servidor valida la clave del tipo 4M (MA, MP) en cada operación
+      formData.append('clave4M', tipo4MActual);
+
+      const contenidoBoton = boton.innerHTML;
+      boton.disabled = true;
+      boton.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> ' + textoProceso;
+
+      return fetch("../api/operacionesLinea.php", {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => response.text())
+        .then((data) => {
+          data = JSON.parse(data);
+
+          if (data.estatus !== 'ok') {
+            boton.disabled = false;
+            boton.innerHTML = contenidoBoton;
+            mostrarModalEstatus(
+              'No se pudo completar la operación',
+              'bi-exclamation-octagon-fill text-danger',
+              escapeHTML(data.mensaje || 'No fue posible guardar la información.'),
+              'bi-exclamation-circle-fill text-danger',
+              true
+            );
+            return;
+          }
+
+          //cargarPCMaquinaria oculta la vista mientras consulta, así que no hay doble envío;
+          //la vista recargada define después qué botones quedan habilitados.
+          boton.disabled = false;
+          boton.innerHTML = contenidoBoton;
+          cargarPCMaquinaria(estacionPCMaq.id, estacionPCMaq.nombre);
+
+          //Actualiza la estación en el layout (íconos de PC 3M al registrar o cerrar)
+          getEstacion(estacionPCMaq.id);
+
+          mostrarModalEstatus(
+            'Operación completada',
+            'bi-check-circle-fill text-success',
+            escapeHTML(data.mensaje + (data.no_controlCambio ? ' No. de control: ' + data.no_controlCambio : '')),
+            'bi-check-circle-fill text-success',
+            true
+          );
+        })
+        .catch((error) => {
+          console.error(error);
+          boton.disabled = false;
+          boton.innerHTML = contenidoBoton;
+          mostrarModalEstatus(
+            'No se pudo completar la operación',
+            'bi-exclamation-octagon-fill text-danger',
+            'Se perdió la conexión con el servidor o la respuesta no es válida.',
+            'bi-exclamation-circle-fill text-danger',
+            true
+          );
         });
     }
 
@@ -2913,7 +3842,10 @@
       mostrarTablaPersonal();
       mostrarTablaOperaciones();
       mostrarTablaPC();
-                               
+
+      //Catálogo del select "Tipo de cambio" del PC de maquinaria
+      cargarTiposCambioMaq();
+
       //DECLARACION DE EVENTOS
         //OBTENER NUMERO DE NOMINA
             nominaModalRegistrar.addEventListener('change', function (){
@@ -3119,6 +4051,24 @@
           $('#selectEstacionesPC').on('change', function () {
               $('#alertChipsAgregarEstacionesPC').addClass('d-none');
           });
+
+          //PC de maquinaria: mostrar la descripción solo cuando el tipo de cambio es "OTRO"
+            document.getElementById('tipo_cambioMaq').addEventListener('change', actualizarDescripcionMaq);
+
+          //PC de maquinaria: validación de nómina del responsable del registro y de la implementación
+            configurarValidacionNomina(nominaResponsableMaq, nombreResponsableMaq, '#alertResponsableMaq');
+            configurarValidacionNomina(document.getElementById('nominaImplMaq'), document.getElementById('nombreImplMaq'), '#alertImplMaq');
+
+          //PC de maquinaria: catálogo de verificación de documentos y puntos de la evaluación
+            cargarVerificacionDocsMaq();
+            renderMetricasEvalMaq();
+            document.getElementById('verificacionDocsMaq').addEventListener('change', function (event) {
+                const entrada = event.target.closest('input[name="verificacionDocMaq"]');
+
+                if (entrada) {
+                    actualizarVerificacionDocsMaq(entrada);
+                }
+            });
 
           $('#selectRegistrarUpdate').on('change', function () {
               $('#alertChipsAgregarOperacion').addClass('d-none');
@@ -3590,13 +4540,143 @@
 
         $('#btnChipModalRegistrar').click(agregarChipPersonal)
         $('#btnEstacionesPC').click(agregarChipEstacion)
-        
+
         btnRegistrarAsistencia.addEventListener('click', registrarAsistencia);
         btnMenuAsignarControlModal.addEventListener('click', function(){changeContent('ventanasModalPC','contAsignacion')});
         //btnMenuAsignarControlModal.addEventListener('click', function(){changeContent('ventanasModalPC','contAsignacion')});
         btnMenuAsignaciones.addEventListener('click', mostrarTablaOperaciones)
         btnInfoRPC.addEventListener('click', function(){changeContent('ventanasModalPC','contInfoEstacion')});
         btnRegistroPc.addEventListener('click', function(){changeContent('ventanasModalPC','contregistroCambioForm')});
+        //Maquinaria, materia prima y método comparten la sección del PC 3M; el botón define el tipo
+        btnRegistroMaquinaria.addEventListener('click', function(){ abrirSeccionPC3M('MA'); });
+        btnRegistroMateriaPrima.addEventListener('click', function(){ abrirSeccionPC3M('MP'); });
+        btnRegistroMetodo.addEventListener('click', function(){ abrirSeccionPC3M('ME'); });
+
+        //PC de maquinaria: primer registro (opción 45). Al guardarse pasa al seguimiento.
+        document.getElementById('confirmChangeMaq').addEventListener('click', function(){
+          if (!document.getElementById('registroCambioMaqForm').reportValidity()) return;
+
+          //El nombre solo se llena cuando la nómina existe en el catálogo de empleados
+          if (nombreResponsableMaq.value.trim() === '') {
+            mostrarModalEstatus(
+              'Personal responsable no validado',
+              'bi-exclamation-triangle-fill text-warning',
+              'Ingresa una nómina válida del personal responsable y espera a que se muestre su nombre.',
+              'bi-exclamation-triangle-fill text-warning',
+              true
+            );
+            return;
+          }
+
+          let formDataRegistroMaq = new FormData();
+          formDataRegistroMaq.append('opcion', 45);
+          formDataRegistroMaq.append('idEstacion', document.getElementById('id_estacionMaq').value);
+          formDataRegistroMaq.append('codigoLinea', codigoLinea.value);
+          formDataRegistroMaq.append('turno', document.getElementById('turnoPuntoCambioMaq').value);
+          formDataRegistroMaq.append('nominaResponsable', nominaResponsableMaq.value.trim());
+
+          enviarOperacionPCMaq(this, 'Registrando...', formDataRegistroMaq);
+        });
+
+        //PC de maquinaria: registro de la planeación (opción 47). Se registra una sola vez.
+        document.getElementById('btnRegistrarPlaneacionMaq').addEventListener('click', function(){
+          if (!idPCMaqActual) return;
+          if (!document.getElementById('planeacionMaqForm').reportValidity()) return;
+
+          let formDataPlaneacionMaq = new FormData();
+          formDataPlaneacionMaq.append('opcion', 47);
+          formDataPlaneacionMaq.append('idPC', idPCMaqActual);
+          formDataPlaneacionMaq.append('nombreProducto', document.getElementById('nombreProductoMaq').value.trim());
+          formDataPlaneacionMaq.append('detallesCambio', document.getElementById('detallesCambioMaq').value.trim());
+          formDataPlaneacionMaq.append('equipo', document.getElementById('equipoMaq').value.trim());
+          formDataPlaneacionMaq.append('idTipo3M', document.getElementById('tipo_cambioMaq').value);
+          formDataPlaneacionMaq.append('otroDetalle', document.getElementById('motivoMaq').value.trim());
+
+          enviarOperacionPCMaq(this, 'Registrando...', formDataPlaneacionMaq);
+        });
+
+        //PC de maquinaria: registro de la implementación (opción 50). Se registra una sola vez.
+        document.getElementById('btnRegistrarImplMaq').addEventListener('click', function(){
+          if (!idPCMaqActual) return;
+
+          const documentos = Array.from(
+            document.querySelectorAll('#verificacionDocsMaq input[name="verificacionDocMaq"]:checked')
+          ).map(entrada => entrada.value);
+
+          if (!documentos.length) {
+            mostrarModalEstatus(
+              'Verificación de documentos',
+              'bi-exclamation-triangle-fill text-warning',
+              'Marca al menos una opción de verificación de documentos.',
+              'bi-exclamation-triangle-fill text-warning',
+              true
+            );
+            return;
+          }
+
+          if (!document.getElementById('implementacionMaqForm').reportValidity()) return;
+
+          //El nombre solo se llena cuando la nómina existe en el catálogo de empleados
+          if (document.getElementById('nombreImplMaq').value.trim() === '') {
+            mostrarModalEstatus(
+              'Responsable no validado',
+              'bi-exclamation-triangle-fill text-warning',
+              'Ingresa una nómina válida del responsable y espera a que se muestre su nombre.',
+              'bi-exclamation-triangle-fill text-warning',
+              true
+            );
+            return;
+          }
+
+          let formDataImplMaq = new FormData();
+          formDataImplMaq.append('opcion', 50);
+          formDataImplMaq.append('idPC', idPCMaqActual);
+          formDataImplMaq.append('documentos', JSON.stringify(documentos));
+          formDataImplMaq.append('otroDetalle', document.getElementById('otroDocMaq').value.trim());
+          formDataImplMaq.append('nominaResponsable', document.getElementById('nominaImplMaq').value.trim());
+          formDataImplMaq.append('fechaCompromiso', document.getElementById('fechaCompromisoMaq').value);
+
+          enviarOperacionPCMaq(this, 'Registrando...', formDataImplMaq);
+        });
+
+        //PC de maquinaria: evaluación del día siguiente (opción 51). El servidor asigna el número de día.
+        document.getElementById('btnRegistrarEvalMaq').addEventListener('click', function(){
+          if (!idPCMaqActual) return;
+
+          const formEval = document.getElementById('evaluacionMaqForm');
+
+          if (!formEval.reportValidity()) return;
+
+          let formDataEvalMaq = new FormData();
+          formDataEvalMaq.append('opcion', 51);
+          formDataEvalMaq.append('idPC', idPCMaqActual);
+
+          METRICAS_EVAL_MAQ.forEach((titulo, indice) => {
+            const seleccion = formEval.querySelector('input[name="metricaMaq' + (indice + 1) + '"]:checked');
+            formDataEvalMaq.append('metrica' + (indice + 1), seleccion ? seleccion.value : '');
+          });
+
+          formDataEvalMaq.append('comentarios', document.getElementById('comentariosEvalMaq').value.trim());
+
+          enviarOperacionPCMaq(this, 'Registrando...', formDataEvalMaq);
+        });
+
+        //PC de maquinaria: cierre (opción 48). El servidor exige planeación, implementación y 3 evaluaciones.
+        document.getElementById('btnCerrarPCMaq').addEventListener('click', function(){
+          if (!idPCMaqActual) return;
+
+          //La fecha de cierre es el momento en que se confirma (formato AAAA-MM-DDTHH:MM que espera el servidor)
+          const fechaCierre = (new Date()).toLocaleString('sv-SE').slice(0, 16).replace(' ', 'T');
+          document.getElementById('fechaCierreMaq').value = fechaCierre;
+
+          let formDataCierreMaq = new FormData();
+          formDataCierreMaq.append('opcion', 48);
+          formDataCierreMaq.append('idPC', idPCMaqActual);
+          formDataCierreMaq.append('fechaCierre', fechaCierre);
+          formDataCierreMaq.append('comentarios', document.getElementById('comentariosCierreMaq').value.trim());
+
+          enviarOperacionPCMaq(this, 'Cerrando...', formDataCierreMaq);
+        });
 
         btnAgregarPersonalP1.addEventListener('click', function(){changeContent('ventanasModalAgregarPersonal','agregarPersonalIndividual')});
         btnAgregarPersonalP2.addEventListener('click', function(){changeContent('ventanasModalAgregarPersonal','agregarListadoPersonal')});
@@ -3945,6 +5025,14 @@
             return;
         })
 
+        //Detalle de un PC 3M (maquinaria, materia prima o método): misma ventana, contenido propio
+        $('#tablePC').on('click', '.btnDetallePC3M', async function () {
+              await cargarDetallePC3M(this.dataset.idpc);
+
+              btnVolverConsultaPC.classList.remove('d-none');
+              changeContent('ventanasConsultaPC','ventanaDetallePC');
+        })
+
         //Boton para volver a la tabla del modal de registro de personal
         $('#btnBackModalPersonal').on('click', function (){changeContent('ventanasModalPersonal', 'ventanaTablaListadoPersonal')})
 
@@ -4130,6 +5218,9 @@
 
         //Evento para cargar la tabla de listado de puntos de cambio al abrir el modal
         $('#btnMenuTablaPC').on('click', function (){ mostrarTablaPC(); })
+
+        //Filtros del listado de PC: tipo 4M y rango de fechas (se consulta de nuevo al cambiar)
+        $('input[name="filtroTipoPC"], #filtroPCDesde, #filtroPCHasta').on('change', function (){ mostrarTablaPC(); })
 
       // Cargar las formas
       setTimeout(() => {

@@ -204,6 +204,9 @@
     // Instancia del sistema de drag
     const dragSystem = new OptimizedDragSystem();
 
+    //Cordenadas donde se agrega el SVG
+    let p = {x:0, y:0};
+
     function saveLayout(showMessage) {
         const stations = document.querySelectorAll('.station');
         const layoutData = [];
@@ -566,10 +569,6 @@
       $('.element-list-item').removeClass('selected-in-list');
     }
 
-    function randomPos(maxX = 1800, maxY = 1300) {
-      return { x: 100 + Math.random() * (maxX - 200), y: 100 + Math.random() * (maxY - 200) };
-    }
-
     function createElement(tag, attrs, isArrow = false) {
       const elt = document.createElementNS('http://www.w3.org/2000/svg', tag);
       for (let key in attrs) elt.setAttribute(key, attrs[key]);
@@ -584,14 +583,59 @@
       return elt;
     }
 
-    //const p = randomPos();
-    const p = {x:200, y:200};
+    function getVisibleWorkspacePosition() {
+      let workspace = document.getElementById('workspaceGrid');
+      let svgCanvas = document.getElementById('workspace-svg');
+      
+          const workspaceRect = workspace.getBoundingClientRect();
+          const svgRect = svgCanvas.getBoundingClientRect();
+
+          // Área visible de la ventana del navegador
+          const viewportRect = {
+            left: 0,
+            top: 0,
+            right: window.innerWidth,
+            bottom: window.innerHeight
+          };
+
+          // Se calcula la intersección entre:
+          // 1. El contenedor workSpace.
+          // 2. El SVG.
+          // 3. El viewport del navegador.
+          const left = Math.max(workspaceRect.left, svgRect.left, viewportRect.left);
+          const top = Math.max(workspaceRect.top, svgRect.top, viewportRect.top);
+          const right = Math.min(workspaceRect.right, svgRect.right, viewportRect.right);
+          const bottom = Math.min(workspaceRect.bottom, svgRect.bottom, viewportRect.bottom);
+
+          // No hay una zona visible donde insertar el elemento.
+          if (left >= right || top >= bottom) {
+            return { x: 200, y: 200 };
+          }
+
+          // Usar el centro de la parte visible del workspace.
+          const clientX = left + ((right - left) / 2);
+          const clientY = top + ((bottom - top) / 2);
+
+          // Convierte coordenadas de pantalla a coordenadas locales de shapesGroup.
+          // Esto respeta scroll, zoom, viewBox y transform="...".
+          const matrix = svg.getScreenCTM().inverse();
+
+          if (!matrix) {
+            return { x: 200, y: 200}
+          }
+
+          const point = new DOMPoint(clientX, clientY).matrixTransform(matrix.inverse());
+
+          return { x: point.x, y: point.y};
+    }
 
     // Botones de dibujo
     $('#addRectFill').click(() => {
+      p = getVisibleWorkspacePosition();
       createElement('rect', { x: p.x, y: p.y, width: 100, height: 70, rx: 10, ry: 10, fill: '#2661ec', stroke: '#000', 'stroke-width': 2 });
     });
     $('#addRectOutline').click(() => {
+      p = getVisibleWorkspacePosition();
       createElement('rect', { 
         x: p.x, 
         y: p.y, 
@@ -604,18 +648,23 @@
          'stroke-width': 3 });
     });
     $('#addCircleFill').click(() => {
+      p = getVisibleWorkspacePosition();
       createElement('circle', { cx: p.x, cy: p.y, r: 35, fill: '#44cc88', stroke: '#000', 'stroke-width': 2 });
     });
     $('#addCircleOutline').click(() => {
+      p = getVisibleWorkspacePosition();
       createElement('circle', { cx: p.x, cy: p.y, r: 40, fill: 'none', stroke: '#dc2626', 'stroke-width': 3 });
     });
     $('#addLine').click(() => {
+      p = getVisibleWorkspacePosition();
       createElement('line', { x1: p.x, y1: p.y, x2: p.x+120, y2: p.y+40, stroke: '#333', 'stroke-width': 3 });
     });
     $('#addArrow').click(() => {
+      p = getVisibleWorkspacePosition();
       createElement('line', { x1: p.x, y1: p.y, x2: p.x+120, y2: p.y+40, stroke: '#000', 'stroke-width': 3 }, true);
     });
     $('#addText').click(() => {
+      p = getVisibleWorkspacePosition();
       const elt = createElement('text', { x: p.x, y: p.y, 'font-family': 'Arial', 'font-size': 20, fill: '#000', stroke: '#ccc', 'stroke-width': 0.5 });
       elt.textContent = 'Texto';
     });

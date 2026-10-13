@@ -5,7 +5,9 @@
         certificaciones: './css/certificaciones.css',
         iluPersonal: './css/iluPersonal.css',
         estacionesCertificaciones: './css/estacionesCertificaciones.css',
-        anormalidades: './css/anormalidades.css'
+        anormalidades: './css/anormalidades.css',
+        reportesAnormalidades: './css/reportesAnormalidades.css',
+        perfil: './css/perfil.css'
     };
 
     //Funcion para actualizar el active del navBar
@@ -39,11 +41,24 @@
             var xhttp = new XMLHttpRequest();
             
                 xhttp.onreadystatechange = function() {
-                    if (this.readyState == 4 && this.status == 200) {
+                    //El 403 trae el aviso de "sin acceso": tambien hay que mostrarlo
+                    if (this.readyState == 4 && (this.status == 200 || this.status == 403)) {
                         window.scroll(0, 0);
                         contenido.innerHTML = this.responseText;
                          updatePageTitle(pagina);
                          actualizarOpcionActiva(pagina);
+
+                        //Sin permiso no se carga el CSS ni el JS de la vista, y se
+                        //limpian los de la vista anterior para que no queden aplicados
+                        if (this.status == 403) {
+                            var estiloPrevio = document.getElementById('cssDinamico');
+                            if (estiloPrevio) estiloPrevio.remove();
+
+                            var scriptPrevio = document.getElementById('jsDinamico');
+                            if (scriptPrevio) scriptPrevio.remove();
+
+                            return;
+                        }
 
                         // Cargar únicamente el CSS particular de la vista actual.
                         var oldStyle = document.getElementById('cssDinamico');
@@ -96,7 +111,7 @@
         function obtenerSeccionActual() {
             const hash = location.hash.split('/');
                 if(hash[hash.length - 1] == '' || hash[hash.length - 1] == null || hash[hash.length - 1]==' ' || hash[hash.length - 1]=='')
-                    hash[hash.length - 1] ='dashboard';
+                    hash[hash.length - 1] ='perfil'; //Seccion inicial. Era 'dashboard'; se regresa cuando el dashboard este terminado
 
                 //if(hash[hash.length - 1]=='pedidos') console.log('no tiene permisos para estar aqui')
 
@@ -196,7 +211,9 @@
                     'change-points': 'Puntos de Cambio',
                     'menuReportes': 'Reportes y Estadísticas',
                     'estadisticas' : 'Estadísticas',
-                    'anormalidades': 'Registro de Anormalidades'
+                    'anormalidades': 'Registro de Anormalidades',
+                    'reportesAnormalidades': 'Reportes de Anormalidades',
+                    'perfil': 'Mi perfil'
             };
 
             pageTitle.classList.toggle("ocultar-mostrar"); //cambia la opacidad en 1  al cambiar de pagina
@@ -300,6 +317,63 @@
         }
 
         syncMobileSidebar();
+    }
+
+    //Cierre de sesion desde el menu del usuario
+    const btnCerrarSesion = document.getElementById('btnCerrarSesion');
+    let cerrandoSesion = false; //Evita reenviar la peticion si se vuelve a pulsar
+
+    if (btnCerrarSesion) {
+        const textoBotonSalir = btnCerrarSesion.innerHTML;
+
+        const restaurarBotonSalir = function (mensaje) {
+            btnCerrarSesion.innerHTML = mensaje;
+
+            window.setTimeout(function () {
+                if (btnCerrarSesion.isConnected) {
+                    btnCerrarSesion.innerHTML = textoBotonSalir;
+                    btnCerrarSesion.disabled = false;
+                }
+
+                cerrandoSesion = false;
+            }, 2500);
+        };
+
+        btnCerrarSesion.addEventListener('click', function () {
+            if (cerrandoSesion) {
+                return;
+            }
+
+            cerrandoSesion = true;
+            btnCerrarSesion.disabled = true;
+            btnCerrarSesion.innerHTML = '<i class="bi bi-hourglass-split"></i> Cerrando...';
+
+            const datosSesion = new FormData();
+            datosSesion.append('opcion', '2');
+
+            fetch('./api/operacionesUsuarios.php', {
+                method: 'POST',
+                body: datosSesion,
+                //El servidor rechaza las peticiones sin esta cabecera
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function (respuesta) {
+                return respuesta.json();
+            })
+            .then(function (datos) {
+                if (!datos || datos.status !== 'ok') {
+                    restaurarBotonSalir('<i class="bi bi-exclamation-triangle"></i> No se pudo cerrar');
+                    return;
+                }
+
+                window.location.href = datos.redirigir || 'login.php';
+            })
+            .catch(function (error) {
+                //La sesion sigue abierta del lado del servidor: se deja reintentar
+                restaurarBotonSalir('<i class="bi bi-wifi-off"></i> Sin conexion');
+                console.log(error);
+            });
+        });
     }
 
 /*
