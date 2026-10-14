@@ -1,0 +1,65 @@
+/* ==========================================================================
+   permisosUsuario.css — Estilos exclusivos de "Permisos individuales"
+   (pages/permisosUsuario.php). Lo reutilizable vive en css/style.css.
+   ========================================================================== */
+
+/* Tarjeta de ayuda "¿Cómo funcionan?" */
+.excepciones-ayuda {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.excepciones-ayuda p {
+    margin-bottom: 10px;
+}
+
+/* Elección conceder / denegar como dos tarjetas grandes. */
+.excepcion-tipos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 10px;
+}
+
+.excepcion-tipo {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.excepcion-tipo .form-check-input {
+    flex-shrink: 0;
+    margin-top: 0.2em;
+    cursor: pointer;
+}
+
+.excepcion-tipo:hover {
+    border-color: var(--focus-border);
+}
+
+.excepcion-tipo-conceder .bi {
+    color: var(--success);
+}
+
+.excepcion-tipo-denegar .bi {
+    color: var(--danger);
+}
+
+.excepcion-tipo-conceder.activo {
+    border-color: var(--success);
+    background: #e6f5f1;
+}
+
+.excepcion-tipo-denegar.activo {
+    border-color: var(--danger);
+    background: #fbe9eb;
+}
+
+#excepcionPista {
+    line-height: 1.5;
+}

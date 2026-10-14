@@ -1,0 +1,111 @@
+/* ==========================================================================
+   usuarios.css — Estilos exclusivos de la pantalla de usuarios (pages/usuarios.php).
+   Lo reutilizable (badges, .clave, tablas contenidas, confirmación) vive en
+   css/style.css.
+   ========================================================================== */
+
+/* El filtro por estatus usa .filtro-pildoras, que vive en css/style.css
+   porque también lo usa la pantalla de permisos individuales. */
+
+/* --------------------------------------------------------------------------
+   Tabla
+   -------------------------------------------------------------------------- */
+.usuarios-acciones {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+}
+
+/* Comentario del usuario bajo su nombre: una sola línea, el texto completo
+   va en el title y en el detalle. */
+.usuarios-comentario {
+    max-width: 340px;
+    overflow: hidden;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.usuarios-estatus {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   Modales
+   -------------------------------------------------------------------------- */
+
+/* Cabecera con el usuario sobre el que se trabaja. */
+.usuarios-identidad {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-soft);
+}
+
+.usuarios-identidad-avatar {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--primary-light), var(--primary-dark));
+    font-size: 1.1rem;
+}
+
+/* Contraseña inicial agrupada en un recuadro para separarla de los datos. */
+.usuarios-bloque-contrasena {
+    padding: 14px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-soft);
+}
+
+.usuarios-vacio {
+    padding: 30px 16px;
+}
+
+.usuarios-vacio > i {
+    font-size: 2rem;
+}
+
+/* Excepción vencida en el detalle: se conserva como historial, atenuada. */
+.usuarios-fila-vencida > td {
+    color: var(--text-secondary);
+    background: var(--surface-soft);
+}
+
+/* Encabezado de aplicación dentro de la tabla de permisos efectivos. */
+.table > tbody > tr.usuarios-grupo > th {
+    padding: 10px 14px;
+    background: var(--surface-soft);
+    color: var(--primary-dark);
+    font-weight: 600;
+}
+
+#modalDetalleUsuario .nav-tabs .badge {
+    padding: 2px 8px;
+}
+
+@media (max-width: 575.98px) {
+    .usuarios-comentario {
+        max-width: 200px;
+    }
+
+    #modalContrasena .modal-footer > div {
+        width: 100%;
+    }
+
+    #modalContrasena .modal-footer .btn {
+        flex: 1 1 0;
+    }
+}

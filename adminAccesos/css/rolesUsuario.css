@@ -1,0 +1,98 @@
+/* ==========================================================================
+   rolesUsuario.css — Estilos exclusivos de "Roles de usuario"
+   (pages/rolesUsuario.php). Lo reutilizable vive en css/style.css.
+   ========================================================================== */
+
+/* Lista de roles de la aplicación: una tarjeta con check por rol. */
+.rol-usuario-lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 10px;
+}
+
+.rol-usuario-opcion {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.rol-usuario-opcion:hover {
+    border-color: var(--focus-border);
+}
+
+/* Rol marcado: se distingue sin depender solo del check. */
+.rol-usuario-opcion:has(.js-rol:checked) {
+    border-color: var(--primary-light);
+    background: var(--surface-blue);
+}
+
+.rol-usuario-opcion .form-check-input {
+    flex-shrink: 0;
+    width: 1.2em;
+    height: 1.2em;
+    margin-top: 0.15em;
+    cursor: pointer;
+}
+
+.rol-usuario-opcion-bloqueada {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.rol-usuario-opcion-bloqueada .form-check-input {
+    cursor: not-allowed;
+}
+
+.rol-usuario-opcion-texto {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.rol-usuario-opcion-estado {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+/* Pie de la tarjeta: resumen a la izquierda y botón a la derecha. */
+.rol-usuario-pie {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.rol-usuario-resumen {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Resumen de roles en todas las aplicaciones. */
+.rol-usuario-resumen-lista {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 575.98px) {
+    .rol-usuario-lista {
+        grid-template-columns: 1fr;
+    }
+
+    .rol-usuario-pie .btn {
+        width: 100%;
+    }
+}

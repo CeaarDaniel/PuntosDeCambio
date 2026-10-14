@@ -1,0 +1,3 @@
+# Esta carpeta solo se usa desde PHP (require/include desde el disco).
+# Nunca se sirve directamente por web.
+Require all denied

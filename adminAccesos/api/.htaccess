@@ -1,0 +1,5 @@
+# Los archivos de conexión solo se incluyen desde PHP; por web no se sirven.
+# (conexionEmpleado.php, además, tiene credenciales y no lo usa esta aplicación.)
+<FilesMatch "^conexion.*\.php$">
+    Require all denied
+</FilesMatch>

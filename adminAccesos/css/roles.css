@@ -1,0 +1,144 @@
+/* ==========================================================================
+   roles.css — Estilos exclusivos de la pantalla de roles (pages/roles.php):
+   la lista de checks para asignar permisos. Lo reutilizable vive en
+   css/style.css.
+   ========================================================================== */
+
+/* Búsqueda y "copiar de otro rol", sobre la lista. */
+.rol-herramientas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    margin-bottom: 14px;
+}
+
+.rol-herramientas-campo {
+    flex: 1 1 260px;
+}
+
+.rol-herramientas-campo .form-label {
+    margin-bottom: 4px;
+    font-size: 0.82rem;
+}
+
+/* Confirmaciones dentro del modal (copiar, salir sin guardar). */
+.rol-confirmacion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+}
+
+.rol-confirmacion-botones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.rol-confirmacion-botones .btn {
+    padding: 6px 12px;
+}
+
+/* Un bloque por módulo. */
+.rol-modulo {
+    margin-bottom: 14px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    overflow: hidden;
+}
+
+.rol-modulo-encabezado {
+    float: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin: 0;
+    padding: 10px 14px;
+    background: var(--surface-blue);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.95rem;
+}
+
+.rol-modulo-encabezado .form-check-input {
+    flex-shrink: 0;
+    margin: 0;
+    width: 1.15em;
+    height: 1.15em;
+    cursor: pointer;
+}
+
+.rol-modulo-titulo {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: var(--primary-dark);
+    font-weight: 600;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+}
+
+.rol-modulo-contador {
+    flex-shrink: 0;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+/* Permisos del módulo en columnas que se acomodan al ancho. */
+.rol-permisos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 4px 16px;
+    padding: 10px 14px;
+}
+
+.rol-permiso {
+    margin: 0;
+    padding: 6px 6px 6px 2.1em;
+    border-radius: 8px;
+    transition: background-color 0.15s ease;
+}
+
+.rol-permiso:hover {
+    background: var(--surface-soft);
+}
+
+.rol-permiso .form-check-input {
+    cursor: pointer;
+}
+
+.rol-permiso .form-check-label {
+    cursor: pointer;
+    overflow-wrap: anywhere;
+}
+
+.rol-permiso-descripcion {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.35;
+}
+
+/* Pie: resumen de la selección a la izquierda, botones a la derecha. */
+.rol-pie {
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.rol-resumen {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+@media (max-width: 575.98px) {
+    .rol-pie > .d-flex {
+        width: 100%;
+    }
+
+    .rol-pie .btn {
+        flex: 1 1 0;
+    }
+}

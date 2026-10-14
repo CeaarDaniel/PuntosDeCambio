@@ -1,0 +1,13 @@
+# ==========================================================================
+# Seguridad básica de Administración de accesos (Apache 2.4).
+# XAMPP tiene AllowOverride All en htdocs, así que este archivo se aplica.
+# ==========================================================================
+
+# No listar el contenido de las carpetas (httpd.conf trae "Options Indexes").
+Options -Indexes
+
+# La documentación y los scripts no se sirven por web: contienen datos
+# internos (servidor, base de datos, hallazgos, rutas).
+<FilesMatch "\.(md|sql|txt|log)$">
+    Require all denied
+</FilesMatch>

@@ -1,0 +1,1681 @@
+/* ==========================================================================
+   style.css — Estilos generales de Administración de accesos.
+
+   Base copiada de css/style.css del proyecto defectos para conservar la misma
+   apariencia en todas las aplicaciones. Se quitaron las piezas exclusivas de
+   defectos y se agregaron las de esta aplicación (menús agrupados, etiquetas
+   de estado y claves estables).
+
+   Lo exclusivo de una sola pantalla va en css/<pantalla>.css.
+   ========================================================================== */
+:root {
+    --primary-dark: #27428f;
+    --primary: #395ca8;
+    --primary-light: #4b7ff0;
+    --accent-cyan: #3cb6ca;
+    --background: #ffffff;
+    --border: #d7dee8;
+    --focus-border: #c7d8ff;
+    --text-main: #111827;
+    --text-secondary: #4b5563;
+    --text-on-blue: #c9d7f2;
+    --surface: #ffffff;
+    --surface-soft: #f5f7fb;
+    --surface-blue: #eef4ff;
+    --success: #16856b;
+    --warning: #d97706;
+    --danger: #dc3545;
+    --shadow-sm: 0 4px 14px rgba(39, 66, 143, 0.08);
+    --shadow-md: 0 14px 36px rgba(39, 66, 143, 0.12);
+    --radius-sm: 10px;
+    --radius-md: 16px;
+    --radius-lg: 22px;
+
+    /* Compatibilidad con nombres usados por las vistas actuales. */
+    --primary-color: var(--primary-dark);
+    --secondary-color: var(--primary-light);
+    --accent-color: var(--accent-cyan);
+    --light-bg: var(--surface-soft);
+    --card-shadow: var(--shadow-sm);
+}
+
+/* ==========================================================================
+   1. PUENTE CON BOOTSTRAP 5.3
+   CRÍTICO: Bootstrap dibuja sus componentes a partir de sus propias variables
+   CSS. Reasignándolas aquí, la paleta del proyecto se aplica de golpe a botones,
+   enlaces, inputs, paginación, etc., sin tener que sobrescribir cada regla.
+   ========================================================================== */
+:root {
+    --bs-primary: var(--primary);
+    --bs-primary-rgb: 57, 92, 168;
+    --bs-link-color: var(--primary);
+    --bs-link-color-rgb: 57, 92, 168;
+    --bs-link-hover-color: var(--primary-dark);
+    --bs-body-color: var(--text-main);
+    --bs-body-bg: var(--surface-soft);
+    --bs-secondary-color: var(--text-secondary);
+    --bs-border-color: var(--border);
+    --bs-border-radius: var(--radius-sm);
+    --bs-border-radius-sm: 8px;
+    --bs-border-radius-lg: var(--radius-md);
+    --bs-border-radius-xl: var(--radius-lg);
+    --bs-success: var(--success);
+    --bs-warning: var(--warning);
+    --bs-danger: var(--danger);
+    --bs-font-sans-serif: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ==========================================================================
+   2. BASE
+   ========================================================================== */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    /* Compensa el header fijo cuando se navega con anclas. */
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--bs-font-sans-serif);
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-main);
+    background-color: var(--surface-soft);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Barra de desplazamiento discreta y acorde a la paleta. */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--surface-soft);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c3ccdb;
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-light);
+}
+
+/* Foco visible y uniforme: importante para accesibilidad y navegación con teclado. */
+:focus-visible {
+    outline: 3px solid var(--focus-border);
+    outline-offset: 2px;
+}
+
+/* ==========================================================================
+   3. TIPOGRAFÍA
+   ========================================================================== */
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 0;
+    color: var(--primary-dark);
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.45rem; }
+h3 { font-size: 1.2rem; }
+h4 { font-size: 1.05rem; }
+
+.text-muted-soft {
+    color: var(--text-secondary);
+}
+
+a {
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+/* ==========================================================================
+   4. LAYOUT DE LA APLICACIÓN
+   Estructura del shell: header + navbar + contenido + footer.
+   El body usa flex en columna para que el footer quede siempre abajo aunque la
+   página tenga poco contenido.
+   ========================================================================== */
+.app-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.app-main {
+    flex: 1 0 auto;
+    width: 100%;
+    max-width: 1400px;
+    /* Último cerrojo: sin min-width: 0 un hijo ancho —una tabla, un bloque de
+       código— puede ensanchar el contenido y sacar la barra de desplazamiento
+       horizontal de toda la página. */
+    min-width: 0;
+    margin: 0 auto;
+    padding: 24px 20px 40px;
+}
+
+/* --- Header (includes/header.php) --- */
+.app-header {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 55%, var(--primary-light) 100%);
+    color: #ffffff;
+    box-shadow: var(--shadow-sm);
+}
+
+.app-header .app-header-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.app-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+.app-brand:hover {
+    color: #ffffff;
+}
+
+.app-brand i {
+    font-size: 1.5rem;
+    color: var(--accent-cyan);
+}
+
+/* --- Barra de navegación (includes/navbar.php) --- */
+.app-nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+}
+
+.app-nav .app-nav-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Los enlaces conservan su desplazamiento horizontal en pantallas pequeñas,
+   pero el menú de usuario queda fuera de ese contenedor para que el dropdown
+   pueda abrirse completo sin ser recortado. */
+.app-nav .app-nav-enlaces {
+    min-width: 0;
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow-x: auto;
+}
+
+/* Enlaces grandes y con icono: el usuario final tiene poca familiaridad
+   tecnológica, así que la navegación debe ser evidente y fácil de acertar. */
+.app-nav .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 18px;
+    white-space: nowrap;
+    color: var(--text-secondary);
+    font-weight: 500;
+    border-bottom: 3px solid transparent;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.app-nav .nav-link i {
+    font-size: 1.05rem;
+}
+
+.app-nav .nav-link:hover {
+    color: var(--primary);
+    background-color: var(--surface-blue);
+}
+
+.app-nav .nav-link.active {
+    color: var(--primary-dark);
+    border-bottom-color: var(--primary-light);
+    font-weight: 600;
+}
+
+/* Los grupos del menú se abren con un <button>: se le quitan los estilos
+   nativos para que se vea igual que los enlaces. */
+.app-nav button.nav-link {
+    border-top: 0;
+    border-right: 0;
+    border-left: 0;
+    background: transparent;
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+}
+
+/* Pantalla que todavía no está terminada: se ve, pero más apagada. */
+.app-nav .nav-link-pendiente {
+    opacity: 0.7;
+}
+
+/* Desplegable de un grupo del menú (Catálogos, Asignaciones). */
+.app-nav .nav-grupo-menu {
+    min-width: 240px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+}
+
+.app-nav .nav-grupo-menu .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.app-nav .nav-grupo-menu .dropdown-item i {
+    width: 18px;
+    text-align: center;
+    color: var(--primary);
+}
+
+.app-nav .nav-grupo-menu .dropdown-item:hover,
+.app-nav .nav-grupo-menu .dropdown-item:focus {
+    color: var(--primary-dark);
+    background: var(--surface-blue);
+}
+
+.app-nav .nav-grupo-menu .dropdown-item.active {
+    color: var(--primary-dark);
+    background: var(--surface-blue);
+    font-weight: 600;
+}
+
+.app-nav .nav-etiqueta-pendiente {
+    margin-left: auto;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--surface-soft);
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+/* Menú compacto de la sesión. El nombre sustituye al botón directo de cierre
+   y las acciones relacionadas quedan agrupadas en su dropdown. */
+.app-nav .nav-usuario {
+    flex: 0 0 auto;
+    margin-left: 4px;
+}
+
+.app-nav .nav-usuario-boton {
+    max-width: 260px;
+    border-top: 0;
+    border-right: 0;
+    border-left: 0;
+    background: transparent;
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+}
+
+.app-nav .nav-usuario-avatar {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--primary-light), var(--primary-dark));
+}
+
+.app-nav .nav-usuario-avatar i {
+    font-size: 1rem;
+}
+
+.app-nav .nav-usuario-nombre {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.app-nav .nav-usuario-menu {
+    min-width: 210px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+}
+
+.app-nav .nav-usuario-menu .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.app-nav .nav-usuario-menu .dropdown-item:hover,
+.app-nav .nav-usuario-menu .dropdown-item:focus {
+    color: var(--primary-dark);
+    background: var(--surface-blue);
+}
+
+.app-nav .nav-usuario-menu .dropdown-item i {
+    width: 18px;
+    margin: 0;
+    text-align: center;
+}
+
+.app-nav .nav-usuario-menu .nav-cerrar-sesion {
+    color: var(--danger);
+}
+
+.app-nav .nav-form-sesion {
+    margin: 0;
+}
+
+/* Nombre y nómina de quien inició sesión, en la cabecera de su menú. */
+.app-nav .nav-usuario-datos {
+    display: flex;
+    flex-direction: column;
+    padding: 6px 12px 4px;
+    line-height: 1.35;
+}
+
+.app-nav .nav-usuario-datos strong {
+    color: var(--primary-dark);
+    overflow-wrap: anywhere;
+}
+
+.app-nav .nav-usuario-datos span {
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+}
+
+/* Laptops y tablets en horizontal: el menú tiene más entradas que el de
+   defectos, así que se compacta un poco para que quepa sin desplazarse. */
+@media (max-width: 1199.98px) {
+    .app-nav .nav-link {
+        padding-right: 12px;
+        padding-left: 12px;
+    }
+
+    .app-nav .nav-usuario-nombre {
+        max-width: 120px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .app-nav .nav-usuario-boton {
+        max-width: 180px;
+        padding-right: 12px;
+        padding-left: 12px;
+    }
+
+    .app-nav .nav-usuario-nombre {
+        max-width: 105px;
+    }
+}
+
+/* En celular solo queda el avatar: el nombre y la nómina siguen visibles
+   dentro del menú desplegable, y así cabe más del menú principal. */
+@media (max-width: 575.98px) {
+    .app-nav .nav-usuario-nombre {
+        display: none;
+    }
+}
+
+/* --- Footer (includes/footer.php) --- */
+.app-footer {
+    flex-shrink: 0;
+    padding: 18px 20px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+/* --- Encabezado de página: título a la izquierda, acciones a la derecha --- */
+.page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.page-header h1 {
+    margin: 0;
+}
+
+.page-header .page-subtitle {
+    margin: 4px 0 0;
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+}
+
+.page-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* ==========================================================================
+   5. BOTONES
+   Botones amplios y redondeados; la acción principal siempre destaca.
+   ========================================================================== */
+.btn {
+    --bs-btn-border-radius: var(--radius-sm);
+    padding: 10px 20px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+.btn i {
+    margin-right: 6px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border: none;
+    color: #ffffff;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+    color: #ffffff;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-outline-primary {
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    background: var(--surface);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+    background: var(--surface-blue);
+    border-color: var(--primary-dark);
+    color: var(--primary-dark);
+}
+
+.btn-accent {
+    background: var(--accent-cyan);
+    border: none;
+    color: #ffffff;
+}
+
+.btn-accent:hover {
+    background: #33a3b6;
+    color: #ffffff;
+}
+
+.btn-success {
+    background: var(--success);
+    border-color: var(--success);
+    color: #ffffff;
+}
+
+.btn-danger {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #ffffff;
+}
+
+.btn-soft {
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+
+.btn-soft:hover {
+    background: var(--surface-blue);
+    color: var(--primary-dark);
+}
+
+/* Botón solo icono, para acciones dentro de las tablas. */
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+}
+
+.btn-icon i {
+    margin: 0;
+}
+
+.btn-lg {
+    padding: 13px 26px;
+    font-size: 1.02rem;
+}
+
+/* ==========================================================================
+   6. TARJETAS Y PANELES
+   ========================================================================== */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.25s ease;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.card-header {
+    background: var(--surface-blue);
+    border-bottom: 1px solid var(--border);
+    border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
+    padding: 14px 20px;
+    color: var(--primary-dark);
+    font-weight: 600;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.card-footer {
+    background: var(--surface-soft);
+    border-top: 1px solid var(--border);
+    border-radius: 0 0 var(--radius-md) var(--radius-md) !important;
+    padding: 14px 20px;
+}
+
+/* Tarjeta de indicador (totales del tablero). */
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 5px solid var(--primary-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.stat-card .stat-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    background: var(--surface-blue);
+    color: var(--primary);
+    font-size: 1.35rem;
+}
+
+.stat-card .stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--primary-dark);
+}
+
+.stat-card .stat-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   7. FORMULARIOS
+   ========================================================================== */
+.form-label {
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.form-control,
+.form-select {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background-color: var(--surface);
+    color: var(--text-main);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 4px var(--focus-border);
+}
+
+.form-control::placeholder {
+    color: #9aa4b2;
+}
+
+.form-control:disabled,
+.form-select:disabled {
+    background-color: var(--surface-soft);
+    color: var(--text-secondary);
+}
+
+/* Los campos de solo lectura se ven distintos de los editables para que quede
+   claro que su valor lo llena el sistema. */
+.form-control[readonly] {
+    background-color: var(--surface-soft);
+    color: var(--text-secondary);
+    cursor: default;
+}
+
+/* Botón de solo icono dentro de un input-group: sin el margen que .btn i deja
+   para separar el icono del texto. */
+.input-group .btn i:only-child {
+    margin-right: 0;
+}
+
+.input-group-text {
+    background: var(--surface-blue);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--primary);
+}
+
+/* Estado de validación: mensaje de error legible bajo el campo. */
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: var(--danger);
+}
+
+.invalid-feedback {
+    font-size: 0.85rem;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* Marca visual para campos obligatorios. */
+.form-label.required::after {
+    content: " *";
+    color: var(--danger);
+    font-weight: 700;
+}
+
+/* ==========================================================================
+   8. TABLAS Y DATATABLES 2.x (estilo Bootstrap 5)
+   NOTA: DataTables 2 usa las clases .dt-container / .dt-search / .dt-length /
+   .dt-paging. Si algún día se actualiza a otra versión, revisar estos nombres.
+   ========================================================================== */
+.table {
+    --bs-table-hover-bg: var(--surface-blue);
+    margin-bottom: 0;
+    color: var(--text-main);
+    vertical-align: middle;
+}
+
+.table > thead > tr > th {
+    background: var(--surface-blue);
+    border-bottom: 1px solid var(--border);
+    color: var(--primary-dark);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+    padding: 12px 14px;
+}
+
+.table > tbody > tr > td {
+    border-color: #eaeef4;
+    padding: 12px 14px;
+}
+
+/* Envoltorio que redondea la tabla y le da scroll horizontal en pantallas chicas. */
+.table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.table-wrap .table-responsive {
+    border-radius: var(--radius-md);
+}
+
+.dt-container {
+    padding: 16px;
+}
+
+.dt-container .dt-search input,
+.dt-container .dt-length select {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.dt-container .dt-search input {
+    padding: 8px 12px;
+}
+
+/* CRÍTICO: la flecha del select es una imagen de fondo pegada a la derecha, y
+   Bootstrap le reserva sitio con padding-right. Si aquí se pone un padding
+   uniforme, ese hueco desaparece y la flecha se encima con el número. */
+.dt-container .dt-length select {
+    padding: 8px 34px 8px 12px;
+}
+
+.dt-container .dt-search input:focus,
+.dt-container .dt-length select:focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 4px var(--focus-border);
+    outline: none;
+}
+
+.dt-container .dt-info {
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+}
+
+.dt-container .pagination .page-link {
+    border-radius: var(--radius-sm);
+    margin: 0 2px;
+    border-color: var(--border);
+    color: var(--primary);
+}
+
+.dt-container .pagination .page-item.active .page-link {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff;
+}
+
+.dt-container .pagination .page-item.disabled .page-link {
+    color: #9aa4b2;
+}
+
+/* Botones de exportación de la extensión Buttons. */
+.dt-buttons .dt-button {
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    padding: 8px 14px;
+    margin-right: 6px;
+}
+
+.dt-buttons .dt-button:hover {
+    background: var(--surface-blue);
+    color: var(--primary-dark);
+}
+
+/* ==========================================================================
+   9. MODALES
+   ========================================================================== */
+.modal-content {
+    /* CRÍTICO: --bs-modal-bg hereda de --bs-body-bg, que en este proyecto es
+       --surface-soft. Sin esto el modal saldría grisáceo en vez de blanco. */
+    --bs-modal-bg: var(--surface);
+    border: none;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    background: var(--surface);
+    overflow: hidden;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    color: #ffffff;
+    border-bottom: none;
+    padding: 16px 22px;
+}
+
+.modal-header .modal-title {
+    color: #ffffff;
+    font-size: 1.1rem;
+}
+
+/* Botón de cierre en blanco para que se vea sobre el header azul. */
+.modal-header .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: 0.85;
+}
+
+.modal-body {
+    padding: 22px;
+    background: var(--surface);
+}
+
+/* Folio u otro dato que acompaña al título del modal. */
+.modal-folio {
+    padding: 2px 10px;
+    margin-left: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    font-size: 0.85rem;
+}
+
+/* --------------------------------------------------------------------------
+   Lista de datos de solo lectura: etiqueta a la izquierda, valor a la derecha.
+   Se usa para mostrar lo ya registrado sin recurrir a campos deshabilitados,
+   que se leen peor y sugieren que algo se puede editar.
+   -------------------------------------------------------------------------- */
+.datos-lista {
+    margin: 0;
+}
+
+.datos-fila {
+    display: flex;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--border);
+}
+
+.datos-fila:last-child {
+    border-bottom: none;
+}
+
+.datos-fila dt {
+    flex: 0 0 38%;
+    max-width: 180px;
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.datos-fila dd {
+    flex: 1 1 auto;
+    margin: 0;
+    font-weight: 500;
+    /* Nombres y descripciones pueden venir largos y sin espacios. */
+    overflow-wrap: anywhere;
+}
+
+/* Dato de texto largo: la etiqueta va encima y el valor conserva los saltos de
+   línea que capturó el usuario, cosa que .datos-fila no hace porque está
+   pensada para valores cortos en una sola línea. */
+.dato-bloque {
+    margin-bottom: 16px;
+}
+
+.dato-bloque:last-child {
+    margin-bottom: 0;
+}
+
+.dato-bloque-etiqueta {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.dato-bloque-valor {
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-soft);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* Rótulo de un bloque dentro de un panel o un modal. */
+.panel-titulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    color: var(--primary-dark);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+@media (max-width: 575.98px) {
+    .datos-fila {
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .datos-fila dt {
+        flex-basis: auto;
+        max-width: none;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Pestañas. Se usan dentro de modales y tarjetas, así que van en el general.
+   Siguen el mismo criterio visual que la barra de navegación: subrayado
+   inferior en lugar del recuadro que trae Bootstrap por omisión.
+   -------------------------------------------------------------------------- */
+.nav-tabs {
+    gap: 2px;
+    border-bottom: 1px solid var(--border);
+}
+
+.nav-tabs .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: none;
+    border-bottom: 3px solid transparent;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.nav-tabs .nav-link:hover {
+    background: var(--surface-blue);
+    border-bottom-color: var(--focus-border);
+    color: var(--primary);
+}
+
+.nav-tabs .nav-link.active {
+    background: transparent;
+    border-bottom-color: var(--primary-light);
+    color: var(--primary-dark);
+    font-weight: 600;
+}
+
+.tab-content {
+    padding-top: 18px;
+}
+
+/* En pantallas chicas las pestañas se desplazan en horizontal en vez de
+   apilarse, para que el contenido no quede empujado hacia abajo. */
+@media (max-width: 575.98px) {
+    .nav-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+
+    .nav-tabs .nav-link {
+        padding: 9px 12px;
+        white-space: nowrap;
+    }
+
+    .nav-tabs .nav-link span {
+        font-size: 0.9rem;
+    }
+}
+
+.modal-footer {
+    background: var(--surface-soft);
+    border-top: 1px solid var(--border);
+    padding: 14px 22px;
+}
+
+/* Botonera propia de cada pestaña, separada del pie del modal para que quede
+   claro que guarda solo esa sección y no cierra el modal. */
+.seg-acciones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+@media (max-width: 575.98px) {
+    .seg-acciones .btn {
+        width: 100%;
+    }
+}
+
+/* --- Cuadro de confirmación (includes/modalConfirmar.php) --- */
+.confirmar-cuerpo {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.confirmar-icono {
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--surface-blue);
+    color: var(--primary);
+    font-size: 1.35rem;
+}
+
+.confirmar-icono-peligro {
+    background: #fbe9eb;
+    color: var(--danger);
+}
+
+.confirmar-mensaje {
+    margin: 0 0 6px;
+    color: var(--text-main);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.confirmar-detalle {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+}
+
+/* ==========================================================================
+   10. ALERTAS, ETIQUETAS Y ESTADOS
+   ========================================================================== */
+.alert {
+    border: none;
+    border-radius: var(--radius-sm);
+    border-left: 4px solid transparent;
+    padding: 14px 18px;
+}
+
+.alert-success {
+    background: #e6f5f1;
+    border-left-color: var(--success);
+    color: #0f5c4a;
+}
+
+.alert-warning {
+    background: #fdf3e3;
+    border-left-color: var(--warning);
+    color: #8a4d05;
+}
+
+.alert-danger {
+    background: #fbe9eb;
+    border-left-color: var(--danger);
+    color: #96202c;
+}
+
+.alert-info {
+    background: var(--surface-blue);
+    border-left-color: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.badge {
+    padding: 6px 11px;
+    border-radius: 999px;
+    font-weight: 500;
+    font-size: 0.78rem;
+}
+
+/* Etiquetas de estado reutilizables en listados. */
+.badge-estado-ok      { background: #e6f5f1; color: #0f5c4a; }
+.badge-estado-pend    { background: #fdf3e3; color: #8a4d05; }
+.badge-estado-error   { background: #fbe9eb; color: #96202c; }
+.badge-estado-neutro  { background: var(--surface-soft); color: var(--text-secondary); }
+
+/* Etiquetas del modelo de accesos. Llevan icono además del color para que el
+   estado se distinga también sin percibir colores. Uso:
+   <span class="badge badge-activo"><i class="bi bi-check-circle"></i>Activo</span> */
+.badge-activo,
+.badge-conceder    { background: #e6f5f1; color: #0f5c4a; }
+.badge-inactivo,
+.badge-permanente  { background: var(--surface-soft); color: var(--text-secondary); }
+.badge-denegar     { background: #fbe9eb; color: #96202c; }
+.badge-vencido     { background: #f1f2f5; color: #6b7280; text-decoration: line-through; }
+.badge-por-vencer  { background: #fdf3e3; color: #8a4d05; }
+.badge-vigente     { background: var(--surface-blue); color: var(--primary-dark); }
+
+.badge > i {
+    margin-right: 4px;
+}
+
+/* Clave estable (codigoSistema, codigoModulo.accion, codigoRol, nómina).
+   Monoespaciada para que se lea carácter por carácter sin ambigüedad. */
+.clave {
+    display: inline-block;
+    max-width: 100%;
+    padding: 1px 8px;
+    border-radius: 6px;
+    background: var(--surface-blue);
+    color: var(--primary-dark);
+    font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
+    font-size: 0.85em;
+    overflow-wrap: anywhere;
+}
+
+/* ==========================================================================
+   10b. NOTIFICACIONES EMERGENTES (TOASTS)
+   Componente compartido: includes/toast.php + assets/js/app.js.
+   ========================================================================== */
+.app-toasts {
+    /* Por encima de la barra de navegación pegajosa (z-index 1020). */
+    z-index: 1090;
+    max-width: min(420px, calc(100vw - 24px));
+}
+
+.app-toast {
+    border: none;
+    border-left: 5px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    background: var(--surface);
+    color: var(--text-main);
+}
+
+.app-toast .toast-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    font-size: 0.92rem;
+}
+
+.app-toast-icono {
+    flex-shrink: 0;
+    margin-top: 1px;
+    font-size: 1.05rem;
+}
+
+.app-toast-texto {
+    flex: 1 1 auto;
+    /* Los mensajes del servidor pueden traer códigos largos sin espacios. */
+    overflow-wrap: anywhere;
+}
+
+.app-toast .btn-close {
+    flex-shrink: 0;
+    margin-top: 1px;
+    font-size: 0.7rem;
+}
+
+.app-toast-exito { border-left-color: var(--success); }
+.app-toast-exito .app-toast-icono { color: var(--success); }
+
+.app-toast-error { border-left-color: var(--danger); }
+.app-toast-error .app-toast-icono { color: var(--danger); }
+
+.app-toast-aviso { border-left-color: var(--warning); }
+.app-toast-aviso .app-toast-icono { color: var(--warning); }
+
+.app-toast-info { border-left-color: var(--primary-light); }
+.app-toast-info .app-toast-icono { color: var(--primary); }
+
+/* ==========================================================================
+   10c. TABLAS CONTENIDAS (DataTables dentro de una tarjeta)
+   Uso: <div class="card tabla-contenida"><div class="card-body"><table …>
+   ========================================================================== */
+
+/* El contenedor de DataTables ya está dentro del card-body, que aporta su
+   propio relleno; sin esto el espaciado se duplicaría. */
+.tabla-contenida .dt-container {
+    padding: 0;
+}
+
+/* CRÍTICO: contención del ancho.
+
+   Una tabla de muchas columnas fija un ancho mínimo según su contenido y, si
+   nadie la frena, empuja a la tarjeta, a .app-main y termina desplazando toda
+   la página en horizontal. Estas tres reglas cortan esa cadena:
+
+   1. Ni la tarjeta ni sus contenedores pueden pasar del ancho disponible.
+      min-width: 0 es imprescindible porque el valor por omisión (auto) impide
+      que un contenedor se encoja por debajo del tamaño de su contenido.
+   2. Si el mínimo de la tabla aún no cabe, el desplazamiento ocurre DENTRO de
+      la tarjeta, no en la ventana.
+   3. El texto largo parte en varias líneas en vez de estirar la columna. */
+.tabla-contenida,
+.tabla-contenida .card-body,
+.tabla-contenida .dt-container {
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* Solo se desplaza el renglón de la tabla: la búsqueda, el selector de
+   registros y la paginación se quedan en su sitio. */
+.tabla-contenida .dt-layout-table,
+.tabla-contenida .table-responsive {
+    overflow-x: auto;
+}
+
+.tabla-contenida table th,
+.tabla-contenida table td {
+    overflow-wrap: anywhere;
+}
+
+/* Dentro de las tablas, las claves (SRD.defectos.ver) solo se cortan en sus
+   puntos (<wbr> de App.ui.clave), nunca a media palabra: así la columna toma
+   el ancho mínimo que necesita para mostrar cada parte completa. */
+.table .clave {
+    overflow-wrap: normal;
+}
+
+/* La columna de acciones se queda del ancho justo del botón. */
+.tabla-contenida td .btn-icon {
+    width: 32px;
+    height: 32px;
+}
+
+/* ==========================================================================
+   10d. CATÁLOGOS (aplicaciones, módulos, permisos, roles) Y ASIGNACIONES
+   Piezas comunes a esas pantallas.
+   ========================================================================== */
+
+/* Barra de filtros sobre la tabla: selectores de aplicación, módulo, etc. */
+.barra-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px 16px;
+    margin-bottom: 16px;
+}
+
+.barra-filtros-campo {
+    flex: 0 1 300px;
+    min-width: 200px;
+}
+
+.barra-filtros-campo .form-label {
+    margin-bottom: 4px;
+    font-size: 0.82rem;
+}
+
+/* Acciones de cada fila de una tabla de catálogo. */
+.acciones-fila {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+}
+
+/* Texto secundario bajo el dato principal de una celda. */
+.celda-secundaria {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+}
+
+/* Texto largo en una celda: máximo dos líneas; el texto completo va en el
+   title y en el detalle. */
+.celda-recortada {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+}
+
+/* Estado vacío para paneles, pestañas y modales (menos alto que el general). */
+.empty-state-compacto {
+    padding: 28px 16px;
+}
+
+.empty-state-compacto > i {
+    font-size: 2rem;
+}
+
+/* Vista previa del icono de un módulo junto al campo donde se escribe. */
+.icono-preview {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    background: var(--surface-blue);
+    color: var(--primary);
+    font-size: 1.15rem;
+}
+
+/* Clave completa que se va armando mientras se captura (SRD.defectos.ver). */
+.clave-completa {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-soft);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+/* Encabezado de grupo dentro de una tabla (por aplicación o por módulo). */
+.table > tbody > tr.fila-grupo > th {
+    padding: 10px 14px;
+    background: var(--surface-soft);
+    color: var(--primary-dark);
+    font-weight: 600;
+}
+
+/* Cabecera de un modal con el elemento sobre el que se trabaja. */
+.identidad-modal {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-soft);
+}
+
+.identidad-modal-icono {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--primary-light), var(--primary-dark));
+    font-size: 1.1rem;
+}
+
+.identidad-modal-texto {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.nav-tabs .nav-link .badge {
+    padding: 2px 8px;
+}
+
+/* --- Selector de usuario (includes/selectorUsuario.php) --- */
+.selector-usuario-resultados {
+    display: grid;
+    gap: 6px;
+    max-height: 360px;
+    margin-top: 10px;
+    overflow-y: auto;
+}
+
+.selector-usuario-opcion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.selector-usuario-opcion:hover,
+.selector-usuario-opcion:focus-visible {
+    border-color: var(--primary-light);
+    background: var(--surface-blue);
+}
+
+.selector-usuario-opcion-texto {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.selector-usuario-opcion-datos {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.selector-usuario-vacio {
+    padding: 8px 4px;
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+}
+
+.selector-usuario-elegido {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* --- Filtro rápido con botones tipo "píldora" y su total (usuarios,
+       permisos individuales). --- */
+.filtro-pildoras {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.filtro-pildora {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.filtro-pildora:hover {
+    border-color: var(--focus-border);
+    color: var(--primary);
+}
+
+.filtro-pildora.active {
+    border-color: var(--primary-light);
+    background: var(--surface-blue);
+    color: var(--primary-dark);
+}
+
+.filtro-pildora-total {
+    min-width: 26px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--surface-soft);
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+.filtro-pildora.active .filtro-pildora-total {
+    background: var(--surface);
+}
+
+@media (max-width: 575.98px) {
+    .filtro-pildora {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+}
+
+/* Fila de algo vencido o sin efecto (permisos individuales, permisos
+   efectivos): se conserva a la vista, atenuada. */
+.table > tbody > tr.fila-vencida > td {
+    color: var(--text-secondary);
+    background: var(--surface-soft);
+}
+
+/* Tarjeta de un paso que todavía no se puede usar (falta elegir algo antes). */
+.paso-bloqueado {
+    opacity: 0.6;
+}
+
+@media (max-width: 575.98px) {
+    .barra-filtros-campo {
+        flex-basis: 100%;
+    }
+}
+
+/* ==========================================================================
+   11. CARGADOR Y ESTADO VACÍO
+   Se usan mientras el contenido llega por AJAX o cuando no hay resultados.
+   ========================================================================== */
+.app-loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 50px 20px;
+    color: var(--text-secondary);
+}
+
+.app-loader .spinner-border {
+    color: var(--primary);
+    width: 2.4rem;
+    height: 2.4rem;
+}
+
+.empty-state {
+    padding: 50px 20px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+/* Solo el icono principal (hijo directo): los iconos de los botones que
+   lleve el estado vacío conservan su tamaño normal. */
+.empty-state > i {
+    font-size: 2.6rem;
+    color: #c3ccdb;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.empty-state .empty-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 4px;
+}
+
+/* ==========================================================================
+   12. UTILIDADES
+   ========================================================================== */
+.surface-soft  { background-color: var(--surface-soft); }
+.surface-blue  { background-color: var(--surface-blue); }
+.text-primary-dark { color: var(--primary-dark) !important; }
+.text-accent   { color: var(--accent-cyan) !important; }
+
+.radius-sm { border-radius: var(--radius-sm); }
+.radius-md { border-radius: var(--radius-md); }
+.radius-lg { border-radius: var(--radius-lg); }
+
+.shadow-soft   { box-shadow: var(--shadow-sm); }
+.shadow-strong { box-shadow: var(--shadow-md); }
+
+.divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+    border: none;
+}
+
+.cursor-pointer { cursor: pointer; }
+
+/* ==========================================================================
+   13. RESPONSIVO
+   El sistema se usa también en tablet y celular; a partir de aquí se reduce el
+   espaciado y la navegación pasa a desplazarse en horizontal.
+   ========================================================================== */
+@media (max-width: 991.98px) {
+    .app-main {
+        padding: 18px 14px 32px;
+    }
+
+    .app-header .app-header-inner {
+        padding: 12px 14px;
+    }
+
+    h1 { font-size: 1.5rem; }
+}
+
+@media (max-width: 767.98px) {
+    body {
+        font-size: 14.5px;
+    }
+
+    .app-nav .nav-link {
+        padding: 12px 14px;
+        font-size: 0.92rem;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /* En celular las acciones principales ocupan todo el ancho: son más fáciles
+       de tocar y quedan siempre visibles. */
+    .page-header-actions,
+    .page-header-actions .btn {
+        width: 100%;
+    }
+
+    .card-body,
+    .modal-body {
+        padding: 16px;
+    }
+}
+
+/* No imprimir la navegación ni las acciones. */
+@media print {
+    .app-header,
+    .app-nav,
+    .app-footer,
+    .page-header-actions,
+    .dt-container .dt-search,
+    .dt-container .dt-length,
+    .dt-container .dt-paging {
+        display: none !important;
+    }
+
+    body {
+        background: #ffffff;
+    }
+}

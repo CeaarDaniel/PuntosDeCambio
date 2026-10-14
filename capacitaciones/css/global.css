@@ -1,0 +1,151 @@
+/* =====================================================
+   Paleta principal
+   Colores base, superficies y textos de la aplicación
+   ===================================================== */
+:root {
+    --primary-dark: #27428f;
+    --primary: #395ca8;
+    --primary-light: #4b7ff0;
+    --accent-cyan: #3cb6ca;
+    --background: #ffffff;
+    --border: #d7dee8;
+    --focus-border: #c7d8ff;
+    --text-main: #111827;
+    --text-secondary: #4b5563;
+    --text-on-blue: #c9d7f2;
+
+    /* Tonos neutros derivados */
+    --surface: #ffffff;
+    --surface-soft: #f7f8fb;
+    --text-muted: #7b8494;
+}
+
+/* =====================================================
+   Paleta secundaria
+   Acentos para estados, detalles y elementos destacados
+   ===================================================== */
+:root {
+    --card-strong: #00244b;
+    --border-soft: #97cbdc38;
+    --success: #79d6c5;
+    --danger: #ff8b9a;
+    --accent-purple: #5225c5;
+    --accent-orange: #e67e22;
+    --accent-pink: #e84393;
+    --accent-gold: #f2b84b;
+
+    /* Tonos estructurales del sidebar */
+    --sidebar-bg-start: #061738;
+    --sidebar-bg-middle: #0a2758;
+    --sidebar-bg-end: #071b40;
+    --sidebar-active-start: #294f8e;
+    --sidebar-active-end: #247582;
+
+    /* Variables reutilizables de estructura y movimiento */
+    --sidebar-width: 286px;
+    --sidebar-collapsed-width: 88px;
+    --topbar-height: 78px;
+    --radius-sm: 12px;
+    --radius-md: 18px;
+    --radius-lg: 26px;
+    --shadow-soft: 0 10px 35px rgba(26, 53, 112, 0.08);
+    --shadow-card: 0 16px 40px rgba(26, 53, 112, 0.11);
+    --transition-fast: 180ms ease;
+    --transition-base: 280ms ease;
+}
+
+@media (max-width: 575.98px) {
+    html {
+        --topbar-height: 70px;
+    }
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    min-width: 320px;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    color: var(--text-main);
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    background: var(--surface-soft);
+    -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button,
+a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+button {
+    cursor: pointer;
+}
+
+.button {
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 11px 20px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
+}
+
+.button:hover {
+    transform: translateY(-2px);
+}
+
+.button:focus-visible,
+.icon-button:focus-visible,
+a:focus-visible {
+    outline: 3px solid var(--focus-border);
+    outline-offset: 3px;
+}
+
+.icon-button {
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    color: var(--primary-dark);
+    background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}

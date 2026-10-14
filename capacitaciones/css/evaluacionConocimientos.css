@@ -1,0 +1,779 @@
+.knowledge-evaluation-page {
+    width: min(1400px, 100%);
+    margin: 0 auto;
+}
+
+.evaluation-hero {
+    position: relative;
+    min-height: 250px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.45fr);
+    align-items: center;
+    gap: clamp(30px, 5vw, 70px);
+    overflow: hidden;
+    padding: clamp(30px, 4vw, 48px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-lg);
+    color: #fff;
+    background:
+        linear-gradient(135deg, rgba(121, 214, 197, 0.14), transparent 42%),
+        linear-gradient(112deg, var(--card-strong) 0%, var(--primary-dark) 68%, #2b357f 100%);
+    box-shadow: var(--shadow-card);
+}
+
+.evaluation-hero::before {
+    position: absolute;
+    inset: 0;
+    content: "";
+    opacity: 0.13;
+    background-image:
+        linear-gradient(30deg, rgba(255, 255, 255, 0.65) 1px, transparent 1px),
+        linear-gradient(120deg, rgba(255, 255, 255, 0.45) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: linear-gradient(to left, #000, transparent 72%);
+}
+
+.evaluation-hero::after {
+    position: absolute;
+    right: -58px;
+    bottom: -106px;
+    width: 235px;
+    height: 235px;
+    content: "";
+    border: 36px solid rgba(255, 139, 154, 0.08);
+    border-radius: 42px;
+    transform: rotate(35deg);
+}
+
+.evaluation-hero-copy,
+.evaluation-overview {
+    position: relative;
+    z-index: 1;
+}
+
+.evaluation-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 17px;
+    padding: 7px 13px;
+    border: 1px solid rgba(121, 214, 197, 0.3);
+    border-radius: 999px;
+    color: #e6fffa;
+    font-size: 0.8rem;
+    font-weight: 750;
+    letter-spacing: 0.035em;
+    background: rgba(121, 214, 197, 0.1);
+}
+
+.evaluation-eyebrow i {
+    color: var(--success);
+}
+
+.evaluation-hero h2 {
+    margin: 0;
+    font-size: clamp(2.05rem, 4vw, 3.25rem);
+    font-weight: 760;
+    letter-spacing: -0.045em;
+    line-height: 1.08;
+}
+
+.evaluation-subtitle {
+    margin: 14px 0 0;
+    color: #eef4ff;
+    font-size: clamp(1.04rem, 2vw, 1.2rem);
+    font-weight: 650;
+}
+
+.evaluation-description {
+    max-width: 740px;
+    margin: 9px 0 0;
+    color: var(--text-on-blue);
+    font-size: 0.96rem;
+    line-height: 1.65;
+}
+
+.evaluation-overview {
+    display: grid;
+    gap: 12px;
+}
+
+.overview-item {
+    min-height: 88px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 16px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 12px 28px rgba(0, 23, 56, 0.14);
+    backdrop-filter: blur(8px);
+}
+
+.overview-icon {
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    font-size: 1.05rem;
+}
+
+.overview-available .overview-icon {
+    color: #064d47;
+    background: var(--success);
+}
+
+.overview-pending .overview-icon {
+    color: #71390d;
+    background: #ffd39b;
+}
+
+.overview-item div {
+    display: flex;
+    flex-direction: column;
+}
+
+.overview-item strong {
+    font-size: 1.55rem;
+    line-height: 1;
+}
+
+.overview-item div span {
+    margin-top: 6px;
+    color: #dce7fb;
+    font-size: 0.82rem;
+    font-weight: 650;
+}
+
+.evaluation-filters {
+    position: relative;
+    margin-top: 30px;
+    padding: 24px;
+    overflow: hidden;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    background:
+        linear-gradient(135deg, rgba(121, 214, 197, 0.055), transparent 36%),
+        var(--surface);
+    box-shadow: var(--shadow-soft);
+}
+
+.evaluation-filters::after {
+    position: absolute;
+    top: -42px;
+    right: -27px;
+    width: 125px;
+    height: 90px;
+    content: "";
+    border: 16px solid rgba(82, 37, 197, 0.035);
+    border-radius: 25px;
+    transform: rotate(-18deg);
+    pointer-events: none;
+}
+
+.filter-panel-heading {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 21px;
+}
+
+.filter-heading-icon {
+    width: 43px;
+    height: 43px;
+    flex: 0 0 43px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 13px;
+    color: var(--accent-purple);
+    background: rgba(82, 37, 197, 0.09);
+}
+
+.filter-panel-heading h2 {
+    margin: 0;
+    font-size: 1.12rem;
+    font-weight: 750;
+}
+
+.filter-panel-heading p {
+    margin: 3px 0 0;
+    color: var(--text-secondary);
+    font-size: 0.86rem;
+}
+
+.evaluation-filter-form {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(230px, 1.35fr) repeat(2, minmax(175px, 0.75fr)) auto;
+    align-items: end;
+    gap: 15px;
+}
+
+.evaluation-filter-field {
+    min-width: 0;
+}
+
+.evaluation-filter-field label {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--text-main);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.evaluation-filter-control {
+    position: relative;
+}
+
+.evaluation-filter-control > i {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    left: 15px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.evaluation-filter-control .form-control,
+.evaluation-filter-control .form-select {
+    min-height: 49px;
+    padding-left: 42px;
+    border-color: var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-main);
+    font-size: 0.9rem;
+    background-color: rgba(255, 255, 255, 0.92);
+    box-shadow: none;
+}
+
+.evaluation-filter-control .form-control::placeholder {
+    color: var(--text-muted);
+}
+
+.evaluation-filter-control .form-control:focus,
+.evaluation-filter-control .form-select:focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 4px var(--focus-border);
+}
+
+.evaluation-filter-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.filter-search-button,
+.filter-clear-button {
+    min-height: 49px;
+    white-space: nowrap;
+}
+
+.filter-search-button {
+    color: #fff;
+    background: linear-gradient(115deg, var(--primary-dark), var(--primary-light));
+    box-shadow: 0 10px 20px rgba(57, 92, 168, 0.18);
+}
+
+.filter-search-button:hover {
+    color: #fff;
+    box-shadow: 0 13px 24px rgba(57, 92, 168, 0.25);
+}
+
+.filter-clear-button {
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    background: #fff;
+}
+
+.filter-clear-button:hover {
+    color: var(--primary-dark);
+    border-color: var(--focus-border);
+    background: #f9fbff;
+}
+
+.evaluation-courses {
+    margin-top: 40px;
+}
+
+.evaluation-section-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 21px;
+}
+
+.evaluation-section-label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--accent-purple);
+    font-size: 0.76rem;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.evaluation-section-heading h2 {
+    margin: 0;
+    font-size: clamp(1.45rem, 3vw, 1.9rem);
+    font-weight: 760;
+    letter-spacing: -0.03em;
+}
+
+.evaluation-section-heading p {
+    margin: 7px 0 0;
+    color: var(--text-secondary);
+}
+
+.evaluation-course-count {
+    flex: 0 0 auto;
+    padding: 7px 13px;
+    border: 1px solid rgba(82, 37, 197, 0.15);
+    border-radius: 999px;
+    color: var(--accent-purple);
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: rgba(82, 37, 197, 0.07);
+}
+
+.evaluation-course-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.evaluation-course-card {
+    position: relative;
+    min-width: 0;
+    min-height: 440px;
+    display: flex;
+    flex-direction: column;
+    padding: 23px;
+    overflow: hidden;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    background:
+        linear-gradient(145deg, rgba(121, 214, 197, 0.035), transparent 40%),
+        var(--surface);
+    box-shadow: var(--shadow-soft);
+    transition: transform var(--transition-base), border-color var(--transition-fast), box-shadow var(--transition-base);
+}
+
+.evaluation-course-card::before {
+    position: absolute;
+    top: 0;
+    left: 23px;
+    width: 58px;
+    height: 4px;
+    content: "";
+    border-radius: 0 0 8px 8px;
+}
+
+.course-available::before {
+    background: linear-gradient(90deg, var(--success), var(--accent-cyan));
+}
+
+.course-completed::before {
+    background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink));
+}
+
+.course-locked::before {
+    background: linear-gradient(90deg, var(--accent-orange), var(--danger));
+}
+
+.evaluation-course-card::after {
+    position: absolute;
+    top: -44px;
+    right: -42px;
+    width: 105px;
+    height: 105px;
+    content: "";
+    border: 1px solid rgba(60, 182, 202, 0.1);
+    border-radius: 26px;
+    background: linear-gradient(145deg, rgba(60, 182, 202, 0.055), transparent 65%);
+    transform: rotate(28deg);
+    transition: transform var(--transition-base);
+    pointer-events: none;
+}
+
+.course-locked::after {
+    border-color: rgba(230, 126, 34, 0.1);
+    background: linear-gradient(145deg, rgba(230, 126, 34, 0.045), transparent 65%);
+}
+
+.course-completed::after {
+    border-color: rgba(82, 37, 197, 0.09);
+    background: linear-gradient(145deg, rgba(82, 37, 197, 0.045), transparent 65%);
+}
+
+.evaluation-course-card:hover {
+    border-color: rgba(60, 182, 202, 0.26);
+    box-shadow: 0 20px 42px rgba(26, 53, 112, 0.14);
+    transform: translateY(-6px);
+}
+
+.course-locked:hover {
+    border-color: rgba(230, 126, 34, 0.2);
+}
+
+.evaluation-course-card:hover::after {
+    transform: rotate(38deg) scale(1.06);
+}
+
+.evaluation-card-top,
+.evaluation-card-content,
+.evaluation-progress,
+.evaluation-availability-message,
+.evaluation-action-button {
+    position: relative;
+    z-index: 1;
+}
+
+.evaluation-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.evaluation-course-icon {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: 15px;
+    font-size: 1.08rem;
+}
+
+.icon-success {
+    color: #126c61;
+    border-color: rgba(121, 214, 197, 0.35);
+    background: rgba(121, 214, 197, 0.19);
+}
+
+.icon-purple {
+    color: var(--accent-purple);
+    border-color: rgba(82, 37, 197, 0.12);
+    background: rgba(82, 37, 197, 0.08);
+}
+
+.icon-cyan {
+    color: #14768a;
+    border-color: rgba(60, 182, 202, 0.2);
+    background: rgba(60, 182, 202, 0.11);
+}
+
+.icon-orange {
+    color: #a6510b;
+    border-color: rgba(230, 126, 34, 0.18);
+    background: rgba(230, 126, 34, 0.1);
+}
+
+.icon-pink {
+    color: #b32d70;
+    border-color: rgba(232, 67, 147, 0.16);
+    background: rgba(232, 67, 147, 0.09);
+}
+
+.evaluation-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.73rem;
+    font-weight: 750;
+}
+
+.status-finished {
+    color: #126c61;
+    background: rgba(121, 214, 197, 0.18);
+}
+
+.status-completed {
+    color: var(--accent-purple);
+    background: rgba(82, 37, 197, 0.09);
+}
+
+.status-pending {
+    color: #9a4b0c;
+    background: rgba(230, 126, 34, 0.11);
+}
+
+.evaluation-card-content {
+    flex: 1;
+    margin-top: 20px;
+}
+
+.evaluation-category {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--primary-light);
+    font-size: 0.72rem;
+    font-weight: 750;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.course-locked .evaluation-category {
+    color: #a75a19;
+}
+
+.evaluation-card-content h3 {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 1.12rem;
+    font-weight: 750;
+    line-height: 1.3;
+}
+
+.evaluation-card-content > p {
+    margin: 10px 0 0;
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    line-height: 1.58;
+}
+
+.evaluation-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 15px;
+    margin-top: 17px;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 650;
+}
+
+.evaluation-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.evaluation-meta i {
+    color: var(--accent-cyan);
+}
+
+.course-locked .evaluation-meta i {
+    color: var(--accent-orange);
+}
+
+.evaluation-progress {
+    margin-top: 19px;
+}
+
+.progress-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 650;
+}
+
+.progress-heading strong {
+    color: var(--text-main);
+}
+
+.evaluation-progress .progress {
+    height: 8px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e9edf3;
+}
+
+.course-available .progress-bar {
+    border-radius: inherit;
+    background: linear-gradient(90deg, #79d6c5, #69c5d3);
+}
+
+.course-completed .progress-bar {
+    border-radius: inherit;
+    background: linear-gradient(90deg, #7961bd, #d875a7);
+}
+
+.course-locked .progress-bar {
+    border-radius: inherit;
+    background: linear-gradient(90deg, #e9a15f, #f29eaa);
+}
+
+.evaluation-availability-message {
+    min-height: 43px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 16px 0 0;
+    padding: 10px 11px;
+    border-radius: 11px;
+    font-size: 0.76rem;
+    font-weight: 650;
+    line-height: 1.4;
+}
+
+.evaluation-availability-message i {
+    margin-top: 2px;
+}
+
+.message-ready {
+    color: #126c61;
+    background: rgba(121, 214, 197, 0.12);
+}
+
+.message-completed {
+    color: var(--accent-purple);
+    background: rgba(82, 37, 197, 0.075);
+}
+
+.message-locked {
+    color: #8f4a12;
+    background: rgba(230, 126, 34, 0.085);
+}
+
+.evaluation-action-button {
+    width: 100%;
+    margin-top: 14px;
+}
+
+.available-action {
+    color: #063f45;
+    background: linear-gradient(115deg, var(--success), #55cad5);
+    box-shadow: 0 10px 22px rgba(60, 182, 202, 0.17);
+}
+
+.available-action:hover {
+    color: #063f45;
+    box-shadow: 0 14px 25px rgba(60, 182, 202, 0.25);
+}
+
+.completed-action,
+.completed-action:hover,
+.completed-action:disabled {
+    cursor: default;
+    color: var(--accent-purple);
+    border: 1px solid rgba(82, 37, 197, 0.14);
+    background: rgba(82, 37, 197, 0.07);
+    box-shadow: none;
+    transform: none;
+    opacity: 1;
+}
+
+.locked-action,
+.locked-action:hover,
+.locked-action:disabled {
+    cursor: not-allowed;
+    color: #78818e;
+    background: #e8ebf0;
+    box-shadow: none;
+    transform: none;
+    opacity: 1;
+}
+
+@media (max-width: 1249.98px) {
+    .evaluation-filter-form {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .evaluation-filter-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 1199.98px) {
+    .evaluation-course-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767.98px) {
+    .evaluation-hero {
+        min-height: auto;
+        grid-template-columns: 1fr;
+        gap: 25px;
+        padding: 34px 28px;
+    }
+
+    .evaluation-overview {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .evaluation-filter-form {
+        grid-template-columns: 1fr;
+    }
+
+    .evaluation-filter-actions {
+        grid-column: auto;
+        justify-content: stretch;
+    }
+
+    .evaluation-filter-actions .button {
+        flex: 1;
+    }
+
+    .evaluation-course-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .evaluation-hero {
+        padding: 29px 21px;
+        border-radius: 22px;
+    }
+
+    .evaluation-hero h2 {
+        font-size: 2rem;
+    }
+
+    .evaluation-description {
+        font-size: 0.9rem;
+    }
+
+    .evaluation-overview {
+        grid-template-columns: 1fr;
+    }
+
+    .overview-item {
+        min-height: 76px;
+    }
+
+    .evaluation-filters {
+        padding: 20px;
+    }
+
+    .filter-panel-heading {
+        align-items: flex-start;
+    }
+
+    .evaluation-filter-actions {
+        flex-direction: column;
+    }
+
+    .evaluation-section-heading {
+        display: block;
+    }
+
+    .evaluation-course-count {
+        display: inline-flex;
+        margin-top: 13px;
+    }
+
+    .evaluation-course-card {
+        min-height: auto;
+        padding: 20px;
+    }
+}
